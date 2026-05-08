@@ -10,25 +10,12 @@ function convertLogicScore(score: number) {
   // Skilled        -> A   100-150
   // Expert         -> A+  150-200
   // Master         -> M   200+
-  let reputation = "beginner";
-  let grade = "B";
-  if (score >= 200) {
-    reputation = "master";
-    grade = "M";
-  } else if (score >= 150) {
-    reputation = "expert";
-    grade = "A+";
-  } else if (score >= 100) {
-    reputation = "skilled";
-    grade = "A";
-  } else if (score >= 50) {
-    reputation = "intermediate";
-    grade = "B+";
-  }
 
+  const logicIndex = Number(score >= 50) + Number(score >= 100) + Number(score >= 150) + Number(score >= 200);
+  
   return {
-    reputation: reputation,
-    grade: grade,
+    reputation: ["beginner", "intermediate", "skilled", "expert", "master"][logicIndex],
+    grade: ["B", "B+", "A", "A+", "M"][logicIndex],
   };
 }
 
