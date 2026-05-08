@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { CgProfile } from "react-icons/cg";
 import { getUser } from "../_utils/getUser";
 import { useEffect, useState } from "react";
+import SearchBar from "./SearchBar";
 
 const navLinks = [
   { label: "Arena", href: "/" },
@@ -42,6 +43,7 @@ const Navbar = () => {
         </div>
       </div>
       <div className="flex items-center gap-3">
+        <SearchBar />
         {/* <div className="hidden lg:flex items-center bg-surface-container-low border border-outline-variant/30 px-3 py-1.5 gap-2">
           <span className="material-symbols-outlined text-outline text-sm">
             <IoMdSearch />
