@@ -4,6 +4,7 @@ services:
   db:
     image: postgres:17.4
     container_name: crux-db
+    restart: unless-stopped
     env_file:
       - ./backend/.env
     volumes:
@@ -23,6 +24,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: backend
+    restart: unless-stopped
     env_file:
       - ./backend/.env
     healthcheck:
@@ -44,12 +46,14 @@ services:
     env_file:
       - ./frontend/.env
     container_name: frontend
+    restart: unless-stopped
     ports:
       - "3001:3000"
 
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
+    restart: unless-stopped
     env_file:
       - ./pgadmin.env
     ports:
