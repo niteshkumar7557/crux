@@ -122,7 +122,7 @@ export async function getSidebarData(req: Request, res: Response) {
                 name,
                 logic_score AS "logicScore",
                 id,
-                RANK () OVER (ORDER BY logic_score DESC, id ASC) AS RANK
+                RANK () OVER (ORDER BY logic_score DESC, id ASC) AS rank
             FROM users
             ORDER BY 
                 logic_score DESC,
