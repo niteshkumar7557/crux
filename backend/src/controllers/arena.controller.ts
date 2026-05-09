@@ -119,16 +119,14 @@ export async function getSidebarData(req: Request, res: Response) {
 
     const data2 = await pool.query(`
             SELECT 
-                u1.name,
-                u1.logic_score AS "logicScore",
-                u1.id,
-                COUNT(*) FILTER (WHERE u2.logic_score > u1.logic_score) + 1 AS rank
-            FROM users u1
-            CROSS JOIN users u2
-            GROUP BY u1.id, u1.name, u1.logic_score
+                name,
+                logic_score AS "logicScore",
+                id,
+                RANK() OVER (ORDER BY logic_score DESC, id ASC) AS RANK
+            FROM users
             ORDER BY 
-                u1.logic_score DESC,
-                u1.id ASC
+                logic_score DESC,
+                id ASC
             LIMIT 3;
         `);
 
