@@ -8,13 +8,15 @@ services:
     env_file:
       - ./backend/.env
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - crux_postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U crux -d cruxdb" ]
       interval: 5s
       timeout: 5s
       retries: 5
       start_period: 10s
+    networks:
+      - proxy-net
 
   backend:
     depends_on:
@@ -23,7 +25,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: backend
+    container_name: crux-backend
     restart: unless-stopped
     env_file:
       - ./backend/.env
@@ -33,6 +35,8 @@ services:
       timeout: 5s
       retries: 5
       start_period: 15s
+    networks:
+      - proxy-net
 
   frontend:
     depends_on:
@@ -42,17 +46,19 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://backend:4001
+        NEXT_PUBLIC_API_URL: http://crux-backend:4001
     env_file:
       - ./frontend/.env
-    container_name: frontend
+    container_name: crux-frontend
     restart: unless-stopped
     ports:
       - "3001:3000"
+    networks:
+      - proxy-net
 
   pgadmin:
     image: dpage/pgadmin4
-    container_name: pgadmin
+    container_name: crux-pgadmin
     restart: unless-stopped
     env_file:
       - ./pgadmin.env
@@ -62,8 +68,14 @@ services:
       db:
         condition: service_healthy
     volumes:
-      - pgadmin_data:/var/lib/pgadmin
+      - crux_pgadmin_data:/var/lib/pgadmin
+    networks:
+      - proxy-net
+
+networks:
+  proxy-net:
+    external: true
 
 volumes:
-  postgres_data:
-  pgadmin_data:
+  crux_postgres_data:
+  crux_pgadmin_data:
