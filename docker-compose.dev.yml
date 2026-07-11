@@ -11,7 +11,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_dev_data:/var/lib/postgresql/data
+      - crux_postgres_dev_data:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U crux -d cruxdb" ]
       interval: 5s
@@ -21,7 +21,7 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4
-    container_name: dev-pgadmin
+    container_name: crux-dev-pgadmin
     env_file:
       - ./pgadmin.env
     ports:
@@ -30,8 +30,8 @@ services:
       db:
         condition: service_healthy
     volumes:
-      - pgadmin_dev_data:/var/lib/pgadmin
+      - crux_pgadmin_dev_data:/var/lib/pgadmin
 
 volumes:
-  postgres_dev_data:
-  pgadmin_dev_data:
+  crux_postgres_dev_data:
+  crux_pgadmin_dev_data:
