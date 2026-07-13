@@ -35,16 +35,24 @@ const Footer = () => {
           </Link>
         </div>
         <div className="flex gap-4">
-          <div className="w-8 h-8 flex items-center justify-center bg-surface-container-high border border-outline-variant/30 text-outline hover:text-primary transition-colors cursor-pointer">
+          <button
+            type="button"
+            aria-label="Developer terminal"
+            className="w-8 h-8 flex items-center justify-center bg-surface-container-high border border-outline-variant/30 text-outline hover:text-primary transition-colors cursor-pointer"
+          >
             <span className="text-sm">
               <MdOutlineTerminal />
             </span>
-          </div>
-          <div className="w-8 h-8 flex items-center justify-center bg-surface-container-high border border-outline-variant/30 text-outline hover:text-primary transition-colors cursor-pointer">
+          </button>
+          <button
+            type="button"
+            aria-label="Share Crux"
+            className="w-8 h-8 flex items-center justify-center bg-surface-container-high border border-outline-variant/30 text-outline hover:text-primary transition-colors cursor-pointer"
+          >
             <span className="text-sm">
               <CiShare2 />
             </span>
-          </div>
+          </button>
         </div>
       </div>
     </footer>

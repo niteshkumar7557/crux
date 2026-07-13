@@ -144,10 +144,10 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
       <form className="space-y-8 relative z-10">
         {/* <!-- Category Selection --> */}
         <div className="space-y-3">
-          <label className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
+          <p className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
             <MdFilterList className="text-sm" />
             SELECT YOUR BATTLEGROUND
-          </label>
+          </p>
           <div className=" flex flex-wrap gap-2">
             {domains.map((domainName, i) => (
               <button
@@ -163,11 +163,15 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
         </div>
         {/* <!-- Statement Textarea --> */}
         <div className="space-y-3">
-          <label className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
+          <label
+            className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant flex items-center gap-2"
+            htmlFor="claim"
+          >
             <MdEditNote className="text-sm" />
             YOUR CLAIM
           </label>
           <textarea
+            id="claim"
             className="w-full focus:outline-none bg-surface-container-highest border-0 focus:ring-1 focus:ring-primary min-h-60 p-6 font-headline text-2xl italic placeholder:text-outline text-on-surface resize-none"
             placeholder="Make a claim worth fighting over..."
             value={formState.text}
@@ -226,7 +230,7 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
               </h3>
               <div className="flex items-center gap-3 bg-surface-container px-4 py-2 border border-primary/30 shadow-glow-primary">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span className="animate-ping motion-reduce:animate-none absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                 </span>
                 <span className="font-label text-[10px] uppercase tracking-widest text-primary">
@@ -236,7 +240,7 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
             </div>
             <div className="bg-surface-container-lowest p-5 border-l border-primary/50">
               <div className="flex items-start gap-4">
-                <MdMemory className="text-primary text-lg mt-0.5 animate-pulse" />
+                <MdMemory className="text-primary text-lg mt-0.5 animate-pulse motion-reduce:animate-none" />
                 <p className="font-label text-xs text-on-surface-variant leading-relaxed">
                   {formState.feedback}
                 </p>

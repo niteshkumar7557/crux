@@ -36,7 +36,7 @@ const Login = () => {
   }
 
   return (
-    <div className="bg-background text-on-surface font-body selection:bg-primary/30 min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+    <main className="bg-background text-on-surface font-body selection:bg-primary/30 min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
       {/* <!-- Background Technical Layer --> */}
       <div className="absolute inset-0 technical-grid z-0"></div>
       <div className="absolute inset-0 bg-radial-at-c from-primary/5 via-transparent to-transparent z-0"></div>
@@ -85,6 +85,7 @@ const Login = () => {
                   placeholder="user@crux-protocol.io"
                   required={true}
                   type="email"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.currentTarget.value)}
                 />
@@ -108,6 +109,7 @@ const Login = () => {
                   placeholder="••••••••••••"
                   required={true}
                   type="password"
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.currentTarget.value)}
                 />
@@ -179,7 +181,7 @@ const Login = () => {
           </a>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

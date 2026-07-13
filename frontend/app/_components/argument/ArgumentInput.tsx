@@ -47,8 +47,9 @@ const ArgumentInput = ({ argumentId }: { argumentId: number }) => {
       <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center gap-3 md:gap-6">
         <div className="flex-1 w-full relative">
           <input
-            className="w-full bg-surface-container border border-outline-variant/50 focus:border-primary px-4 py-3 md:px-6 md:py-4 font-body text-on-surface placeholder:text-outline/50 transition-all"
+            className="w-full bg-surface-container border border-outline-variant/50 focus:border-primary px-4 py-3 md:px-6 md:py-4 font-body text-on-surface placeholder:text-outline transition-all"
             placeholder="Join the Argument..."
+            aria-label="Join the argument"
             type="text"
             value={input}
             onChange={(e) => setInput(e.currentTarget.value)}

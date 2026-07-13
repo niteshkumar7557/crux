@@ -82,24 +82,34 @@ export default function SearchBar() {
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-24 sm:pt-32">
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center pt-24 sm:pt-32"
+          onKeyDown={(e) => e.key === "Escape" && setIsOpen(false)}
+        >
           <div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setIsOpen(false)}
           />
 
-          <div className="relative w-full max-w-2xl bg-surface-container-lowest/20 border border-outline-variant rounded-xl shadow-2xl overflow-hidden flex flex-col mx-4 sm:mx-0">
-            <div className="flex items-center px-4 py-4 bg-surface-container-low">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Search"
+            className="relative w-full max-w-2xl bg-surface-container-lowest/20 border border-outline-variant rounded-xl shadow-2xl overflow-hidden flex flex-col mx-4 sm:mx-0"
+          >
+            <div className="flex items-center px-4 py-4 bg-surface-container-low border-b border-transparent focus-within:border-primary/50 transition-colors">
               <IoMdSearch className="text-outline text-2xl mr-2" />
               <input
                 className="flex-1 bg-transparent border-none focus:outline-none text-lg text-on-surface placeholder:text-outline"
                 placeholder="Search statements, domains, or users..."
+                aria-label="Search statements, domains, or users"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 autoFocus
               />
               <button
                 onClick={() => setIsOpen(false)}
+                aria-label="Close search"
                 className="p-1 text-outline hover:text-on-surface hover:bg-surface-container-high"
               >
                 <IoMdClose className="text-xl" />

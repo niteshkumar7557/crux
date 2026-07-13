@@ -19,7 +19,7 @@ const ActiveStatements = ({
             <li key={i} className="group cursor-pointer">
               <span className="font-label text-[10px] tracking-widest opacity-70 block mb-1">
                 <div className="mt-2 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-on-primary animate-pulse"></span>
+                  <span className="w-2 h-2 rounded-full bg-on-primary animate-pulse motion-reduce:animate-none"></span>
                   <span className="font-label text-[10px] uppercase">
                     Live in Arena #{e.id}
                   </span>

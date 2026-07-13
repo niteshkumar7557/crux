@@ -42,6 +42,7 @@ const Navbar = () => {
         </Button>
         <Link
           href={user ? `/profile/${user.id}` : "/login"}
+          aria-label={user ? "Your profile" : "Log in"}
           className={`cursor-pointer ${pathname === "/profile" ? "border-b-2 border-primary-container pb-1 text-primary-container" : ""} text-outline hover:text-primary-container transition-colors`}
         >
           <CgProfile size={26} />

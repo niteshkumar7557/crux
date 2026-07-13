@@ -72,6 +72,7 @@ const Register = () => {
                     placeholder="Enter Identity..."
                     required={true}
                     type="text"
+                    autoComplete="name"
                     value={name}
                     onChange={(e) => setName(e.currentTarget.value)}
                   />
@@ -92,6 +93,7 @@ const Register = () => {
                     placeholder="Enter Identity..."
                     required={true}
                     type="text"
+                    autoComplete="username"
                     value={userName}
                     onChange={(e) => setUserName(e.currentTarget.value)}
                   />
@@ -112,6 +114,7 @@ const Register = () => {
                     placeholder="user@crux-protocol.io"
                     required={true}
                     type="email"
+                    autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.currentTarget.value)}
                   />
@@ -134,6 +137,7 @@ const Register = () => {
                     placeholder="••••••••••••"
                     required={true}
                     type="password"
+                    autoComplete="new-password"
                     value={password}
                     onChange={(e) => setPassword(e.currentTarget.value)}
                   />
@@ -174,13 +178,13 @@ const Register = () => {
             <div className="relative h-48 md:h-64 overflow-hidden">
               <img
                 className="w-full h-full object-cover grayscale opacity-60"
-                data-alt="dramatic cinematic shot of high-stakes courtroom debate with cool blue volumetric lighting and sharp architectural shadows"
+                alt=""
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkgpIew1fdUvf7p8_I1gPEDxnhI_AYhnwLdKCpkD23uyKJgPUQ717z1NwADtWDqvfFny8RKu8LKuyuG9nt5_VOP6ZiKTro5FR8GunuEeSud_Z2guVkXj-4i9PNK3kxHM7K6XW08rKWTGGicMwzlwTy9GYmgw16EysO40rELyN2DszfgnmKb5ku7tpatCyP-oqRnJNY2Dltz_fKntlJem8TqwDmjhUJNYbJmP15gA67-0e5wz_dgxpXC89UuXzKT9hENHk3IV2Xetpb"
               />
               <div className="absolute inset-0 bg-linear-to-t from-surface-container to-transparent"></div>
               <div className="absolute bottom-6 left-10">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-primary animate-pulse"></div>
+                  <div className="w-2 h-2 bg-primary animate-pulse motion-reduce:animate-none"></div>
                   <span className="font-label text-[10px] tracking-widest text-primary font-bold">
                     STATUS: RECRUITMENT OPEN
                   </span>

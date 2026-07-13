@@ -23,7 +23,7 @@ const MainTrendingArenaCard = ({
     >
       <div className="flex items-center gap-3 mb-6">
         <img
-          alt="Aurelius_X"
+          alt={username}
           className="w-8 h-8 border border-outline-variant/30 grayscale hover:grayscale-0 transition-all"
           src={PLACEHOLDER_AVATAR_URL}
         />

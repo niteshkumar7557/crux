@@ -4,7 +4,7 @@ const SystemHealth = ({ data }: { data: SystemHealthData }) => {
   return (
     <div className="bg-surface-container-highest mt-10 p-6 border-t-4 border-primary">
       <div className="flex items-center gap-2 mb-4">
-        <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+        <div className="w-2 h-2 rounded-full bg-primary animate-pulse motion-reduce:animate-none"></div>
         <span className="font-label text-[10px] uppercase tracking-widest text-primary">
           System Health: normal
         </span>
