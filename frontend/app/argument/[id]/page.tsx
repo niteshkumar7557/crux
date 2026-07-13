@@ -2,14 +2,27 @@ import ArgumentArena from "@/app/_components/argument/ArgumentArena";
 import ArgumentHeader from "@/app/_components/argument/ArgumentHeader";
 import ArgumentInput from "@/app/_components/argument/ArgumentInput";
 import serverApi from "@/app/axios.server";
+import { isAxiosError } from "axios";
+import { notFound } from "next/navigation";
 
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
-  let { id } = await params;
+  const { id: rawId } = await params;
 
-  id = id.split("-")[1];
+  const id = Number(rawId.split("-")[1]);
+  if (!Number.isInteger(id) || id <= 0) notFound();
 
-  const { data } = await serverApi.get(`/argument/${+id}`);
-  const comments = await serverApi.get(`/comment/${+id}`);
+  let data;
+  let comments;
+  try {
+    [{ data }, comments] = await Promise.all([
+      serverApi.get(`/argument/${id}`),
+      serverApi.get(`/comment/${id}`),
+    ]);
+  } catch (error) {
+    if (isAxiosError(error) && error.response?.status === 404) notFound();
+    throw error;
+  }
+  if (!data?.data) notFound();
 
   const aiAnalysis: [string, string] = [
     data.data.for_analysis,
@@ -31,7 +44,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
         <ArgumentHeader argumentHeaderData={argumentHeaderData} />
         <ArgumentArena aiAnalysis={aiAnalysis} comments={comments.data} />
       </section>
-      <ArgumentInput argumentId={+id} />
+      <ArgumentInput argumentId={id} />
     </>
   );
 };

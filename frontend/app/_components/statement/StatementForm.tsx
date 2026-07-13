@@ -71,22 +71,29 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
 			eligibility: "pending",
 		});
 		
-    const { data } = await api.post("/ai/statement", {
-			content: formState.text,
-			domain: formState.selectedDomain,
-		});
+		try {
+			const { data } = await api.post("/ai/statement", {
+				content: formState.text,
+				domain: formState.selectedDomain,
+			});
 
-    updateFormState({
-			loading: false,
-			text: data.improved,
-			allowInput: true,
-			keyword: data.keyword,
-			eligibility: data.eligibility,
-			domain: data.domain,
-			feedback: data.feedback,
-		});
-
-		requestInProccess.current = false;
+			updateFormState({
+				text: data.improved,
+				keyword: data.keyword,
+				eligibility: data.eligibility,
+				domain: data.domain,
+				feedback: data.feedback,
+			});
+		} catch {
+			updateFormState({
+				eligibility: "unavailable",
+				feedback:
+					"The Arbiter is unreachable right now. Your claim is untouched — try the eligibility check again in a moment.",
+			});
+		} finally {
+			updateFormState({ loading: false, allowInput: true });
+			requestInProccess.current = false;
+		}
   }
 
   async function handleSubmit() {
@@ -97,17 +104,35 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
 
     const user = await getUser();
 		if (!user) {
-			updateFormState({ loading: false, allowInput: true });
+			updateFormState({
+				loading: false,
+				allowInput: true,
+				eligibility: "unavailable",
+				feedback:
+					"You need to be logged in to broadcast a statement to the arena.",
+			});
 			requestInProccess.current = false;
 			return;
 		}
 
-    await api.post("/argument", {
-			user_id: user.id,
-			content: formState.text,
-			content_keyword: formState.keyword,
-			domain: formState.domain,
-		});
+		try {
+			await api.post("/argument", {
+				user_id: user.id,
+				content: formState.text,
+				content_keyword: formState.keyword,
+				domain: formState.domain,
+			});
+		} catch {
+			updateFormState({
+				loading: false,
+				allowInput: true,
+				eligibility: "unavailable",
+				feedback:
+					"Broadcast failed — the arena couldn't be reached. Your statement is still here; try again.",
+			});
+			requestInProccess.current = false;
+			return;
+		}
 
     router.push("/");
   }
