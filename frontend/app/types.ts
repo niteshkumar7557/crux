@@ -54,3 +54,26 @@ export interface NewestCardProps {
   time: string;
 }
 export type NewestCardData = NewestCardProps[];
+
+export interface StatementSearchResult {
+  id: number;
+  content: string;
+  domain: string;
+  username: string;
+}
+
+export interface DomainSearchResult {
+  domain: string;
+  statementCount: number;
+}
+
+export interface UserSearchResult {
+  id: number;
+  username: string;
+}
+
+export interface SearchResults {
+  statements: StatementSearchResult[];
+  domains: DomainSearchResult[];
+  users: UserSearchResult[];
+}

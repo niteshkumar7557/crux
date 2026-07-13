@@ -10,6 +10,7 @@ import arenaRoutes from "./routes/arena.route.js";
 import aiRoutes from "./routes/ai.route.js";
 import likeRoutes from "./routes/like.route.js";
 import profileRoutes from "./routes/profile.route.js";
+import searchRoutes from "./routes/search.route.js";
 
 const app = express();
 
@@ -33,5 +34,6 @@ app.use("/arena", arenaRoutes);
 app.use("/ai", aiRoutes);
 app.use("/like", likeRoutes);
 app.use("/profile", profileRoutes);
+app.use("/search", searchRoutes);
 
 export default app;
