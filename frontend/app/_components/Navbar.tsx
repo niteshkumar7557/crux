@@ -2,8 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CgProfile } from "react-icons/cg";
-import { getUser } from "../_utils/getUser";
-import { useEffect, useState } from "react";
+import { useUser } from "../_hooks/useUser";
 import SearchBar from "./SearchBar";
 
 const navLinks = [
@@ -13,14 +12,7 @@ const navLinks = [
 
 const Navbar = () => {
   const pathname = usePathname();
-  const [user, setUser] = useState<any>(null);
-  useEffect(() => {
-    async function fetchUser() {
-      const userInfo = await getUser();
-      setUser(userInfo);
-    }
-    fetchUser();
-  }, []);
+  const user = useUser();
   return (
     <div className="bg-neutral-950 py-3 px-6 flex items-start justify-between">
       <div className="flex">

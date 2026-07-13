@@ -1,4 +1,5 @@
-import { NewestCardProps, TrendingArenaCardProps } from "@/app/types";
+import { NewestCardProps } from "@/app/types";
+import { PLACEHOLDER_AVATAR_URL } from "@/app/_utils/constants";
 import { Newsreader } from "next/font/google";
 import Link from "next/link";
 import { LuMessageSquare } from "react-icons/lu";
@@ -29,7 +30,7 @@ const NewestCard = ({
               <img
                 alt="Dr. Aris Thorne"
                 className="w-6 h-6 border border-outline-variant/20 grayscale"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDY5Anp_D4xW6pJE78a2afpLChi3n-4n80CePZRl9k3_YW9rmmoew2pl6257BuP4_E8hZqh9u13uGYgZXQFhwsbwoQwM0JtnQaaLJBih9wYDfaGqm09iQ_YE538pVkDQcQ5bJaEJzREFPAXwM7dkiihuigd-a6g_2sXBdnGbZgtCFBNZD_NE9zLmWe5uqoqow7VHtx5Yp3eQL-KTBAZ4Pfku3J0sGV0VTFF9GDeJ3NFN_V0u5U6ybXJIEN8rTU4PrUeXh2MfvHK2bL6"
+                src={PLACEHOLDER_AVATAR_URL}
               />
               <span className="font-body text-[10px] font-bold text-outline uppercase tracking-wider">
                 {username}

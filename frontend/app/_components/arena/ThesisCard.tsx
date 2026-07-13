@@ -1,22 +1,14 @@
 "use client";
-import { getUser } from "@/app/_utils/getUser";
+import { useUser } from "@/app/_hooks/useUser";
 import { Newsreader } from "next/font/google";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 const newsreader = Newsreader({
   subsets: ["latin"],
 });
 
 const ThesisCard = () => {
-  const [user, setUser] = useState<any>(null);
-  useEffect(() => {
-    async function fetchUser() {
-      const userInfo = await getUser();
-      setUser(userInfo);
-    }
-    fetchUser();
-  }, []);
+  const user = useUser();
 
   return (
     <div className="bg-surface-container p-12 text-center border border-outline-variant/10 relative overflow-hidden">

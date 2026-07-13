@@ -7,13 +7,7 @@ const TopDebatersCard = ({
   name,
   logicScore,
   id,
-}: {
-  rank: number;
-  avatar_url: string;
-  name: string;
-  logicScore: number;
-  id: number;
-}) => {
+}: TopDebatersCardProps) => {
   return (
     <Link
       href={`/profile/${id}`}

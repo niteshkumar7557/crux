@@ -4,9 +4,8 @@ export interface MainTrendingArenaCardProps {
   title: string;
   argumentNum: number;
   argumentQuality: "low" | "medium" | "high";
-  affermativeScore: number;
+  affirmativeScore: number;
   negativeScore: number;
-  numOfUsers: number;
   argumentId: string;
 }
 export type MainTrendingArenaCardData = MainTrendingArenaCardProps[];
@@ -35,6 +34,7 @@ export interface TopDebatersCardProps {
   logicScore: number;
   id: number;
   rank: number;
+  avatar_url: string;
 }
 export type TopDebatersCardData = TopDebatersCardProps[];
 

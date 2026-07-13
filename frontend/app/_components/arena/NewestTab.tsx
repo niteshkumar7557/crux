@@ -32,8 +32,12 @@ const NewestTab = () => {
 
   useEffect(() => {
     async function getCardsData() {
-      const { data } = await api.get("/arena/active/newest");
-      setCardsData(data);
+      try {
+        const { data } = await api.get("/arena/active/newest");
+        setCardsData(data);
+      } catch (error) {
+        console.error("Failed to load newest arguments:", error);
+      }
     }
     getCardsData();
   }, []);

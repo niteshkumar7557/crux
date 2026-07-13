@@ -1,5 +1,5 @@
 "use client";
-import LiveArenaCard from "./MainTrendingArenaCard";
+import MainTrendingArenaCard from "./MainTrendingArenaCard";
 import ThesisCard from "./ThesisCard";
 import ActiveArgumentsNavbar from "./ActiveArgumentsNavbar";
 import { useState } from "react";
@@ -33,38 +33,35 @@ const ActiveArguments = ({
         (mainTrendingArenaCardData.length > 0 &&
         trendingArenaCardData.length > 0 ? (
           <div>
-            {mainTrendingArenaCardData.length > 0 &&
-              mainTrendingArenaCardData.map((e, i) => (
-                <LiveArenaCard
-                  key={i}
-                  domain={e.domain}
-                  username={e.username}
-                  title={e.title}
-                  argumentNum={e.argumentNum}
-                  argumentQuality={e.argumentQuality}
-                  affermativeScore={e.affermativeScore}
-                  negativeScore={e.negativeScore}
-                  numOfUsers={e.numOfUsers}
-                  argumentId={e.argumentId}
-                />
-              ))}
+            {mainTrendingArenaCardData.map((e, i) => (
+              <MainTrendingArenaCard
+                key={i}
+                domain={e.domain}
+                username={e.username}
+                title={e.title}
+                argumentNum={e.argumentNum}
+                argumentQuality={e.argumentQuality}
+                affirmativeScore={e.affirmativeScore}
+                negativeScore={e.negativeScore}
+                argumentId={e.argumentId}
+              />
+            ))}
             <div className="mb-5 md:flex md:flex-wrap md:justify-between">
-              {mainTrendingArenaCardData.length > 0 &&
-                trendingArenaCardData.map(
-                  (e, i) =>
-                    (mainTrendingArenaCardData.length === 0 || i !== 0) && (
-                      <TrendingArenaCard
-                        key={i}
-                        username={e.username}
-                        domain={e.domain}
-                        title={e.title}
-                        affirmativescore={e.affirmativescore}
-                        negativescore={e.negativescore}
-                        argumentid={e.argumentid}
-                        active_minds={e.active_minds}
-                      />
-                    ),
-                )}
+              {trendingArenaCardData
+                // the first trending item is already shown above as the main card
+                .filter((_, i) => i !== 0)
+                .map((e, i) => (
+                  <TrendingArenaCard
+                    key={i}
+                    username={e.username}
+                    domain={e.domain}
+                    title={e.title}
+                    affirmativescore={e.affirmativescore}
+                    negativescore={e.negativescore}
+                    argumentid={e.argumentid}
+                    active_minds={e.active_minds}
+                  />
+                ))}
             </div>
             <ThesisCard />
           </div>
