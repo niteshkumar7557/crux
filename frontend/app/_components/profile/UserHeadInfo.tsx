@@ -19,7 +19,7 @@ const UserHeadInfo = ({
           </span>
         </div>
         <h1
-          className="font-headline text-6xl md:text-8xl font-bold tracking-tighter text-on-background leading-none"
+          className="font-headline text-5xl md:text-8xl font-bold tracking-tighter text-on-background leading-none break-words"
         >
           {name}
         </h1>

@@ -50,7 +50,7 @@ const MainTrendingArenaCard = ({
         </span>
       </div>
       <div className="py-5">
-        <div className="flex justify-between font-label text-[10px] uppercase tracking-[0.25em] mb-3">
+        <div className="flex justify-between gap-4 font-label text-[10px] uppercase tracking-[0.25em] mb-3">
           <span className="text-primary-container">
             Affirmative ({affirmativeScore}%)
           </span>

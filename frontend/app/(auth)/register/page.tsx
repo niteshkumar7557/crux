@@ -40,7 +40,7 @@ const Register = () => {
 
   return (
     <>
-      <main className="grow flex items-center justify-center pt-14 pb-12 px-6">
+      <main className="relative min-h-screen grow flex items-center justify-center pt-14 pb-12 px-6">
         {/* <!-- Background Technical Layer --> */}
         <div className="absolute inset-0 technical-grid -z-5"></div>
         <div className="absolute inset-0 bg-radial-at-c from-primary/5 via-transparent to-transparent -z-5"></div>

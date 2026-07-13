@@ -18,7 +18,7 @@ const ArgumentHeader = ({
           </span>
         </div>
         <h1
-          className="font-headline text-5xl md:text-7xl font-bold max-w-5xl tracking-tight"
+          className="font-headline text-5xl md:text-7xl font-bold max-w-5xl tracking-tight break-words"
         >
           {
             argumentHeaderData.statement.split(

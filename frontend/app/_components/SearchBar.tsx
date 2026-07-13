@@ -63,15 +63,23 @@ export default function SearchBar() {
     results.users.length > 0;
 
   return (
-    <div className="relative flex-1 max-w-3xl w-full lg:min-w-150">
-      <div
+    <div className="relative flex-1 min-w-0 max-w-3xl flex justify-end md:justify-start">
+      <button
         onClick={() => setIsOpen(true)}
-        className="relative z-10 flex items-center bg-zinc-900 border border-neutral-700 rounded-md transition-colors w-full hover:border-gray-500 cursor-pointer px-4 py-2.5 gap-3">
+        aria-label="Search"
+        className="md:hidden p-2 text-gray-400 hover:text-primary-container transition-colors cursor-pointer"
+      >
+        <IoMdSearch className="text-2xl" />
+      </button>
+      <button
+        onClick={() => setIsOpen(true)}
+        className="relative z-10 hidden md:flex items-center bg-zinc-900 border border-neutral-700 rounded-md transition-colors w-full hover:border-gray-500 cursor-pointer px-4 py-2.5 gap-3"
+      >
         <IoMdSearch className="text-xl text-gray-400" />
         <span className="text-sm font-body text-gray-500 w-full text-left">
           Search statements...
         </span>
-      </div>
+      </button>
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-start justify-center pt-24 sm:pt-32">

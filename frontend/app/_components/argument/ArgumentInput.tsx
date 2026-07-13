@@ -42,11 +42,11 @@ const ArgumentInput = ({ argumentId }: { argumentId: number }) => {
     }
   }
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-neutral-950/80 backdrop-blur-xl border-t border-outline-variant/20 py-6 px-6 z-40">
-      <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center gap-6">
+    <div className="sticky bottom-0 bg-neutral-950/80 backdrop-blur-xl border-t border-outline-variant/20 py-4 px-4 md:py-6 md:px-6 z-40">
+      <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center gap-3 md:gap-6">
         <div className="flex-1 w-full relative">
           <input
-            className="w-full bg-surface-container border border-outline-variant/50 focus:border-primary px-6 py-4 font-body text-on-surface placeholder:text-outline/50 transition-all"
+            className="w-full bg-surface-container border border-outline-variant/50 focus:border-primary px-4 py-3 md:px-6 md:py-4 font-body text-on-surface placeholder:text-outline/50 transition-all"
             placeholder="Join the Argument..."
             type="text"
             value={input}
@@ -56,13 +56,13 @@ const ArgumentInput = ({ argumentId }: { argumentId: number }) => {
         <div className="flex gap-2 w-full md:w-auto">
           <button
             onClick={() => handleBtn("affirmative")}
-            className="flex-1 cursor-pointer md:flex-none border border-primary text-primary hover:bg-primary/10 px-8 py-4 font-label uppercase tracking-widest text-xs transition-all"
+            className="flex-1 cursor-pointer md:flex-none border border-primary text-primary hover:bg-primary/10 px-2 py-3 md:px-8 md:py-4 font-label uppercase tracking-widest text-[10px] md:text-xs whitespace-nowrap transition-all"
           >
             Support Affirmative
           </button>
           <button
             onClick={() => handleBtn("negative")}
-            className="flex-1 cursor-pointer md:flex-none border border-secondary text-secondary hover:bg-secondary/10 px-8 py-4 font-label uppercase tracking-widest text-xs transition-all"
+            className="flex-1 cursor-pointer md:flex-none border border-secondary text-secondary hover:bg-secondary/10 px-2 py-3 md:px-8 md:py-4 font-label uppercase tracking-widest text-[10px] md:text-xs whitespace-nowrap transition-all"
           >
             Support Negative
           </button>

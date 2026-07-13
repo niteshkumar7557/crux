@@ -30,9 +30,8 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
       <section className="max-w-screen-2xl mx-auto px-6 pt-12 pb-16">
         <ArgumentHeader argumentHeaderData={argumentHeaderData} />
         <ArgumentArena aiAnalysis={aiAnalysis} comments={comments.data} />
-
-        <ArgumentInput argumentId={+id} />
       </section>
+      <ArgumentInput argumentId={+id} />
     </>
   );
 };

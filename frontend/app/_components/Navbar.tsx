@@ -14,8 +14,8 @@ const Navbar = () => {
   const pathname = usePathname();
   const user = useUser();
   return (
-    <div className="bg-neutral-950 py-3 px-6 flex items-start justify-between">
-      <div className="flex">
+    <nav className="bg-neutral-950 py-3 px-4 md:px-6 flex items-center justify-between gap-2 md:gap-6">
+      <div className="flex items-center shrink-0">
         <Link
           className="text-2xl font-headline italic text-primary-container tracking-tighter"
           href={"/"}
@@ -34,27 +34,14 @@ const Navbar = () => {
           ))}
         </div>
       </div>
-      <div className="flex items-center gap-3">
-        <SearchBar />
-        {/* <div className="hidden lg:flex items-center bg-surface-container-low border border-outline-variant/30 px-3 py-1.5 gap-2">
-          <span className="material-symbols-outlined text-outline text-sm">
-            <IoMdSearch />
-          </span>
-          <input
-            className="bg-transparent border-none focus:ring-0 text-sm w-48 font-body"
-            placeholder="Search statements..."
-            type="text"
-          />
-        </div> */}
+      <SearchBar />
+      <div className="flex items-center gap-3 shrink-0">
         <Link
           href={user === null ? "/login" : "/statement"}
-          className="bg-primary text-on-primary mx-2 px-4 py-2 font-label uppercase tracking-widest text-xs font-bold hover:bg-primary-container active:scale-95 transition-all duration-100"
+          className="bg-primary text-on-primary px-3 md:px-4 py-2 font-label uppercase tracking-widest text-xs font-bold whitespace-nowrap hover:bg-primary-container active:scale-95 transition-all duration-100"
         >
           NEW STATEMENT
         </Link>
-        {/* <span className="cursor-pointer text-gray-500 hover:text-primary-container transition-colors">
-          <IoIosNotificationsOutline size={31} />
-        </span> */}
         <Link
           href={user ? `/profile/${user.id}` : "/login"}
           className={`cursor-pointer ${pathname === "/profile" ? "border-b-2 border-primary-container pb-1 text-primary-container" : ""} text-gray-500 hover:text-primary-container transition-colors`}
@@ -62,7 +49,7 @@ const Navbar = () => {
           <CgProfile size={26} />
         </Link>
       </div>
-    </div>
+    </nav>
   );
 };
 
