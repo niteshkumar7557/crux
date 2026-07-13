@@ -2,15 +2,10 @@
 import { HiOutlineBolt } from "react-icons/hi2";
 import { LuLockKeyhole } from "react-icons/lu";
 import { MdOutlineEmail } from "react-icons/md";
-import { Newsreader } from "next/font/google";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/app/axios";
-
-const newsreader = Newsreader({
-  subsets: ["latin"],
-});
 
 const Login = () => {
   const [email, setEmail] = useState<string>("");
@@ -50,7 +45,7 @@ const Login = () => {
         {/* <!-- Brand Header (Simplified for Login) --> */}
         <div className="text-center mb-12">
           <h1
-            className={`text-4xl ${newsreader.className} italic tracking-tighter text-primary`}
+            className="text-4xl font-headline italic tracking-tighter text-primary"
           >
             CRUX
           </h1>
@@ -64,7 +59,7 @@ const Login = () => {
         <div className="bg-surface-container-low border-l-2 border-primary p-8 md:p-10 shadow-2xl relative">
           <header className="mb-8">
             <h2
-              className={`text-3xl ${newsreader.className} italic text-on-surface leading-tight`}
+              className="text-3xl font-headline italic text-on-surface leading-tight"
             >
               Login to the Arena
             </h2>

@@ -1,8 +1,4 @@
 import { ReputationBreakdownProps } from "@/app/profile/types";
-import { Newsreader } from "next/font/google";
-const newsreader = Newsreader({
-  subsets: ["latin"],
-});
 
 const ReputationBreakdown = ({ data }: ReputationBreakdownProps) => {
   const max = Math.max(...data);
@@ -13,7 +9,7 @@ const ReputationBreakdown = ({ data }: ReputationBreakdownProps) => {
       <div className="flex justify-between items-start mb-12">
         <div>
           <h2
-            className={`${newsreader.className} text-3xl font-bold mb-1 italic`}
+            className="font-headline text-3xl font-bold mb-1 italic"
           >
             Reputation Breakdown
           </h2>
@@ -37,7 +33,7 @@ const ReputationBreakdown = ({ data }: ReputationBreakdownProps) => {
           i === maxIndex ? (
             <div
               key={i}
-              className={`flex-1 bg-primary relative`}
+              className="flex-1 bg-primary relative"
               style={{ height: `${e}%` }}
             >
               <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-surface-bright p-2 text-[10px] font-label whitespace-nowrap z-10">
@@ -47,7 +43,7 @@ const ReputationBreakdown = ({ data }: ReputationBreakdownProps) => {
           ) : (
             <div
               key={i}
-              className={`flex-1 bg-surface-container-high hover:bg-primary transition-colors cursor-crosshair`}
+              className="flex-1 bg-surface-container-high hover:bg-primary transition-colors cursor-crosshair"
               style={{ height: `${e}%` }}
             ></div>
           ),

@@ -1,11 +1,6 @@
 import { TrendingArenaCardProps } from "@/app/types";
 import { PLACEHOLDER_AVATAR_URL } from "@/app/_utils/constants";
-import { Newsreader } from "next/font/google";
 import Link from "next/link";
-
-const newsreader = Newsreader({
-  subsets: ["latin"],
-});
 
 const TrendingArenaCard = ({
   username,
@@ -36,17 +31,17 @@ const TrendingArenaCard = ({
           <span className="font-label text-[10px] text-tertiary uppercase tracking-widest mb-3 block">
             {domain}
           </span>
-          <h3 className={`${newsreader.className} text-xl mb-4`}>"{title}"</h3>
+          <h3 className="font-headline text-xl mb-4">"{title}"</h3>
         </div>
 
         <div>
           <div className="h-2 w-full bg-surface-container-highest flex mb-4">
             <div
-              className={`h-full bg-primary-container`}
+              className="h-full bg-primary-container"
               style={{ width: `${affirmativescore}%` }}
             ></div>
             <div
-              className={`h-full bg-secondary-container`}
+              className="h-full bg-secondary-container"
               style={{ width: `${negativescore}%` }}
             ></div>
           </div>

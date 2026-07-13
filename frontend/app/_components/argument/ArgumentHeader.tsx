@@ -1,10 +1,5 @@
 import { ArgumentHeaderProps } from "@/app/argument/types";
 import ArgumentProbability from "./ArgumentProbability";
-import { Newsreader } from "next/font/google";
-
-const newsreader = Newsreader({
-  subsets: ["latin"],
-});
 
 const ArgumentHeader = ({
   argumentHeaderData,
@@ -23,7 +18,7 @@ const ArgumentHeader = ({
           </span>
         </div>
         <h1
-          className={`${newsreader.className} text-5xl md:text-7xl font-bold max-w-5xl tracking-tight`}
+          className="font-headline text-5xl md:text-7xl font-bold max-w-5xl tracking-tight"
         >
           {
             argumentHeaderData.statement.split(

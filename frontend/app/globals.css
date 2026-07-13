@@ -52,9 +52,9 @@
   --color-surface-dim: #131314;
 
   /* Fonts */
-  --font-headline: "Newsreader", serif;
-  --font-body: "Manrope", sans-serif;
-  --font-label: "Space Grotesk", monospace;
+  --font-headline: var(--font-newsreader), serif;
+  --font-body: var(--font-manrope), sans-serif;
+  --font-label: var(--font-space-grotesk), monospace;
 
   /* Radius */
   --radius: 0px;

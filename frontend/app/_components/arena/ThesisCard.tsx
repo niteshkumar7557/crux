@@ -1,11 +1,6 @@
 "use client";
 import { useUser } from "@/app/_hooks/useUser";
-import { Newsreader } from "next/font/google";
 import Link from "next/link";
-
-const newsreader = Newsreader({
-  subsets: ["latin"],
-});
 
 const ThesisCard = () => {
   const user = useUser();
@@ -14,7 +9,7 @@ const ThesisCard = () => {
     <div className="bg-surface-container p-12 text-center border border-outline-variant/10 relative overflow-hidden">
       <div className="absolute inset-0 bg-linear-to-br from-primary/5 to-transparent"></div>
       <h2
-        className={`${newsreader.className} text-3xl mb-4 relative z-10 italic`}
+        className="font-headline text-3xl mb-4 relative z-10 italic"
       >
         Your logic is required in the Arena.
       </h2>

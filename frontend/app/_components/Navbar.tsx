@@ -17,7 +17,7 @@ const Navbar = () => {
     <div className="bg-neutral-950 py-3 px-6 flex items-start justify-between">
       <div className="flex">
         <Link
-          className="text-2xl font-serif italic text-primary-container tracking-tighter"
+          className="text-2xl font-headline italic text-primary-container tracking-tighter"
           href={"/"}
         >
           Crux

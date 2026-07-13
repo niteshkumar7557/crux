@@ -7,7 +7,7 @@ const Footer = () => {
     <footer className="bg-neutral-950 border-t border-outline-variant/10">
       <div className="flex flex-col md:flex-row justify-between items-center px-10 py-12 w-full gap-8 max-w-screen-2xl mx-auto">
         <div className="flex flex-col gap-4">
-          <span className="text-lg font-serif text-neutral-100 italic">
+          <span className="text-lg font-headline text-neutral-100 italic">
             Crux
           </span>
           <span className="font-label uppercase tracking-widest text-xs text-neutral-500">

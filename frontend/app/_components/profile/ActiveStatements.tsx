@@ -1,9 +1,5 @@
 import { ActiveStatementsProps } from "@/app/profile/types";
-import { Newsreader } from "next/font/google";
 import Link from "next/link";
-const newsreader = Newsreader({
-  subsets: ["latin"],
-});
 
 const ActiveStatements = ({
   activeStatementsData,
@@ -14,7 +10,7 @@ const ActiveStatements = ({
     <div className="lg:col-span-4 bg-primary text-on-primary p-8 flex flex-col">
       <div className="mb-auto">
         <h2
-          className={`${newsreader.className} text-3xl font-bold mb-4 leading-tight italic`}
+          className="font-headline text-3xl font-bold mb-4 leading-tight italic"
         >
           Active Statements
         </h2>

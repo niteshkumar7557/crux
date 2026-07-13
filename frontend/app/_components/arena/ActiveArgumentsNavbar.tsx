@@ -1,8 +1,3 @@
-import { Newsreader } from "next/font/google";
-const newsreader = Newsreader({
-  subsets: ["latin"],
-});
-
 interface ActiveNavbarProps {
   tabList: string[];
   active: string;
@@ -20,10 +15,10 @@ const ActiveArgumentsNavbar = ({
         live feed
       </span>
       <div className="mb-8 flex flex-col gap-3 md:flex-row md:justify-between md:items-baseline">
-        <h2 className={`${newsreader.className} text-5xl font-medium italic`}>
+        <h2 className="font-headline text-5xl font-medium italic">
           Active Arguments
         </h2>
-        <div className="flex gap-5 [word-spacing:-4px] font-label text-[10px] uppercase tracking-widest">
+        <div className="flex gap-5 font-label text-[10px] uppercase tracking-widest">
           {tabList.map((e, i) => (
             <button
               key={i}

@@ -1,9 +1,5 @@
 import { DebateHistoryProps } from "@/app/profile/types";
-import { Newsreader } from "next/font/google";
 import { MdOutlinePlayArrow } from "react-icons/md";
-const newsreader = Newsreader({
-  subsets: ["latin"],
-});
 
 const HistoryItem = ({
   date,
@@ -37,7 +33,7 @@ const HistoryItem = ({
         <span className="font-label text-[10px] text-outline block mb-1">
           SCORE
         </span>
-        <span className={`${newsreader.className} text-xl`}>
+        <span className="font-headline text-xl">
           {score}% Affirmative
         </span>
       </div>

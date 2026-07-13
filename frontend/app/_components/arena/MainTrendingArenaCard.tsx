@@ -1,13 +1,8 @@
 import { MainTrendingArenaCardProps } from "@/app/types";
 import { PLACEHOLDER_AVATAR_URL } from "@/app/_utils/constants";
-import { Newsreader } from "next/font/google";
 import Link from "next/link";
 import { GoVerified } from "react-icons/go";
 import { LuMessageSquare } from "react-icons/lu";
-
-const newsreader = Newsreader({
-  subsets: ["latin"],
-});
 
 const MainTrendingArenaCard = ({
   username,
@@ -40,16 +35,16 @@ const MainTrendingArenaCard = ({
         {domain}
       </span>
       <h2
-        className={`${newsreader.className} text-4xl leading-tight mb-4 transition-colors`}
+        className="font-headline text-4xl leading-tight mb-4 transition-colors"
       >
         "{title}"
       </h2>
       <div className="flex gap-5 border-b border-gray-800 pb-5">
-        <span className="font-label [word-spacing:-4px] text-xs text-outline uppercase tracking-widest">
+        <span className="font-label text-xs text-outline uppercase tracking-widest">
           <LuMessageSquare className="inline text-primary" /> {argumentNum}{" "}
           {argumentNum === 1 ? "Argument" : "Arguments"}
         </span>
-        <span className="font-label [word-spacing:-4px] text-xs text-outline uppercase tracking-widest">
+        <span className="font-label text-xs text-outline uppercase tracking-widest">
           <GoVerified className="inline text-tertiary" /> Argument Quality:{" "}
           {argumentQuality}
         </span>
@@ -63,11 +58,11 @@ const MainTrendingArenaCard = ({
         </div>
         <div className="w-full h-5 flex gap-0.5">
           <span
-            className={`bg-primary-container`}
+            className="bg-primary-container"
             style={{ width: `${affirmativeScore}%` }}
           ></span>
           <span
-            className={`bg-secondary-container`}
+            className="bg-secondary-container"
             style={{ width: `${negativeScore}%` }}
           ></span>
         </div>

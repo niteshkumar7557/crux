@@ -1,14 +1,10 @@
-import { Newsreader } from "next/font/google";
 import Link from "next/link";
-const newsreader = Newsreader({
-  subsets: ["latin"],
-});
 
 const Challenge = () => {
   return (
     <section className="mt-18 bg-surface-bright/40 backdrop-blur-xl border border-outline-variant/20 p-12 text-center relative">
       <div className="absolute inset-0 bg-noise pointer-events-none"></div>
-      <h2 className={`${newsreader.className} text-5xl font-bold italic mb-6`}>
+      <h2 className="font-headline text-5xl font-bold italic mb-6">
         Your knowledge is the only currency here.
       </h2>
       <p className="font-body text-outline mb-10 max-w-2xl mx-auto">

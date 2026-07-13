@@ -1,8 +1,4 @@
 import type { UserHeadInfoProps } from "@/app/profile/types";
-import { Newsreader } from "next/font/google";
-const newsreader = Newsreader({
-  subsets: ["latin"],
-});
 
 const UserHeadInfo = ({
   name,
@@ -23,7 +19,7 @@ const UserHeadInfo = ({
           </span>
         </div>
         <h1
-          className={`${newsreader.className} text-6xl md:text-8xl font-bold tracking-tighter text-on-background leading-none`}
+          className="font-headline text-6xl md:text-8xl font-bold tracking-tighter text-on-background leading-none"
         >
           {name}
         </h1>

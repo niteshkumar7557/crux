@@ -9,16 +9,12 @@ import {
   MdSensors,
 } from "react-icons/md";
 
-import { Newsreader } from "next/font/google";
 import { TbGavel } from "react-icons/tb";
 import { getUser } from "@/app/_utils/getUser";
 import { useRouter } from "next/navigation";
 import api from "@/app/axios";
 import { RiRobot3Line } from "react-icons/ri";
 import { jwtPayload } from "@/app/_types/jwt";
-const newsreader = Newsreader({
-  subsets: ["latin"],
-});
 
 interface FormState {
 	text: string;
@@ -150,7 +146,7 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
             YOUR CLAIM
           </label>
           <textarea
-            className={`w-full focus:outline-none bg-surface-container-highest border-0 focus:ring-1 focus:ring-primary min-h-60 p-6 ${newsreader.className} text-2xl italic placeholder:text-neutral-600 text-on-surface resize-none`}
+            className="w-full focus:outline-none bg-surface-container-highest border-0 focus:ring-1 focus:ring-primary min-h-60 p-6 font-headline text-2xl italic placeholder:text-neutral-600 text-on-surface resize-none"
             placeholder="Make a claim worth fighting over..."
             value={formState.text}
 						maxLength={MAXIMUM_CHAR_LIMIT}
@@ -205,7 +201,7 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
           <div className="relative z-10 flex flex-col gap-4">
             <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 border-b border-outline-variant/30 pb-4">
               <h3
-                className={`${newsreader.className} italic text-2xl text-primary`}
+                className="font-headline italic text-2xl text-primary"
               >
                 CRUX AI Validation
               </h3>
