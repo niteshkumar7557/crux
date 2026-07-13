@@ -1,5 +1,7 @@
+"use client";
 import { MainTrendingArenaCardProps } from "@/app/types";
 import { PLACEHOLDER_AVATAR_URL } from "@/app/_utils/constants";
+import { useScoreBarReveal } from "@/app/_hooks/useScoreBarReveal";
 import Link from "next/link";
 import { GoVerified } from "react-icons/go";
 import { LuMessageSquare } from "react-icons/lu";
@@ -14,8 +16,12 @@ const MainTrendingArenaCard = ({
   negativeScore,
   argumentId,
 }: MainTrendingArenaCardProps) => {
+  const barRef = useScoreBarReveal<HTMLDivElement>();
   return (
-    <div className="bg-surface-container-low mt-5 p-8 pb-4 border-l-2 border-primary group hover:bg-surface-container transition-colors relative overflow-hidden">
+    <div
+      data-reveal
+      className="bg-surface-container-low mt-5 p-8 pb-4 border-l-2 border-primary group hover:bg-surface-container transition-colors relative overflow-hidden"
+    >
       <div className="flex items-center gap-3 mb-6">
         <img
           alt="Aurelius_X"
@@ -56,7 +62,7 @@ const MainTrendingArenaCard = ({
           </span>
           <span className="text-secondary">Negative ({negativeScore}%)</span>
         </div>
-        <div className="w-full h-5 flex gap-0.5">
+        <div ref={barRef} className="w-full h-5 flex gap-0.5">
           <span
             className="bg-primary-container"
             style={{ width: `${affirmativeScore}%` }}

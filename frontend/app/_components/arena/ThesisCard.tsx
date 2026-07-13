@@ -6,7 +6,10 @@ const ThesisCard = () => {
   const user = useUser();
 
   return (
-    <div className="bg-surface-container p-12 text-center border border-outline-variant/10 relative overflow-hidden">
+    <div
+      data-reveal
+      className="bg-surface-container p-12 text-center border border-outline-variant/10 relative overflow-hidden"
+    >
       <div className="absolute inset-0 bg-linear-to-br from-primary/5 to-transparent"></div>
       <h2
         className="font-headline text-3xl mb-4 relative z-10 italic"

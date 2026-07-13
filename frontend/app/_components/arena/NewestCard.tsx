@@ -1,5 +1,7 @@
+"use client";
 import { NewestCardProps } from "@/app/types";
 import { PLACEHOLDER_AVATAR_URL } from "@/app/_utils/constants";
+import { useScoreBarReveal } from "@/app/_hooks/useScoreBarReveal";
 import Link from "next/link";
 import { LuMessageSquare } from "react-icons/lu";
 
@@ -13,8 +15,12 @@ const NewestCard = ({
   argumentNum,
   time,
 }: NewestCardProps) => {
+  const barRef = useScoreBarReveal<HTMLDivElement>();
   return (
-    <div className="bg-surface-container-low cursor-pointer mt-5 p-6 border-l-2 border-outline-variant/30 hover:border-primary transition-all">
+    <div
+      data-reveal
+      className="bg-surface-container-low cursor-pointer mt-5 p-6 border-l-2 border-outline-variant/30 hover:border-primary transition-all"
+    >
       <Link
         className="flex flex-col justify-between h-full"
         href={`/argument/CRX-${argumentid}-A`}
@@ -45,7 +51,7 @@ const NewestCard = ({
         </div>
 
         <div>
-          <div className="h-2 w-full bg-surface-container-highest flex mb-4">
+          <div ref={barRef} className="h-2 w-full bg-surface-container-highest flex mb-4">
             <div
               className="h-full bg-primary-container"
               style={{ width: `${affirmativescore}%` }}

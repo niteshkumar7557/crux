@@ -2,11 +2,12 @@
 import MainTrendingArenaCard from "./MainTrendingArenaCard";
 import ThesisCard from "./ThesisCard";
 import ActiveArgumentsNavbar from "./ActiveArgumentsNavbar";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import NewestTab from "./NewestTab";
 import HighStakesTab from "./HighStakesTab";
 import { MainTrendingArenaCardData, TrendingArenaCardData } from "@/app/types";
 import TrendingArenaCard from "./TrendingArenaCard";
+import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
 
 const tabList = ["trending", "newest"]; // for future: "high stakes"
 
@@ -18,12 +19,37 @@ const ActiveArguments = ({
   trendingArenaCardData: TrendingArenaCardData;
 }) => {
   const [activeTab, setActiveTab] = useState("trending");
+  const feedRef = useRef<HTMLDivElement>(null);
 
   const changeActive = (e: string) => {
     setActiveTab(e);
   };
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add(MOTION_OK, () => {
+        // Cards start dimmed but always visible — never fully hidden while
+        // waiting for their stagger slot.
+        gsap.fromTo(
+          "[data-reveal]",
+          { opacity: 0.25, y: 24 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.7,
+            stagger: 0.07,
+            ease: "power3.out",
+            clearProps: "opacity,transform",
+          },
+        );
+      });
+    },
+    { scope: feedRef },
+  );
+
   return (
-    <div>
+    <div ref={feedRef}>
       <ActiveArgumentsNavbar
         tabList={tabList}
         active={activeTab}

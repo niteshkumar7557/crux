@@ -7,8 +7,9 @@ import {
   TopDebatersCardData,
   TrendingTopicsCardData,
 } from "@/app/types";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import api from "@/app/axios";
+import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
 
 const ArenaSidebar = () => {
   const [trendingTopicsData, setTrendingTopicsData] =
@@ -37,8 +38,32 @@ const ArenaSidebar = () => {
     getData();
   }, []);
 
+  const sidebarRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add(MOTION_OK, () => {
+        gsap.fromTo(
+          sidebarRef.current!.children,
+          { opacity: 0.25, y: 20 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.7,
+            stagger: 0.12,
+            delay: 0.25,
+            ease: "power3.out",
+            clearProps: "opacity,transform",
+          },
+        );
+      });
+    },
+    { scope: sidebarRef },
+  );
+
   return (
-    <div className="py-10 md:w-[30%]">
+    <div ref={sidebarRef} className="py-10 md:w-[30%]">
       <TrendingTopics data={trendingTopicsData} />
       <TopDebaters data={topDebatersData} />
       <SystemHealth data={systemHealthData} />
