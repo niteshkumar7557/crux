@@ -43,7 +43,7 @@ const ArgumentInput = ({ argumentId }: { argumentId: number }) => {
     }
   }
   return (
-    <div className="sticky bottom-0 bg-neutral-950/80 backdrop-blur-xl border-t border-outline-variant/20 py-4 px-4 md:py-6 md:px-6 z-40">
+    <div className="sticky bottom-0 bg-surface-container-lowest/80 backdrop-blur-xl border-t border-outline-variant/20 py-4 px-4 md:py-6 md:px-6 z-40">
       <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center gap-3 md:gap-6">
         <div className="flex-1 w-full relative">
           <input
@@ -74,7 +74,7 @@ const ArgumentInput = ({ argumentId }: { argumentId: number }) => {
         </div>
       </div>
       {warning && (
-        <div className="fixed bottom-32 right-6 z-60 max-w-sm bg-neutral-950 border-l-4 border-secondary p-4 shadow-[0_0_20px_rgba(255,82,93,0.1)] flex items-start gap-4">
+        <div className="fixed bottom-32 right-6 z-60 max-w-sm bg-surface-container-lowest border-l-4 border-secondary p-4 shadow-glow-secondary flex items-start gap-4">
           <div className="shrink-0 mt-1">
             <MdWarningAmber className="text-secondary font-bold text-xl" />
           </div>

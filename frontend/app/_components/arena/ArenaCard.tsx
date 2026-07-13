@@ -50,7 +50,7 @@ const ArenaCard = ({
               </span>
             </div>
             {time && (
-              <span className="font-label uppercase text-[10px] text-gray-400 bg-gray-500/10 px-1.5 py-1 self-start">
+              <span className="font-label uppercase text-[10px] text-on-surface-variant bg-outline/10 px-1.5 py-1 self-start">
                 {time}
               </span>
             )}

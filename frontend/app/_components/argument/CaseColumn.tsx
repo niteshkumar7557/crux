@@ -11,9 +11,9 @@ const SIDES = {
     wrapper: "bg-background lg:pr-12 py-8",
     header: "border-primary",
     accentText: "text-primary",
-    panel: "border-primary/30",
+    panel: "border-primary/30 shadow-glow-primary",
     markdown:
-      "min-h-30 max-w-none [&>p]:font-headline [&>p]:text-sm [&>p]:text-on-surface-variant [&>p]:italic [&>p]:leading-relaxed [&>p]:mb-4 [&>h3]:font-label [&>h3]:text-[9px] [&>h3]:uppercase [&>h3]:tracking-[0.2em] [&>h3]:text-primary [&>h3]:font-bold [&>h3]:mt-6 [&>h3]:mb-3 [&>h3]:border-b [&>h3]:border-primary/20 [&>h3]:pb-1 [&>ul]:pl-0 [&>ul]:mt-2 [&>ul]:space-y-3 [&>ul]:list-none [&>ul>li]:font-headline [&>ul>li]:text-sm [&>ul>li]:text-on-surface-variant [&>ul>li]:italic [&>ul>li]:leading-snug [&>ul>li]:border-l-2 [&>ul>li]:border-primary/40 [&>ul>li]:pl-3 [&>ul>li>strong]:text-white [&>ul>li>strong]:not-italic [&>ul>li>strong]:font-bold [&>ul>li>strong]:font-label [&>ul>li>strong]:text-xs [&>ul>li>strong]:tracking-wide",
+      "min-h-30 max-w-none [&>p]:font-headline [&>p]:text-sm [&>p]:text-on-surface-variant [&>p]:italic [&>p]:leading-relaxed [&>p]:mb-4 [&>h3]:font-label [&>h3]:text-[9px] [&>h3]:uppercase [&>h3]:tracking-[0.2em] [&>h3]:text-primary [&>h3]:font-bold [&>h3]:mt-6 [&>h3]:mb-3 [&>h3]:border-b [&>h3]:border-primary/20 [&>h3]:pb-1 [&>ul]:pl-0 [&>ul]:mt-2 [&>ul]:space-y-3 [&>ul]:list-none [&>ul>li]:font-headline [&>ul>li]:text-sm [&>ul>li]:text-on-surface-variant [&>ul>li]:italic [&>ul>li]:leading-snug [&>ul>li]:border-l-2 [&>ul>li]:border-primary/40 [&>ul>li]:pl-3 [&>ul>li>strong]:text-on-surface [&>ul>li>strong]:not-italic [&>ul>li>strong]:font-bold [&>ul>li>strong]:font-label [&>ul>li>strong]:text-xs [&>ul>li>strong]:tracking-wide",
   },
   against: {
     title: "The Case Against",
@@ -21,9 +21,9 @@ const SIDES = {
       "bg-background lg:pl-12 py-8 border-t lg:border-t-0 lg:border-l border-outline-variant/20",
     header: "border-secondary",
     accentText: "text-secondary",
-    panel: "border-secondary/30",
+    panel: "border-secondary/30 shadow-glow-secondary",
     markdown:
-      "min-h-30 max-w-none [&>p]:font-headline [&>p]:text-sm [&>p]:text-on-surface-variant [&>p]:italic [&>p]:leading-relaxed [&>p]:mb-4 [&>h3]:font-label [&>h3]:text-[9px] [&>h3]:uppercase [&>h3]:tracking-[0.2em] [&>h3]:text-secondary [&>h3]:font-bold [&>h3]:mt-6 [&>h3]:mb-3 [&>h3]:border-b [&>h3]:border-secondary/20 [&>h3]:pb-1 [&>ul]:pl-0 [&>ul]:mt-2 [&>ul]:space-y-3 [&>ul]:list-none [&>ul>li]:font-headline [&>ul>li]:text-sm [&>ul>li]:text-on-surface-variant [&>ul>li]:italic [&>ul>li]:leading-snug [&>ul>li]:border-l-2 [&>ul>li]:border-secondary/40 [&>ul>li]:pl-3 [&>ul>li>strong]:text-white [&>ul>li>strong]:not-italic [&>ul>li>strong]:font-bold [&>ul>li>strong]:font-label [&>ul>li>strong]:text-xs [&>ul>li>strong]:tracking-wide",
+      "min-h-30 max-w-none [&>p]:font-headline [&>p]:text-sm [&>p]:text-on-surface-variant [&>p]:italic [&>p]:leading-relaxed [&>p]:mb-4 [&>h3]:font-label [&>h3]:text-[9px] [&>h3]:uppercase [&>h3]:tracking-[0.2em] [&>h3]:text-secondary [&>h3]:font-bold [&>h3]:mt-6 [&>h3]:mb-3 [&>h3]:border-b [&>h3]:border-secondary/20 [&>h3]:pb-1 [&>ul]:pl-0 [&>ul]:mt-2 [&>ul]:space-y-3 [&>ul]:list-none [&>ul>li]:font-headline [&>ul>li]:text-sm [&>ul>li]:text-on-surface-variant [&>ul>li]:italic [&>ul>li]:leading-snug [&>ul>li]:border-l-2 [&>ul>li]:border-secondary/40 [&>ul>li]:pl-3 [&>ul>li>strong]:text-on-surface [&>ul>li>strong]:not-italic [&>ul>li>strong]:font-bold [&>ul>li>strong]:font-label [&>ul>li>strong]:text-xs [&>ul>li>strong]:tracking-wide",
   },
 } as const;
 
@@ -61,7 +61,7 @@ const CaseColumn = ({
         </span>
       </div>
       <div
-        className={`mb-10 relative p-6 bg-[#0a0f12] border ${s.panel} shadow-[0_0_20px_rgba(164,230,255,0.05)]`}
+        className={`mb-10 relative p-6 bg-surface-container-lowest border ${s.panel}`}
       >
         <div className="flex items-center gap-2 mb-3">
           <MdMemory className={`${s.accentText} text-sm`} />

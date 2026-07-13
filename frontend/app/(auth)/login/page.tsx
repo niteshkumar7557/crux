@@ -80,7 +80,7 @@ const Login = () => {
               <div className="relative group">
                 <MdOutlineEmail className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
                 <input
-                  className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-stone-600 transition-all font-body text-sm"
+                  className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-outline transition-all font-body text-sm"
                   id="email"
                   placeholder="user@crux-protocol.io"
                   required={true}
@@ -103,7 +103,7 @@ const Login = () => {
               <div className="relative group">
                 <LuLockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
                 <input
-                  className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-stone-600 transition-all font-body text-sm"
+                  className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-outline transition-all font-body text-sm"
                   id="password"
                   placeholder="••••••••••••"
                   required={true}
@@ -161,18 +161,18 @@ const Login = () => {
 
       {/* <!-- Global Footer (Suppressed for transactional focus per mandate, but keeping branding) --> */}
       <div className="absolute bottom-0 w-full p-8 flex flex-col md:flex-row justify-between items-center gap-4 border-t border-outline-variant/5">
-        <span className="font-label text-[10px] uppercase tracking-[0.2em] text-stone-600">
+        <span className="font-label text-[10px] uppercase tracking-[0.2em] text-outline">
           © 2026 CRUX DIGITAL ARENA. ALL RIGHTS RESERVED.
         </span>
         <div className="flex gap-8">
           <a
-            className="font-label text-[10px] uppercase tracking-widest text-stone-500 hover:text-primary transition-colors"
+            className="font-label text-[10px] uppercase tracking-widest text-outline hover:text-primary transition-colors"
             href="#"
           >
             PROTOCOL
           </a>
           <a
-            className="font-label text-[10px] uppercase tracking-widest text-stone-500 hover:text-primary transition-colors"
+            className="font-label text-[10px] uppercase tracking-widest text-outline hover:text-primary transition-colors"
             href="#"
           >
             ENCRYPTED CONTACT

@@ -44,7 +44,7 @@ const MainTrendingArenaCard = ({
       >
         "{title}"
       </h2>
-      <div className="flex gap-5 border-b border-gray-800 pb-5">
+      <div className="flex gap-5 border-b border-outline-variant/40 pb-5">
         <span className="font-label text-xs text-outline uppercase tracking-widest">
           <LuMessageSquare className="inline text-primary" /> {argumentNum}{" "}
           {argumentNum === 1 ? "Argument" : "Arguments"}
@@ -59,7 +59,9 @@ const MainTrendingArenaCard = ({
           <span className="text-primary-container">
             Affirmative ({affirmativeScore}%)
           </span>
-          <span className="text-secondary">Negative ({negativeScore}%)</span>
+          <span className="text-secondary-container">
+            Negative ({negativeScore}%)
+          </span>
         </div>
         <ScoreBar
           affirmative={affirmativeScore}

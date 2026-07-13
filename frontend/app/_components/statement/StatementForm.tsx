@@ -168,7 +168,7 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
             YOUR CLAIM
           </label>
           <textarea
-            className="w-full focus:outline-none bg-surface-container-highest border-0 focus:ring-1 focus:ring-primary min-h-60 p-6 font-headline text-2xl italic placeholder:text-neutral-600 text-on-surface resize-none"
+            className="w-full focus:outline-none bg-surface-container-highest border-0 focus:ring-1 focus:ring-primary min-h-60 p-6 font-headline text-2xl italic placeholder:text-outline text-on-surface resize-none"
             placeholder="Make a claim worth fighting over..."
             value={formState.text}
 						maxLength={MAXIMUM_CHAR_LIMIT}
@@ -177,7 +177,7 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
 								updateFormState({ text: e.target.value, eligibility: "" });
 						}}
           ></textarea>
-          <div className="flex justify-between items-center text-[10px] font-label text-neutral-500 uppercase tracking-tighter">
+          <div className="flex justify-between items-center text-[10px] font-label text-outline uppercase tracking-tighter">
             <span>THE ARBITER REQUIRES SUBSTANCE — MINIMUM {MINIMUM_CHAR_LIMIT} CHARACTERS</span>
             <span>{formState.text.length} / {MAXIMUM_CHAR_LIMIT}</span>
           </div>
@@ -206,7 +206,7 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
           >
             {isEligible ? "Broadcast Statement" : "Check eligibility"}
             {formState.loading ? (
-              <span className="border-t-2 border-black h-4 w-4 rounded-full animate-spin"></span>
+              <span className="border-t-2 border-on-primary h-4 w-4 rounded-full animate-spin"></span>
             ) : isEligible ? (
               <MdSensors className="text-lg" />
             ) : (
@@ -224,7 +224,7 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
               >
                 CRUX AI Validation
               </h3>
-              <div className="flex items-center gap-3 bg-surface-container px-4 py-2 border border-primary/30 shadow-[0_0_15px_rgba(0,209,255,0.1)]">
+              <div className="flex items-center gap-3 bg-surface-container px-4 py-2 border border-primary/30 shadow-glow-primary">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>

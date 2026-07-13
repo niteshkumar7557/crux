@@ -4,31 +4,31 @@ import { MdOutlineTerminal } from "react-icons/md";
 
 const Footer = () => {
   return (
-    <footer className="bg-neutral-950 border-t border-outline-variant/10">
+    <footer className="bg-surface-container-lowest border-t border-outline-variant/10">
       <div className="flex flex-col md:flex-row justify-between items-center px-10 py-12 w-full gap-8 max-w-screen-2xl mx-auto">
         <div className="flex flex-col gap-4">
-          <span className="text-lg font-headline text-neutral-100 italic">
+          <span className="text-lg font-headline text-on-surface italic">
             Crux
           </span>
-          <span className="font-label uppercase tracking-widest text-xs text-neutral-500">
+          <span className="font-label uppercase tracking-widest text-xs text-outline">
             © 2026 Crux Digital Arena. All Rights Reserved.
           </span>
         </div>
         <div className="flex gap-8">
           <Link
-            className="font-label uppercase tracking-widest text-xs text-neutral-500 hover:text-primary transition-colors"
+            className="font-label uppercase tracking-widest text-xs text-outline hover:text-primary transition-colors"
             href={"/leaderboard"}
           >
             Leaderboard
           </Link>
           <Link
-            className="font-label uppercase tracking-tight text-xs text-neutral-500 hover:text-primary transition-colors"
+            className="font-label uppercase tracking-tight text-xs text-outline hover:text-primary transition-colors"
             href={"/rules"}
           >
             Rules of Engagement
           </Link>
           <Link
-            className="font-label uppercase tracking-widest text-xs text-neutral-500 hover:text-primary transition-colors"
+            className="font-label uppercase tracking-widest text-xs text-outline hover:text-primary transition-colors"
             href={"/about"}
           >
             About

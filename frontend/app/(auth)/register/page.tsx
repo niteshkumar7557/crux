@@ -67,7 +67,7 @@ const Register = () => {
                 <div className="relative group">
                   <LuUser className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
                   <input
-                    className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-stone-600 transition-all font-body text-sm"
+                    className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-outline transition-all font-body text-sm"
                     id="name"
                     placeholder="Enter Identity..."
                     required={true}
@@ -87,7 +87,7 @@ const Register = () => {
                 <div className="relative group">
                   <DiRuby className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
                   <input
-                    className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-stone-600 transition-all font-body text-sm"
+                    className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-outline transition-all font-body text-sm"
                     id="username"
                     placeholder="Enter Identity..."
                     required={true}
@@ -107,7 +107,7 @@ const Register = () => {
                 <div className="relative group">
                   <MdOutlineEmail className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
                   <input
-                    className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-stone-600 transition-all font-body text-sm"
+                    className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-outline transition-all font-body text-sm"
                     id="email"
                     placeholder="user@crux-protocol.io"
                     required={true}
@@ -129,7 +129,7 @@ const Register = () => {
                 <div className="relative group">
                   <LuLockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
                   <input
-                    className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-stone-600 transition-all font-body text-sm"
+                    className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-outline transition-all font-body text-sm"
                     id="password"
                     placeholder="••••••••••••"
                     required={true}

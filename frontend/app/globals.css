@@ -61,6 +61,11 @@
   --radius-lg: 0px;
   --radius-xl: 0px;
   --radius-full: 9999px;
+
+  /* Glow shadows — the only three glows in the system */
+  --shadow-glow-primary: 0 0 16px rgba(0, 209, 255, 0.12);
+  --shadow-glow-secondary: 0 0 16px rgba(255, 82, 93, 0.12);
+  --shadow-glow-marker: 0 0 15px rgba(255, 255, 255, 0.8);
 }
 
 .perspective-grid {

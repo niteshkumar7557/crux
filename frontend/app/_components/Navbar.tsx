@@ -15,7 +15,7 @@ const Navbar = () => {
   const pathname = usePathname();
   const user = useUser();
   return (
-    <nav className="bg-neutral-950 py-3 px-4 md:px-6 flex items-center justify-between gap-2 md:gap-6">
+    <nav className="bg-surface-container-lowest py-3 px-4 md:px-6 flex items-center justify-between gap-2 md:gap-6">
       <div className="flex items-center shrink-0">
         <Link
           className="text-2xl font-headline italic text-primary-container tracking-tighter"
@@ -28,7 +28,7 @@ const Navbar = () => {
             <Link
               href={e.href}
               key={i}
-              className={`${pathname === e.href ? "text-primary-container cursor-pointer border-b-2 border-primary-container pb-1 font-bold text-sm" : "text-neutral-400 font-medium cursor-pointer hover:text-primary-container pb-1 transition-colors duration-200 text-sm"}`}
+              className={`${pathname === e.href ? "text-primary-container cursor-pointer border-b-2 border-primary-container pb-1 font-bold text-sm" : "text-on-surface-variant font-medium cursor-pointer hover:text-primary-container pb-1 transition-colors duration-200 text-sm"}`}
             >
               {e.label}
             </Link>
@@ -42,7 +42,7 @@ const Navbar = () => {
         </Button>
         <Link
           href={user ? `/profile/${user.id}` : "/login"}
-          className={`cursor-pointer ${pathname === "/profile" ? "border-b-2 border-primary-container pb-1 text-primary-container" : ""} text-gray-500 hover:text-primary-container transition-colors`}
+          className={`cursor-pointer ${pathname === "/profile" ? "border-b-2 border-primary-container pb-1 text-primary-container" : ""} text-outline hover:text-primary-container transition-colors`}
         >
           <CgProfile size={26} />
         </Link>

@@ -43,7 +43,7 @@ const UserArgumentCard = ({
   return (
     <div>
       <div
-        className={`group mb-2 relative bg-surface-container-low p-6 border-l ${side === "for" ? "border-primary/20 hover:border-primary/60" : "border-secondary/20 hover:border-secondary/60"}  transition-all shadow-[inset_0_0_20px_rgba(164,230,255,0.03)]`}
+        className={`group mb-2 relative bg-surface-container-low p-6 border-l ${side === "for" ? "border-primary/20 hover:border-primary/60" : "border-secondary/20 hover:border-secondary/60"}  transition-all`}
       >
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center gap-3">
@@ -63,7 +63,7 @@ const UserArgumentCard = ({
             className={`${side === "for" ? "bg-primary/10 border border-primary/20" : "bg-secondary/10 border border-secondary/20"}  px-3 py-1`}
           >
             <span
-              className={`font-label font-bold ${side === "for" ? "text-primary" : "text-secondary"} text-sm shadow-[0_0_10px_rgba(164,230,255,0.3)]`}
+              className={`font-label font-bold ${side === "for" ? "text-primary" : "text-secondary"} text-sm`}
             >
               {grade}
             </span>
