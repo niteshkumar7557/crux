@@ -7,6 +7,7 @@ import { FaBalanceScale } from "react-icons/fa";
 import { IoIosArrowRoundForward } from "react-icons/io";
 import { LuLockKeyhole, LuUser } from "react-icons/lu";
 import { MdOutlineEmail, MdOutlineVerifiedUser } from "react-icons/md";
+import Button from "@/app/_components/ui/Button";
 
 const Register = () => {
   const [name, setName] = useState<string>("");
@@ -64,9 +65,7 @@ const Register = () => {
                   Nom de Guerre / Full Name
                 </label>
                 <div className="relative group">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg">
-                    <LuUser />
-                  </span>
+                  <LuUser className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
                   <input
                     className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-stone-600 transition-all font-body text-sm"
                     id="name"
@@ -86,9 +85,7 @@ const Register = () => {
                   Unique Identity / Username
                 </label>
                 <div className="relative group">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg">
-                    <DiRuby />
-                  </span>
+                  <DiRuby className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
                   <input
                     className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-stone-600 transition-all font-body text-sm"
                     id="username"
@@ -108,9 +105,7 @@ const Register = () => {
                   Secure Communication / Email
                 </label>
                 <div className="relative group">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg">
-                    <MdOutlineEmail />
-                  </span>
+                  <MdOutlineEmail className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
                   <input
                     className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-stone-600 transition-all font-body text-sm"
                     id="email"
@@ -132,9 +127,7 @@ const Register = () => {
                   </label>
                 </div>
                 <div className="relative group">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg">
-                    <LuLockKeyhole />
-                  </span>
+                  <LuLockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
                   <input
                     className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-stone-600 transition-all font-body text-sm"
                     id="password"
@@ -159,15 +152,10 @@ const Register = () => {
               </div>
 
               <div className="pt-6">
-                <button
-                  className="cursor-pointer w-full bg-primary text-on-primary py-5 font-label font-bold tracking-[0.2em] text-sm hover:bg-primary-container transition-all flex items-center justify-center gap-3"
-                  type="submit"
-                >
+                <Button type="submit" size="lg" className="w-full">
                   JOIN THE FRAY
-                  <span className="material-symbols-outlined text-lg">
-                    <IoIosArrowRoundForward />
-                  </span>
-                </button>
+                  <IoIosArrowRoundForward className="text-lg" />
+                </Button>
               </div>
             </form>
             <p className="mt-8 text-outline text-xs font-body">
@@ -206,12 +194,7 @@ const Register = () => {
               <div className="space-y-8">
                 <div className="flex gap-4">
                   <div className="shrink-0 w-10 h-10 bg-surface-container-high flex items-center justify-center">
-                    <span
-                      className="material-symbols-outlined text-primary"
-                      data-icon="verified_user"
-                    >
-                      <MdOutlineVerifiedUser />
-                    </span>
+                    <MdOutlineVerifiedUser className="text-primary" />
                   </div>
                   <div>
                     <h3 className="font-label text-xs tracking-widest text-primary uppercase mb-1">
@@ -225,12 +208,7 @@ const Register = () => {
                 </div>
                 <div className="flex gap-4">
                   <div className="shrink-0 w-10 h-10 bg-surface-container-high flex items-center justify-center">
-                    <span
-                      className="material-symbols-outlined text-secondary"
-                      data-icon="balance"
-                    >
-                      <FaBalanceScale />
-                    </span>
+                    <FaBalanceScale className="text-secondary" />
                   </div>
                   <div>
                     <h3 className="font-label text-xs tracking-widest text-secondary uppercase mb-1">

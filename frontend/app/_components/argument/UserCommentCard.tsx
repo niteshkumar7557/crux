@@ -4,6 +4,7 @@ import api from "@/app/axios";
 import { useState } from "react";
 import { FiThumbsUp } from "react-icons/fi";
 import { VscThumbsupFilled } from "react-icons/vsc";
+import { MdOutlineVerifiedUser } from "react-icons/md";
 
 const UserArgumentCard = ({
   side,
@@ -47,10 +48,7 @@ const UserArgumentCard = ({
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-surface-container-high border border-outline-variant/40 flex items-center justify-center">
-              <span
-                className="text-sm text-primary"
-                data-icon="verified_user"
-              ></span>
+              <MdOutlineVerifiedUser className="text-sm text-primary" />
             </div>
             <div>
               <p className="font-label text-[10px] uppercase text-on-surface">
@@ -71,7 +69,7 @@ const UserArgumentCard = ({
             </span>
           </div>
         </div>
-        <p className="font-body text-md leading-relaxed text-on-surface-variant mb-6 italic">
+        <p className="font-body text-base leading-relaxed text-on-surface-variant mb-6 italic">
           "{comment}"
         </p>
         <div className="flex gap-4">
@@ -79,18 +77,13 @@ const UserArgumentCard = ({
             onClick={handleClick}
             className={`flex items-center gap-2 font-label text-[10px] uppercase text-outline ${liked && side === "for" && "text-primary"} ${liked && side === "against" && "text-secondary"} ${side === "for" ? "hover:text-primary" : "hover:text-secondary"}  transition-colors`}
           >
-            <span
-              className="material-symbols-outlined text-sm"
-              data-icon="thumb_up"
-            >
-              {!liked ? (
-                <FiThumbsUp />
-              ) : (
-                <VscThumbsupFilled
-                  className={`${side === "for" ? "text-primary" : "text-secondary"}`}
-                />
-              )}
-            </span>{" "}
+            {!liked ? (
+              <FiThumbsUp className="text-sm" />
+            ) : (
+              <VscThumbsupFilled
+                className={`text-sm ${side === "for" ? "text-primary" : "text-secondary"}`}
+              />
+            )}{" "}
             {likeCount}
           </button>
         </div>

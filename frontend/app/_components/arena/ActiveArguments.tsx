@@ -4,9 +4,8 @@ import ThesisCard from "./ThesisCard";
 import ActiveArgumentsNavbar from "./ActiveArgumentsNavbar";
 import { useRef, useState } from "react";
 import NewestTab from "./NewestTab";
-import HighStakesTab from "./HighStakesTab";
 import { MainTrendingArenaCardData, TrendingArenaCardData } from "@/app/types";
-import TrendingArenaCard from "./TrendingArenaCard";
+import ArenaCard from "./ArenaCard";
 import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
 
 const tabList = ["trending", "newest"]; // for future: "high stakes"
@@ -77,7 +76,7 @@ const ActiveArguments = ({
                 // the first trending item is already shown above as the main card
                 .filter((_, i) => i !== 0)
                 .map((e, i) => (
-                  <TrendingArenaCard
+                  <ArenaCard
                     key={i}
                     username={e.username}
                     domain={e.domain}
@@ -85,7 +84,8 @@ const ActiveArguments = ({
                     affirmativescore={e.affirmativescore}
                     negativescore={e.negativescore}
                     argumentid={e.argumentid}
-                    active_minds={e.active_minds}
+                    className="md:w-[49%]"
+                    footerLeft={`${e.active_minds} Active ${e.active_minds === 1 ? "Mind" : "Minds"}`}
                   />
                 ))}
             </div>
@@ -97,7 +97,6 @@ const ActiveArguments = ({
           </div>
         ))}
       {activeTab === "newest" && <NewestTab />}
-      {activeTab === "high stakes" && <HighStakesTab />}
     </div>
   );
 };

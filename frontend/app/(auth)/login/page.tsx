@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/app/axios";
+import Button from "@/app/_components/ui/Button";
 
 const Login = () => {
   const [email, setEmail] = useState<string>("");
@@ -77,9 +78,7 @@ const Login = () => {
                 Identify Your Interface (Email)
               </label>
               <div className="relative group">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg">
-                  <MdOutlineEmail />
-                </span>
+                <MdOutlineEmail className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
                 <input
                   className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-stone-600 transition-all font-body text-sm"
                   id="email"
@@ -102,9 +101,7 @@ const Login = () => {
                 </label>
               </div>
               <div className="relative group">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg">
-                  <LuLockKeyhole />
-                </span>
+                <LuLockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
                 <input
                   className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-stone-600 transition-all font-body text-sm"
                   id="password"
@@ -129,15 +126,10 @@ const Login = () => {
             </div>
             {/* <!-- Action Button --> */}
             <div className="pt-4">
-              <button
-                className="w-full cursor-pointer bg-primary text-on-primary py-4 font-label font-bold uppercase tracking-widest hover:bg-primary-container transition-all active:scale-[0.98] flex items-center justify-center gap-2 group"
-                type="submit"
-              >
+              <Button type="submit" size="lg" className="w-full group">
                 Enter the Fray
-                <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">
-                  <HiOutlineBolt />
-                </span>
-              </button>
+                <HiOutlineBolt className="text-lg group-hover:translate-x-1 transition-transform" />
+              </Button>
             </div>
           </form>
           {/* <!-- Secondary Actions --> */}

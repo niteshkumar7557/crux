@@ -17,12 +17,3 @@ interface statementData {
   title: string;
 }
 export type ActiveStatementsProps = statementData[];
-
-export interface DebateHistoryProps {
-  date: string;
-  result: "win" | "loss";
-  inFavour: boolean;
-  title: string;
-  score: number;
-  replayLink: string;
-}

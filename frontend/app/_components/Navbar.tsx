@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { CgProfile } from "react-icons/cg";
 import { useUser } from "../_hooks/useUser";
 import SearchBar from "./SearchBar";
+import Button from "./ui/Button";
 
 const navLinks = [
   { label: "Arena", href: "/" },
@@ -36,12 +37,9 @@ const Navbar = () => {
       </div>
       <SearchBar />
       <div className="flex items-center gap-3 shrink-0">
-        <Link
-          href={user === null ? "/login" : "/statement"}
-          className="bg-primary text-on-primary px-3 md:px-4 py-2 font-label uppercase tracking-widest text-xs font-bold whitespace-nowrap hover:bg-primary-container active:scale-95 transition-all duration-100"
-        >
+        <Button href={user === null ? "/login" : "/statement"} size="sm">
           NEW STATEMENT
-        </Link>
+        </Button>
         <Link
           href={user ? `/profile/${user.id}` : "/login"}
           className={`cursor-pointer ${pathname === "/profile" ? "border-b-2 border-primary-container pb-1 text-primary-container" : ""} text-gray-500 hover:text-primary-container transition-colors`}

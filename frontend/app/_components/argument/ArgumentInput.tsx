@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { IoMdClose } from "react-icons/io";
 import { MdWarningAmber } from "react-icons/md";
+import Button from "@/app/_components/ui/Button";
 
 const ArgumentInput = ({ argumentId }: { argumentId: number }) => {
   const [user, setUser] = useState<any>(null);
@@ -54,26 +55,28 @@ const ArgumentInput = ({ argumentId }: { argumentId: number }) => {
           />
         </div>
         <div className="flex gap-2 w-full md:w-auto">
-          <button
+          <Button
+            variant="outline"
+            size="bare"
+            className="flex-1 md:flex-none px-2 py-3 md:px-8 md:py-4 text-[10px] md:text-xs"
             onClick={() => handleBtn("affirmative")}
-            className="flex-1 cursor-pointer md:flex-none border border-primary text-primary hover:bg-primary/10 px-2 py-3 md:px-8 md:py-4 font-label uppercase tracking-widest text-[10px] md:text-xs whitespace-nowrap transition-all"
           >
             Support Affirmative
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline-secondary"
+            size="bare"
+            className="flex-1 md:flex-none px-2 py-3 md:px-8 md:py-4 text-[10px] md:text-xs"
             onClick={() => handleBtn("negative")}
-            className="flex-1 cursor-pointer md:flex-none border border-secondary text-secondary hover:bg-secondary/10 px-2 py-3 md:px-8 md:py-4 font-label uppercase tracking-widest text-[10px] md:text-xs whitespace-nowrap transition-all"
           >
             Support Negative
-          </button>
+          </Button>
         </div>
       </div>
       {warning && (
         <div className="fixed bottom-32 right-6 z-60 max-w-sm bg-neutral-950 border-l-4 border-secondary p-4 shadow-[0_0_20px_rgba(255,82,93,0.1)] flex items-start gap-4">
           <div className="shrink-0 mt-1">
-            <span className="material-symbols-outlined text-secondary font-bold text-xl">
-              <MdWarningAmber />
-            </span>
+            <MdWarningAmber className="text-secondary font-bold text-xl" />
           </div>
           <div className="grow">
             <h4 className="font-label text-[10px] uppercase tracking-[0.2em] text-secondary mb-1 font-bold">
@@ -95,9 +98,7 @@ const ArgumentInput = ({ argumentId }: { argumentId: number }) => {
             className="shrink-0 text-outline hover:text-white cursor-pointer"
             onClick={() => setWarning(false)}
           >
-            <span className="material-symbols-outlined text-sm">
-              <IoMdClose />
-            </span>
+            <IoMdClose className="text-sm" />
           </button>
         </div>
       )}

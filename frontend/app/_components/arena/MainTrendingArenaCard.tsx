@@ -1,8 +1,8 @@
 "use client";
 import { MainTrendingArenaCardProps } from "@/app/types";
 import { PLACEHOLDER_AVATAR_URL } from "@/app/_utils/constants";
-import { useScoreBarReveal } from "@/app/_hooks/useScoreBarReveal";
-import Link from "next/link";
+import Button from "@/app/_components/ui/Button";
+import ScoreBar from "./ScoreBar";
 import { GoVerified } from "react-icons/go";
 import { LuMessageSquare } from "react-icons/lu";
 
@@ -16,7 +16,6 @@ const MainTrendingArenaCard = ({
   negativeScore,
   argumentId,
 }: MainTrendingArenaCardProps) => {
-  const barRef = useScoreBarReveal<HTMLDivElement>();
   return (
     <div
       data-reveal
@@ -62,24 +61,15 @@ const MainTrendingArenaCard = ({
           </span>
           <span className="text-secondary">Negative ({negativeScore}%)</span>
         </div>
-        <div ref={barRef} className="w-full h-5 flex gap-0.5">
-          <span
-            className="bg-primary-container"
-            style={{ width: `${affirmativeScore}%` }}
-          ></span>
-          <span
-            className="bg-secondary-container"
-            style={{ width: `${negativeScore}%` }}
-          ></span>
-        </div>
-        <div className="mt-7 flex justify-between items-center">
-          <div></div>
-          <Link
-            href={`/argument/${argumentId}`}
-            className="border border-primary/30 text-primary px-6 py-2 font-label uppercase tracking-widest text-[10px] hover:bg-primary/10 transition-colors"
-          >
+        <ScoreBar
+          affirmative={affirmativeScore}
+          negative={negativeScore}
+          size="lg"
+        />
+        <div className="mt-7 flex justify-end items-center">
+          <Button href={`/argument/${argumentId}`} variant="outline" size="sm">
             Enter Argument
-          </Link>
+          </Button>
         </div>
       </div>
     </div>

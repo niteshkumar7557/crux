@@ -1,9 +1,8 @@
-import Link from "next/link";
+import Button from "@/app/_components/ui/Button";
 
 const Challenge = () => {
   return (
     <section className="mt-18 bg-surface-bright/40 backdrop-blur-xl border border-outline-variant/20 p-12 text-center relative">
-      <div className="absolute inset-0 bg-noise pointer-events-none"></div>
       <h2 className="font-headline text-5xl font-bold italic mb-6">
         Your knowledge is the only currency here.
       </h2>
@@ -12,18 +11,12 @@ const Challenge = () => {
         intellectual collective.
       </p>
       <div className="flex flex-col sm:flex-row justify-center gap-6">
-        <Link
-          href={"/"}
-          className="bg-primary text-on-primary px-10 py-4 font-label font-bold tracking-widest uppercase hover:bg-primary-container transition-all"
-        >
+        <Button href="/" size="lg">
           Enter The Arena
-        </Link>
-        <Link
-          href={"/leaderboard"}
-          className="border border-outline px-10 py-4 font-label font-bold tracking-widest uppercase hover:bg-on-surface hover:text-background transition-all"
-        >
+        </Button>
+        <Button href="/leaderboard" variant="outline-neutral" size="lg">
           View Leaderboard
-        </Link>
+        </Button>
       </div>
     </section>
   );

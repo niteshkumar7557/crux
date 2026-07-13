@@ -1,6 +1,6 @@
 "use client";
 import { useUser } from "@/app/_hooks/useUser";
-import Link from "next/link";
+import Button from "@/app/_components/ui/Button";
 
 const ThesisCard = () => {
   const user = useUser();
@@ -20,12 +20,13 @@ const ThesisCard = () => {
         Join the highest quality discourse on the web. Sharpen your arguments
         and climb the leaderboard.
       </p>
-      <Link
+      <Button
         href={user === null ? "/login" : "/statement"}
-        className="bg-on-surface text-surface px-10 py-3 font-label uppercase tracking-[0.2em] text-xs font-bold hover:bg-primary transition-colors relative z-10"
+        size="lg"
+        className="relative z-10"
       >
         Initialize Thesis
-      </Link>
+      </Button>
     </div>
   );
 };

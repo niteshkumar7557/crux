@@ -1,7 +1,6 @@
 import serverApi from "@/app/axios.server";
 import ActiveStatements from "../../_components/profile/ActiveStatements";
 import Challenge from "../../_components/profile/Challenge";
-import DebateHistory from "../../_components/profile/DebateHistory";
 import ReputationBreakdown from "../../_components/profile/ReputationBreakdown";
 import UserHeadInfo from "../../_components/profile/UserHeadInfo";
 

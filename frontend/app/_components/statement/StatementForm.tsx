@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import api from "@/app/axios";
 import { RiRobot3Line } from "react-icons/ri";
 import { jwtPayload } from "@/app/_types/jwt";
+import Button from "@/app/_components/ui/Button";
 
 interface FormState {
 	text: string;
@@ -119,9 +120,7 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
         {/* <!-- Category Selection --> */}
         <div className="space-y-3">
           <label className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
-            <span className="material-symbols-outlined text-sm">
-              <MdFilterList />
-            </span>
+            <MdFilterList className="text-sm" />
             SELECT YOUR BATTLEGROUND
           </label>
           <div className=" flex flex-wrap gap-2">
@@ -140,9 +139,7 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
         {/* <!-- Statement Textarea --> */}
         <div className="space-y-3">
           <label className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
-            <span className="material-symbols-outlined text-sm">
-              <MdEditNote />
-            </span>
+            <MdEditNote className="text-sm" />
             YOUR CLAIM
           </label>
           <textarea
@@ -165,35 +162,32 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
           <div className="flex items-center gap-4 text-on-surface-variant">
             <div className="flex">
               <div className="w-8 h-8 bg-surface-container-high border border-outline-variant flex items-center justify-center">
-                <span className="material-symbols-outlined text-xs">
-                  <TbGavel />
-                </span>
+                <TbGavel className="text-xs" />
               </div>
               <div className="w-8 h-8 bg-surface-container-high border border-outline-variant flex items-center justify-center">
-                <span className="material-symbols-outlined text-xs">
-                  <MdOutlineAnalytics />
-                </span>
+                <MdOutlineAnalytics className="text-xs" />
               </div>
             </div>
             <span className="font-label text-[10px] uppercase tracking-widest">
               ARBITER STANDING BY
             </span>
           </div>
-          <button
-						className={`${isTextInLimits() ? "cursor-pointer hover:bg-primary-container bg-primary" : "disabled bg-primary cursor-not-allowed"} w-full md:w-auto  text-on-primary font-label text-sm uppercase tracking-[0.2em] px-12 py-4 transition-all active:scale-95 flex items-center justify-center gap-3`}
-						type="button"
-						onClick={() => (isEligible ? handleSubmit : checkEligibility)()}
-					>
-						{ isEligible ? "Broadcast Statement" : "Check eligibility" }
-
-						{
-							formState.loading
-								? <span className="border-t-2 border-black h-4 w-4 rounded-full animate-spin"></span>
-								: <span className="material-symbols-outlined text-lg">
-										{ isEligible ? <MdSensors /> : <RiRobot3Line /> }
-									</span>
-						}
-					</button>
+          <Button
+            type="button"
+            size="lg"
+            className="w-full md:w-auto"
+            disabled={!isTextInLimits()}
+            onClick={() => (isEligible ? handleSubmit : checkEligibility)()}
+          >
+            {isEligible ? "Broadcast Statement" : "Check eligibility"}
+            {formState.loading ? (
+              <span className="border-t-2 border-black h-4 w-4 rounded-full animate-spin"></span>
+            ) : isEligible ? (
+              <MdSensors className="text-lg" />
+            ) : (
+              <RiRobot3Line className="text-lg" />
+            )}
+          </Button>
         </div>
       </form>
       {formState.eligibility && (
@@ -217,9 +211,7 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
             </div>
             <div className="bg-surface-container-lowest p-5 border-l border-primary/50">
               <div className="flex items-start gap-4">
-                <span className="material-symbols-outlined text-primary text-lg mt-0.5 animate-pulse">
-                  <MdMemory />
-                </span>
+                <MdMemory className="text-primary text-lg mt-0.5 animate-pulse" />
                 <p className="font-label text-xs text-on-surface-variant leading-relaxed">
                   {formState.feedback}
                 </p>

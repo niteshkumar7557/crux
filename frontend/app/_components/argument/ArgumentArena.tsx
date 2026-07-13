@@ -1,6 +1,5 @@
 "use client";
-import TheCaseFor from "./TheCaseFor";
-import TheCaseAgainst from "./TheCaseAgainst";
+import CaseColumn from "./CaseColumn";
 import { getUser } from "@/app/_utils/getUser";
 import { useEffect, useState } from "react";
 
@@ -75,12 +74,14 @@ const ArgumentArena = ({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-outline-variant/20">
-      <TheCaseFor
-        aiForAnalysis={aiAnalysis[0]}
+      <CaseColumn
+        side="for"
+        aiAnalysis={aiAnalysis[0]}
         argumentArenaData={argumentArenaData}
       />
-      <TheCaseAgainst
-        aiAgainstAnalysis={aiAnalysis[1]}
+      <CaseColumn
+        side="against"
+        aiAnalysis={aiAnalysis[1]}
         argumentArenaData={argumentArenaData}
       />
     </div>

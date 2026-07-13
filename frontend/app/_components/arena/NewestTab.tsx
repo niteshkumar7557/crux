@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
-import NewestCard from "./NewestCard";
+import ArenaCard from "./ArenaCard";
 import api from "@/app/axios";
 import { NewestCardProps } from "@/app/types";
+import { LuMessageSquare } from "react-icons/lu";
 
 export function timeAgo(timestamp: string): string {
   const now = Date.now();
@@ -44,20 +45,24 @@ const NewestTab = () => {
 
   return (
     <div>
-      {cardsData.length &&
-        cardsData.map((e, i) => (
-          <NewestCard
-            key={i}
-            username={e.username}
-            domain={e.domain}
-            title={e.title}
-            affirmativescore={e.affirmativescore}
-            negativescore={e.negativescore}
-            argumentid={e.argumentid}
-            time={timeAgo(e.time)}
-            argumentNum={e.argumentNum}
-          />
-        ))}
+      {cardsData.map((e, i) => (
+        <ArenaCard
+          key={i}
+          username={e.username}
+          domain={e.domain}
+          title={e.title}
+          affirmativescore={e.affirmativescore}
+          negativescore={e.negativescore}
+          argumentid={e.argumentid}
+          time={timeAgo(e.time)}
+          footerLeft={
+            <>
+              <LuMessageSquare className="inline text-primary" />{" "}
+              {e.argumentNum} Arguments
+            </>
+          }
+        />
+      ))}
     </div>
   );
 };
