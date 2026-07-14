@@ -37,7 +37,7 @@ const MainTrendingArenaCard = ({
       <h2
         className="font-headline text-4xl leading-tight mb-4 transition-colors"
       >
-        "{title}"
+        &ldquo;{title}&rdquo;
       </h2>
       <div className="flex gap-5 border-b border-outline-variant/40 pb-5">
         <span className="font-label text-xs text-outline uppercase tracking-widest">

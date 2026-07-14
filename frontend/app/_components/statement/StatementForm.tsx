@@ -13,7 +13,6 @@ import {
 import { getUser } from "@/app/_utils/getUser";
 import { useRouter } from "next/navigation";
 import api from "@/app/axios";
-import { jwtPayload } from "@/app/_types/jwt";
 import Button from "@/app/_components/ui/Button";
 
 interface FormState {

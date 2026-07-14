@@ -5,7 +5,7 @@ export interface UserArgumentCardProps {
   grade: string;
   comment: string;
   likes: number;
-  user_id: number;
+  user_id?: number;
   comment_id: number;
   post_user_id: number;
 }

@@ -13,23 +13,29 @@ export default function SearchBar() {
   const [results, setResults] = useState<SearchResults>(EMPTY_RESULTS);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (!isOpen) {
-      setSearchInput("");
+  // State resets live in the handlers (not effects) so renders never cascade.
+  function close() {
+    setIsOpen(false);
+    setSearchInput("");
+    setResults(EMPTY_RESULTS);
+    setIsLoading(false);
+  }
+
+  function handleInputChange(value: string) {
+    setSearchInput(value);
+    if (value.trim().length === 0) {
       setResults(EMPTY_RESULTS);
+      setIsLoading(false);
+    } else {
+      setIsLoading(true);
     }
-  }, [isOpen]);
+  }
 
   useEffect(() => {
     const query = searchInput.trim();
-    if (query.length === 0) {
-      setResults(EMPTY_RESULTS);
-      setIsLoading(false);
-      return;
-    }
+    if (query.length === 0) return;
 
     const controller = new AbortController();
-    setIsLoading(true);
 
     const timer = setTimeout(async () => {
       try {
@@ -84,11 +90,11 @@ export default function SearchBar() {
       {isOpen && (
         <div
           className="fixed inset-0 z-50 flex items-start justify-center pt-24 sm:pt-32"
-          onKeyDown={(e) => e.key === "Escape" && setIsOpen(false)}
+          onKeyDown={(e) => e.key === "Escape" && close()}
         >
           <div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setIsOpen(false)}
+            onClick={close}
           />
 
           <div
@@ -104,11 +110,11 @@ export default function SearchBar() {
                 placeholder="Search statements, domains, or users..."
                 aria-label="Search statements, domains, or users"
                 value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
+                onChange={(e) => handleInputChange(e.target.value)}
                 autoFocus
               />
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={close}
                 aria-label="Close search"
                 className="p-1 text-outline hover:text-on-surface hover:bg-surface-container-high"
               >
@@ -140,7 +146,7 @@ export default function SearchBar() {
                         <Link
                           key={`statement-${result.id}`}
                           href={`/argument/CRX-${result.id}-A`}
-                          onClick={() => setIsOpen(false)}
+                          onClick={close}
                           className="w-full text-left px-4 py-3 flex items-center justify-between gap-3 text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface border-l-2 border-transparent"
                         >
                           <span className="truncate">{result.content}</span>
@@ -161,7 +167,7 @@ export default function SearchBar() {
                         <Link
                           key={`domain-${result.domain}`}
                           href={`/archive?domain=${encodeURIComponent(result.domain)}`}     // crux-future: Updated the href to include the domain as a query parameter for better routing
-                          onClick={() => setIsOpen(false)}
+                          onClick={close}
                           className="w-full text-left px-4 py-3 flex items-center justify-between gap-3 text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface border-l-2 border-transparent"
                         >
                           <span className="truncate">{result.domain}</span>
@@ -182,7 +188,7 @@ export default function SearchBar() {
                         <Link
                           key={`user-${result.id}`}
                           href={`/profile/${result.id}`}
-                          onClick={() => setIsOpen(false)}
+                          onClick={close}
                           className="w-full text-left px-4 py-3 flex items-center space-x-3 text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface border-l-2 border-transparent"
                         >
                           <span className="truncate">@{result.username}</span>
@@ -195,7 +201,8 @@ export default function SearchBar() {
 
               {hasQuery && !isLoading && !hasResults && (
                 <div className="px-6 py-12 text-center text-outline text-sm">
-                  No results found for "<span className="text-on-surface">{searchInput}</span>"
+                  No results found for &ldquo;
+                  <span className="text-on-surface">{searchInput}</span>&rdquo;
                 </div>
               )}
             </div>

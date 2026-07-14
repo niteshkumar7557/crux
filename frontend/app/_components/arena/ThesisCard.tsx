@@ -25,7 +25,7 @@ const ThesisCard = () => {
         size="lg"
         className="relative z-10"
       >
-        Initialize Thesis
+        Start a Debate
       </Button>
     </div>
   );

@@ -23,20 +23,20 @@ api.interceptors.response.use(
       original._retry = true;
 
       try {
-        const { data } = (await axios.post(
+        const { data } = await axios.post<{ access_token: string }>(
           `/api/user/refresh`,
           {},
           {
             withCredentials: true,
           },
-        )) as any;
+        );
 
         localStorage.setItem("access_token", data.access_token);
 
         original.headers.Authorization = `Bearer ${data.access_token}`;
 
         return api(original);
-      } catch (err) {
+      } catch {
         localStorage.removeItem("access_token");
         window.location.href = "/login";
       }

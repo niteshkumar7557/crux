@@ -11,8 +11,8 @@ const CruxAIRoleInfo = () => {
         <p className="font-body text-xs text-on-surface-variant leading-relaxed">
           The Crux Engine dissects your statement for argumentative integrity —
           flagging logical fallacies, measuring controversy potential, and
-          issuing a verdict before anything reaches the arena. Weak claims don't
-          survive.
+          issuing a verdict before anything reaches the arena. Weak claims
+          don&apos;t survive.
         </p>
       </div>
       <div className="bg-surface-container p-6 border-l border-primary/30">
@@ -23,7 +23,7 @@ const CruxAIRoleInfo = () => {
         <p className="font-body text-xs text-on-surface-variant leading-relaxed">
           Once live, Crux scans its debater pool for opponents with
           contradicting historical positions and high Logic Scores in your
-          domain. The arena doesn't do friendly debates.
+          domain. The arena doesn&apos;t do friendly debates.
         </p>
       </div>
     </div>

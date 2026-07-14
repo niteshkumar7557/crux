@@ -54,7 +54,7 @@ const ArenaCard = ({
           <span className="font-label text-[10px] text-tertiary uppercase tracking-widest mb-3 block">
             {domain}
           </span>
-          <h3 className="font-headline text-xl mb-4">"{title}"</h3>
+          <h3 className="font-headline text-xl mb-4">&ldquo;{title}&rdquo;</h3>
         </div>
 
         <div>

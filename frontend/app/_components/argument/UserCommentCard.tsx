@@ -14,7 +14,6 @@ const UserArgumentCard = ({
   likes,
   user_id,
   comment_id,
-  post_user_id,
 }: UserArgumentCardProps) => {
   const [likeCount, setLikeCount] = useState(likes);
   const [liked, setLiked] = useState(false);
@@ -71,7 +70,7 @@ const UserArgumentCard = ({
           </div>
         </div>
         <p className="font-body text-base leading-relaxed text-on-surface-variant mb-6 italic">
-          "{comment}"
+          &ldquo;{comment}&rdquo;
         </p>
         <div className="flex gap-4">
           <button

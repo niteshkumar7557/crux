@@ -10,9 +10,8 @@ import { LuTriangleAlert, LuX } from "react-icons/lu";
 import Button from "@/app/_components/ui/Button";
 
 const ArgumentInput = ({ argumentId }: { argumentId: number }) => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<jwtPayload | null>(null);
   const [input, setInput] = useState("");
-  const [mounted, setMounted] = useState(false);
   const [warning, setWarning] = useState(false);
 
   const router = useRouter();
@@ -23,10 +22,9 @@ const ArgumentInput = ({ argumentId }: { argumentId: number }) => {
       setUser(userInfo);
     }
     fetchUser();
-    setMounted(true);
   }, []);
 
-  if (!mounted || !user) return null;
+  if (!user) return null;
 
   async function handleBtn(side: string) {
     if (input.length === 0) return;
@@ -83,13 +81,12 @@ const ArgumentInput = ({ argumentId }: { argumentId: number }) => {
               Flagged for Abuse
             </h4>
             <p className="font-body text-xs leading-relaxed text-on-surface-variant">
-              Your latest contribution violates the Arena Constitution. Review
-              the{" "}
+              Your comment crossed the line of civil debate. Review the{" "}
               <Link
                 className="text-secondary underline underline-offset-2 hover:text-white"
                 href={"/rules"}
               >
-                Rules of Engagement
+                Arena Rules
               </Link>{" "}
               before posting again.
             </p>

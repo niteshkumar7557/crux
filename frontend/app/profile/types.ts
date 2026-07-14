@@ -1,5 +1,3 @@
-export interface ProfileData {}
-
 export interface UserHeadInfoProps {
   name: string;
   level: string;

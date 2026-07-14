@@ -13,6 +13,7 @@ import {
   LuUser,
 } from "react-icons/lu";
 import Button from "@/app/_components/ui/Button";
+import { isAxiosError } from "axios";
 
 const Register = () => {
   const [name, setName] = useState<string>("");
@@ -39,8 +40,12 @@ const Register = () => {
       setTimeout(() => {
         router.push("/");
       }, 1000);
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Something went wrong");
+    } catch (err) {
+      setError(
+        (isAxiosError<{ error?: string }>(err) &&
+          err.response?.data?.error) ||
+          "Something went wrong",
+      );
     }
   }
 
@@ -55,7 +60,7 @@ const Register = () => {
           <div className="md:col-span-7 p-10 md:p-16 flex flex-col justify-center">
             <div className="mb-12">
               <span className="font-label text-[10px] tracking-[0.3em] text-primary uppercase mb-4 block">
-                ENLISTMENT PROTOCOL
+                CREATE YOUR ACCOUNT
               </span>
               <h1 className="font-headline text-5xl md:text-6xl text-on-surface italic leading-none">
                 Join the Intellectual Fray
@@ -67,14 +72,14 @@ const Register = () => {
                   className="block font-label text-[10px] uppercase tracking-widest text-outline"
                   htmlFor="name"
                 >
-                  Nom de Guerre / Full Name
+                  Full name
                 </label>
                 <div className="relative group">
                   <LuUser className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
                   <input
                     className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-outline transition-all font-body text-sm"
                     id="name"
-                    placeholder="Enter Identity..."
+                    placeholder="Your name"
                     required={true}
                     type="text"
                     autoComplete="name"
@@ -88,14 +93,14 @@ const Register = () => {
                   className="block font-label text-[10px] uppercase tracking-widest text-outline"
                   htmlFor="username"
                 >
-                  Unique Identity / Username
+                  Username
                 </label>
                 <div className="relative group">
                   <LuGem className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
                   <input
                     className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-outline transition-all font-body text-sm"
                     id="username"
-                    placeholder="Enter Identity..."
+                    placeholder="Pick a username"
                     required={true}
                     type="text"
                     autoComplete="username"
@@ -109,14 +114,14 @@ const Register = () => {
                   className="block font-label text-[10px] uppercase tracking-widest text-outline"
                   htmlFor="email"
                 >
-                  Secure Communication / Email
+                  Email
                 </label>
                 <div className="relative group">
                   <LuMail className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
                   <input
                     className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-outline transition-all font-body text-sm"
                     id="email"
-                    placeholder="user@crux-protocol.io"
+                    placeholder="you@example.com"
                     required={true}
                     type="email"
                     autoComplete="email"
@@ -131,7 +136,7 @@ const Register = () => {
                     className="block font-label text-[10px] uppercase tracking-widest text-outline"
                     htmlFor="password"
                   >
-                    Access Key / Password
+                    Password
                   </label>
                 </div>
                 <div className="relative group">
@@ -147,22 +152,14 @@ const Register = () => {
                     onChange={(e) => setPassword(e.currentTarget.value)}
                   />
                 </div>
-                <div className="flex justify-between">
-                  <p className="font-label text-[10px] uppercase tracking-widest text-secondary cursor-default">
-                    {error}
-                  </p>
-                  <a
-                    className="font-label text-[10px] uppercase tracking-widest text-primary hover:underline decoration-primary transition-all"
-                    href="#"
-                  >
-                    Forgot Password?
-                  </a>
-                </div>
+                <p className="font-label text-[10px] uppercase tracking-widest text-secondary cursor-default">
+                  {error}
+                </p>
               </div>
 
               <div className="pt-6">
                 <Button type="submit" size="lg" className="w-full">
-                  JOIN THE FRAY
+                  CREATE ACCOUNT
                   <LuArrowRight className="text-lg" />
                 </Button>
               </div>
@@ -170,11 +167,11 @@ const Register = () => {
             <p className="mt-8 text-outline text-xs font-body">
               By entering the arena, you agree to the{" "}
               <a className="text-primary hover:underline" href="#">
-                CONSTITUTION
+                ARENA RULES
               </a>{" "}
               and{" "}
               <a className="text-primary hover:underline" href="#">
-                PROTOCOL
+                TERMS
               </a>
               .
             </p>
@@ -186,6 +183,7 @@ const Register = () => {
                 alt=""
                 src="/register-hero.png"
                 fill
+                priority
                 sizes="(min-width: 768px) 40vw, 100vw"
               />
               <div className="absolute inset-0 bg-linear-to-t from-surface-container to-transparent"></div>

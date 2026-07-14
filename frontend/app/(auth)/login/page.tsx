@@ -1,5 +1,6 @@
 "use client";
 import { LuLockKeyhole, LuMail, LuZap } from "react-icons/lu";
+import { isAxiosError } from "axios";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -28,8 +29,12 @@ const Login = () => {
       setTimeout(() => {
         router.push("/");
       }, 1000);
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Something went wrong");
+    } catch (err) {
+      setError(
+        (isAxiosError<{ error?: string }>(err) &&
+          err.response?.data?.error) ||
+          "Something went wrong",
+      );
     }
   }
 
@@ -63,7 +68,7 @@ const Login = () => {
               Login to the Arena
             </h2>
             <p className="text-on-surface-variant text-sm mt-2">
-              Enter your credentials to access the fray.
+              Welcome back. Log in to rejoin the debate.
             </p>
           </header>
           <form className="space-y-6" onSubmit={handleSubmit}>
@@ -73,14 +78,14 @@ const Login = () => {
                 className="block font-label text-[10px] uppercase tracking-widest text-outline"
                 htmlFor="email"
               >
-                Identify Your Interface (Email)
+                Email
               </label>
               <div className="relative group">
                 <LuMail className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
                 <input
                   className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-outline transition-all font-body text-sm"
                   id="email"
-                  placeholder="user@crux-protocol.io"
+                  placeholder="you@example.com"
                   required={true}
                   type="email"
                   autoComplete="email"
@@ -96,7 +101,7 @@ const Login = () => {
                   className="block font-label text-[10px] uppercase tracking-widest text-outline"
                   htmlFor="password"
                 >
-                  Encryption Key (Password)
+                  Password
                 </label>
               </div>
               <div className="relative group">
@@ -127,7 +132,7 @@ const Login = () => {
             {/* <!-- Action Button --> */}
             <div className="pt-4">
               <Button type="submit" size="lg" className="w-full group">
-                Enter the Fray
+                Log in
                 <LuZap className="text-lg group-hover:translate-x-1 transition-transform" />
               </Button>
             </div>
@@ -135,12 +140,12 @@ const Login = () => {
           {/* <!-- Secondary Actions --> */}
           <div className="mt-8 pt-8 border-t border-outline-variant/10 text-center">
             <p className="font-body text-sm text-on-surface-variant">
-              New to the protocol?
+              New to Crux?
               <Link
                 className="font-label text-[10px] uppercase tracking-widest text-primary hover:underline decoration-primary ml-2 transition-all"
                 href={"/register"}
               >
-                Join the Fray
+                Create an account
               </Link>
             </p>
           </div>
@@ -169,13 +174,13 @@ const Login = () => {
             className="font-label text-[10px] uppercase tracking-widest text-outline hover:text-primary transition-colors"
             href="#"
           >
-            PROTOCOL
+            TERMS
           </a>
           <a
             className="font-label text-[10px] uppercase tracking-widest text-outline hover:text-primary transition-colors"
             href="#"
           >
-            ENCRYPTED CONTACT
+            CONTACT
           </a>
         </div>
       </div>

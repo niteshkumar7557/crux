@@ -1,7 +1,19 @@
 "use client";
 import CaseColumn from "./CaseColumn";
 import { getUser } from "@/app/_utils/getUser";
+import { jwtPayload } from "@/app/_types/jwt";
+import { UserArgumentCardProps } from "@/app/argument/types";
 import { useEffect, useState } from "react";
+
+interface RawComment {
+  comment_id: number;
+  username: string;
+  side: "for" | "against";
+  logic_score: number;
+  content: string;
+  likes: number;
+  post_user_id: number;
+}
 
 function convertLogicScore(score: number) {
   // Beginner       -> B   0-50
@@ -23,9 +35,9 @@ const ArgumentArena = ({
   comments,
 }: {
   aiAnalysis: [string, string];
-  comments: any;
+  comments: { comments: RawComment[] };
 }) => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<jwtPayload | null>(null);
   useEffect(() => {
     async function fetchUser() {
       const userInfo = await getUser();
@@ -34,37 +46,27 @@ const ArgumentArena = ({
     fetchUser();
   }, []);
 
-  const forCaseComments: any = [];
-  const againstCaseComments: any = [];
-  comments.comments.forEach(
-    (e: {
-      comment_id: number;
-      username: string;
-      side: "for" | "against";
-      logic_score: number;
-      content: string;
-      likes: number;
-      post_user_id: number;
-    }) => {
-      const logicStats = convertLogicScore(e.logic_score);
-      const arenaComment = {
-        side: e.side,
-        reputation: logicStats.reputation,
-        username: e.username,
-        grade: logicStats.grade,
-        comment: e.content,
-        likes: e.likes,
-        user_id: user?.id,
-        comment_id: e.comment_id,
-        post_user_id: e.post_user_id,
-      };
-      if (e.side === "for") {
-        forCaseComments.push(arenaComment);
-      } else {
-        againstCaseComments.push(arenaComment);
-      }
-    },
-  );
+  const forCaseComments: UserArgumentCardProps[] = [];
+  const againstCaseComments: UserArgumentCardProps[] = [];
+  comments.comments.forEach((e) => {
+    const logicStats = convertLogicScore(e.logic_score);
+    const arenaComment = {
+      side: e.side,
+      reputation: logicStats.reputation,
+      username: e.username,
+      grade: logicStats.grade,
+      comment: e.content,
+      likes: e.likes,
+      user_id: user?.id,
+      comment_id: e.comment_id,
+      post_user_id: e.post_user_id,
+    };
+    if (e.side === "for") {
+      forCaseComments.push(arenaComment);
+    } else {
+      againstCaseComments.push(arenaComment);
+    }
+  });
   const argumentArenaData = {
     forArgumentsCount: forCaseComments.length,
     againstArgumentsCount: againstCaseComments.length,
