@@ -1,9 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { LuSearch, LuX } from "react-icons/lu";
 import api from "@/app/axios";
 import { SearchResults } from "@/app/types";
+import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
 
 const EMPTY_RESULTS: SearchResults = { statements: [], domains: [], users: [] };
 
@@ -12,6 +13,38 @@ export default function SearchBar() {
   const [searchInput, setSearchInput] = useState("");
   const [results, setResults] = useState<SearchResults>(EMPTY_RESULTS);
   const [isLoading, setIsLoading] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  // Modal open choreography only — results re-render every debounce tick and
+  // must never animate per keystroke.
+  useGSAP(
+    () => {
+      if (!isOpen) return;
+      const mm = gsap.matchMedia();
+      mm.add(MOTION_OK, () => {
+        gsap
+          .timeline({ defaults: { ease: "power2.out" } })
+          .fromTo(
+            "[data-search-backdrop]",
+            { opacity: 0 },
+            { opacity: 1, duration: 0.2 },
+          )
+          .fromTo(
+            "[data-search-panel]",
+            { opacity: 0, scale: 0.98, y: -8 },
+            {
+              opacity: 1,
+              scale: 1,
+              y: 0,
+              duration: 0.25,
+              clearProps: "opacity,transform",
+            },
+            0.05,
+          );
+      });
+    },
+    { dependencies: [isOpen], scope: rootRef },
+  );
 
   // State resets live in the handlers (not effects) so renders never cascade.
   function close() {
@@ -69,7 +102,10 @@ export default function SearchBar() {
     results.users.length > 0;
 
   return (
-    <div className="relative flex-1 min-w-0 max-w-3xl flex justify-end md:justify-start">
+    <div
+      ref={rootRef}
+      className="relative flex-1 min-w-0 max-w-3xl flex justify-end md:justify-start"
+    >
       <button
         onClick={() => setIsOpen(true)}
         aria-label="Search"
@@ -93,11 +129,13 @@ export default function SearchBar() {
           onKeyDown={(e) => e.key === "Escape" && close()}
         >
           <div
+            data-search-backdrop
             className="fixed inset-0 bg-black/60 backdrop-blur-sm"
             onClick={close}
           />
 
           <div
+            data-search-panel
             role="dialog"
             aria-modal="true"
             aria-label="Search"

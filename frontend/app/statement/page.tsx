@@ -2,6 +2,7 @@ import StatementHeader from "../_components/statement/StatementHeader";
 import CruxAIRoleInfo from "../_components/statement/CruxAIRoleInfo";
 import { DomainClassification } from "./types";
 import StatementForm from "../_components/statement/StatementForm";
+import Reveal from "../_components/ui/Reveal";
 
 const domains: DomainClassification = [
   "AI",
@@ -14,13 +15,19 @@ const domains: DomainClassification = [
 const page = () => {
   return (
     <div className="min-h-screen pt-22 pb-20 px-4">
-      <div className="max-w-3xl mx-auto">
-        <StatementHeader />
-        <div className="grid grid-cols-1 gap-8">
-          <StatementForm domains={domains} />
-          <CruxAIRoleInfo />
+      <Reveal className="max-w-3xl mx-auto">
+        <div data-reveal>
+          <StatementHeader />
         </div>
-      </div>
+        <div className="grid grid-cols-1 gap-8">
+          <div data-reveal>
+            <StatementForm domains={domains} />
+          </div>
+          <div data-reveal>
+            <CruxAIRoleInfo />
+          </div>
+        </div>
+      </Reveal>
     </div>
   );
 };

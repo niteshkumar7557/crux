@@ -1,9 +1,10 @@
 "use client";
 import { UserArgumentCardProps } from "@/app/argument/types";
 import api from "@/app/axios";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { LuThumbsUp } from "react-icons/lu";
 import Avatar from "@/app/_components/ui/Avatar";
+import { gsap, MOTION_OK } from "@/app/_utils/gsap";
 
 const UserArgumentCard = ({
   side,
@@ -17,10 +18,25 @@ const UserArgumentCard = ({
 }: UserArgumentCardProps) => {
   const [likeCount, setLikeCount] = useState(likes);
   const [liked, setLiked] = useState(false);
+  const likeRef = useRef<HTMLButtonElement>(null);
 
   async function handleClick() {
     setLiked(!liked);
     if (!liked) {
+      if (likeRef.current && window.matchMedia(MOTION_OK).matches) {
+        gsap.fromTo(
+          likeRef.current,
+          { scale: 1 },
+          {
+            scale: 1.25,
+            duration: 0.12,
+            yoyo: true,
+            repeat: 1,
+            ease: "power2.out",
+            overwrite: "auto",
+          },
+        );
+      }
       setLikeCount((e) => e + 1);
       if (user_id) {
         await api.post(
@@ -74,6 +90,7 @@ const UserArgumentCard = ({
         </p>
         <div className="flex gap-4">
           <button
+            ref={likeRef}
             onClick={handleClick}
             className={`flex items-center gap-2 font-label text-[10px] uppercase text-outline ${liked && side === "for" && "text-primary"} ${liked && side === "against" && "text-secondary"} ${side === "for" ? "hover:text-primary" : "hover:text-secondary"}  transition-colors`}
           >

@@ -7,7 +7,10 @@ const ActiveStatements = ({
   activeStatementsData: ActiveStatementsProps;
 }) => {
   return (
-    <div className="lg:col-span-4 bg-primary text-on-primary p-8 flex flex-col">
+    <div
+      data-reveal
+      className="lg:col-span-4 bg-primary text-on-primary p-8 flex flex-col"
+    >
       <div className="mb-auto">
         <h2
           className="font-headline text-3xl font-bold mb-4 leading-tight italic"

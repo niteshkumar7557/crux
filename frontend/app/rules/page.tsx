@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Button from "@/app/_components/ui/Button";
+import Reveal from "@/app/_components/ui/Reveal";
 
 export const metadata: Metadata = {
   title: "Arena Rules",
@@ -34,8 +35,8 @@ const RULES = [
 
 const Rules = () => {
   return (
-    <div className="max-w-4xl mx-auto px-6 md:px-8 py-12">
-      <div className="mb-12 border-l-4 border-secondary pl-6">
+    <Reveal className="max-w-4xl mx-auto px-6 md:px-8 py-12">
+      <div data-reveal className="mb-12 border-l-4 border-secondary pl-6">
         <span className="font-label text-secondary text-xs uppercase tracking-[0.3em] mb-2 block">
           ARENA RULES
         </span>
@@ -52,6 +53,7 @@ const Rules = () => {
         {RULES.map((rule, i) => (
           <li
             key={rule.title}
+            data-reveal
             className="bg-surface-container-low border-l-2 border-outline-variant/30 hover:border-primary transition-colors p-6 md:p-8 flex gap-6"
           >
             <span className="font-label text-2xl font-bold text-primary/60 shrink-0">
@@ -69,7 +71,10 @@ const Rules = () => {
         ))}
       </ol>
 
-      <div className="mt-12 bg-surface-container border border-outline-variant/10 p-10 text-center">
+      <div
+        data-reveal
+        className="mt-12 bg-surface-container border border-outline-variant/10 p-10 text-center"
+      >
         <p className="font-headline italic text-2xl text-on-surface mb-6">
           Agreed? Then say something worth fighting over.
         </p>
@@ -77,7 +82,7 @@ const Rules = () => {
           Start a Debate
         </Button>
       </div>
-    </div>
+    </Reveal>
   );
 };
 

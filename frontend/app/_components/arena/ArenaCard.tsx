@@ -1,8 +1,9 @@
 "use client";
-import { ReactNode } from "react";
+import { ReactNode, useRef } from "react";
 import Link from "next/link";
 import Avatar from "@/app/_components/ui/Avatar";
 import ScoreBar from "./ScoreBar";
+import { gsap, MOTION_OK } from "@/app/_utils/gsap";
 
 // The compact feed card used by both the trending grid and the newest tab.
 export interface ArenaCardComponentProps {
@@ -28,9 +29,24 @@ const ArenaCard = ({
   time,
   className = "",
 }: ArenaCardComponentProps) => {
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const lift = (up: boolean) => {
+    if (!cardRef.current || !window.matchMedia(MOTION_OK).matches) return;
+    gsap.to(cardRef.current, {
+      y: up ? -6 : 0,
+      duration: 0.35,
+      ease: "power2.out",
+      overwrite: "auto",
+    });
+  };
+
   return (
     <div
+      ref={cardRef}
       data-reveal
+      onMouseEnter={() => lift(true)}
+      onMouseLeave={() => lift(false)}
       className={`bg-surface-container-low cursor-pointer mt-5 p-6 border-l-2 border-outline-variant/30 hover:border-primary transition-all ${className}`}
     >
       <Link

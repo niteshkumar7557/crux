@@ -2,7 +2,7 @@
 import api from "@/app/axios";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   LuArrowRight,
   LuGem,
@@ -14,6 +14,7 @@ import {
 } from "react-icons/lu";
 import Button from "@/app/_components/ui/Button";
 import { isAxiosError } from "axios";
+import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
 
 const Register = () => {
   const [name, setName] = useState<string>("");
@@ -24,6 +25,36 @@ const Register = () => {
   const [error, setError] = useState("");
 
   const router = useRouter();
+  const rootRef = useRef<HTMLElement>(null);
+
+  // Entrance: the form column rises while the reputation panel slides in
+  // from its own edge; form fields follow with a soft stagger.
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add(MOTION_OK, () => {
+        gsap
+          .timeline({ defaults: { ease: "power3.out" } })
+          .from("[data-auth-form]", { y: 28, opacity: 0, duration: 0.7 })
+          .from(
+            "[data-auth-field]",
+            { y: 14, opacity: 0, duration: 0.5, stagger: 0.07 },
+            0.25,
+          )
+          .from(
+            "[data-auth-panel]",
+            {
+              x: 32,
+              opacity: 0,
+              duration: 0.7,
+              clearProps: "opacity,transform",
+            },
+            0.2,
+          );
+      });
+    },
+    { scope: rootRef },
+  );
 
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -51,13 +82,19 @@ const Register = () => {
 
   return (
     <>
-      <main className="relative min-h-screen grow flex items-center justify-center pt-14 pb-12 px-6">
+      <main
+        ref={rootRef}
+        className="relative min-h-screen grow flex items-center justify-center pt-14 pb-12 px-6"
+      >
         {/* <!-- Background Technical Layer --> */}
         <div className="absolute inset-0 technical-grid -z-5"></div>
         <div className="absolute inset-0 bg-radial-at-c from-primary/5 via-transparent to-transparent -z-5"></div>
 
-        <div className="w-full max-w-5xl grid md:grid-cols-12 gap-0 border border-outline-variant/15 shadow-2xl shadow-primary/5 bg-surface-container-lowest">
-          <div className="md:col-span-7 p-10 md:p-16 flex flex-col justify-center">
+        <div className="w-full max-w-5xl grid md:grid-cols-12 gap-0 border border-outline-variant/15 shadow-2xl shadow-primary/5 bg-surface-container-lowest overflow-hidden">
+          <div
+            data-auth-form
+            className="md:col-span-7 p-10 md:p-16 flex flex-col justify-center"
+          >
             <div className="mb-12">
               <span className="font-label text-[10px] tracking-[0.3em] text-primary uppercase mb-4 block">
                 CREATE YOUR ACCOUNT
@@ -67,7 +104,7 @@ const Register = () => {
               </h1>
             </div>
             <form className="space-y-8" onSubmit={handleSubmit}>
-              <div className="space-y-2">
+              <div data-auth-field className="space-y-2">
                 <label
                   className="block font-label text-[10px] uppercase tracking-widest text-outline"
                   htmlFor="name"
@@ -88,7 +125,7 @@ const Register = () => {
                   />
                 </div>
               </div>
-              <div className="space-y-2">
+              <div data-auth-field className="space-y-2">
                 <label
                   className="block font-label text-[10px] uppercase tracking-widest text-outline"
                   htmlFor="username"
@@ -109,7 +146,7 @@ const Register = () => {
                   />
                 </div>
               </div>
-              <div className="space-y-2">
+              <div data-auth-field className="space-y-2">
                 <label
                   className="block font-label text-[10px] uppercase tracking-widest text-outline"
                   htmlFor="email"
@@ -130,7 +167,7 @@ const Register = () => {
                   />
                 </div>
               </div>
-              <div className="space-y-2">
+              <div data-auth-field className="space-y-2">
                 <div className="flex justify-between items-end">
                   <label
                     className="block font-label text-[10px] uppercase tracking-widest text-outline"
@@ -157,7 +194,7 @@ const Register = () => {
                 </p>
               </div>
 
-              <div className="pt-6">
+              <div data-auth-field className="pt-6">
                 <Button type="submit" size="lg" className="w-full">
                   CREATE ACCOUNT
                   <LuArrowRight className="text-lg" />
@@ -176,7 +213,10 @@ const Register = () => {
               .
             </p>
           </div>
-          <div className="md:col-span-5 bg-surface-container border-l border-outline-variant/15 flex flex-col">
+          <div
+            data-auth-panel
+            className="md:col-span-5 bg-surface-container border-l border-outline-variant/15 flex flex-col"
+          >
             <div className="relative h-48 md:h-64 overflow-hidden">
               <Image
                 className="object-cover"

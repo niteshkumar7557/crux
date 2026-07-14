@@ -2,10 +2,11 @@
 import { LuLockKeyhole, LuMail, LuZap } from "react-icons/lu";
 import { isAxiosError } from "axios";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/app/axios";
 import Button from "@/app/_components/ui/Button";
+import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
 
 const Login = () => {
   const [email, setEmail] = useState<string>("");
@@ -14,6 +15,31 @@ const Login = () => {
   const [error, setError] = useState("");
 
   const router = useRouter();
+  const rootRef = useRef<HTMLElement>(null);
+
+  // Entrance: brand drops in, the card rises, then the status strip fades.
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add(MOTION_OK, () => {
+        gsap
+          .timeline({ defaults: { ease: "power3.out" } })
+          .from("[data-auth-brand]", { y: -14, opacity: 0, duration: 0.5 })
+          .from(
+            "[data-auth-card]",
+            {
+              y: 28,
+              opacity: 0,
+              duration: 0.7,
+              clearProps: "opacity,transform",
+            },
+            0.15,
+          )
+          .from("[data-auth-deco]", { opacity: 0, duration: 0.4 }, 0.55);
+      });
+    },
+    { scope: rootRef },
+  );
 
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -39,7 +65,10 @@ const Login = () => {
   }
 
   return (
-    <main className="bg-background text-on-surface font-body selection:bg-primary/30 min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+    <main
+      ref={rootRef}
+      className="bg-background text-on-surface font-body selection:bg-primary/30 min-h-screen flex flex-col items-center justify-center relative overflow-hidden"
+    >
       {/* <!-- Background Technical Layer --> */}
       <div className="absolute inset-0 technical-grid z-0"></div>
       <div className="absolute inset-0 bg-radial-at-c from-primary/5 via-transparent to-transparent z-0"></div>
@@ -47,7 +76,7 @@ const Login = () => {
       {/* <!-- Login Container --> */}
       <div className="relative z-10 w-full max-w-md px-6">
         {/* <!-- Brand Header (Simplified for Login) --> */}
-        <div className="text-center mb-12">
+        <div data-auth-brand className="text-center mb-12">
           <h1
             className="text-4xl font-headline italic tracking-tighter text-primary"
           >
@@ -60,7 +89,10 @@ const Login = () => {
           </div>
         </div>
         {/* <!-- Login Card --> */}
-        <div className="bg-surface-container-low border-l-2 border-primary p-8 md:p-10 shadow-2xl relative">
+        <div
+          data-auth-card
+          className="bg-surface-container-low border-l-2 border-primary p-8 md:p-10 shadow-2xl relative"
+        >
           <header className="mb-8">
             <h2
               className="text-3xl font-headline italic text-on-surface leading-tight"
@@ -151,7 +183,7 @@ const Login = () => {
           </div>
         </div>
         {/* <!-- Visual Decorative Element --> */}
-        <div className="mt-6 flex justify-between items-center px-2">
+        <div data-auth-deco className="mt-6 flex justify-between items-center px-2">
           <div className="flex gap-1">
             <div className="w-1.5 h-1.5 bg-primary/40"></div>
             <div className="w-1.5 h-1.5 bg-primary/20"></div>

@@ -47,7 +47,7 @@ const CaseColumn = ({
       : argumentArenaData.againstCaseComments;
 
   return (
-    <div className={s.wrapper}>
+    <div data-case={side} className={s.wrapper}>
       <div
         className={`flex items-center justify-between mb-10 border-l-4 ${s.header} pl-4`}
       >

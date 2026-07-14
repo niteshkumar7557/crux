@@ -5,6 +5,7 @@ import { LuMessageSquare } from "react-icons/lu";
 import serverApi from "@/app/axios.server";
 import ArenaCard from "@/app/_components/arena/ArenaCard";
 import Button from "@/app/_components/ui/Button";
+import Reveal from "@/app/_components/ui/Reveal";
 import { NewestCardProps } from "@/app/types";
 import { timeAgo } from "@/app/_utils/timeAgo";
 
@@ -33,8 +34,11 @@ const Archive = async ({
     : statements;
 
   return (
-    <div className="max-w-6xl mx-auto px-6 md:px-8 py-12">
-      <div className="mb-12 border-l-4 border-tertiary pl-6">
+    <Reveal
+      key={domain ?? "all"}
+      className="max-w-6xl mx-auto px-6 md:px-8 py-12"
+    >
+      <div data-reveal className="mb-12 border-l-4 border-tertiary pl-6">
         <span className="font-label text-tertiary text-xs uppercase tracking-[0.3em] mb-2 block">
           THE RECORD
         </span>
@@ -47,7 +51,7 @@ const Archive = async ({
       </div>
 
       {domains.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-8">
+        <div data-reveal className="flex flex-wrap gap-2 mb-8">
           <Link
             href="/archive"
             className={`${!domain ? "border-primary text-primary bg-primary/5" : "border-outline-variant bg-surface-container text-on-surface-variant"} border px-4 py-2 font-label text-xs uppercase hover:border-primary hover:text-primary transition-colors`}
@@ -67,7 +71,10 @@ const Archive = async ({
       )}
 
       {filtered.length === 0 ? (
-        <div className="bg-surface-container-low border-l-2 border-outline-variant/30 p-12 text-center">
+        <div
+          data-reveal
+          className="bg-surface-container-low border-l-2 border-outline-variant/30 p-12 text-center"
+        >
           <p className="font-headline italic text-2xl text-on-surface mb-3">
             {domain
               ? `No statements filed under ${domain}.`
@@ -104,7 +111,7 @@ const Archive = async ({
           ))}
         </div>
       )}
-    </div>
+    </Reveal>
   );
 };
 

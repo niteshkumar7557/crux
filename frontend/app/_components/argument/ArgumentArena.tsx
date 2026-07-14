@@ -3,8 +3,9 @@ import CaseColumn from "./CaseColumn";
 import { getUser } from "@/app/_utils/getUser";
 import { jwtPayload } from "@/app/_types/jwt";
 import { UserArgumentCardProps } from "@/app/argument/types";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { convertLogicScore } from "@/app/_utils/logicScore";
+import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
 
 interface RawComment {
   comment_id: number;
@@ -24,6 +25,7 @@ const ArgumentArena = ({
   comments: { comments: RawComment[] };
 }) => {
   const [user, setUser] = useState<jwtPayload | null>(null);
+  const arenaRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     async function fetchUser() {
       const userInfo = await getUser();
@@ -31,6 +33,34 @@ const ArgumentArena = ({
     }
     fetchUser();
   }, []);
+
+  // Each case column slides in once from its own side of the argument.
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add(MOTION_OK, () => {
+        const sides = [
+          ["[data-case='for']", -24],
+          ["[data-case='against']", 24],
+        ] as const;
+        for (const [selector, x] of sides) {
+          gsap.fromTo(
+            selector,
+            { opacity: 0.25, x },
+            {
+              opacity: 1,
+              x: 0,
+              duration: 0.8,
+              ease: "power3.out",
+              clearProps: "opacity,transform",
+              scrollTrigger: { trigger: selector, start: "top 80%", once: true },
+            },
+          );
+        }
+      });
+    },
+    { scope: arenaRef },
+  );
 
   const forCaseComments: UserArgumentCardProps[] = [];
   const againstCaseComments: UserArgumentCardProps[] = [];
@@ -61,7 +91,10 @@ const ArgumentArena = ({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-outline-variant/20">
+    <div
+      ref={arenaRef}
+      className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-outline-variant/20 overflow-x-clip"
+    >
       <CaseColumn
         side="for"
         aiAnalysis={aiAnalysis[0]}

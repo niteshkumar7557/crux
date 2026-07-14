@@ -5,6 +5,7 @@ import { LuCrown, LuMedal, LuStar } from "react-icons/lu";
 import serverApi from "@/app/axios.server";
 import Avatar from "@/app/_components/ui/Avatar";
 import Button from "@/app/_components/ui/Button";
+import Reveal from "@/app/_components/ui/Reveal";
 import { convertLogicScore } from "@/app/_utils/logicScore";
 
 export const metadata: Metadata = {
@@ -56,7 +57,11 @@ const PodiumSideCard = ({
   const style = SIDE_CARD[place];
   const share = topScore > 0 ? (debater.logicScore / topScore) * 100 : 0;
   return (
-    <Link href={`/profile/${debater.id}`} className={`md:col-span-3 ${style.order}`}>
+    <Link
+      href={`/profile/${debater.id}`}
+      data-reveal
+      className={`md:col-span-3 ${style.order}`}
+    >
       <div
         className={`bg-surface-container-low p-8 ${style.border} relative h-[380px] flex flex-col justify-end hover:bg-surface-container transition-colors`}
       >
@@ -130,8 +135,11 @@ const Leaderboard = async () => {
   const topScore = standings[0]?.logicScore ?? 0;
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12">
-      <header className="mb-16 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+    <Reveal className="max-w-7xl mx-auto px-6 py-12">
+      <header
+        data-reveal
+        className="mb-16 flex flex-col md:flex-row justify-between items-start md:items-end gap-6"
+      >
         <div className="max-w-2xl">
           <div className="flex items-center gap-2 text-primary font-label text-xs tracking-[0.2em] uppercase mb-2">
             <span className="w-8 h-px bg-primary"></span>
@@ -175,6 +183,7 @@ const Leaderboard = async () => {
 
               <Link
                 href={`/profile/${podium[0].id}`}
+                data-reveal
                 className="md:col-span-6 order-1 md:order-2 z-10"
               >
                 <div className="bg-surface-container-high p-12 border-t-4 border-primary shadow-2xl relative h-[460px] flex flex-col justify-end hover:bg-surface-container-highest transition-colors">
@@ -257,6 +266,7 @@ const Leaderboard = async () => {
                   <Link
                     key={debater.id}
                     href={`/profile/${debater.id}`}
+                    data-reveal
                     className={`grid grid-cols-12 px-8 py-6 ${i % 2 === 0 ? "bg-surface" : "bg-surface-container-lowest"} hover:bg-surface-container-low transition-colors items-center group border-l-2 border-transparent hover:border-primary`}
                   >
                     <div className="col-span-2 md:col-span-1 font-label text-xl font-bold text-outline group-hover:text-primary transition-colors">
@@ -289,7 +299,7 @@ const Leaderboard = async () => {
           )}
         </>
       )}
-    </div>
+    </Reveal>
   );
 };
 

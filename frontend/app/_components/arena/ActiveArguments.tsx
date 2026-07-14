@@ -19,10 +19,38 @@ const ActiveArguments = ({
 }) => {
   const [activeTab, setActiveTab] = useState("trending");
   const feedRef = useRef<HTMLDivElement>(null);
+  const tabContentRef = useRef<HTMLDivElement>(null);
+  const mountedTab = useRef(false);
 
   const changeActive = (e: string) => {
     setActiveTab(e);
   };
+
+  // Tab switches crossfade + slide the incoming panel; the initial mount is
+  // handled by the [data-reveal] stagger below instead.
+  useGSAP(
+    () => {
+      if (!mountedTab.current) {
+        mountedTab.current = true;
+        return;
+      }
+      const mm = gsap.matchMedia();
+      mm.add(MOTION_OK, () => {
+        gsap.fromTo(
+          tabContentRef.current,
+          { opacity: 0, x: 12 },
+          {
+            opacity: 1,
+            x: 0,
+            duration: 0.35,
+            ease: "power2.out",
+            clearProps: "opacity,transform",
+          },
+        );
+      });
+    },
+    { dependencies: [activeTab], scope: feedRef },
+  );
 
   useGSAP(
     () => {
@@ -54,6 +82,7 @@ const ActiveArguments = ({
         active={activeTab}
         changeActive={changeActive}
       />
+      <div ref={tabContentRef}>
       {activeTab === "trending" &&
         (mainTrendingArenaCardData.length > 0 &&
         trendingArenaCardData.length > 0 ? (
@@ -97,6 +126,7 @@ const ActiveArguments = ({
           </div>
         ))}
       {activeTab === "newest" && <NewestTab />}
+      </div>
     </div>
   );
 };

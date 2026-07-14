@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { LuGavel, LuScale, LuTrendingUp } from "react-icons/lu";
 import Button from "@/app/_components/ui/Button";
+import Reveal from "@/app/_components/ui/Reveal";
 
 export const metadata: Metadata = {
   title: "About",
@@ -32,8 +33,8 @@ const PILLARS = [
 
 const About = () => {
   return (
-    <div className="max-w-4xl mx-auto px-6 md:px-8 py-12">
-      <div className="mb-12 border-l-4 border-primary pl-6">
+    <Reveal className="max-w-4xl mx-auto px-6 md:px-8 py-12">
+      <div data-reveal className="mb-12 border-l-4 border-primary pl-6">
         <span className="font-label text-primary text-xs uppercase tracking-[0.3em] mb-2 block">
           ABOUT CRUX
         </span>
@@ -51,6 +52,7 @@ const About = () => {
         {PILLARS.map((pillar) => (
           <div
             key={pillar.title}
+            data-reveal
             className={`bg-surface-container p-6 border-l ${pillar.border}`}
           >
             <pillar.icon className={`${pillar.accent} text-xl mb-4`} />
@@ -66,7 +68,10 @@ const About = () => {
         ))}
       </div>
 
-      <div className="bg-surface-container border border-outline-variant/10 p-10 text-center">
+      <div
+        data-reveal
+        className="bg-surface-container border border-outline-variant/10 p-10 text-center"
+      >
         <p className="font-headline italic text-2xl text-on-surface mb-6">
           The arena is open. Bring an opinion.
         </p>
@@ -79,7 +84,7 @@ const About = () => {
           </Button>
         </div>
       </div>
-    </div>
+    </Reveal>
   );
 };
 
