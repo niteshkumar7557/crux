@@ -3,16 +3,17 @@ import CruxAIRoleInfo from "../_components/statement/CruxAIRoleInfo";
 import { DomainClassification } from "./types";
 import StatementForm from "../_components/statement/StatementForm";
 import Reveal from "../_components/ui/Reveal";
+import serverApi from "@/app/axios.server";
 
-const domains: DomainClassification = [
-  "AI",
-  "Geopolitics",
-  "Technology",
-  "Science",
-  "Other",
-];
+const page = async () => {
+  let domains: DomainClassification = [];
+  try {
+    const { data } = await serverApi.get("/domains");
+    domains = data.domains.map((d: { id: number; name: string }) => d.name);
+  } catch {
+    domains = [];
+  }
 
-const page = () => {
   return (
     <div className="min-h-screen pt-22 pb-20 px-4">
       <Reveal className="max-w-3xl mx-auto">

@@ -60,7 +60,7 @@ const STATEMENTS: SeedStatement[] = [
     author: 0,
     content: "AI should be granted legal personhood.",
     keyword: "legal personhood",
-    domain: "technology",
+    domain: "Technology & AI",
     affirmative: 54,
     forAnalysis:
       "Autonomous systems need legal standing to function as independent agents in society.\n\n### Key Points\n- Enables AI to enter contracts and own intellectual property\n- Creates clear accountability as AI grows more capable and independent\n- Establishes liability frameworks before systems become uncontrollable",
@@ -77,7 +77,7 @@ const STATEMENTS: SeedStatement[] = [
     author: 1,
     content: "Social media does more harm than good to society.",
     keyword: "more harm",
-    domain: "society",
+    domain: "Society & Culture",
     affirmative: 62,
     forAnalysis:
       "Decades of research consistently link social media to measurable psychological and civic damage.\n\n### Key Points\n- Drives rising anxiety and depression, especially among teenagers\n- Algorithmic design engineers addiction at the cost of mental health\n- Erodes shared civic discourse by amplifying outrage over truth",
@@ -94,7 +94,7 @@ const STATEMENTS: SeedStatement[] = [
     author: 2,
     content: "Universal basic income is necessary for the future of work.",
     keyword: "basic income",
-    domain: "economics",
+    domain: "Economics & Business",
     affirmative: 48,
     forAnalysis:
       "Accelerating automation demands a systemic safety net that no targeted program can provide.\n\n### Key Points\n- Ensures no worker is left behind as jobs are structurally displaced\n- Empowers retraining, entrepreneurship, and caregiving without financial ruin\n- Decouples survival from employment in an era of machine labor",
@@ -111,7 +111,7 @@ const STATEMENTS: SeedStatement[] = [
     author: 3,
     content: "Space exploration is a waste of resources.",
     keyword: "Space exploration",
-    domain: "science",
+    domain: "Science",
     affirmative: 33,
     forAnalysis:
       "Trillions spent on space while billions lack basic needs reflects a profound failure of priorities.\n\n### Key Points\n- Funds could directly address poverty, disease, and climate disasters on Earth\n- Benefits of space investment are abstract and long-term; suffering is immediate\n- Private space ventures primarily serve billionaire vanity, not humanity",
@@ -128,7 +128,7 @@ const STATEMENTS: SeedStatement[] = [
     author: 4,
     content: "Cryptocurrency will replace traditional banking systems.",
     keyword: "Cryptocurrency",
-    domain: "finance",
+    domain: "Economics & Business",
     affirmative: 41,
     forAnalysis:
       "Crypto offers the first genuinely decentralized alternative to rent-seeking financial infrastructure.\n\n### Key Points\n- Banks the unbanked — 1.4 billion adults globally without financial access\n- Eliminates middlemen and slashes remittance costs for migrant workers\n- Permissionless and borderless by design — no institution can revoke access",
@@ -145,7 +145,7 @@ const STATEMENTS: SeedStatement[] = [
     author: 5,
     content: "Climate change action should be prioritized over economic growth.",
     keyword: "prioritized",
-    domain: "environment",
+    domain: "Environment & Energy",
     affirmative: 68,
     forAnalysis:
       "The cost of climate inaction already exceeds the cost of transition — the math is settled.\n\n### Key Points\n- Floods, droughts, and crop failures impose economic costs dwarfing clean energy investment\n- Sustainable growth is only possible on a climatically stable planet\n- Delaying action compounds costs exponentially — early investment is rational",
@@ -162,7 +162,7 @@ const STATEMENTS: SeedStatement[] = [
     author: 6,
     content: "Artificial intelligence will cause more unemployment than it creates.",
     keyword: "unemployment",
-    domain: "technology",
+    domain: "Technology & AI",
     affirmative: 57,
     forAnalysis:
       "AI threatens cognitive and creative jobs simultaneously — unlike any automation wave before it.\n\n### Key Points\n- White-collar, legal, medical, and creative roles are all vulnerable at once\n- Speed of displacement will outpace any realistic retraining infrastructure\n- Structural unemployment will concentrate in communities with no alternative industries",
@@ -179,7 +179,7 @@ const STATEMENTS: SeedStatement[] = [
     author: 7,
     content: "Social media platforms should be held liable for misinformation.",
     keyword: "misinformation",
-    domain: "law",
+    domain: "Law & Justice",
     affirmative: 52,
     forAnalysis:
       "Platforms profit from misinformation-driven engagement while bearing zero consequence for the harm.\n\n### Key Points\n- Legal liability creates direct financial incentive for serious content moderation\n- Platforms already curate content algorithmically — liability should follow editorial control\n- Victims of misinformation currently have no legal recourse against the amplifier",
@@ -196,7 +196,7 @@ const STATEMENTS: SeedStatement[] = [
     author: 8,
     content: "Nuclear energy is the cleanest solution to the global energy crisis.",
     keyword: "cleanest solution",
-    domain: "energy",
+    domain: "Environment & Energy",
     affirmative: 71,
     forAnalysis:
       "Nuclear produces near-zero carbon emissions and operates independently of weather or daylight.\n\n### Key Points\n- Smallest land footprint of any major energy source at equivalent output\n- Modern reactor designs have dramatically reduced safety and waste risks\n- Only proven baseload power source fully compatible with complete decarbonization",
@@ -213,7 +213,7 @@ const STATEMENTS: SeedStatement[] = [
     author: 9,
     content: "Governments should regulate big tech companies like public utilities.",
     keyword: "big tech companies",
-    domain: "policy",
+    domain: "Politics & Governance",
     affirmative: 46,
     forAnalysis:
       "A handful of corporations control digital infrastructure billions depend on — that is a utility.\n\n### Key Points\n- Utility status ensures fair access and prevents anti-competitive gatekeeping\n- Protects users from algorithmic exploitation of attention and personal data\n- Accountability frameworks would force transparency currently absent from platform governance",
@@ -230,7 +230,7 @@ const STATEMENTS: SeedStatement[] = [
     author: 10,
     content: "Standardized exams fail to measure real intelligence.",
     keyword: "real intelligence",
-    domain: "education",
+    domain: "Education",
     affirmative: 61,
     forAnalysis:
       "Standardized testing measures recall under pressure, not the creative and social capacities that define real-world intelligence.\n\n### Key Points\n- Rewards memorization and test-taking strategy over original thinking\n- Ignores creativity, collaboration, and emotional intelligence entirely\n- High-stakes pressure distorts results for capable students with anxiety",
@@ -247,7 +247,7 @@ const STATEMENTS: SeedStatement[] = [
     author: 11,
     content: "Junk food should be taxed like tobacco.",
     keyword: "taxed",
-    domain: "health",
+    domain: "Health & Medicine",
     affirmative: 54,
     forAnalysis:
       "Diet-related disease now outkills tobacco, and taxation is the one lever proven to shift consumption at scale.\n\n### Key Points\n- Sugar taxes in Mexico and the UK measurably cut consumption\n- Healthcare systems absorb the cost of cheap calories — the price is just hidden\n- Revenue can subsidize healthy food access in low-income areas",
@@ -264,7 +264,7 @@ const STATEMENTS: SeedStatement[] = [
     author: 1,
     content: "Mass surveillance is never justified, even for national security.",
     keyword: "Mass surveillance",
-    domain: "privacy",
+    domain: "Law & Justice",
     affirmative: 57,
     forAnalysis:
       "Dragnet surveillance inverts the presumption of innocence for entire populations.\n\n### Key Points\n- Chills journalism, activism, and dissent long before any abuse occurs\n- Databases outlive the governments that promise restraint\n- No documented case of mass collection stopping what targeted warrants could not",
@@ -281,7 +281,7 @@ const STATEMENTS: SeedStatement[] = [
     author: 12,
     content: "Streaming has made music worse.",
     keyword: "Streaming",
-    domain: "culture",
+    domain: "Society & Culture",
     affirmative: 44,
     forAnalysis:
       "Streaming's economics compress songs into interchangeable background content.\n\n### Key Points\n- Per-stream payouts collapse mid-tier artist income\n- Skip-rate optimization pushes hooks to second five and shortens everything\n- Playlist culture rewards mood conformity over albums and ambition",
@@ -298,7 +298,7 @@ const STATEMENTS: SeedStatement[] = [
     author: 13,
     content: "University degrees are becoming obsolete.",
     keyword: "University degrees",
-    domain: "education",
+    domain: "Education",
     affirmative: 39,
     forAnalysis:
       "The signal value of a degree is collapsing while its price quadruples.\n\n### Key Points\n- Major tech employers dropped degree requirements for most roles\n- Bootcamps and certifications reach competence in months, not years\n- Student debt delays homes, families, and entrepreneurship by a decade",
@@ -315,7 +315,7 @@ const STATEMENTS: SeedStatement[] = [
     author: 14,
     content: "Esports deserve the same recognition as traditional sports.",
     keyword: "Esports",
-    domain: "sports",
+    domain: "Sports & Gaming",
     affirmative: 47,
     forAnalysis:
       "Esports demand elite reflexes, strategy, and teamwork before audiences that rival championship finals.\n\n### Key Points\n- Sustained precision under pressure is measurable athletic performance\n- Prize pools and viewership already exceed many Olympic sports\n- Training regimens mirror traditional athletics, coaches and all",
@@ -332,7 +332,7 @@ const STATEMENTS: SeedStatement[] = [
     author: 2,
     content: "Remote work should be the default for knowledge jobs.",
     keyword: "Remote work",
-    domain: "society",
+    domain: "Society & Culture",
     affirmative: 63,
     forAnalysis:
       "Knowledge work measured by output has no business requiring a commute.\n\n### Key Points\n- Productivity held or rose in the largest remote experiments ever run\n- Reclaims 200+ hours per worker per year from commuting\n- Opens elite jobs to talent outside megacity housing markets",
@@ -349,7 +349,7 @@ const STATEMENTS: SeedStatement[] = [
     author: 15,
     content: "Gene editing of human embryos should be legal.",
     keyword: "Gene editing",
-    domain: "science",
+    domain: "Science",
     affirmative: 41,
     forAnalysis:
       "Refusing to edit out heritable suffering when we can is itself an ethical choice.\n\n### Key Points\n- Could eliminate Huntington's, Tay-Sachs, and thousands of single-gene diseases\n- Bans push the research into unregulated jurisdictions\n- The somatic-germline distinction is already blurring in the clinic",
@@ -422,13 +422,23 @@ const seed = async () => {
       () => new Date(now - randInt(3, 45 * 24) * HOUR),
     );
 
+    const domainRows = await client.query("SELECT id, name FROM domains");
+    const domainIds = new Map<string, number>(
+      domainRows.rows.map((r: { id: number; name: string }) => [r.name, r.id]),
+    );
+
     const argValues: unknown[] = [];
     const argRows = STATEMENTS.map((s, i) => {
       argValues.push(
         users[s.author].id,
         s.content,
         s.keyword,
-        s.domain,
+        domainIds.get(s.domain) ??
+          (() => {
+            throw new Error(
+              `Unknown seed domain: ${s.domain} — run migrations first`,
+            );
+          })(),
         s.forAnalysis,
         s.againstAnalysis,
         s.affirmative,
@@ -441,7 +451,7 @@ const seed = async () => {
 
     const argsResult = await client.query(
       `
-      INSERT INTO arguments (user_id, content, content_keyword, domain, for_analysis, against_analysis, affirmative, negative, created_at)
+      INSERT INTO arguments (user_id, content, content_keyword, domain_id, for_analysis, against_analysis, affirmative, negative, created_at)
       VALUES
         ${argRows}
       RETURNING id;

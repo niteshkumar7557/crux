@@ -13,6 +13,7 @@ import likeRoutes from "./routes/like.route.js";
 import profileRoutes from "./routes/profile.route.js";
 import searchRoutes from "./routes/search.route.js";
 import avatarRoutes from "./routes/avatar.route.js";
+import domainRoutes from "./routes/domain.route.js";
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use("/ai", aiRoutes);
 app.use("/like", likeRoutes);
 app.use("/profile", profileRoutes);
 app.use("/search", searchRoutes);
+app.use("/domains", domainRoutes);
 app.use("/avatar", avatarRoutes);
 
 export default app;

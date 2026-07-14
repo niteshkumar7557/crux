@@ -40,7 +40,7 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
 		loading: false,
 		text: "",
 		allowInput: true,
-		selectedDomain: "AI",
+		selectedDomain: domains[0] ?? "",
 		keyword: "",
 		eligibility: "",
 		domain: "",
@@ -119,6 +119,7 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
 				content: formState.text,
 				content_keyword: formState.keyword,
 				domain: formState.domain,
+				selected_domain: formState.selectedDomain,
 			});
 		} catch {
 			updateFormState({

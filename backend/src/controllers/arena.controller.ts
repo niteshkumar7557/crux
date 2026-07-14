@@ -4,8 +4,9 @@ import pool from "../db/index.js";
 export async function getActiveCardData(req: Request, res: Response) {
   try {
     const argument = await pool.query(`
-                SELECT id, user_id, content, domain, affirmative, negative
+                SELECT a.id, a.user_id, a.content, d.name AS domain, a.affirmative, a.negative
                 FROM arguments a
+                JOIN domains d ON d.id = a.domain_id
                 ORDER BY a.id DESC
                 LIMIT 1;
             `);
@@ -47,7 +48,7 @@ export async function getTrendingCardData(req: Request, res: Response) {
                 SELECT
                     u.username,
                     u.avatar,
-                    a.domain,
+                    d.name AS domain,
                     a.content AS title,
                     a.affirmative AS affirmativeScore,
                     a.negative AS negativeScore,
@@ -55,8 +56,9 @@ export async function getTrendingCardData(req: Request, res: Response) {
                     COUNT(DISTINCT c.user_id)::int AS active_minds
                 FROM arguments a
                 JOIN users u ON a.user_id = u.id
+                JOIN domains d ON d.id = a.domain_id
                 LEFT JOIN comments c ON c.argument_id = a.id
-                GROUP BY a.id, u.username, u.avatar, a.domain, a.content, a.affirmative, a.negative
+                GROUP BY a.id, u.username, u.avatar, d.name, a.content, a.affirmative, a.negative
                 ORDER BY a.id DESC
                 LIMIT 7;
             `);
@@ -77,7 +79,7 @@ export async function getNewestCardData(req: Request, res: Response) {
                 SELECT
                     u.username,
                     u.avatar,
-                    a.domain,
+                    d.name AS domain,
                     a.content AS title,
                     a.affirmative AS affirmativeScore,
                     a.negative AS negativeScore,
@@ -86,6 +88,7 @@ export async function getNewestCardData(req: Request, res: Response) {
                     COALESCE(c.count, 0)::int AS "argumentNum"
                 FROM arguments a
                 JOIN users u ON a.user_id = u.id
+                JOIN domains d ON d.id = a.domain_id
                 LEFT JOIN (
                     SELECT argument_id, COUNT(*) AS count
                     FROM comments c
@@ -109,13 +112,14 @@ export async function getSidebarData(req: Request, res: Response) {
   try {
     const data1 = await pool.query(`
             SELECT
-                a.domain AS topic,
+                d.name AS topic,
                 ROUND(AVG(a.affirmative - a.negative))::numeric AS "changePercentage",
                 COUNT(DISTINCT c.id)::int AS arguments,
                 COUNT(DISTINCT a.id)::int AS "liveBattles"
             FROM arguments a
+            JOIN domains d ON d.id = a.domain_id
             LEFT JOIN comments c ON c.argument_id = a.id
-            GROUP BY a.domain
+            GROUP BY d.name
             ORDER BY arguments DESC
             LIMIT 3;
         `);

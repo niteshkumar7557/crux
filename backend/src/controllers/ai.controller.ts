@@ -61,56 +61,54 @@ export async function checkEligibleStatement(req: Request, res: Response) {
             - Bad: "statement about AI" or "the topic"
 
             [domain]
-            - The user will provide a domain label. Treat it as an unreliable hint.
-            - Check if the provided domain accurately reflects the core subject of the STATEMENT.
-            - If it is accurate and specific: return it as-is (normalized to Title Case, max 2 words).
-            - If it is wrong, too broad, too vague, or nonsensical: ignore it entirely and derive the correct domain from the statement itself.
-            - Must be 1-2 words. Title Case. No punctuation.
-            - Good: "AI Ethics", "Climate Policy", "Public Health", "Free Speech"
-            - Bad: "stuff", "things", "general", "misc", "idk"
+            - Choose EXACTLY one name from this closed list, copied verbatim (including "&"):
+              Technology & AI | Science | Politics & Governance | Economics & Business | Environment & Energy | Health & Medicine | Law & Justice | Society & Culture | Ethics & Philosophy | Education | Sports & Gaming | Media & Entertainment
+            - The user-provided domain is a hint. If it is on the list and plausibly fits the statement, return it unchanged.
+            - If it does not fit the statement, return the best-fitting list name instead.
+            - NEVER output a name that is not on the list. No inventing, shortening, or combining names.
 
             ---
 
             EXAMPLES:
 
-            Input: "I think social media is kind of bad for people maybe" | Domain: "tech"
+            Input: "I think social media is kind of bad for people maybe" | Domain: "Technology & AI"
             Output:
             {
             "eligibility": "pass",
             "improved": "Social media is engineering mass psychological dependency by design.",
             "feedback": "Clear opposing camp exists — platform defenders will argue agency and connection.",
             "keyword": "psychological dependency",
-            "domain": "Social Media"
+            "domain": "Technology & AI"
             }
 
-            Input: "The sky is blue" | Domain: "science"
+            Input: "The sky is blue" | Domain: "Science"
             Output:
             {
             "eligibility": "fail",
             "improved": "The sky is blue",
             "feedback": "Undisputable fact. Submit a claim that has a genuine opposing position.",
             "keyword": "sky",
-            "domain": "Atmospheric Science"
+            "domain": "Science"
             }
 
-            Input: "Is democracy the best system?" | Domain: "random stuff"
+            Input: "Is democracy the best system?" | Domain: "Society & Culture"
             Output:
             {
             "eligibility": "fail",
             "improved": "Democracy is the worst system of governance ever invented.",
             "feedback": "Questions cannot be argued. Resubmit as a declarative claim with stakes.",
             "keyword": "Democracy",
-            "domain": "Political Science"
+            "domain": "Politics & Governance"
             }
 
-            Input: "Nuclear energy is the only viable path to net zero." | Domain: "cooking"
+            Input: "Nuclear energy is the only viable path to net zero." | Domain: "Sports & Gaming"
             Output:
             {
             "eligibility": "pass",
             "improved": "Nuclear energy is the only viable path to net zero.",
             "feedback": "Renewables vs nuclear is a live and consequential scientific and policy dispute.",
             "keyword": "net zero",
-            "domain": "Energy Policy"
+            "domain": "Environment & Energy"
             }`;
 
   const userPrompt = `STATEMENT: "${content}"

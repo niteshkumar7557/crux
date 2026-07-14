@@ -63,7 +63,22 @@ export async function addNewArgument(req: Request, res: Response) {
     content: string;
     content_keyword: string;
     domain: string;
+    selected_domain?: string;
   } = req.body;
+
+  const domainResult = await pool.query(
+    `
+        SELECT id, name FROM domains
+        WHERE name = $1 OR name = $2
+        ORDER BY (name = $1) DESC
+        LIMIT 1;
+        `,
+    [data.domain, data.selected_domain ?? ""],
+  );
+  if (domainResult.rows.length === 0) {
+    return res.status(400).json({ error: "Unknown domain." });
+  }
+  const { id: domainId, name: domainName } = domainResult.rows[0];
 
   const systemPrompt = `
             You are an expert debate judge and analyst with deep knowledge across technology, law, economics, science, and policy.
@@ -103,7 +118,7 @@ export async function addNewArgument(req: Request, res: Response) {
 
   const userPrompt = `
         Argument: ${data.content}
-        Domain: ${data.domain}
+        Domain: ${domainName}
         `;
 
   try {
@@ -114,14 +129,14 @@ export async function addNewArgument(req: Request, res: Response) {
 
     const { rows } = await pool.query(
       `
-        INSERT INTO arguments (user_id, content_keyword, content, domain, for_analysis, against_analysis) VALUES ($1,$2,$3,$4,$5,$6)
+        INSERT INTO arguments (user_id, content_keyword, content, domain_id, for_analysis, against_analysis) VALUES ($1,$2,$3,$4,$5,$6)
         RETURNING id;
         `,
       [
         data.user_id,
         data.content_keyword,
         data.content,
-        data.domain,
+        domainId,
         parsed.for_analysis,
         parsed.against_analysis,
       ],
@@ -142,7 +157,10 @@ export async function getArgumentById(req: Request, res: Response) {
   try {
     const { rows } = await pool.query(
       `
-                SELECT * FROM "arguments" WHERE id = $1;
+                SELECT a.*, d.name AS domain
+                FROM arguments a
+                JOIN domains d ON d.id = a.domain_id
+                WHERE a.id = $1;
             `,
       [id],
     );

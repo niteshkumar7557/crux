@@ -20,9 +20,10 @@ export async function searchAll(req: Request, res: Response) {
     const [statements, domains, users] = await Promise.all([
       pool.query(
         `
-                SELECT a.id, a.content, a.domain, u.username
+                SELECT a.id, a.content, d.name AS domain, u.username
                 FROM arguments a
                 JOIN users u ON u.id = a.user_id
+                JOIN domains d ON d.id = a.domain_id
                 WHERE a.content ILIKE $1 ESCAPE '\\'
                 ORDER BY a.id DESC
                 LIMIT $2;
@@ -31,10 +32,11 @@ export async function searchAll(req: Request, res: Response) {
       ),
       pool.query(
         `
-                SELECT domain, COUNT(*)::int AS "statementCount"
-                FROM arguments
-                WHERE domain ILIKE $1 ESCAPE '\\'
-                GROUP BY domain
+                SELECT d.name AS domain, COUNT(*)::int AS "statementCount"
+                FROM arguments a
+                JOIN domains d ON d.id = a.domain_id
+                WHERE d.name ILIKE $1 ESCAPE '\\'
+                GROUP BY d.name
                 ORDER BY "statementCount" DESC
                 LIMIT $2;
             `,
