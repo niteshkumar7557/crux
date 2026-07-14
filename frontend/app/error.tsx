@@ -1,6 +1,6 @@
 "use client";
 import { useEffect } from "react";
-import { MdOutlineReplay } from "react-icons/md";
+import { LuRotateCcw } from "react-icons/lu";
 import Button from "./_components/ui/Button";
 
 const Error = ({
@@ -30,7 +30,7 @@ const Error = ({
         </p>
         <Button size="lg" onClick={reset}>
           Try Again
-          <MdOutlineReplay className="text-lg" />
+          <LuRotateCcw className="text-lg" />
         </Button>
         {error.digest && (
           <p className="mt-8 font-label text-[9px] uppercase tracking-widest text-outline">

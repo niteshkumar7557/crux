@@ -20,8 +20,12 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Crux",
-  description: "Nitesh OP in the Chat!",
+  title: {
+    default: "Crux — The Digital Debate Arena",
+    template: "%s · Crux",
+  },
+  description:
+    "Stake a claim, argue both sides, and let logic decide. Crux is a digital arena where every statement is tested by structured debate and AI adjudication.",
 };
 
 export default function RootLayout({

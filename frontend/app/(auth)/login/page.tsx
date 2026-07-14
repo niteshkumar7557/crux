@@ -1,7 +1,5 @@
 "use client";
-import { HiOutlineBolt } from "react-icons/hi2";
-import { LuLockKeyhole } from "react-icons/lu";
-import { MdOutlineEmail } from "react-icons/md";
+import { LuLockKeyhole, LuMail, LuZap } from "react-icons/lu";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -78,7 +76,7 @@ const Login = () => {
                 Identify Your Interface (Email)
               </label>
               <div className="relative group">
-                <MdOutlineEmail className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
+                <LuMail className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
                 <input
                   className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-outline transition-all font-body text-sm"
                   id="email"
@@ -130,7 +128,7 @@ const Login = () => {
             <div className="pt-4">
               <Button type="submit" size="lg" className="w-full group">
                 Enter the Fray
-                <HiOutlineBolt className="text-lg group-hover:translate-x-1 transition-transform" />
+                <LuZap className="text-lg group-hover:translate-x-1 transition-transform" />
               </Button>
             </div>
           </form>

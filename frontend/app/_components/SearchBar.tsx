@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { IoMdSearch, IoMdClose } from "react-icons/io";
+import { LuSearch, LuX } from "react-icons/lu";
 import api from "@/app/axios";
 import { SearchResults } from "@/app/types";
 
@@ -69,13 +69,13 @@ export default function SearchBar() {
         aria-label="Search"
         className="md:hidden p-2 text-outline hover:text-primary-container transition-colors cursor-pointer"
       >
-        <IoMdSearch className="text-2xl" />
+        <LuSearch className="text-2xl" />
       </button>
       <button
         onClick={() => setIsOpen(true)}
         className="relative z-10 hidden md:flex items-center bg-surface-container-low border border-outline-variant transition-colors w-full hover:border-outline cursor-pointer px-4 py-2.5 gap-3"
       >
-        <IoMdSearch className="text-xl text-outline" />
+        <LuSearch className="text-xl text-outline" />
         <span className="text-sm font-body text-outline w-full text-left">
           Search statements...
         </span>
@@ -98,7 +98,7 @@ export default function SearchBar() {
             className="relative w-full max-w-2xl bg-surface-container-lowest/20 border border-outline-variant rounded-xl shadow-2xl overflow-hidden flex flex-col mx-4 sm:mx-0"
           >
             <div className="flex items-center px-4 py-4 bg-surface-container-low border-b border-transparent focus-within:border-primary/50 transition-colors">
-              <IoMdSearch className="text-outline text-2xl mr-2" />
+              <LuSearch className="text-outline text-2xl mr-2" />
               <input
                 className="flex-1 bg-transparent border-none focus:outline-none text-lg text-on-surface placeholder:text-outline"
                 placeholder="Search statements, domains, or users..."
@@ -112,7 +112,7 @@ export default function SearchBar() {
                 aria-label="Close search"
                 className="p-1 text-outline hover:text-on-surface hover:bg-surface-container-high"
               >
-                <IoMdClose className="text-xl" />
+                <LuX className="text-xl" />
               </button>
             </div>
 

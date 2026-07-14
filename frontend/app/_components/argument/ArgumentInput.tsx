@@ -6,8 +6,7 @@ import api from "@/app/axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { IoMdClose } from "react-icons/io";
-import { MdWarningAmber } from "react-icons/md";
+import { LuTriangleAlert, LuX } from "react-icons/lu";
 import Button from "@/app/_components/ui/Button";
 
 const ArgumentInput = ({ argumentId }: { argumentId: number }) => {
@@ -77,7 +76,7 @@ const ArgumentInput = ({ argumentId }: { argumentId: number }) => {
       {warning && (
         <div className="fixed bottom-32 right-6 z-60 max-w-sm bg-surface-container-lowest border-l-4 border-secondary p-4 shadow-glow-secondary flex items-start gap-4">
           <div className="shrink-0 mt-1">
-            <MdWarningAmber className="text-secondary font-bold text-xl" />
+            <LuTriangleAlert className="text-secondary font-bold text-xl" />
           </div>
           <div className="grow">
             <h4 className="font-label text-[10px] uppercase tracking-[0.2em] text-secondary mb-1 font-bold">
@@ -99,7 +98,7 @@ const ArgumentInput = ({ argumentId }: { argumentId: number }) => {
             className="shrink-0 text-outline hover:text-white cursor-pointer"
             onClick={() => setWarning(false)}
           >
-            <IoMdClose className="text-sm" />
+            <LuX className="text-sm" />
           </button>
         </div>
       )}

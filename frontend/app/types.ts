@@ -34,7 +34,6 @@ export interface TopDebatersCardProps {
   logicScore: number;
   id: number;
   rank: number;
-  avatar_url: string;
 }
 export type TopDebatersCardData = TopDebatersCardProps[];
 

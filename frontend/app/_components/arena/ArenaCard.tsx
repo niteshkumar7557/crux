@@ -1,7 +1,7 @@
 "use client";
 import { ReactNode } from "react";
-import { PLACEHOLDER_AVATAR_URL } from "@/app/_utils/constants";
 import Link from "next/link";
+import Avatar from "@/app/_components/ui/Avatar";
 import ScoreBar from "./ScoreBar";
 
 // The compact feed card used by both the trending grid and the newest tab.
@@ -40,11 +40,7 @@ const ArenaCard = ({
         <div>
           <div className="flex justify-between">
             <div className="flex items-center gap-2 mb-4">
-              <img
-                alt={username}
-                className="w-6 h-6 border border-outline-variant/20 grayscale"
-                src={PLACEHOLDER_AVATAR_URL}
-              />
+              <Avatar username={username} size="sm" />
               <span className="font-body text-[10px] font-bold text-outline uppercase tracking-wider">
                 {username}
               </span>

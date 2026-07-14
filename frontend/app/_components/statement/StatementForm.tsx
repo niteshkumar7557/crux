@@ -2,18 +2,17 @@
 import { DomainClassification } from "@/app/statement/types";
 import React, { useState, useRef } from "react";
 import {
-  MdEditNote,
-  MdFilterList,
-  MdMemory,
-  MdOutlineAnalytics,
-  MdSensors,
-} from "react-icons/md";
-
-import { TbGavel } from "react-icons/tb";
+  LuBot,
+  LuChartColumn,
+  LuCpu,
+  LuGavel,
+  LuListFilter,
+  LuPenLine,
+  LuRadioTower,
+} from "react-icons/lu";
 import { getUser } from "@/app/_utils/getUser";
 import { useRouter } from "next/navigation";
 import api from "@/app/axios";
-import { RiRobot3Line } from "react-icons/ri";
 import { jwtPayload } from "@/app/_types/jwt";
 import Button from "@/app/_components/ui/Button";
 
@@ -145,7 +144,7 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
         {/* <!-- Category Selection --> */}
         <div className="space-y-3">
           <p className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
-            <MdFilterList className="text-sm" />
+            <LuListFilter className="text-sm" />
             SELECT YOUR BATTLEGROUND
           </p>
           <div className=" flex flex-wrap gap-2">
@@ -167,7 +166,7 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
             className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant flex items-center gap-2"
             htmlFor="claim"
           >
-            <MdEditNote className="text-sm" />
+            <LuPenLine className="text-sm" />
             YOUR CLAIM
           </label>
           <textarea
@@ -191,10 +190,10 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
           <div className="flex items-center gap-4 text-on-surface-variant">
             <div className="flex">
               <div className="w-8 h-8 bg-surface-container-high border border-outline-variant flex items-center justify-center">
-                <TbGavel className="text-xs" />
+                <LuGavel className="text-xs" />
               </div>
               <div className="w-8 h-8 bg-surface-container-high border border-outline-variant flex items-center justify-center">
-                <MdOutlineAnalytics className="text-xs" />
+                <LuChartColumn className="text-xs" />
               </div>
             </div>
             <span className="font-label text-[10px] uppercase tracking-widest">
@@ -212,9 +211,9 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
             {formState.loading ? (
               <span className="border-t-2 border-on-primary h-4 w-4 rounded-full animate-spin"></span>
             ) : isEligible ? (
-              <MdSensors className="text-lg" />
+              <LuRadioTower className="text-lg" />
             ) : (
-              <RiRobot3Line className="text-lg" />
+              <LuBot className="text-lg" />
             )}
           </Button>
         </div>
@@ -240,7 +239,7 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
             </div>
             <div className="bg-surface-container-lowest p-5 border-l border-primary/50">
               <div className="flex items-start gap-4">
-                <MdMemory className="text-primary text-lg mt-0.5 animate-pulse motion-reduce:animate-none" />
+                <LuCpu className="text-primary text-lg mt-0.5 animate-pulse motion-reduce:animate-none" />
                 <p className="font-label text-xs text-on-surface-variant leading-relaxed">
                   {formState.feedback}
                 </p>

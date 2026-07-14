@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { CiShare2 } from "react-icons/ci";
-import { MdOutlineTerminal } from "react-icons/md";
+import { LuShare2, LuTerminal } from "react-icons/lu";
 
 const Footer = () => {
   return (
@@ -41,7 +40,7 @@ const Footer = () => {
             className="w-8 h-8 flex items-center justify-center bg-surface-container-high border border-outline-variant/30 text-outline hover:text-primary transition-colors cursor-pointer"
           >
             <span className="text-sm">
-              <MdOutlineTerminal />
+              <LuTerminal />
             </span>
           </button>
           <button
@@ -50,7 +49,7 @@ const Footer = () => {
             className="w-8 h-8 flex items-center justify-center bg-surface-container-high border border-outline-variant/30 text-outline hover:text-primary transition-colors cursor-pointer"
           >
             <span className="text-sm">
-              <CiShare2 />
+              <LuShare2 />
             </span>
           </button>
         </div>

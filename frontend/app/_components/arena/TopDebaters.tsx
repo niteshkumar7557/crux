@@ -1,5 +1,4 @@
 import { TopDebatersCardData } from "@/app/types";
-import { PLACEHOLDER_AVATAR_URL } from "@/app/_utils/constants";
 import TopDebatersCard from "./TopDebatersCard";
 import Link from "next/link";
 
@@ -24,7 +23,6 @@ const TopDebaters = ({ data }: { data: TopDebatersCardData }) => {
             key={i}
             id={e.id}
             rank={e.rank}
-            avatar_url={PLACEHOLDER_AVATAR_URL}
             name={e.name}
             logicScore={e.logicScore}
           />

@@ -2,9 +2,8 @@
 import { UserArgumentCardProps } from "@/app/argument/types";
 import api from "@/app/axios";
 import { useState } from "react";
-import { FiThumbsUp } from "react-icons/fi";
-import { VscThumbsupFilled } from "react-icons/vsc";
-import { MdOutlineVerifiedUser } from "react-icons/md";
+import { LuThumbsUp } from "react-icons/lu";
+import Avatar from "@/app/_components/ui/Avatar";
 
 const UserArgumentCard = ({
   side,
@@ -47,9 +46,11 @@ const UserArgumentCard = ({
       >
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-surface-container-high border border-outline-variant/40 flex items-center justify-center">
-              <MdOutlineVerifiedUser className="text-sm text-primary" />
-            </div>
+            <Avatar
+              username={username}
+              size="md"
+              accent={side === "for" ? "primary" : "secondary"}
+            />
             <div>
               <p className="font-label text-[10px] uppercase text-on-surface">
                 Reputation: {reputation}
@@ -77,13 +78,9 @@ const UserArgumentCard = ({
             onClick={handleClick}
             className={`flex items-center gap-2 font-label text-[10px] uppercase text-outline ${liked && side === "for" && "text-primary"} ${liked && side === "against" && "text-secondary"} ${side === "for" ? "hover:text-primary" : "hover:text-secondary"}  transition-colors`}
           >
-            {!liked ? (
-              <FiThumbsUp className="text-sm" />
-            ) : (
-              <VscThumbsupFilled
-                className={`text-sm ${side === "for" ? "text-primary" : "text-secondary"}`}
-              />
-            )}{" "}
+            <LuThumbsUp
+              className={`text-sm ${liked ? `fill-current ${side === "for" ? "text-primary" : "text-secondary"}` : ""}`}
+            />{" "}
             {likeCount}
           </button>
         </div>

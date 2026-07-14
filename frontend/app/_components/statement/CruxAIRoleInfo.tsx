@@ -1,11 +1,11 @@
-import { MdOutlineGroup, MdOutlinePsychology } from "react-icons/md";
+import { LuBrain, LuUsers } from "react-icons/lu";
 
 const CruxAIRoleInfo = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="bg-surface-container p-6 border-l border-tertiary/30">
         <h4 className="font-label text-[10px] uppercase tracking-[0.2em] text-tertiary mb-3 flex items-center gap-2">
-          <MdOutlinePsychology className="text-sm" />
+          <LuBrain className="text-sm" />
           Autonomous Adjudication
         </h4>
         <p className="font-body text-xs text-on-surface-variant leading-relaxed">
@@ -17,7 +17,7 @@ const CruxAIRoleInfo = () => {
       </div>
       <div className="bg-surface-container p-6 border-l border-primary/30">
         <h4 className="font-label text-[10px] uppercase tracking-[0.2em] text-primary mb-3 flex items-center gap-2">
-          <MdOutlineGroup className="text-sm" />
+          <LuUsers className="text-sm" />
           Matchmaking Logic
         </h4>
         <p className="font-body text-xs text-on-surface-variant leading-relaxed">

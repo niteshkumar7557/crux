@@ -1,6 +1,6 @@
 import { ArgumentArenaProps } from "@/app/argument/types";
 import UserArgumentCard from "./UserCommentCard";
-import { MdMemory } from "react-icons/md";
+import { LuCpu } from "react-icons/lu";
 import ReactMarkdown from "react-markdown";
 
 // Both sides share one layout; only the accent token and column padding
@@ -64,7 +64,7 @@ const CaseColumn = ({
         className={`mb-10 relative p-6 bg-surface-container-lowest border ${s.panel}`}
       >
         <div className="flex items-center gap-2 mb-3">
-          <MdMemory className={`${s.accentText} text-sm`} />
+          <LuCpu className={`${s.accentText} text-sm`} />
           <span
             className={`font-label text-[10px] uppercase tracking-[0.15em] ${s.accentText} font-bold`}
           >

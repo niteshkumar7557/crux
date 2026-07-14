@@ -1,12 +1,17 @@
 "use client";
 import api from "@/app/axios";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { DiRuby } from "react-icons/di";
-import { FaBalanceScale } from "react-icons/fa";
-import { IoIosArrowRoundForward } from "react-icons/io";
-import { LuLockKeyhole, LuUser } from "react-icons/lu";
-import { MdOutlineEmail, MdOutlineVerifiedUser } from "react-icons/md";
+import {
+  LuArrowRight,
+  LuGem,
+  LuLockKeyhole,
+  LuMail,
+  LuScale,
+  LuShieldCheck,
+  LuUser,
+} from "react-icons/lu";
 import Button from "@/app/_components/ui/Button";
 
 const Register = () => {
@@ -86,7 +91,7 @@ const Register = () => {
                   Unique Identity / Username
                 </label>
                 <div className="relative group">
-                  <DiRuby className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
+                  <LuGem className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
                   <input
                     className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-outline transition-all font-body text-sm"
                     id="username"
@@ -107,7 +112,7 @@ const Register = () => {
                   Secure Communication / Email
                 </label>
                 <div className="relative group">
-                  <MdOutlineEmail className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
+                  <LuMail className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
                   <input
                     className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-outline transition-all font-body text-sm"
                     id="email"
@@ -158,7 +163,7 @@ const Register = () => {
               <div className="pt-6">
                 <Button type="submit" size="lg" className="w-full">
                   JOIN THE FRAY
-                  <IoIosArrowRoundForward className="text-lg" />
+                  <LuArrowRight className="text-lg" />
                 </Button>
               </div>
             </form>
@@ -176,10 +181,12 @@ const Register = () => {
           </div>
           <div className="md:col-span-5 bg-surface-container border-l border-outline-variant/15 flex flex-col">
             <div className="relative h-48 md:h-64 overflow-hidden">
-              <img
-                className="w-full h-full object-cover grayscale opacity-60"
+              <Image
+                className="object-cover"
                 alt=""
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkgpIew1fdUvf7p8_I1gPEDxnhI_AYhnwLdKCpkD23uyKJgPUQ717z1NwADtWDqvfFny8RKu8LKuyuG9nt5_VOP6ZiKTro5FR8GunuEeSud_Z2guVkXj-4i9PNK3kxHM7K6XW08rKWTGGicMwzlwTy9GYmgw16EysO40rELyN2DszfgnmKb5ku7tpatCyP-oqRnJNY2Dltz_fKntlJem8TqwDmjhUJNYbJmP15gA67-0e5wz_dgxpXC89UuXzKT9hENHk3IV2Xetpb"
+                src="/register-hero.png"
+                fill
+                sizes="(min-width: 768px) 40vw, 100vw"
               />
               <div className="absolute inset-0 bg-linear-to-t from-surface-container to-transparent"></div>
               <div className="absolute bottom-6 left-10">
@@ -198,7 +205,7 @@ const Register = () => {
               <div className="space-y-8">
                 <div className="flex gap-4">
                   <div className="shrink-0 w-10 h-10 bg-surface-container-high flex items-center justify-center">
-                    <MdOutlineVerifiedUser className="text-primary" />
+                    <LuShieldCheck className="text-primary" />
                   </div>
                   <div>
                     <h3 className="font-label text-xs tracking-widest text-primary uppercase mb-1">
@@ -212,7 +219,7 @@ const Register = () => {
                 </div>
                 <div className="flex gap-4">
                   <div className="shrink-0 w-10 h-10 bg-surface-container-high flex items-center justify-center">
-                    <FaBalanceScale className="text-secondary" />
+                    <LuScale className="text-secondary" />
                   </div>
                   <div>
                     <h3 className="font-label text-xs tracking-widest text-secondary uppercase mb-1">

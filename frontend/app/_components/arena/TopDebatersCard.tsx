@@ -1,9 +1,9 @@
 import { TopDebatersCardProps } from "@/app/types";
 import Link from "next/link";
+import Avatar from "@/app/_components/ui/Avatar";
 
 const TopDebatersCard = ({
   rank,
-  avatar_url,
   name,
   logicScore,
   id,
@@ -18,11 +18,7 @@ const TopDebatersCard = ({
       >
         {rank < 10 ? `0${rank}` : rank}
       </span>
-      <img
-        className="w-10 h-10 border border-outline-variant/30 hover:grayscale-0 transition-all"
-        alt={name}
-        src={avatar_url}
-      />
+      <Avatar username={name} size="lg" />
       <div>
         <div className="text-sm font-bold">{name}</div>
         <div className="text-[10px] font-label text-outline uppercase tracking-widest">

@@ -1,4 +1,4 @@
-import { IoIosArrowRoundForward } from "react-icons/io";
+import { LuArrowRight } from "react-icons/lu";
 import Button from "./_components/ui/Button";
 
 const NotFound = () => (
@@ -17,7 +17,7 @@ const NotFound = () => (
       </p>
       <Button size="lg" href="/">
         Back to the Arena
-        <IoIosArrowRoundForward className="text-lg" />
+        <LuArrowRight className="text-lg" />
       </Button>
     </div>
   </main>

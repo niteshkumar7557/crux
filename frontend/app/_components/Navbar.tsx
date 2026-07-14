@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CgProfile } from "react-icons/cg";
+import { LuCircleUserRound } from "react-icons/lu";
 import { useUser } from "../_hooks/useUser";
 import SearchBar from "./SearchBar";
 import Button from "./ui/Button";
@@ -45,7 +45,7 @@ const Navbar = () => {
           aria-label={user ? "Your profile" : "Log in"}
           className={`cursor-pointer ${pathname === "/profile" ? "border-b-2 border-primary-container pb-1 text-primary-container" : ""} text-outline hover:text-primary-container transition-colors`}
         >
-          <CgProfile size={26} />
+          <LuCircleUserRound size={26} />
         </Link>
       </div>
     </nav>
