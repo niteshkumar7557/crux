@@ -23,7 +23,7 @@ const NewestTab = () => {
 
   return (
     <div>
-      {cardsData.map((e, i) => (
+      {cardsData.length > 0 && cardsData.map((e, i) => (
         <ArenaCard
           key={i}
           username={e.username}

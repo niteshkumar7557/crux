@@ -69,10 +69,10 @@
 }
 
 /* Keyboard focus — visible everywhere unless a component ships its own replacement */
-:focus-visible {
+/* :focus-visible {
   outline: 2px solid var(--color-primary-container);
   outline-offset: 2px;
-}
+} */
 
 .perspective-grid {
   background-image:
