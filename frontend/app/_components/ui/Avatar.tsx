@@ -5,6 +5,8 @@ const SIZES = {
   sm: "w-6 h-6 text-[9px]",
   md: "w-8 h-8 text-[10px]",
   lg: "w-10 h-10 text-xs",
+  xl: "w-20 h-20 text-xl",
+  "2xl": "w-32 h-32 text-3xl",
 };
 
 const HASH_ACCENTS = ["text-primary", "text-tertiary"];

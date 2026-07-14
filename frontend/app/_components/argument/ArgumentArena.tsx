@@ -4,6 +4,7 @@ import { getUser } from "@/app/_utils/getUser";
 import { jwtPayload } from "@/app/_types/jwt";
 import { UserArgumentCardProps } from "@/app/argument/types";
 import { useEffect, useState } from "react";
+import { convertLogicScore } from "@/app/_utils/logicScore";
 
 interface RawComment {
   comment_id: number;
@@ -13,21 +14,6 @@ interface RawComment {
   content: string;
   likes: number;
   post_user_id: number;
-}
-
-function convertLogicScore(score: number) {
-  // Beginner       -> B   0-50
-  // Intermediate   -> B+  50-100
-  // Skilled        -> A   100-150
-  // Expert         -> A+  150-200
-  // Master         -> M   200+
-
-  const logicIndex = Number(score >= 50) + Number(score >= 100) + Number(score >= 150) + Number(score >= 200);
-  
-  return {
-    reputation: ["beginner", "intermediate", "skilled", "expert", "master"][logicIndex],
-    grade: ["B", "B+", "A", "A+", "M"][logicIndex],
-  };
 }
 
 const ArgumentArena = ({

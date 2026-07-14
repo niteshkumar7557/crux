@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   getActiveCardData,
+  getLeaderboardData,
   getNewestCardData,
   getSidebarData,
   getTrendingCardData,
@@ -12,5 +13,6 @@ arenaRoutes.get("/active/main", getActiveCardData);
 arenaRoutes.get("/active/trending", getTrendingCardData);
 arenaRoutes.get("/active/newest", getNewestCardData);
 arenaRoutes.get("/sidebar", getSidebarData);
+arenaRoutes.get("/leaderboard", getLeaderboardData);
 
 export default arenaRoutes;

@@ -166,7 +166,7 @@ export default function SearchBar() {
                       {results.domains.map((result) => (
                         <Link
                           key={`domain-${result.domain}`}
-                          href={`/archive?domain=${encodeURIComponent(result.domain)}`}     // crux-future: Updated the href to include the domain as a query parameter for better routing
+                          href={`/archive?domain=${encodeURIComponent(result.domain)}`}
                           onClick={close}
                           className="w-full text-left px-4 py-3 flex items-center justify-between gap-3 text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface border-l-2 border-transparent"
                         >

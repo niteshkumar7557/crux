@@ -152,3 +152,32 @@ export async function getSidebarData(req: Request, res: Response) {
     res.status(200).json([]);
   }
 }
+
+export async function getLeaderboardData(req: Request, res: Response) {
+  try {
+    const standings = await pool.query(`
+            SELECT
+                u.id,
+                u.name,
+                u.username,
+                u.logic_score AS "logicScore",
+                RANK () OVER (ORDER BY u.logic_score DESC, u.id ASC)::int AS rank,
+                COALESCE(a.count, 0)::int AS "statementCount",
+                COALESCE(c.count, 0)::int AS "argumentCount"
+            FROM users u
+            LEFT JOIN (
+                SELECT user_id, COUNT(*) AS count FROM arguments GROUP BY user_id
+            ) a ON a.user_id = u.id
+            LEFT JOIN (
+                SELECT user_id, COUNT(*) AS count FROM comments GROUP BY user_id
+            ) c ON c.user_id = u.id
+            ORDER BY u.logic_score DESC, u.id ASC
+            LIMIT 50;
+        `);
+
+    res.status(200).json(standings.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(200).json([]);
+  }
+}
