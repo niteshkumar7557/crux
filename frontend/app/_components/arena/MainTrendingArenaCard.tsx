@@ -7,6 +7,7 @@ import { LuBadgeCheck, LuMessageSquare } from "react-icons/lu";
 
 const MainTrendingArenaCard = ({
   username,
+  avatar,
   domain,
   title,
   argumentNum,
@@ -21,7 +22,7 @@ const MainTrendingArenaCard = ({
       className="bg-surface-container-low mt-5 p-8 pb-4 border-l-2 border-primary group hover:bg-surface-container transition-colors relative overflow-hidden"
     >
       <div className="flex items-center gap-3 mb-6">
-        <Avatar username={username} size="md" />
+        <Avatar username={username} src={avatar} size="md" />
         <div className="flex flex-col">
           <span className="font-label text-[10px] text-primary uppercase tracking-[0.2em]">
             Proposed By

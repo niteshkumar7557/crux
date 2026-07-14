@@ -61,7 +61,7 @@ Tokens live in `frontend/app/globals.css` `@theme` (M3-style dark ramp):
 
 **`ui/` primitives:**
 - `Button.tsx` — the only CTA. Variants `solid | outline | outline-secondary | outline-neutral`, sizes `sm | md | lg | bare` (bare = caller controls padding). Renders `<Link>` when `href` is passed. Has real disabled styling.
-- `Avatar.tsx` — brand default avatar: initials (splits on space/`_`/`.`/`-`) on `surface-container-high` chip. Accent auto-hashed from username (cyan/amber only) or forced via `accent="primary"|"secondary"` (comment cards pass stance). Sizes `sm md lg xl 2xl`. **There are no user photos anywhere in the app; this is intentional.**
+- `Avatar.tsx` — brand avatar. Optional `src` (the `users.avatar` path, e.g. `/avatars/presets/preset-07.svg` or `/uploads/avatars/u2-<uuid>.webp`) renders the image via `next/image` (`fill`, `unoptimized`, prefixed with `/api` so the Next rewrite proxies to the backend). Without `src`: initials (splits on space/`_`/`.`/`-`) on `surface-container-high` chip, accent auto-hashed from username (cyan/amber only) or forced via `accent="primary"|"secondary"` (comment cards pass stance). Sizes `sm md lg xl 2xl`. The picker/upload UI is `profile/AvatarEditor.tsx`, shown on your own `/profile/[id]`.
 - `Reveal.tsx` — client wrapper for server pages: batch-staggers every `[data-reveal]` descendant via `ScrollTrigger.batch` (start "top 88%", `once`, initial dim 0.25 → rise). Used by statement, profile, leaderboard, rules, about, archive.
 - `Skeleton.tsx` — loading-state building block.
 
@@ -94,7 +94,8 @@ Reduced-motion users get the server-rendered end state (verified via emulation).
 ## 7. Backend touchpoints added during the makeover
 
 - `GET /arena/leaderboard` (arena.controller/route) — top-50 standings with `RANK() OVER (ORDER BY logic_score DESC, id ASC)`, statement + comment counts. Read-only.
-- Everything else was frontend-only. Schema: `users(id, role, name, username, logic_score, description, email)`, `arguments(id, user_id, content, content_keyword, domain, affirmative, negative, created_at)`, `comments(id, user_id, argument_id, side, content, likes)`.
+- **Avatar system** (avatar.controller/route + `lib/avatars.ts`): `GET /avatar/presets` (public list), `POST /avatar/upload` (auth; multer memory storage 5MB + MIME filter, magic-byte check, sharp → 256×256 webp, metadata stripped), `PUT /avatar/preset` (auth; id validated server-side), `DELETE /avatar` (auth). `backend/public` is served by `express.static`; presets are 18 committed SVGs in `public/avatars/presets`, uploads land in `public/uploads/avatars` (gitignored, `.gitkeep`); replacing/removing deletes the old *custom* file only (ENOENT tolerated), presets are shared and never deleted. Migration `0005_add_user_avatar.sql` added `users.avatar TEXT` storing the public URL path — the prefix distinguishes preset vs custom. `avatar` is returned by `/user/me`, `/profile/:id`, `/comment/:id`, `/arena/leaderboard`, `/arena/sidebar`, and the `/arena/active/*` feeds.
+- Everything else was frontend-only. Schema: `users(id, role, name, username, logic_score, description, email, avatar)`, `arguments(id, user_id, content, content_keyword, domain, affirmative, negative, created_at)`, `comments(id, user_id, argument_id, side, content, likes)`.
 
 ## 8. Known issues & rough edges (candidates for the improvement session)
 

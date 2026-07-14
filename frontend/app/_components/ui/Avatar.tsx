@@ -1,6 +1,10 @@
-// Brand default avatar: initials on a surface chip, sharp corners.
-// Accent is derived from the username so the feed varies without images;
-// comment cards override it to match their stance side.
+import Image from "next/image";
+
+// Brand avatar. With a `src` (preset or custom upload, served by the
+// backend behind the /api rewrite) it shows the image; without one it
+// falls back to initials on a surface chip, accent derived from the
+// username so the feed varies without images. Comment cards override
+// the accent to match their stance side.
 const SIZES = {
   sm: "w-6 h-6 text-[9px]",
   md: "w-8 h-8 text-[10px]",
@@ -26,15 +30,35 @@ const initialsOf = (name: string) =>
 
 const Avatar = ({
   username,
+  src,
   size = "md",
   accent,
   className = "",
 }: {
   username: string;
+  src?: string | null;
   size?: keyof typeof SIZES;
   accent?: keyof typeof ACCENTS;
   className?: string;
 }) => {
+  if (src) {
+    return (
+      <span
+        aria-hidden="true"
+        className={`relative shrink-0 block overflow-hidden bg-surface-container-high border border-outline-variant/30 select-none ${SIZES[size]} ${className}`}
+      >
+        <Image
+          src={`/api${src}`}
+          alt=""
+          fill
+          sizes="128px"
+          unoptimized
+          className="object-cover"
+        />
+      </span>
+    );
+  }
+
   const color = accent
     ? ACCENTS[accent]
     : HASH_ACCENTS[

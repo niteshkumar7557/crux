@@ -24,6 +24,7 @@ const TopDebaters = ({ data }: { data: TopDebatersCardData }) => {
             id={e.id}
             rank={e.rank}
             name={e.name}
+            avatar={e.avatar}
             logicScore={e.logicScore}
           />
         ))}

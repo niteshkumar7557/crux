@@ -173,7 +173,7 @@ export async function getUserInfo(req: Request, res: Response) {
   try {
     const { rows } = await pool.query(
       `
-        SELECT id, name, username, role FROM users WHERE id = $1; 
+        SELECT id, name, username, role, avatar FROM users WHERE id = $1;
       `,
       [req.user!.id],
     );

@@ -10,6 +10,7 @@ import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
 interface RawComment {
   comment_id: number;
   username: string;
+  avatar: string | null;
   side: "for" | "against";
   logic_score: number;
   content: string;
@@ -70,6 +71,7 @@ const ArgumentArena = ({
       side: e.side,
       reputation: logicStats.reputation,
       username: e.username,
+      avatar: e.avatar,
       grade: logicStats.grade,
       comment: e.content,
       likes: e.likes,

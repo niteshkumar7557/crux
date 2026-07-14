@@ -8,6 +8,7 @@ import { gsap, MOTION_OK } from "@/app/_utils/gsap";
 // The compact feed card used by both the trending grid and the newest tab.
 export interface ArenaCardComponentProps {
   username: string;
+  avatar?: string | null;
   domain: string;
   title: string;
   affirmativescore: number;
@@ -20,6 +21,7 @@ export interface ArenaCardComponentProps {
 
 const ArenaCard = ({
   username,
+  avatar,
   domain,
   title,
   affirmativescore,
@@ -56,7 +58,7 @@ const ArenaCard = ({
         <div>
           <div className="flex justify-between">
             <div className="flex items-center gap-2 mb-4">
-              <Avatar username={username} size="sm" />
+              <Avatar username={username} src={avatar} size="sm" />
               <span className="font-body text-[10px] font-bold text-outline uppercase tracking-wider">
                 {username}
               </span>

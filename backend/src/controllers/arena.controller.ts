@@ -14,7 +14,7 @@ export async function getActiveCardData(req: Request, res: Response) {
     }
     const user = await pool.query(
       `
-                SELECT username FROM users WHERE id = $1;
+                SELECT username, avatar FROM users WHERE id = $1;
             `,
       [argument.rows[0].user_id],
     );
@@ -29,6 +29,7 @@ export async function getActiveCardData(req: Request, res: Response) {
       domain: argument.rows[0].domain,
       argumentId: argument.rows[0].id,
       username: user.rows[0].username,
+      avatar: user.rows[0].avatar,
       content: argument.rows[0].content,
       affirmative: argument.rows[0].affirmative,
       negative: argument.rows[0].negative,
@@ -43,8 +44,9 @@ export async function getActiveCardData(req: Request, res: Response) {
 export async function getTrendingCardData(req: Request, res: Response) {
   try {
     const argument = await pool.query(`
-                SELECT 
+                SELECT
                     u.username,
+                    u.avatar,
                     a.domain,
                     a.content AS title,
                     a.affirmative AS affirmativeScore,
@@ -54,7 +56,7 @@ export async function getTrendingCardData(req: Request, res: Response) {
                 FROM arguments a
                 JOIN users u ON a.user_id = u.id
                 LEFT JOIN comments c ON c.argument_id = a.id
-                GROUP BY a.id, u.username, a.domain, a.content, a.affirmative, a.negative
+                GROUP BY a.id, u.username, u.avatar, a.domain, a.content, a.affirmative, a.negative
                 ORDER BY a.id DESC
                 LIMIT 7;
             `);
@@ -72,8 +74,9 @@ export async function getTrendingCardData(req: Request, res: Response) {
 export async function getNewestCardData(req: Request, res: Response) {
   try {
     const argument = await pool.query(`
-                SELECT 
+                SELECT
                     u.username,
+                    u.avatar,
                     a.domain,
                     a.content AS title,
                     a.affirmative AS affirmativeScore,
@@ -118,8 +121,9 @@ export async function getSidebarData(req: Request, res: Response) {
         `);
 
     const data2 = await pool.query(`
-            SELECT 
+            SELECT
                 name,
+                avatar,
                 logic_score AS "logicScore",
                 id,
                 RANK () OVER (ORDER BY logic_score DESC, id ASC) AS rank
@@ -160,6 +164,7 @@ export async function getLeaderboardData(req: Request, res: Response) {
                 u.id,
                 u.name,
                 u.username,
+                u.avatar,
                 u.logic_score AS "logicScore",
                 RANK () OVER (ORDER BY u.logic_score DESC, u.id ASC)::int AS rank,
                 COALESCE(a.count, 0)::int AS "statementCount",

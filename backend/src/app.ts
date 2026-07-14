@@ -3,6 +3,7 @@ import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import config from "./config/index.js";
+import { PUBLIC_DIR } from "./lib/avatars.js";
 import userRoutes from "./routes/user.route.js";
 import argumentRoutes from "./routes/argument.route.js";
 import commentRoutes from "./routes/comment.route.js";
@@ -11,6 +12,7 @@ import aiRoutes from "./routes/ai.route.js";
 import likeRoutes from "./routes/like.route.js";
 import profileRoutes from "./routes/profile.route.js";
 import searchRoutes from "./routes/search.route.js";
+import avatarRoutes from "./routes/avatar.route.js";
 
 const app = express();
 
@@ -24,6 +26,7 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
+app.use(express.static(PUBLIC_DIR));
 
 // routes
 app.get("/health", (req, res) => res.sendStatus(200));
@@ -35,5 +38,6 @@ app.use("/ai", aiRoutes);
 app.use("/like", likeRoutes);
 app.use("/profile", profileRoutes);
 app.use("/search", searchRoutes);
+app.use("/avatar", avatarRoutes);
 
 export default app;

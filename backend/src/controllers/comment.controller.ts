@@ -237,7 +237,7 @@ export async function getComments(req: Request, res: Response) {
   const { id } = req.params;
   const comments = await pool.query(
     `
-            SELECT c.id AS comment_id, u.username, c.side, u.logic_score, c.content, c.likes, u.id AS post_user_id
+            SELECT c.id AS comment_id, u.username, u.avatar, c.side, u.logic_score, c.content, c.likes, u.id AS post_user_id
             FROM comments c
             JOIN users u ON c.user_id = u.id
             WHERE c.argument_id = $1;

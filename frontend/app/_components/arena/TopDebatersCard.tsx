@@ -5,6 +5,7 @@ import Avatar from "@/app/_components/ui/Avatar";
 const TopDebatersCard = ({
   rank,
   name,
+  avatar,
   logicScore,
   id,
 }: TopDebatersCardProps) => {
@@ -18,7 +19,7 @@ const TopDebatersCard = ({
       >
         {rank < 10 ? `0${rank}` : rank}
       </span>
-      <Avatar username={name} size="lg" />
+      <Avatar username={name} src={avatar} size="lg" />
       <div>
         <div className="text-sm font-bold">{name}</div>
         <div className="text-[10px] font-label text-outline uppercase tracking-widest">

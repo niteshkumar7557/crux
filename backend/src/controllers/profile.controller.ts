@@ -35,7 +35,7 @@ export async function getProfileDataById(req: Request, res: Response) {
   try {
     const data1 = await pool.query(
       `
-                SELECT name, description, logic_score
+                SELECT name, username, description, logic_score, avatar
                 FROM users
                 WHERE id = $1;
             `,
@@ -60,6 +60,8 @@ export async function getProfileDataById(req: Request, res: Response) {
 
     const userHeadInfo = {
       name: data1.rows[0].name,
+      username: data1.rows[0].username,
+      avatar: data1.rows[0].avatar,
       level: convertLogicScore(logicScore).reputation,
       description: data1.rows[0].description,
       reputation: data1.rows[0].logic_score,

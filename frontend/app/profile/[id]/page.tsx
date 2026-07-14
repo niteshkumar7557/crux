@@ -26,7 +26,10 @@ const page = async ({ params }: { params: { id: string } }) => {
     <Reveal className="px-8 py-6">
       <div data-reveal>
         <UserHeadInfo
+          profileId={id}
           name={data.userHeadInfo.name}
+          username={data.userHeadInfo.username}
+          avatar={data.userHeadInfo.avatar}
           level={data.userHeadInfo.level}
           description={data.userHeadInfo.description}
           reputation={data.userHeadInfo.reputation}

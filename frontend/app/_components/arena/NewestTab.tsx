@@ -27,6 +27,7 @@ const NewestTab = () => {
         <ArenaCard
           key={i}
           username={e.username}
+          avatar={e.avatar}
           domain={e.domain}
           title={e.title}
           affirmativescore={e.affirmativescore}

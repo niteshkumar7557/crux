@@ -1,5 +1,6 @@
 export interface MainTrendingArenaCardProps {
   username: string;
+  avatar: string | null;
   domain: string;
   title: string;
   argumentNum: number;
@@ -12,6 +13,7 @@ export type MainTrendingArenaCardData = MainTrendingArenaCardProps[];
 
 export interface TrendingArenaCardProps {
   username: string;
+  avatar: string | null;
   domain: string;
   title: string;
   affirmativescore: number;
@@ -31,6 +33,7 @@ export type TrendingTopicsCardData = TrendingTopicsCardProps[];
 
 export interface TopDebatersCardProps {
   name: string;
+  avatar: string | null;
   logicScore: number;
   id: number;
   rank: number;
@@ -44,6 +47,7 @@ export interface SystemHealthData {
 
 export interface NewestCardProps {
   username: string;
+  avatar: string | null;
   domain: string;
   title: string;
   affirmativescore: number;

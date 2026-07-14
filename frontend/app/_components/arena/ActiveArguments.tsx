@@ -92,6 +92,7 @@ const ActiveArguments = ({
                 key={i}
                 domain={e.domain}
                 username={e.username}
+                avatar={e.avatar}
                 title={e.title}
                 argumentNum={e.argumentNum}
                 argumentQuality={e.argumentQuality}
@@ -108,6 +109,7 @@ const ActiveArguments = ({
                   <ArenaCard
                     key={i}
                     username={e.username}
+                    avatar={e.avatar}
                     domain={e.domain}
                     title={e.title}
                     affirmativescore={e.affirmativescore}

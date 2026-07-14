@@ -10,6 +10,7 @@ const UserArgumentCard = ({
   side,
   reputation,
   username,
+  avatar,
   grade,
   comment,
   likes,
@@ -63,6 +64,7 @@ const UserArgumentCard = ({
           <div className="flex items-center gap-3">
             <Avatar
               username={username}
+              src={avatar}
               size="md"
               accent={side === "for" ? "primary" : "secondary"}
             />

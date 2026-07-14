@@ -1,14 +1,22 @@
 import type { UserHeadInfoProps } from "@/app/profile/types";
+import AvatarEditor from "./AvatarEditor";
+import LogoutButton from "./LogoutButton";
 
 const UserHeadInfo = ({
+  profileId,
   name,
+  username,
+  avatar,
   level,
   description,
   reputation,
   globalRank,
 }: UserHeadInfoProps) => {
   return (
-    <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-8 md:mt-12 mb-16 items-end">
+    <section className="relative grid grid-cols-1 lg:grid-cols-12 gap-8 mt-8 md:mt-12 mb-16 items-end">
+      <div className="absolute top-0 right-0">
+        <LogoutButton profileId={profileId} />
+      </div>
       <div className="lg:col-span-7">
         <div className="flex items-center gap-2 mb-4">
           <span className="bg-primary-container text-on-primary-container px-3 py-0.5 font-label text-[10px] font-bold tracking-[0.2em] uppercase">
@@ -18,11 +26,18 @@ const UserHeadInfo = ({
             Verified Logic
           </span>
         </div>
-        <h1
-          className="font-headline text-5xl md:text-8xl font-bold tracking-tighter text-on-background leading-none break-words"
-        >
-          {name}
-        </h1>
+        <div className="flex items-end gap-5 md:gap-8">
+          <AvatarEditor
+            profileId={profileId}
+            username={username}
+            avatar={avatar}
+          />
+          <h1
+            className="font-headline text-5xl md:text-8xl font-bold tracking-tighter text-on-background leading-none break-words min-w-0"
+          >
+            {name}
+          </h1>
+        </div>
         <p className="font-body text-on-surface-variant mt-6 max-w-xl text-lg leading-relaxed">
           {description}
         </p>

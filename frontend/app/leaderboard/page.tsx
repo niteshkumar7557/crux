@@ -16,6 +16,7 @@ interface LeaderboardRow {
   id: number;
   name: string;
   username: string;
+  avatar: string | null;
   logicScore: number;
   rank: number;
   statementCount: number;
@@ -71,7 +72,7 @@ const PodiumSideCard = ({
           {String(place).padStart(2, "0")}
         </div>
         <div className="relative w-20 h-20 mb-6">
-          <Avatar username={debater.username} size="xl" />
+          <Avatar username={debater.username} src={debater.avatar} size="xl" />
           <div className={`absolute -bottom-2 -right-2 ${style.badge} p-1`}>
             <style.Icon className="text-sm" />
           </div>
@@ -197,6 +198,7 @@ const Leaderboard = async () => {
                     <div className="absolute inset-0 bg-primary/20 scale-110"></div>
                     <Avatar
                       username={podium[0].username}
+                      src={podium[0].avatar}
                       size="2xl"
                       className="relative z-10"
                     />
@@ -273,7 +275,11 @@ const Leaderboard = async () => {
                       {String(debater.rank).padStart(2, "0")}
                     </div>
                     <div className="col-span-6 md:col-span-5 flex items-center gap-4 min-w-0">
-                      <Avatar username={debater.username} size="lg" />
+                      <Avatar
+                        username={debater.username}
+                        src={debater.avatar}
+                        size="lg"
+                      />
                       <span className="min-w-0">
                         <span className="block font-headline text-xl italic text-on-background truncate">
                           {debater.name}

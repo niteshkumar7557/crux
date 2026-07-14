@@ -82,6 +82,7 @@ const CaseColumn = ({
             side={e.side}
             reputation={e.reputation}
             username={e.username}
+            avatar={e.avatar}
             grade={e.grade}
             comment={e.comment}
             likes={e.likes}

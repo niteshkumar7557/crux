@@ -1,5 +1,8 @@
 export interface UserHeadInfoProps {
+  profileId: number;
   name: string;
+  username: string;
+  avatar: string | null;
   level: string;
   description: string;
   reputation: number;

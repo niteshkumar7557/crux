@@ -1,8 +1,11 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { LuCircleUserRound } from "react-icons/lu";
+import api from "../axios";
 import { useUser } from "../_hooks/useUser";
+import Avatar from "./ui/Avatar";
 import SearchBar from "./SearchBar";
 import Button from "./ui/Button";
 
@@ -14,6 +17,31 @@ const navLinks = [
 const Navbar = () => {
   const pathname = usePathname();
   const user = useUser();
+  // the JWT doesn't carry the avatar, so fetch it once we know who's here
+  const [avatar, setAvatar] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    api
+      .get("/user/me")
+      .then(({ data }) => {
+        if (active) setAvatar(data.user?.avatar ?? null);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  // AvatarEditor announces changes so the navbar updates without a reload
+  useEffect(() => {
+    const onUpdate = (e: Event) =>
+      setAvatar((e as CustomEvent<string | null>).detail);
+    window.addEventListener("crux:avatar-updated", onUpdate);
+    return () => window.removeEventListener("crux:avatar-updated", onUpdate);
+  }, []);
+
   return (
     <nav className="bg-surface-container-lowest py-3 px-4 md:px-6 flex items-center justify-between gap-2 md:gap-6">
       <div className="flex items-center shrink-0">
@@ -43,9 +71,18 @@ const Navbar = () => {
         <Link
           href={user ? `/profile/${user.id}` : "/login"}
           aria-label={user ? "Your profile" : "Log in"}
-          className={`cursor-pointer ${pathname === "/profile" ? "border-b-2 border-primary-container pb-1 text-primary-container" : ""} text-outline hover:text-primary-container transition-colors`}
+          className="cursor-pointer text-outline hover:text-primary-container transition-colors"
         >
-          <LuCircleUserRound size={26} />
+          {user ? (
+            <Avatar
+              username={user.username}
+              src={avatar}
+              size="md"
+              className="hover:border-primary/60 transition-colors"
+            />
+          ) : (
+            <LuCircleUserRound size={26} />
+          )}
         </Link>
       </div>
     </nav>

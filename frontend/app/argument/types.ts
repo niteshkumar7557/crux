@@ -2,6 +2,7 @@ export interface UserArgumentCardProps {
   side: "for" | "against";
   reputation: string;
   username: string;
+  avatar: string | null;
   grade: string;
   comment: string;
   likes: number;

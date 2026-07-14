@@ -12,6 +12,7 @@ function buildMainTrendingArenaCardData(
   return [
     {
       username: String(mainPayload.username ?? ""),
+      avatar: typeof mainPayload.avatar === "string" ? mainPayload.avatar : null,
       domain: String(mainPayload.domain ?? ""),
       title: String(mainPayload.content ?? ""),
       argumentNum: Number(mainPayload.count_comments ?? 0),
