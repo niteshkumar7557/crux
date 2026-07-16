@@ -4,6 +4,7 @@ import Link from "next/link";
 import { LuSearch, LuX } from "react-icons/lu";
 import api from "@/app/axios";
 import { SearchResults } from "@/app/types";
+import { slugifyDomain } from "@/app/_utils/domainSlug";
 import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
 
 const EMPTY_RESULTS: SearchResults = { statements: [], domains: [], users: [] };
@@ -204,7 +205,7 @@ export default function SearchBar() {
                       {results.domains.map((result) => (
                         <Link
                           key={`domain-${result.domain}`}
-                          href={`/archive?domain=${encodeURIComponent(result.domain)}`}
+                          href={`/domain?q=${slugifyDomain(result.domain)}`}
                           onClick={close}
                           className="w-full text-left px-4 py-3 flex items-center justify-between gap-3 text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface border-l-2 border-transparent"
                         >

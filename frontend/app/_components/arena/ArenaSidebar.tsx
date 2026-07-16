@@ -1,19 +1,19 @@
 "use client";
 import TopDebaters from "./TopDebaters";
 import SystemHealth from "./SystemHealth";
-import TrendingTopics from "./TrendingTopics";
+import TrendingDomains from "./TrendingDomains";
 import {
   SystemHealthData,
   TopDebatersCardData,
-  TrendingTopicsCardData,
+  TrendingDomainCardData,
 } from "@/app/types";
 import { useEffect, useRef, useState } from "react";
 import api from "@/app/axios";
 import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
 
 const ArenaSidebar = () => {
-  const [trendingTopicsData, setTrendingTopicsData] =
-    useState<TrendingTopicsCardData>([]);
+  const [trendingDomainsData, setTrendingDomainsData] =
+    useState<TrendingDomainCardData>([]);
   const [topDebatersData, setTopDebatersData] = useState<TopDebatersCardData>(
     [],
   );
@@ -27,7 +27,7 @@ const ArenaSidebar = () => {
       try {
         const { data } = await api.get("/arena/sidebar");
         if (data.length !== 0) {
-          setTrendingTopicsData(data.data1);
+          setTrendingDomainsData(data.data1);
           setTopDebatersData(data.data2);
           setSystemHealthData(data.data3[0]);
         }
@@ -64,7 +64,7 @@ const ArenaSidebar = () => {
 
   return (
     <div ref={sidebarRef} className="py-10 md:w-[30%]">
-      <TrendingTopics data={trendingTopicsData} />
+      <TrendingDomains data={trendingDomainsData} />
       <TopDebaters data={topDebatersData} />
       <SystemHealth data={systemHealthData} />
     </div>

@@ -23,13 +23,13 @@ export interface TrendingArenaCardProps {
 }
 export type TrendingArenaCardData = TrendingArenaCardProps[];
 
-export interface TrendingTopicsCardProps {
+export interface TrendingDomainCardProps {
   topic: string;
   changePercentage: number;
   arguments: number;
   liveBattles: number;
 }
-export type TrendingTopicsCardData = TrendingTopicsCardProps[];
+export type TrendingDomainCardData = TrendingDomainCardProps[];
 
 export interface TopDebatersCardProps {
   name: string;
@@ -79,4 +79,16 @@ export interface SearchResults {
   statements: StatementSearchResult[];
   domains: DomainSearchResult[];
   users: UserSearchResult[];
+}
+
+export interface DomainInfo {
+  id: number;
+  name: string;
+}
+
+export interface PaginatedStatements {
+  statements: NewestCardProps[];
+  total: number;
+  page: number;
+  pageSize: number;
 }

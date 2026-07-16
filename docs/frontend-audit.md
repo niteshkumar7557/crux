@@ -42,7 +42,7 @@ These came from explicit user feedback during the makeover. Do not relitigate th
 | `/leaderboard` | **Real page** ("The Elite Hierarchy"): asymmetric top-3 podium (crowned apex + silver/bronze flanks) + striped standings table. Data from new backend endpoint `GET /arena/leaderboard` (top 50: id, name, username, logicScore, rank, statementCount, argumentCount). Podium requires ≥3 ranked users, else flat list. |
 | `/rules` | Real static "Rules of Engagement" (6 numbered rules + CTA). Linked from footer and the abuse toast. |
 | `/about` | Real static "Where logic decides." (3 accent pillars + CTAs). |
-| `/archive` | Real, **domain-filterable** statement index (`?domain=` — search domain results link here). Uses `/arena/active/newest` + chips + `ArenaCard` grid. |
+| `/domain` | Canonical **domain browser** (`?q=<slug>` or `?q=all`, `&page=<n>`; replaced the old `/archive`). Server-filtered via `GET /arena/statements`, all-12 seeded chips, `ArenaCard` grid, `ui/Pagination` footer. Slugs via `_utils/domainSlug.ts` (`"Technology & AI"` → `technology-ai`). Search domain results and the sidebar's Trending Domains link here; navbar has a Domains tab. |
 | Page states | Root `loading.tsx`, `error.tsx`, branded `not-found.tsx`; route-level `loading.tsx` for `/argument/[id]` and `/profile/[id]`. |
 
 ## 3. Design system reference
@@ -64,6 +64,7 @@ Tokens live in `frontend/app/globals.css` `@theme` (M3-style dark ramp):
 - `Avatar.tsx` — brand avatar. Optional `src` (the `users.avatar` path, e.g. `/avatars/presets/preset-07.svg` or `/uploads/avatars/u2-<uuid>.webp`) renders the image via `next/image` (`fill`, `unoptimized`, prefixed with `/api` so the Next rewrite proxies to the backend). Without `src`: initials (splits on space/`_`/`.`/`-`) on `surface-container-high` chip, accent auto-hashed from username (cyan/amber only) or forced via `accent="primary"|"secondary"` (comment cards pass stance). Sizes `sm md lg xl 2xl`. The picker/upload UI is `profile/AvatarEditor.tsx`, shown on your own `/profile/[id]`.
 - `Reveal.tsx` — client wrapper for server pages: batch-staggers every `[data-reveal]` descendant via `ScrollTrigger.batch` (start "top 88%", `once`, initial dim 0.25 → rise). Used by statement, profile, leaderboard, rules, about, archive.
 - `Skeleton.tsx` — loading-state building block.
+- `Pagination.tsx` — reusable pager (props: `page`, `totalPages`, `totalItems`, `itemLabel`, `hrefFor(page)`). Hairline-topped readout row + windowed zero-padded page cells (first/last/current ±1, inert `…` gaps), chip-style active state, disabled edge Prev/Next. Renders `null` at ≤1 page. Used by `/domain`; drop-in for future paginated pages.
 
 **Shared pieces:** `ArenaCard` (one base for trending/newest/archive cards; has `data-reveal` + GSAP hover lift built in), `ScoreBar` (+ `useScoreBarReveal` hook — bars draw from outer edges), `CaseColumn side="for"|"against"` (single implementation, literal class strings per side for Tailwind), `SearchBar` (debounced modal, dialog semantics, Escape/backdrop close, open-only GSAP choreography).
 
@@ -94,6 +95,7 @@ Reduced-motion users get the server-rendered end state (verified via emulation).
 ## 7. Backend touchpoints added during the makeover
 
 - `GET /arena/leaderboard` (arena.controller/route) — top-50 standings with `RANK() OVER (ORDER BY logic_score DESC, id ASC)`, statement + comment counts. Read-only.
+- `GET /arena/statements` (arena.controller/route) — paginated, domain-filterable statement feed for `/domain`: `?domainId=&page=&pageSize=` → `{ statements, total, page, pageSize }` (newest-first, same row shape as `/arena/active/newest`; `page` clamped to range, `pageSize` default 12 max 50, junk params → defaults). Read-only.
 - **Avatar system** (avatar.controller/route + `lib/avatars.ts`): `GET /avatar/presets` (public list), `POST /avatar/upload` (auth; multer memory storage 5MB + MIME filter, magic-byte check, sharp → 256×256 webp, metadata stripped), `PUT /avatar/preset` (auth; id validated server-side), `DELETE /avatar` (auth). `backend/public` is served by `express.static`; presets are 18 committed SVGs in `public/avatars/presets`, uploads land in `public/uploads/avatars` (gitignored, `.gitkeep`); replacing/removing deletes the old *custom* file only (ENOENT tolerated), presets are shared and never deleted. Migration `0005_add_user_avatar.sql` added `users.avatar TEXT` storing the public URL path — the prefix distinguishes preset vs custom. `avatar` is returned by `/user/me`, `/profile/:id`, `/comment/:id`, `/arena/leaderboard`, `/arena/sidebar`, and the `/arena/active/*` feeds.
 - Everything else was frontend-only. Schema: `users(id, role, name, username, logic_score, description, email, avatar)`, `arguments(id, user_id, content, content_keyword, domain, affirmative, negative, created_at)`, `comments(id, user_id, argument_id, side, content, likes)`.
 
@@ -109,8 +111,7 @@ Reduced-motion users get the server-rendered end state (verified via emulation).
 - Likes: optimistic UI only; unauthenticated likes mutate local state without persisting; no unlike API call.
 - Search: no keyboard result navigation (arrow keys), no focus trap in the dialog.
 - Leaderboard: no pagination beyond top 50; "Consistency"/"Wins"-style stats from the design mock have no schema backing (page shows only real columns deliberately).
-- `/archive` builds on `/arena/active/newest` (LIMIT 20) — a dedicated paginated archive endpoint would make it a real archive.
-- Statement domains on `/statement` are hardcoded (`AI, Geopolitics, …`) and don't match the seeded domains in the DB (`technology, policy, …` lowercase) — the archive chips derive from real data, so the two vocabularies diverge.
+- Leaderboard/home feeds are still unpaginated — `ui/Pagination` + the `/arena/statements` response shape (`{ statements, total, page, pageSize }`) are the intended pattern when they get there.
 - Audit motion opportunity #9 (new-comment insertion tween + bar re-tween on post) and #10 (route transitions) were deliberately not built.
 
 **Code quality niggles**
@@ -122,7 +123,7 @@ Reduced-motion users get the server-rendered end state (verified via emulation).
 ## 9. Verification workflow used throughout (repeat it)
 
 1. `cd frontend && npx tsc --noEmit` and `npm run lint` — both must stay at zero.
-2. Playwright MCP sweep: navigate `/`, `/login`, `/register`, `/statement`, `/argument/CRX-1-A`, `/profile/1`, `/leaderboard`, `/rules`, `/about`, `/archive` collecting console errors + pageerrors — must be zero (ignore one-time `ChunkLoadError` right after a dev-server restart; re-run to confirm).
+2. Playwright MCP sweep: navigate `/`, `/login`, `/register`, `/statement`, `/argument/CRX-1-A`, `/profile/1`, `/leaderboard`, `/rules`, `/about`, `/domain?q=all` collecting console errors + pageerrors — must be zero (ignore one-time `ChunkLoadError` right after a dev-server restart; re-run to confirm).
 3. Screenshot desktop (1440) and mobile (390) for visual changes; check `scrollWidth === clientWidth` at 390px.
 4. For motion work: emulate `prefers-reduced-motion: reduce` and assert no element is left dimmed/transformed; assert end states are `opacity: 1` / `transform: none`.
 5. Backend endpoint changes hot-reload via tsx watch; probe with `curl localhost:8000/...`.

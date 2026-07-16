@@ -11,6 +11,7 @@ import Button from "./ui/Button";
 
 const navLinks = [
   { label: "Arena", href: "/" },
+  { label: "Domains", href: "/domain?q=all" },
   { label: "Leaderboard", href: "/leaderboard" },
 ];
 
@@ -56,7 +57,7 @@ const Navbar = () => {
             <Link
               href={e.href}
               key={i}
-              className={`${pathname === e.href ? "text-primary-container cursor-pointer border-b-2 border-primary-container pb-1 font-bold text-sm" : "text-on-surface-variant font-medium cursor-pointer hover:text-primary-container pb-1 transition-colors duration-200 text-sm"}`}
+              className={`${pathname === e.href.split("?")[0] ? "text-primary-container cursor-pointer border-b-2 border-primary-container pb-1 font-bold text-sm" : "text-on-surface-variant font-medium cursor-pointer hover:text-primary-container pb-1 transition-colors duration-200 text-sm"}`}
             >
               {e.label}
             </Link>

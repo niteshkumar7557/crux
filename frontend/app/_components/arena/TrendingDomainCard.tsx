@@ -1,13 +1,15 @@
-import { TrendingTopicsCardProps } from "@/app/types";
+import Link from "next/link";
+import { TrendingDomainCardProps } from "@/app/types";
+import { slugifyDomain } from "@/app/_utils/domainSlug";
 
-const TrendingTopicsCard = ({
+const TrendingDomainCard = ({
   topic,
   changePercentage,
   arguments: argumentsCount,
   liveBattles,
-}: TrendingTopicsCardProps) => {
+}: TrendingDomainCardProps) => {
   return (
-    <div className="group cursor-default">
+    <Link href={`/domain?q=${slugifyDomain(topic)}`} className="group block">
       <div className="flex justify-between items-start mb-1">
         <span className="font-body capitalize text-sm font-bold group-hover:text-primary transition-colors">
           {topic}
@@ -21,8 +23,8 @@ const TrendingTopicsCard = ({
       <div className="text-[10px] font-label text-outline uppercase tracking-widest">
         {argumentsCount} Arguments • {liveBattles} Live Battles
       </div>
-    </div>
+    </Link>
   );
 };
 
-export default TrendingTopicsCard;
+export default TrendingDomainCard;

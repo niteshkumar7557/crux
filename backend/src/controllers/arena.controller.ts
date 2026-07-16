@@ -190,3 +190,67 @@ export async function getLeaderboardData(req: Request, res: Response) {
     res.status(200).json([]);
   }
 }
+
+export async function getStatements(req: Request, res: Response) {
+  try {
+    const domainId = Number.parseInt(String(req.query.domainId ?? ""), 10);
+    const hasDomain = Number.isInteger(domainId) && domainId > 0;
+
+    let pageSize = Number.parseInt(String(req.query.pageSize ?? ""), 10);
+    if (!Number.isInteger(pageSize)) pageSize = 12;
+    pageSize = Math.min(Math.max(pageSize, 1), 50);
+
+    let page = Number.parseInt(String(req.query.page ?? ""), 10);
+    if (!Number.isInteger(page) || page < 1) page = 1;
+
+    const filterParams: number[] = [];
+    let where = "";
+    if (hasDomain) {
+      filterParams.push(domainId);
+      where = `WHERE a.domain_id = $${filterParams.length}`;
+    }
+
+    const totalResult = await pool.query(
+      `SELECT COUNT(*)::int AS total FROM arguments a ${where};`,
+      filterParams,
+    );
+    const total: number = totalResult.rows[0].total;
+
+    const totalPages = Math.max(Math.ceil(total / pageSize), 1);
+    if (page > totalPages) page = totalPages;
+
+    const statements = await pool.query(
+      `
+                SELECT
+                    u.username,
+                    u.avatar,
+                    d.name AS domain,
+                    a.content AS title,
+                    a.affirmative AS affirmativeScore,
+                    a.negative AS negativeScore,
+                    a.id AS argumentId,
+                    a.created_at AT TIME ZONE 'UTC' AS time,
+                    COALESCE(c.count, 0)::int AS "argumentNum"
+                FROM arguments a
+                JOIN users u ON a.user_id = u.id
+                JOIN domains d ON d.id = a.domain_id
+                LEFT JOIN (
+                    SELECT argument_id, COUNT(*) AS count
+                    FROM comments c
+                    GROUP BY argument_id
+                ) c ON a.id = c.argument_id
+                ${where}
+                ORDER BY a.id DESC
+                LIMIT $${filterParams.length + 1} OFFSET $${filterParams.length + 2};
+            `,
+      [...filterParams, pageSize, (page - 1) * pageSize],
+    );
+
+    res
+      .status(200)
+      .json({ statements: statements.rows, total, page, pageSize });
+  } catch (err) {
+    console.error(err);
+    res.status(200).json({ statements: [], total: 0, page: 1, pageSize: 12 });
+  }
+}

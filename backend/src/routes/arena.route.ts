@@ -4,6 +4,7 @@ import {
   getLeaderboardData,
   getNewestCardData,
   getSidebarData,
+  getStatements,
   getTrendingCardData,
 } from "../controllers/arena.controller.js";
 
@@ -14,5 +15,6 @@ arenaRoutes.get("/active/trending", getTrendingCardData);
 arenaRoutes.get("/active/newest", getNewestCardData);
 arenaRoutes.get("/sidebar", getSidebarData);
 arenaRoutes.get("/leaderboard", getLeaderboardData);
+arenaRoutes.get("/statements", getStatements);
 
 export default arenaRoutes;
