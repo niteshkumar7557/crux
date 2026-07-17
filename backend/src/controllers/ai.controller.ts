@@ -65,6 +65,7 @@ export async function checkEligibleStatement(req: Request, res: Response) {
               Technology & AI | Science | Politics & Governance | Economics & Business | Environment & Energy | Health & Medicine | Law & Justice | Society & Culture | Ethics & Philosophy | Education | Sports & Gaming | Media & Entertainment
             - The user-provided domain is a hint. If it is on the list and plausibly fits the statement, return it unchanged.
             - If it does not fit the statement, return the best-fitting list name instead.
+            - If the user-provided domain is "auto" or empty, ignore the hint entirely and choose the best-fitting list name from the statement alone.
             - NEVER output a name that is not on the list. No inventing, shortening, or combining names.
 
             ---
@@ -131,5 +132,6 @@ export async function checkEligibleStatement(req: Request, res: Response) {
     });
   } catch (err) {
     console.error(err);
+    res.status(502).json({ error: "arbiter_unavailable" });
   }
 }

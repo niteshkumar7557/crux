@@ -142,13 +142,19 @@ export async function addNewArgument(req: Request, res: Response) {
       ],
     );
 
-    await updateDesciption(data.user_id);
+    try {
+      await updateDesciption(data.user_id);
+    } catch (err) {
+      console.error(err);
+    }
 
-    return res
-      .status(200)
-      .json({ message: `Argument with id: ${rows[0].id} added successfully!` });
+    return res.status(200).json({
+      id: rows[0].id,
+      message: `Argument with id: ${rows[0].id} added successfully!`,
+    });
   } catch (err) {
     console.error(err);
+    res.status(500).json({ error: "Failed to create the argument." });
   }
 }
 

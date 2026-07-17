@@ -2,6 +2,8 @@
 
 *Updated 2026-07-14 on branch `frontend-makeover` (HEAD `be3b0ab`). This replaces the original pre-makeover audit: all 10 items of that plan have shipped. This document describes the **final state** of the frontend so a fresh session can start improvements without re-deriving context.*
 
+*Updated 2026-07-17: the `/statement` posting flow was redesigned (see §4a and the spec at `docs/superpowers/specs/2026-07-16-statement-posting-ux-design.md` + plan at `docs/superpowers/plans/2026-07-16-statement-posting-ux.md`).*
+
 **Direction (agreed, still in force):** audience = general consumers · vibe = sleek dark-tech · motion = tasteful accents (GSAP).
 
 ---
@@ -36,7 +38,7 @@ These came from explicit user feedback during the makeover. Do not relitigate th
 |---|---|
 | `/` | Arena home: `ActiveArguments` (featured + trending/newest tabs) + `ArenaSidebar` (fetches `/arena/sidebar` client-side). |
 | `/login`, `/register` | Auth pages (route group hides navbar/footer via `ConditionalLayout`); consumer labels, GSAP entrances. |
-| `/statement` | Claim submission with two-step AI eligibility check. |
+| `/statement` | Staged claim submission (2026-07-17 redesign): compose → Arbiter verdict → broadcast on one evolving surface with a progress rail. See §4a. |
 | `/argument/[id]` | Debate arena: SplitText hero, probability bar draw + count-up, For/Against `CaseColumn`s, sticky `ArgumentInput`. |
 | `/profile/[id]` | Head info, reputation bar chart (animated draw), active statements, CTA. 404s cleanly on bad ids. |
 | `/leaderboard` | **Real page** ("The Elite Hierarchy"): asymmetric top-3 podium (crowned apex + silver/bronze flanks) + striped standings table. Data from new backend endpoint `GET /arena/leaderboard` (top 50: id, name, username, logicScore, rank, statementCount, argumentCount). Podium requires ≥3 ranked users, else flat list. |
@@ -70,6 +72,21 @@ Tokens live in `frontend/app/globals.css` `@theme` (M3-style dark ramp):
 
 **Utils:** `_utils/gsap.ts` (see §6), `_utils/logicScore.ts` (`convertLogicScore`: score → tier beginner…master / grade B…M — used by comment cards and leaderboard), `_utils/timeAgo.ts`, `_utils/getUser.ts`, `_hooks/useUser.ts`, `_hooks/useScoreBarReveal.ts`.
 
+## 4a. Statement posting flow (`_components/statement/`, redesigned 2026-07-17)
+
+One evolving surface driven by a state machine in `StatementForm.tsx` (container — TAB indentation inside function bodies): `compose → checking → verdict(pass|fail|unavailable) → casting → redirect`. Editing text or switching domain voids the verdict with a notice. Spec: `docs/superpowers/specs/2026-07-16-statement-posting-ux-design.md`.
+
+| Component | Responsibility |
+|---|---|
+| `StatementForm.tsx` | State machine, API calls (30s check / 60s cast axios timeouts), draft persistence (`localStorage` `crux:statement-draft`, restore deferred via `setTimeout(0)` for StrictMode + the `react-hooks/set-state-in-effect` rule), Cmd/Ctrl+Enter, login gate, avatar fetch via `/user/me` (JWT carries no avatar) |
+| `StageRail.tsx` | `01 COMPOSE ── 02 VERDICT ── 03 BROADCAST` progress rail (CSS transitions, derived from state) |
+| `DomainPicker.tsx` | Domain chips + **AUTO** chip (default; tertiary accent; sentinel `AUTO_DOMAIN = "auto"` in `app/statement/types.ts`); mobile = two-row horizontal scroll strip |
+| `ClaimEditor.tsx` | Textarea; exports `MIN_CHARS`/`MAX_CHARS`/`isTextInLimits`; countdown counter (tertiary ≥105, secondary at 120, "SUBSTANCE CONFIRMED" once armed); free local nudges (trailing `?`, hedge words) |
+| `VerdictPanel.tsx` | Verdict-colored panel (PASS cyan+glow / FAIL red+glow / UNAVAILABLE amber no-glow); ORIGINAL-vs-IMPROVED radio-cards (improved pre-selected, skipped when identical); `REFILED: X → Y` notice, or `FILED UNDER: Y` when AUTO; fail "Try the Arbiter's reframe"; similar-fights links (`GET /search` by keyword, capped 3, silent failure, `similarSeq` staleness guard in container) |
+| `BroadcastPreview.tsx` | ArenaCard-style preview (keyword highlight with graceful fallback, real user avatar); progress-theater button (4 staged labels @2.2s); logged-out → `Log in to broadcast` link |
+
+Flow guarantees: logged-out users compose and check freely ("SPECTATOR MODE" banner); drafts survive reload and the login round-trip (`/login?next=/statement`); broadcast success clears the draft and redirects to the new `/argument/CRX-{id}-A`; failure preserves all state with retry in place; double-submit guarded (`casting` set before the `getUser()` await).
+
 ## 5. Assets & metadata
 
 - File-convention assets (generated, brand-styled): `app/icon.png` (favicon), `app/apple-icon.png`, `app/opengraph-image.png` (1200×630 "Cru*x*" card). `public/register-hero.png` = local duotone quote-marks hero, served via `next/image` (`fill` + `sizes` + `priority`). **Zero raw `<img>` tags and zero hotlinked assets in the app.**
@@ -97,6 +114,8 @@ Reduced-motion users get the server-rendered end state (verified via emulation).
 - `GET /arena/leaderboard` (arena.controller/route) — top-50 standings with `RANK() OVER (ORDER BY logic_score DESC, id ASC)`, statement + comment counts. Read-only.
 - `GET /arena/statements` (arena.controller/route) — paginated, domain-filterable statement feed for `/domain`: `?domainId=&page=&pageSize=` → `{ statements, total, page, pageSize }` (newest-first, same row shape as `/arena/active/newest`; `page` clamped to range, `pageSize` default 12 max 50, junk params → defaults). Read-only.
 - **Avatar system** (avatar.controller/route + `lib/avatars.ts`): `GET /avatar/presets` (public list), `POST /avatar/upload` (auth; multer memory storage 5MB + MIME filter, magic-byte check, sharp → 256×256 webp, metadata stripped), `PUT /avatar/preset` (auth; id validated server-side), `DELETE /avatar` (auth). `backend/public` is served by `express.static`; presets are 18 committed SVGs in `public/avatars/presets`, uploads land in `public/uploads/avatars` (gitignored, `.gitkeep`); replacing/removing deletes the old *custom* file only (ENOENT tolerated), presets are shared and never deleted. Migration `0005_add_user_avatar.sql` added `users.avatar TEXT` storing the public URL path — the prefix distinguishes preset vs custom. `avatar` is returned by `/user/me`, `/profile/:id`, `/comment/:id`, `/arena/leaderboard`, `/arena/sidebar`, and the `/arena/active/*` feeds.
+- **Statement-flow backend fixes (2026-07-17):** both AI controllers' `catch` blocks now send real responses (`ai.controller.ts` → `502 {error:"arbiter_unavailable"}`; `argument.controller.ts` → `500`) — previously they sent nothing and the frontend spun forever. `POST /argument` success returns `{ id, message }` (the id drives the post-broadcast redirect). `updateDesciption` is wrapped in its own try/catch so a failed description AI call can't 500 an already-committed insert (which invited duplicate-argument retries). The arbiter prompt gained one `[domain]` rule: hint `"auto"`/empty → pick from the closed list by statement alone.
+- **Login `?next=`:** `/login?next=/statement` redirects there after login; validation rejects `//` and `/\` prefixes (open-redirect guard).
 - Everything else was frontend-only. Schema: `users(id, role, name, username, logic_score, description, email, avatar)`, `arguments(id, user_id, content, content_keyword, domain, affirmative, negative, created_at)`, `comments(id, user_id, argument_id, side, content, likes)`.
 
 ## 8. Known issues & rough edges (candidates for the improvement session)
@@ -113,6 +132,9 @@ Reduced-motion users get the server-rendered end state (verified via emulation).
 - Leaderboard: no pagination beyond top 50; "Consistency"/"Wins"-style stats from the design mock have no schema backing (page shows only real columns deliberately).
 - Leaderboard/home feeds are still unpaginated — `ui/Pagination` + the `/arena/statements` response shape (`{ statements, total, page, pageSize }`) are the intended pattern when they get there.
 - Audit motion opportunity #9 (new-comment insertion tween + bar re-tween on post) and #10 (route transitions) were deliberately not built.
+- Statement flow, deferred from the 2026-07-17 final review (a11y polish batch): no `aria-live` on the typing nudges, notices, or progress-theater label; the ORIGINAL/IMPROVED radiogroup lacks roving tabIndex/arrow-key nav; `StageRail` has only a static `aria-label` (no `aria-current`).
+- `POST /argument` still trusts `user_id` from the client body (no auth middleware) — pre-existing trust model, unchanged by the redesign; server-side derivation is a separate hardening task.
+- Hedge-word nudge regexes can false-positive on legitimate phrasing ("this kind of argument") — accepted as a non-blocking heuristic.
 
 **Code quality niggles**
 - `React.SubmitEvent` used in auth handlers (non-standard type name; tsc accepts it today).

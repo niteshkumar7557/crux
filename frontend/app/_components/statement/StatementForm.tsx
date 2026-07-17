@@ -1,255 +1,343 @@
 "use client";
-import { DomainClassification } from "@/app/statement/types";
-import React, { useState, useRef } from "react";
 import {
-  LuBot,
-  LuChartColumn,
-  LuCpu,
-  LuGavel,
-  LuListFilter,
-  LuPenLine,
-  LuRadioTower,
-} from "react-icons/lu";
-import { getUser } from "@/app/_utils/getUser";
+	ArbiterVerdict,
+	AUTO_DOMAIN,
+	ClaimVersion,
+	DomainClassification,
+	SimilarStatement,
+	Stage,
+} from "@/app/statement/types";
+import React, { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { LuBot, LuChartColumn, LuGavel } from "react-icons/lu";
 import { useRouter } from "next/navigation";
+import { getUser } from "@/app/_utils/getUser";
+import { jwtPayload } from "@/app/_types/jwt";
 import api from "@/app/axios";
 import Button from "@/app/_components/ui/Button";
+import StageRail from "./StageRail";
+import DomainPicker from "./DomainPicker";
+import ClaimEditor, { isTextInLimits } from "./ClaimEditor";
+import VerdictPanel from "./VerdictPanel";
+import BroadcastPreview from "./BroadcastPreview";
 
-interface FormState {
-	text: string;
-	allowInput: boolean;
-	selectedDomain: string;
-	keyword: string;
-	loading: boolean;
-	eligibility: string;
-	domain: string;
-	feedback: string;
-};
-
-const MINIMUM_CHAR_LIMIT = 35;
-const MAXIMUM_CHAR_LIMIT = 120;
+const DRAFT_KEY = "crux:statement-draft";
+const CHECK_TIMEOUT_MS = 30000;
+const CAST_TIMEOUT_MS = 60000;
 
 const StatementForm = ({ domains }: { domains: DomainClassification }) => {
-  const router = useRouter();
+	const router = useRouter();
 
-	function isTextInLimits() {
-		return formState.text.length >= MINIMUM_CHAR_LIMIT && formState.text.length <= MAXIMUM_CHAR_LIMIT;
+	const [text, setText] = useState("");
+	const [selectedDomain, setSelectedDomain] = useState(AUTO_DOMAIN);
+	const [checking, setChecking] = useState(false);
+	const [casting, setCasting] = useState(false);
+	const [verdict, setVerdict] = useState<ArbiterVerdict | null>(null);
+	const [chosenVersion, setChosenVersion] = useState<ClaimVersion>("improved");
+	const [similar, setSimilar] = useState<SimilarStatement[]>([]);
+	const [composeNotice, setComposeNotice] = useState("");
+	const [castNotice, setCastNotice] = useState("");
+	// undefined = auth unknown (checking), null = logged out
+	const [authUser, setAuthUser] = useState<jwtPayload | null | undefined>(undefined);
+	// the JWT doesn't carry the avatar, so fetch it once we know who's here
+	const [avatar, setAvatar] = useState<string | null>(null);
+
+	const restored = useRef(false);
+	const similarSeq = useRef(0);
+
+	useEffect(() => {
+		let active = true;
+		getUser()
+			.then((user) => {
+				if (!active) return;
+				setAuthUser(user);
+				if (!user) return;
+				api
+					.get("/user/me")
+					.then(({ data }) => {
+						if (active) setAvatar(data.user?.avatar ?? null);
+					})
+					.catch(() => {});
+			})
+			.catch(() => {
+				if (active) setAuthUser(null);
+			});
+		return () => {
+			active = false;
+		};
+	}, []);
+
+	// Restore draft once, before the save effect may overwrite it. setState
+	// calls are deferred into a timer (react-hooks/set-state-in-effect forbids
+	// synchronous setState in an effect body); 0ms always precedes the 300ms
+	// save-effect debounce below, so no draft is ever clobbered.
+	useEffect(() => {
+		if (restored.current) return;
+		const timer = setTimeout(() => {
+			restored.current = true;
+			try {
+				const raw = localStorage.getItem(DRAFT_KEY);
+				if (!raw) return;
+				const draft = JSON.parse(raw) as { text?: string; selectedDomain?: string };
+				if (draft.text) setText(draft.text);
+				if (
+					draft.selectedDomain &&
+					(draft.selectedDomain === AUTO_DOMAIN ||
+						domains.includes(draft.selectedDomain))
+				)
+					setSelectedDomain(draft.selectedDomain);
+			} catch {}
+		}, 0);
+		return () => clearTimeout(timer);
+	}, [domains]);
+
+	// Debounced draft save.
+	useEffect(() => {
+		if (!restored.current) return;
+		const timer = setTimeout(() => {
+			try {
+				localStorage.setItem(DRAFT_KEY, JSON.stringify({ text, selectedDomain }));
+			} catch {}
+		}, 300);
+		return () => clearTimeout(timer);
+	}, [text, selectedDomain]);
+
+	const busy = checking || casting;
+	const stage: Stage = !verdict
+		? "compose"
+		: verdict.status === "pass"
+			? "broadcast"
+			: "verdict";
+
+	function voidVerdict(notice: string) {
+		if (verdict) {
+			setVerdict(null);
+			similarSeq.current++;
+			setSimilar([]);
+			setCastNotice("");
+			setComposeNotice(notice);
+		}
 	}
 
-  const [formState, setFormState] = useState<FormState>({
-		loading: false,
-		text: "",
-		allowInput: true,
-		selectedDomain: domains[0] ?? "",
-		keyword: "",
-		eligibility: "",
-		domain: "",
-		feedback:
-			"Crux AI is analyzing the semantic integrity of your thesis. Ensure your statement is falsifiable and free of ad hominem triggers for optimal Arena placement.",
-	});
-
-	function updateFormState(updates: Partial<FormState>) {
-		setFormState((pFormState) => ({
-			...pFormState,
-			...updates,
-		}));
+	function handleTextChange(next: string) {
+		if (busy) return;
+		setText(next);
+		voidVerdict("Claim changed — the verdict is void. Re-check eligibility.");
 	}
 
-	const requestInProccess = useRef<boolean>(false);
+	function handleDomainSelect(domain: string) {
+		if (busy) return;
+		setSelectedDomain(domain);
+		voidVerdict("Battleground changed — the verdict is void. Re-check eligibility.");
+	}
 
-  async function checkEligibility() {
-		if (!isTextInLimits() || requestInProccess.current)
-			return;
+	function handleChooseVersion(version: ClaimVersion) {
+		if (busy) return;
+		setChosenVersion(version);
+	}
 
-		requestInProccess.current = true;
-		
-		updateFormState({
-			loading: true,
-			allowInput: false,
-			eligibility: "pending",
-		});
-		
+	function handleTryReframe() {
+		if (!verdict || busy) return;
+		setText(verdict.improved);
+		setVerdict(null);
+		similarSeq.current++;
+		setSimilar([]);
+		setComposeNotice("Reframe loaded — run the eligibility check.");
+	}
+
+	async function fetchSimilar(keyword: string) {
+		if (!keyword) return;
+		const seq = ++similarSeq.current;
 		try {
-			const { data } = await api.post("/ai/statement", {
-				content: formState.text,
-				domain: formState.selectedDomain,
-			});
-
-			updateFormState({
-				text: data.improved,
-				keyword: data.keyword,
-				eligibility: data.eligibility,
-				domain: data.domain,
-				feedback: data.feedback,
-			});
+			const { data } = await api.get("/search", { params: { q: keyword } });
+			if (seq !== similarSeq.current) return;
+			setSimilar(((data.statements ?? []) as SimilarStatement[]).slice(0, 3));
 		} catch {
-			updateFormState({
-				eligibility: "unavailable",
+			// Similar fights are a bonus — never block the flow.
+		}
+	}
+
+	async function handleCheck() {
+		if (!isTextInLimits(text) || busy) return;
+		setChecking(true);
+		setComposeNotice("");
+		try {
+			const { data } = await api.post(
+				"/ai/statement",
+				{ content: text, domain: selectedDomain },
+				{ timeout: CHECK_TIMEOUT_MS },
+			);
+			const next: ArbiterVerdict = {
+				status: data.eligibility === "pass" ? "pass" : "fail",
+				original: text,
+				improved: (data.improved ?? text) as string,
+				feedback: (data.feedback ?? "") as string,
+				keyword: (data.keyword ?? "") as string,
+				domain: (data.domain ?? selectedDomain) as string,
+			};
+			setVerdict(next);
+			setChosenVersion(
+				next.improved.trim() === next.original.trim() ? "original" : "improved",
+			);
+			similarSeq.current++;
+			setSimilar([]);
+			if (next.status === "pass") fetchSimilar(next.keyword);
+		} catch {
+			setVerdict({
+				status: "unavailable",
+				original: text,
+				improved: text,
 				feedback:
 					"The Arbiter is unreachable right now. Your claim is untouched — try the eligibility check again in a moment.",
+				keyword: "",
+				domain: selectedDomain,
 			});
 		} finally {
-			updateFormState({ loading: false, allowInput: true });
-			requestInProccess.current = false;
+			setChecking(false);
 		}
-  }
+	}
 
-  async function handleSubmit() {
-		if (requestInProccess.current) return;
-		requestInProccess.current = true;
-		
-		updateFormState({ loading: true, allowInput: false });
-
-    const user = await getUser();
+	async function handleBroadcast() {
+		if (!verdict || verdict.status !== "pass" || busy) return;
+		setCasting(true);
+		setCastNotice("");
+		const user = await getUser().catch(() => null);
 		if (!user) {
-			updateFormState({
-				loading: false,
-				allowInput: true,
-				eligibility: "unavailable",
-				feedback:
-					"You need to be logged in to broadcast a statement to the arena.",
-			});
-			requestInProccess.current = false;
+			setAuthUser(null);
+			setCasting(false);
 			return;
 		}
-
+		const content =
+			chosenVersion === "improved" ? verdict.improved : verdict.original;
 		try {
-			await api.post("/argument", {
-				user_id: user.id,
-				content: formState.text,
-				content_keyword: formState.keyword,
-				domain: formState.domain,
-				selected_domain: formState.selectedDomain,
-			});
+			const { data } = await api.post(
+				"/argument",
+				{
+					user_id: user.id,
+					content,
+					content_keyword: verdict.keyword,
+					domain: verdict.domain,
+					selected_domain: selectedDomain,
+				},
+				{ timeout: CAST_TIMEOUT_MS },
+			);
+			try {
+				localStorage.removeItem(DRAFT_KEY);
+			} catch {}
+			router.push(`/argument/CRX-${data.id}-A`);
+			// Keep `casting` true — the redirect is the success state.
 		} catch {
-			updateFormState({
-				loading: false,
-				allowInput: true,
-				eligibility: "unavailable",
-				feedback:
-					"Broadcast failed — the arena couldn't be reached. Your statement is still here; try again.",
-			});
-			requestInProccess.current = false;
-			return;
+			setCastNotice(
+				"Broadcast failed — the arena couldn't be reached. Everything is preserved; try again.",
+			);
+			setCasting(false);
 		}
+	}
 
-    router.push("/");
-  }
+	function handleKeyDown(e: React.KeyboardEvent) {
+		if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+			e.preventDefault();
+			if (verdict?.status === "pass") handleBroadcast();
+			else handleCheck();
+		}
+	}
 
-	const isEligible = formState.eligibility === "pass";
+	const chosenContent = verdict
+		? chosenVersion === "improved"
+			? verdict.improved
+			: verdict.original
+		: text;
 
-  return (
-    <div className="bg-surface-container-low p-8 relative overflow-hidden">
-      <form className="space-y-8 relative z-10">
-        {/* <!-- Category Selection --> */}
-        <div className="space-y-3">
-          <p className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
-            <LuListFilter className="text-sm" />
-            SELECT YOUR BATTLEGROUND
-          </p>
-          <div className=" flex flex-wrap gap-2">
-            {domains.map((domainName, i) => (
-              <button
-                key={i}
-                className={`${formState.selectedDomain === domainName ? "border-primary text-primary bg-primary/5" : "border-outline-variant bg-surface-container"} cursor-pointer border px-4 py-2 font-label text-xs uppercase hover:border-primary hover:text-primary transition-colors `}
-                type="button"
-                onClick={() => updateFormState({ selectedDomain: domainName })}
-              >
-                {domainName}
-              </button>
-            ))}
-          </div>
-        </div>
-        {/* <!-- Statement Textarea --> */}
-        <div className="space-y-3">
-          <label
-            className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant flex items-center gap-2"
-            htmlFor="claim"
-          >
-            <LuPenLine className="text-sm" />
-            YOUR CLAIM
-          </label>
-          <textarea
-            id="claim"
-            className="w-full focus:outline-none bg-surface-container-highest border-0 focus:ring-1 focus:ring-primary min-h-60 p-6 font-headline text-2xl italic placeholder:text-outline text-on-surface resize-none"
-            placeholder="Make a claim worth fighting over..."
-            value={formState.text}
-						maxLength={MAXIMUM_CHAR_LIMIT}
-            onChange={(e) => {
-							if (formState.allowInput)
-								updateFormState({ text: e.target.value, eligibility: "" });
-						}}
-          ></textarea>
-          <div className="flex justify-between items-center text-[10px] font-label text-outline uppercase tracking-tighter">
-            <span>THE ARBITER REQUIRES SUBSTANCE — MINIMUM {MINIMUM_CHAR_LIMIT} CHARACTERS</span>
-            <span>{formState.text.length} / {MAXIMUM_CHAR_LIMIT}</span>
-          </div>
-        </div>
-        {/* <!-- Action Bar --> */}
-        <div className="pt-6 border-t border-outline-variant/30 flex flex-col md:flex-row gap-6 items-center justify-between">
-          <div className="flex items-center gap-4 text-on-surface-variant">
-            <div className="flex">
-              <div className="w-8 h-8 bg-surface-container-high border border-outline-variant flex items-center justify-center">
-                <LuGavel className="text-xs" />
-              </div>
-              <div className="w-8 h-8 bg-surface-container-high border border-outline-variant flex items-center justify-center">
-                <LuChartColumn className="text-xs" />
-              </div>
-            </div>
-            <span className="font-label text-[10px] uppercase tracking-widest">
-              ARBITER STANDING BY
-            </span>
-          </div>
-          <Button
-            type="button"
-            size="lg"
-            className="w-full md:w-auto"
-            disabled={!isTextInLimits()}
-            onClick={() => (isEligible ? handleSubmit : checkEligibility)()}
-          >
-            {isEligible ? "Broadcast Statement" : "Check eligibility"}
-            {formState.loading ? (
-              <span className="border-t-2 border-on-primary h-4 w-4 rounded-full animate-spin"></span>
-            ) : isEligible ? (
-              <LuRadioTower className="text-lg" />
-            ) : (
-              <LuBot className="text-lg" />
-            )}
-          </Button>
-        </div>
-      </form>
-      {formState.eligibility && (
-        <div className="bg-surface-container-high border mt-6 border-outline-variant/50 p-6 relative overflow-hidden">
-          <div className="relative z-10 flex flex-col gap-4">
-            <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 border-b border-outline-variant/30 pb-4">
-              <h3
-                className="font-headline italic text-2xl text-primary"
-              >
-                CRUX AI Validation
-              </h3>
-              <div className="flex items-center gap-3 bg-surface-container px-4 py-2 border border-primary/30 shadow-glow-primary">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping motion-reduce:animate-none absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                </span>
-                <span className="font-label text-[10px] uppercase tracking-widest text-primary">
-                  Eligibility: {formState.eligibility}
-                </span>
-              </div>
-            </div>
-            <div className="bg-surface-container-lowest p-5 border-l border-primary/50">
-              <div className="flex items-start gap-4">
-                <LuCpu className="text-primary text-lg mt-0.5 animate-pulse motion-reduce:animate-none" />
-                <p className="font-label text-xs text-on-surface-variant leading-relaxed">
-                  {formState.feedback}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+	return (
+		<div className="bg-surface-container-low p-8 relative overflow-hidden">
+			<StageRail stage={stage} />
+			{authUser === null && (
+				<div className="mb-8 flex items-center justify-between gap-4 border border-tertiary/30 bg-tertiary/5 px-4 py-3">
+					<span className="font-label text-[10px] uppercase tracking-widest text-tertiary">
+						SPECTATOR MODE — LOG IN TO BROADCAST
+					</span>
+					<Link
+						href="/login?next=/statement"
+						className="font-label text-[10px] uppercase tracking-widest text-primary hover:underline whitespace-nowrap"
+					>
+						LOG IN
+					</Link>
+				</div>
+			)}
+			<form
+				className="space-y-8 relative z-10"
+				onSubmit={(e) => e.preventDefault()}
+				onKeyDown={handleKeyDown}
+			>
+				<DomainPicker
+					domains={domains}
+					selected={selectedDomain}
+					onSelect={handleDomainSelect}
+					disabled={busy}
+				/>
+				<ClaimEditor text={text} onChange={handleTextChange} locked={busy} />
+				{composeNotice && (
+					<p className="font-label text-[10px] uppercase tracking-widest text-tertiary">
+						{composeNotice}
+					</p>
+				)}
+				<div className="pt-6 border-t border-outline-variant/30 flex flex-col md:flex-row gap-6 items-center justify-between">
+					<div className="flex items-center gap-4 text-on-surface-variant">
+						<div className="flex">
+							<div className="w-8 h-8 bg-surface-container-high border border-outline-variant flex items-center justify-center">
+								<LuGavel className="text-xs" />
+							</div>
+							<div className="w-8 h-8 bg-surface-container-high border border-outline-variant flex items-center justify-center">
+								<LuChartColumn className="text-xs" />
+							</div>
+						</div>
+						<span className="font-label text-[10px] uppercase tracking-widest">
+							{checking ? "ARBITER ANALYZING" : "ARBITER STANDING BY"}
+						</span>
+					</div>
+					{stage !== "broadcast" && (
+						<Button
+							type="button"
+							size="lg"
+							className="w-full md:w-auto"
+							disabled={!isTextInLimits(text) || busy}
+							onClick={handleCheck}
+						>
+							{checking ? "Analyzing…" : "Check eligibility"}
+							{checking ? (
+								<span className="border-t-2 border-on-primary h-4 w-4 rounded-full animate-spin motion-reduce:animate-none"></span>
+							) : (
+								<LuBot className="text-lg" />
+							)}
+						</Button>
+					)}
+				</div>
+			</form>
+			{verdict && (
+				<VerdictPanel
+					verdict={verdict}
+					selectedDomain={selectedDomain}
+					chosenVersion={chosenVersion}
+					onChooseVersion={handleChooseVersion}
+					onTryReframe={handleTryReframe}
+					similar={similar}
+				/>
+			)}
+			{verdict?.status === "pass" && (
+				<BroadcastPreview
+					content={chosenContent}
+					keyword={verdict.keyword}
+					domain={verdict.domain}
+					username={authUser?.username ?? null}
+					avatar={avatar}
+					requiresLogin={authUser === null}
+					casting={casting}
+					notice={castNotice}
+					onBroadcast={handleBroadcast}
+				/>
+			)}
+		</div>
+	);
 };
 
 export default StatementForm;

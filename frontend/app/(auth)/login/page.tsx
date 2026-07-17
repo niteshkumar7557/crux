@@ -52,8 +52,11 @@ const Login = () => {
     try {
       const response = await api.post("/user/login", info);
       localStorage.setItem("access_token", response.data.accessToken);
+      const next = new URLSearchParams(window.location.search).get("next");
+      const dest =
+        next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\") ? next : "/";
       setTimeout(() => {
-        router.push("/");
+        router.push(dest);
       }, 1000);
     } catch (err) {
       setError(
