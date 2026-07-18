@@ -1,9 +1,38 @@
 import ArgumentArena from "@/app/_components/argument/ArgumentArena";
 import ArgumentHeader from "@/app/_components/argument/ArgumentHeader";
 import ArgumentInput from "@/app/_components/argument/ArgumentInput";
+import { truncate } from "@/app/_components/argument/verdictCard";
 import serverApi from "@/app/axios.server";
 import { isAxiosError } from "axios";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id: rawId } = await params;
+  const id = Number(rawId.split("-")[1]);
+  if (!Number.isInteger(id) || id <= 0) return {};
+  try {
+    const { data } = await serverApi.get(`/argument/${id}`);
+    const row = data?.data;
+    if (!row) return {};
+    const claim = truncate(String(row.content), 70);
+    const description =
+      row.status === "concluded"
+        ? `Verdict in. ${truncate(String(row.verdict_text ?? "The debate has settled."), 160)}`
+        : "Live debate — the clock is running. Pick a side.";
+    return {
+      title: claim,
+      description,
+      twitter: { card: "summary_large_image" },
+    };
+  } catch {
+    return {};
+  }
+}
 
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id: rawId } = await params;
@@ -55,6 +84,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
         <ArgumentHeader
           argumentHeaderData={argumentHeaderData}
           matchState={matchState}
+          shareUrl={`${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/argument/${argumentHeaderData.statementId}`}
         />
         <ArgumentArena aiAnalysis={aiAnalysis} comments={comments.data} />
       </section>

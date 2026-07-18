@@ -1,4 +1,5 @@
 import { MatchState } from "@/app/argument/types";
+import ShareVerdict from "@/app/_components/argument/ShareVerdict";
 
 type Winner = MatchState["winner"];
 
@@ -37,6 +38,7 @@ const VerdictBanner = ({
   verdictText,
   affirmative,
   negative,
+  shareUrl,
 }: {
   winner: Winner;
   margin: number | null;
@@ -44,6 +46,7 @@ const VerdictBanner = ({
   verdictText: string | null;
   affirmative: number;
   negative: number;
+  shareUrl: string;
 }) => {
   const ruling = RULINGS[winner ?? "draw"];
   const showMargin = winner !== "walkover" && margin !== null;
@@ -60,6 +63,9 @@ const VerdictBanner = ({
         </span>
         <span className="font-label text-[10px] uppercase tracking-[0.2em] text-outline">
           Verdict
+        </span>
+        <span className="ml-auto self-center">
+          <ShareVerdict url={shareUrl} title={ruling.label} />
         </span>
       </div>
 

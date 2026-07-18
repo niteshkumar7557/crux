@@ -9,9 +9,11 @@ import { gsap, useGSAP, SplitText, MOTION_OK } from "@/app/_utils/gsap";
 const ArgumentHeader = ({
   argumentHeaderData,
   matchState,
+  shareUrl,
 }: {
   argumentHeaderData: ArgumentHeaderProps;
   matchState: MatchState;
+  shareUrl: string;
 }) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const headlineRef = useRef<HTMLHeadingElement>(null);
@@ -93,6 +95,7 @@ const ArgumentHeader = ({
           verdictText={matchState.verdictText}
           affirmative={matchState.affirmative}
           negative={matchState.negative}
+          shareUrl={shareUrl}
         />
       )}
 
