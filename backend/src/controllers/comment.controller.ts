@@ -1,17 +1,22 @@
 import type { Request, Response } from "express";
 import pool from "../db/index.js";
 import { llmJson } from "../ai/llm.js";
+import { buildAnalystPrompt } from "../ai/analyst.logic.js";
 
-const MODERATOR_ANALYST_SYSTEM_PROMPT = `You are CRUX ANALYST for a debate arena. A statement has a FOR and an AGAINST side, each with a running analysis. A user posted a new comment on one side. First moderate the comment, then score it and update that side's analysis.
+const MODERATOR_ANALYST_SYSTEM_PROMPT = `You are CRUX ANALYST for a debate arena. A statement has a FOR and an AGAINST side, each with a running analysis. A user posted a new comment on one side. You see that side (OWN SIDE ANALYSIS), the other side (OPPONENT ANALYSIS), and the comment. First moderate the comment, then score it by how it engages the live thread, then update the OWN side's analysis.
 
 Return JSON: {"abused":boolean,"points":number,"newAnalysis":string}
 
 abused — true if the comment contains hate speech or slurs (any language, including romanized Hindi profanity), threats, sexually explicit content, spam or gibberish, or targets the person instead of the argument ("shut up", "you're an idiot", "nobody asked you"). Forceful attacks on the argument itself are acceptable ("this reasoning collapses under scrutiny"). If abused is true, set points to 0 and newAnalysis to "" and stop.
 
-points — integer 4-8. 8: genuinely new angle backed by logic, data, or analogy. 6-7: sound substance that advances the case. 4-5: relevant but surface-level or repeats the existing analysis. Subtract 1 for a clear logical fallacy or direct paraphrase of existing analysis; never below 4.
+points — integer 1-8, scored by engagement with the live thread, not abstract eloquence:
+- 6-8: directly rebuts a specific point in OPPONENT ANALYSIS (name the point it answers), or adds a genuinely new angle absent from BOTH analyses, backed by logic, data, or analogy.
+- 4-5: sound and relevant, advances its own side, but does not engage the opponent or is somewhat generic.
+- 1-3: ignores the live thread — a generic essay that could apply to any debate, a restatement of points already present, or cold-pasted boilerplate. A clear logical fallacy or a direct paraphrase of existing analysis belongs here.
+Opener exception: if OPPONENT ANALYSIS is "(none yet)", there is nothing to rebut — score on substance alone; a strong opener can still reach 6-8. Do not floor an opener for the mere absence of an opponent.
 
-newAnalysis — Markdown, max 130 words, replacing the side's analysis. Every claim must trace to something a user actually said — invent nothing, no editorializing. Names are always the commenter's real username, never topic labels.
-Structure: an opening paragraph (no heading) of 2-3 sentences synthesizing the users' strongest points, crediting contributors inline ("As {name} pointed out..."); then "### Key Arguments" with one bullet per distinct point, format "**{name}** — the point in one sharp sentence". Keep strong points from the existing analysis, add the new comment's point, silently drop weak or repeated ones.`;
+newAnalysis — Markdown, max 130 words, replacing the OWN side's analysis only. Never incorporate OPPONENT ANALYSIS content — it is scoring context, not material for this side. Every claim must trace to something an own-side user actually said — invent nothing, no editorializing. Names are always the commenter's real username, never topic labels.
+Structure: an opening paragraph (no heading) of 2-3 sentences synthesizing the users' strongest points, crediting contributors inline ("As {name} pointed out..."); then "### Key Arguments" with one bullet per distinct point, format "**{name}** — the point in one sharp sentence". Keep strong points from the existing OWN analysis, add the new comment's point, silently drop weak or repeated ones.`;
 
 const PROBABILITY_SYSTEM_PROMPT = `You judge which side of a debate currently holds the stronger position, given the statement and each side's analysis.
 
@@ -59,44 +64,32 @@ async function moderateAndAnalyze(
   input: string,
   first: boolean = false,
 ) {
-  const data1 = await pool.query(
+  const argRes = await pool.query(
     `
-            SELECT content FROM arguments WHERE id = $1;
+            SELECT content, for_analysis, against_analysis
+            FROM arguments
+            WHERE id = $1;
         `,
     [argumentId],
   );
-  const data2 = await pool.query(
+  const nameRes = await pool.query(
     `
             SELECT name FROM users WHERE id = $1;
         `,
     [userId],
   );
-  const data3 = await pool.query(
-    `
-                SELECT ${side}_analysis
-                FROM arguments
-                WHERE id = $1;
-            `,
-    [argumentId],
-  );
-  const argumentContent = data1.rows[0].content;
-  const name = data2.rows[0].name;
-  const oldAnalysis =
-    side === "for"
-      ? data3.rows[0].for_analysis
-      : data3.rows[0].against_analysis;
+  const argumentContent = argRes.rows[0].content;
+  const name = nameRes.rows[0].name;
 
-  const userPrompt = first
-    ? `STATEMENT: "${argumentContent}"
-SIDE: ${side.toUpperCase()}
-AUTHOR: ${name}
-COMMENT: "${input}"`
-    : `STATEMENT: "${argumentContent}"
-SIDE: ${side.toUpperCase()}
-EXISTING ANALYSIS:
-${oldAnalysis}
-NEW COMMENT AUTHOR: ${name}
-COMMENT: "${input}"`;
+  const userPrompt = buildAnalystPrompt({
+    statement: argumentContent,
+    side: side as "for" | "against",
+    author: name,
+    forAnalysis: argRes.rows[0].for_analysis,
+    againstAnalysis: argRes.rows[0].against_analysis,
+    ownIsFirst: first,
+    comment: input,
+  });
 
   const parsed = await llmJson({
     system: MODERATOR_ANALYST_SYSTEM_PROMPT,
@@ -187,7 +180,7 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
       [argumentId, userId, input, side],
     );
 
-    const safePoints = Math.min(8, Math.max(4, Math.round(points)));
+    const safePoints = Math.min(8, Math.max(1, Math.round(points)));
     await pool.query(
       `
             UPDATE users
