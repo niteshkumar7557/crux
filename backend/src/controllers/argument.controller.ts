@@ -91,7 +91,8 @@ Domain: ${domainName}`;
 
     const { rows } = await pool.query(
       `
-        INSERT INTO arguments (user_id, content_keyword, content, domain_id, for_analysis, against_analysis) VALUES ($1,$2,$3,$4,$5,$6)
+        INSERT INTO arguments (user_id, content_keyword, content, domain_id, for_analysis, against_analysis, closes_at)
+        VALUES ($1,$2,$3,$4,$5,$6, NOW() + INTERVAL '48 hours')
         RETURNING id;
         `,
       [

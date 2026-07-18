@@ -213,15 +213,16 @@ export const insertBaseData = async (
 				affirmative,
 				100 - affirmative,
 				statementTimes[i],
+				"live",
 			);
-			const o = i * 9;
-			return `($${o + 1}, $${o + 2}, $${o + 3}, $${o + 4}, $${o + 5}, $${o + 6}, $${o + 7}, $${o + 8}, $${o + 9})`;
+			const o = i * 10;
+			return `($${o + 1}, $${o + 2}, $${o + 3}, $${o + 4}, $${o + 5}, $${o + 6}, $${o + 7}, $${o + 8}, $${o + 9}, $${o + 10}, NOW() + INTERVAL '48 hours')`;
 		},
 	).join(",\n        ");
 
 	await client.query(
 		`
-      INSERT INTO arguments (user_id, content, content_keyword, domain_id, for_analysis, against_analysis, affirmative, negative, created_at)
+      INSERT INTO arguments (user_id, content, content_keyword, domain_id, for_analysis, against_analysis, affirmative, negative, created_at, status, closes_at)
       VALUES
         ${argRows};
       `,

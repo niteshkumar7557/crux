@@ -131,6 +131,27 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
   const argumentId = Number(id);
 
   try {
+    // Arena is read-only once concluded.
+    const statusRes = await pool.query(
+      `SELECT status FROM arguments WHERE id = $1`,
+      [argumentId],
+    );
+    if (statusRes.rows.length === 0) {
+      return res.status(404).json({ error: "Argument not found." });
+    }
+    if (statusRes.rows[0].status !== "live") {
+      return res.status(409).json({ reason: "locked" });
+    }
+
+    // Commit-to-one-side: the user's first comment locks their side for this debate.
+    const sideRes = await pool.query(
+      `SELECT side FROM comments WHERE argument_id = $1 AND user_id = $2 LIMIT 1`,
+      [argumentId, userId],
+    );
+    if (sideRes.rows.length > 0 && sideRes.rows[0].side !== side) {
+      return res.status(409).json({ reason: "side_locked" });
+    }
+
     const { rows: existing } = await pool.query(
       `
             SELECT id FROM comments WHERE argument_id = $1 AND side = $2;
