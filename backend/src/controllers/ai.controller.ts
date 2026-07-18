@@ -1,137 +1,45 @@
 import type { Request, Response } from "express";
-import { jsonrepair } from "jsonrepair";
-import { groqGPT } from "../ai/groq.js";
+import { llmJson } from "../ai/llm.js";
+
+const ARBITER_SYSTEM_PROMPT = `You are CRUX ARBITER. Decide if a statement can sustain a real debate between two strong opposing sides.
+
+Return JSON: {"eligibility":"pass"|"fail","improved":string,"feedback":string,"keyword":string,"domain":string}
+
+eligibility — judge the statement exactly as submitted; never upgrade to "pass" just because you could improve it. "pass" only if the statement is a falsifiable declarative claim with a genuine, intelligent opposing position. "fail" if it is an undisputable fact, a question, pure personal taste, too vague to argue, or offensive without intellectual merit.
+
+improved — the statement as one bold declarative sentence, max 15 words. Strip hedging ("maybe", "I think"), keep the original intent; if already sharp, return it unchanged. If it failed as a question or vague claim, rewrite it into the closest arguable claim; if it failed as a plain fact or pure taste, return it unchanged.
+
+feedback — one sentence, max 35 words, tone of a judge, not a teacher. On pass: name the tension that makes it arguable. On fail: name the disqualifier and what would fix it.
+
+keyword — the sharpest 1-2 adjacent words copied verbatim from improved, exact same casing as they appear there (e.g. "cognitive liberty"), never a meta-phrase like "the topic".
+
+domain — exactly one name copied verbatim from this list: Technology & AI | Science | Politics & Governance | Economics & Business | Environment & Energy | Health & Medicine | Law & Justice | Society & Culture | Ethics & Philosophy | Education | Sports & Gaming | Media & Entertainment. Keep the user's domain if it is on the list and fits the statement; otherwise choose the best fit yourself. If the user's domain is "auto" or empty, choose from the statement alone.
+
+Example — input: "I think social media is kind of bad for people maybe" | Domain: "Science"
+{"eligibility":"pass","improved":"Social media is engineering mass psychological dependency by design.","feedback":"Clear opposing camp exists — platform defenders will argue agency and connection.","keyword":"psychological dependency","domain":"Technology & AI"}`;
 
 export async function checkEligibleStatement(req: Request, res: Response) {
-  const { content, domain } = req.body;
+	const { content, domain } = req.body;
 
-  const systemPrompt = `You are CRUX ARBITER — the gatekeeper of a high-stakes debate arena.
+	const userPrompt = `STATEMENT: "${content}"
+DOMAIN: "${domain}"`;
 
-            Your only job: decide if a statement can sustain a real fight between two equally strong sides.
+	try {
+		const parsed = await llmJson({
+			system: ARBITER_SYSTEM_PROMPT,
+			user: userPrompt,
+			maxTokens: 2000,
+		});
 
-            RETURN ONLY a raw JSON object. No markdown. No explanation. No preamble.
-
-            ---
-
-            OUTPUT SCHEMA:
-            {
-            "eligibility": "pass" | "fail",
-            "improved": "string",       // max 15 words, declarative, provocative
-            "feedback": "string",       // max 50 words, blunt verdict
-            "keyword": "string",        // 1-2 adjacent words from improved statement
-            "domain": "string"          // 1-2 words, validated or corrected domain
-            }
-
-            ---
-
-            FIELD RULES:
-
-            [eligibility]
-            PASS when ALL of these are true:
-            - Makes a falsifiable claim (not a question, not a fact)
-            - Has a genuine, intelligent opposing position
-            - Touches something socially, ethically, politically, or scientifically contested
-
-            FAIL when ANY of these are true:
-            - Is an undisputable fact ("water boils at 100C")
-            - Is pure personal taste ("I prefer X over Y")
-            - Is so vague it cannot be argued ("things should be better")
-            - Is a question rather than a claim
-            - Is offensive with no intellectual merit
-
-            [improved]
-            - Rewrite as a sharp, confident declarative sentence
-            - Strip hedging words: "maybe", "perhaps", "I think", "kind of"
-            - Make the claim bolder but keep the original intent
-            - Hard limit: 15 words maximum
-            - If already strong and specific: return it unchanged
-
-            [feedback]
-            - One sentence. No filler.
-            - PASS: state what tension makes it arguable
-            - FAIL: state exactly what disqualifies it, and what would fix it
-            - Hard limit: 25 words maximum
-            - Tone: a judge, not a teacher
-
-            [keyword]
-            - The single sharpest tension word or phrase in the improved statement
-            - Must appear as adjacent words in the improved text
-            - 1-2 words only. Exact casing as given in the statement
-            - Good: "cognitive liberty", "democracy", "genetic editing"
-            - Bad: "statement about AI" or "the topic"
-
-            [domain]
-            - Choose EXACTLY one name from this closed list, copied verbatim (including "&"):
-              Technology & AI | Science | Politics & Governance | Economics & Business | Environment & Energy | Health & Medicine | Law & Justice | Society & Culture | Ethics & Philosophy | Education | Sports & Gaming | Media & Entertainment
-            - The user-provided domain is a hint. If it is on the list and plausibly fits the statement, return it unchanged.
-            - If it does not fit the statement, return the best-fitting list name instead.
-            - If the user-provided domain is "auto" or empty, ignore the hint entirely and choose the best-fitting list name from the statement alone.
-            - NEVER output a name that is not on the list. No inventing, shortening, or combining names.
-
-            ---
-
-            EXAMPLES:
-
-            Input: "I think social media is kind of bad for people maybe" | Domain: "Technology & AI"
-            Output:
-            {
-            "eligibility": "pass",
-            "improved": "Social media is engineering mass psychological dependency by design.",
-            "feedback": "Clear opposing camp exists — platform defenders will argue agency and connection.",
-            "keyword": "psychological dependency",
-            "domain": "Technology & AI"
-            }
-
-            Input: "The sky is blue" | Domain: "Science"
-            Output:
-            {
-            "eligibility": "fail",
-            "improved": "The sky is blue",
-            "feedback": "Undisputable fact. Submit a claim that has a genuine opposing position.",
-            "keyword": "sky",
-            "domain": "Science"
-            }
-
-            Input: "Is democracy the best system?" | Domain: "Society & Culture"
-            Output:
-            {
-            "eligibility": "fail",
-            "improved": "Democracy is the worst system of governance ever invented.",
-            "feedback": "Questions cannot be argued. Resubmit as a declarative claim with stakes.",
-            "keyword": "Democracy",
-            "domain": "Politics & Governance"
-            }
-
-            Input: "Nuclear energy is the only viable path to net zero." | Domain: "Sports & Gaming"
-            Output:
-            {
-            "eligibility": "pass",
-            "improved": "Nuclear energy is the only viable path to net zero.",
-            "feedback": "Renewables vs nuclear is a live and consequential scientific and policy dispute.",
-            "keyword": "net zero",
-            "domain": "Environment & Energy"
-            }`;
-
-  const userPrompt = `STATEMENT: "${content}"
-            DOMAIN: "${domain}"
-
-            Evaluate. Return raw JSON only.`;
-
-  try {
-    const data = await groqGPT(systemPrompt, userPrompt);
-
-    const repaired = jsonrepair(data);
-    const parsed = JSON.parse(repaired);
-
-    res.status(200).json({
-      eligibility: parsed.eligibility,
-      improved: parsed.improved,
-      feedback: parsed.feedback,
-      keyword: parsed.keyword,
-      domain: parsed.domain,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(502).json({ error: "arbiter_unavailable" });
-  }
+		res.status(200).json({
+			eligibility: parsed.eligibility,
+			improved: parsed.improved,
+			feedback: parsed.feedback,
+			keyword: parsed.keyword,
+			domain: parsed.domain,
+		});
+	} catch (err) {
+		console.error(err);
+		res.status(502).json({ error: "arbiter_unavailable" });
+	}
 }

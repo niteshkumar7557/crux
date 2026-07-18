@@ -12,6 +12,20 @@ const ArgumentHeader = ({
   const rootRef = useRef<HTMLDivElement>(null);
   const headlineRef = useRef<HTMLHeadingElement>(null);
 
+  const { statement, statementKeyword } = argumentHeaderData;
+  const matchIndex = statementKeyword
+    ? statement.toLowerCase().indexOf(statementKeyword.toLowerCase())
+    : -1;
+  const before = matchIndex >= 0 ? statement.slice(0, matchIndex) : statement;
+  const highlight =
+    matchIndex >= 0
+      ? statement.slice(matchIndex, matchIndex + statementKeyword.length)
+      : "";
+  const after =
+    matchIndex >= 0
+      ? statement.slice(matchIndex + statementKeyword.length)
+      : "";
+
   useGSAP(
     () => {
       const mm = gsap.matchMedia();
@@ -50,19 +64,11 @@ const ArgumentHeader = ({
           ref={headlineRef}
           className="font-headline text-5xl md:text-7xl font-bold max-w-5xl tracking-tight break-words"
         >
-          {
-            argumentHeaderData.statement.split(
-              argumentHeaderData.statementKeyword,
-            )[0]
-          }
-          <span className="text-primary italic">
-            {argumentHeaderData.statementKeyword}
-          </span>
-          {
-            argumentHeaderData.statement.split(
-              argumentHeaderData.statementKeyword,
-            )[1]
-          }
+          {before}
+          {highlight && (
+            <span className="text-primary italic">{highlight}</span>
+          )}
+          {after}
         </h1>
       </div>
 

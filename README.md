@@ -93,6 +93,17 @@ Rename `.env.example` file in both `frontend/` and `backend/` directories to `.e
 
 and add your Groq api key inside `backend/.env`
 
+**LLM provider (optional).** By default the backend talks to Groq using `GROQ_API_KEY`. To point it at any OpenAI-compatible provider (e.g. OpenRouter) without code changes, set:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `LLM_BASE_URL` | `https://api.groq.com/openai/v1` | Chat-completions base URL |
+| `LLM_API_KEY` | falls back to `GROQ_API_KEY` | API key for the provider |
+| `LLM_MODEL_SMART` | `openai/gpt-oss-120b` | Model for the arbiter, analysis, and scoring calls |
+| `LLM_MODEL_FAST` | `llama-3.3-70b-versatile` | Model for the debater-description call |
+
+Example for OpenRouter: `LLM_BASE_URL=https://openrouter.ai/api/v1`, `LLM_API_KEY=sk-or-...`, `LLM_MODEL_SMART=deepseek/deepseek-v4-flash`.
+
 ---
 
 ### 3. Run the Stack
