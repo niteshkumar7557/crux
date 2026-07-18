@@ -7,6 +7,7 @@ export interface UserHeadInfoProps {
   description: string;
   reputation: number;
   globalRank: number;
+  record: { wins: number; losses: number; draws: number };
 }
 
 export interface ReputationBreakdownProps {

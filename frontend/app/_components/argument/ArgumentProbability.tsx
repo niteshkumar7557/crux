@@ -5,8 +5,10 @@ import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
 
 const ArgumentProbability = ({
   argumentHeaderData,
+  status,
 }: {
   argumentHeaderData: ArgumentHeaderProps;
+  status: "live" | "concluded";
 }) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const { affirmativeProbability, negativeProbability } = argumentHeaderData;
@@ -15,6 +17,9 @@ const ArgumentProbability = ({
     () => {
       const mm = gsap.matchMedia();
       mm.add(MOTION_OK, () => {
+        // Concluded bars are a frozen final result, not a running forecast —
+        // render them at their final widths with no draw/count-up.
+        if (status === "concluded") return;
         const tl = gsap.timeline({
           delay: 0.45,
           defaults: { duration: 1.2, ease: "power3.out" },
@@ -44,7 +49,8 @@ const ArgumentProbability = ({
         style={{ width: `${affirmativeProbability}%` }}
       >
         <span className="font-label text-sm text-on-primary font-bold relative z-10 whitespace-nowrap">
-          AFFIRMATIVE <span data-count>{affirmativeProbability}</span>%
+          AFFIRMATIVE {status === "concluded" && "FINAL "}
+          <span data-count>{affirmativeProbability}</span>%
         </span>
         <div className="absolute inset-0 bg-linear-to-r from-white/10 to-transparent"></div>
       </div>
@@ -59,7 +65,8 @@ const ArgumentProbability = ({
         style={{ width: `${negativeProbability}%` }}
       >
         <span className="font-label text-sm text-on-secondary font-bold relative z-10 whitespace-nowrap">
-          NEGATIVE <span data-count>{negativeProbability}</span>%
+          NEGATIVE {status === "concluded" && "FINAL "}
+          <span data-count>{negativeProbability}</span>%
         </span>
         <div className="absolute inset-0 bg-linear-to-l from-white/10 to-transparent"></div>
       </div>

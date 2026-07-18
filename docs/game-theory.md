@@ -14,6 +14,13 @@
 
 **Design complete — the whole product is now specified (§0–13).** What remains is the **build phase** (every future section carries its own "implementation consequences" notes) and the video arena's **v2 upgrades** — live-streaming, AI host, and economy-integration — which arrive together as "AI-host live."
 
+### Build progress (§8 is now under construction)
+
+- **§8 Slice 1 — Conclusion engine backend (DONE, uncommitted 2026-07-18).** Schema migration `0007` (arguments lifecycle cols + `debate_results` table), in-process 60s poller (`backend/src/jobs/conclusion.ts`), Verdict Judge persona + `concludeDebate` (`backend/src/ai/verdict.ts`), pure decision logic under vitest (`backend/src/ai/verdict.logic.ts` — 10 tests), side-lock on comment POST, `closes_at` on new statements, seed-dev seeds live 48h matches. Spec/plan: `docs/superpowers/specs/2026-07-18-conclusion-engine-design.md`, `docs/superpowers/plans/2026-07-18-conclusion-engine.md`.
+- **§8 Slice 2 — Frontend wiring (DONE, uncommitted 2026-07-18).** Live countdown, Verdict card (`VerdictBanner`), FINAL bar, read-only concluded arena, side-lock 409 toasts + opposite-side pre-disable, profile W-L record card; backend added `mvp_username` on `/argument/:id` and `record` on `/profile/:id`. Spec/plan: `docs/superpowers/specs/2026-07-18-conclusion-frontend-design.md`, `docs/superpowers/plans/2026-07-18-conclusion-frontend.md`.
+- **§8 deferred (not built):** the Verdict **share-card image** (§8.6), the **thread-relative analyst-prompt rewrite** (§8.5 integrity), the **hot-extension** (§8.1), the losing-side **standout** nod (§8.3), and **feed/domain card** countdown+concluded states.
+- Both slices verified (backend: vitest + real conclusion runs; frontend: tsc + lint clean, Playwright 0 console errors). **Nothing is committed** — two commit messages were handed over.
+
 **Working rule:** the user commits — hand over a commit message, never run `git commit`.
 
 ---

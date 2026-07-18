@@ -19,6 +19,22 @@ export interface ArgumentHeaderProps {
   negativeProbability: number;
 }
 
+export interface MatchState {
+  status: "live" | "concluded";
+  closesAt: string | null;
+  winner: "for" | "against" | "draw" | "walkover" | null;
+  margin: number | null;
+  mvpUsername: string | null;
+  verdictText: string | null;
+  affirmative: number;
+  negative: number;
+}
+
+export interface CommentSide {
+  post_user_id: number;
+  side: "for" | "against";
+}
+
 export interface ArgumentArenaProps {
   forArgumentsCount: number;
   againstArgumentsCount: number;

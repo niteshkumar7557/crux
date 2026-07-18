@@ -11,6 +11,7 @@ const UserHeadInfo = ({
   description,
   reputation,
   globalRank,
+  record,
 }: UserHeadInfoProps) => {
   return (
     <section className="relative grid grid-cols-1 lg:grid-cols-12 gap-8 mt-8 md:mt-12 mb-16 items-end">
@@ -57,6 +58,17 @@ const UserHeadInfo = ({
           </span>
           <span className="font-label text-4xl font-bold text-secondary">
             #{globalRank}
+          </span>
+        </div>
+        <div className="col-span-2 bg-surface-container-low p-6 border-l-4 border-tertiary">
+          <span className="font-label text-xs text-outline uppercase tracking-widest block mb-2">
+            Record
+          </span>
+          <span className="font-label text-4xl font-bold text-tertiary">
+            {record.wins}–{record.losses}
+            {record.draws > 0 && (
+              <span className="text-lg text-outline"> · {record.draws} draws</span>
+            )}
           </span>
         </div>
       </div>

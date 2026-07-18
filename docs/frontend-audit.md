@@ -149,3 +149,29 @@ Reduced-motion users get the server-rendered end state (verified via emulation).
 3. Screenshot desktop (1440) and mobile (390) for visual changes; check `scrollWidth === clientWidth` at 390px.
 4. For motion work: emulate `prefers-reduced-motion: reduce` and assert no element is left dimmed/transformed; assert end states are `opacity: 1` / `transform: none`.
 5. Backend endpoint changes hot-reload via tsx watch; probe with `curl localhost:8000/...`.
+
+## 10. §8 Conclusion engine wiring (2026-07-18, uncommitted)
+
+The §8 "concluded state" was surfaced in the UI (spec:
+`docs/superpowers/specs/2026-07-18-conclusion-frontend-design.md`). New on the debate page
+(`/argument/[id]`): a `matchState` object (status/closesAt/winner/margin/mvpUsername/
+verdictText) flows from `page.tsx` into `ArgumentHeader` and `ArgumentInput`.
+
+- `_components/argument/Countdown.tsx` — live ticking "CLOSES IN Xh Ym / mm:ss" chip
+  (tertiary); ticks for everyone (it's info, not decorative motion).
+- `_components/argument/VerdictBanner.tsx` — concluded-only ruling card: AFFIRMATIVE WINS
+  (primary) / NEGATIVE WINS (secondary) / DRAW (tertiary) / UNOPPOSED (outline), margin
+  readout, `MVP — @username`, and the closing line in `font-headline` italic. Per-accent
+  **literal** class strings (RULINGS map) so Tailwind keeps them.
+- `ArgumentHeader` — badge flips Live Arena→Concluded; renders Countdown (live) / VerdictBanner
+  (concluded); passes `status` to `ArgumentProbability`.
+- `ArgumentProbability` — `status` prop; concluded skips the count-up/draw entrance and labels
+  the bars `FINAL`.
+- `ArgumentInput` — concluded = read-only strip (shown logged-out too); generalized `notice`
+  toast handles the POST 409s (`side_locked`, `locked`) + the abuse case; opposite-side
+  button pre-disabled from the viewer's own comment side (`commentSides` prop).
+- Profile: `UserHeadInfo` gained a **Record** card (`border-l-4 border-tertiary`, `W–L`,
+  spanning both columns) from `record` on `GET /profile/:id`. `GET /argument/:id` now returns
+  `mvp_username`.
+
+Deferred: feed/domain card countdown+concluded states; the verdict share-card image (§8.6).

@@ -34,6 +34,7 @@ const page = async ({ params }: { params: { id: string } }) => {
           description={data.userHeadInfo.description}
           reputation={data.userHeadInfo.reputation}
           globalRank={data.userHeadInfo.globalRank}
+          record={data.userHeadInfo.record}
         />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

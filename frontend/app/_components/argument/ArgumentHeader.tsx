@@ -1,13 +1,17 @@
 "use client";
 import { useRef } from "react";
-import { ArgumentHeaderProps } from "@/app/argument/types";
+import { ArgumentHeaderProps, MatchState } from "@/app/argument/types";
 import ArgumentProbability from "./ArgumentProbability";
+import Countdown from "./Countdown";
+import VerdictBanner from "./VerdictBanner";
 import { gsap, useGSAP, SplitText, MOTION_OK } from "@/app/_utils/gsap";
 
 const ArgumentHeader = ({
   argumentHeaderData,
+  matchState,
 }: {
   argumentHeaderData: ArgumentHeaderProps;
+  matchState: MatchState;
 }) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const headlineRef = useRef<HTMLHeadingElement>(null);
@@ -52,13 +56,22 @@ const ArgumentHeader = ({
   return (
     <div ref={rootRef}>
       <div className="flex flex-col items-start gap-4 mb-8">
-        <div data-hero-meta className="flex items-center gap-3">
-          <span className="font-label text-[10px] uppercase tracking-[0.2em] text-primary px-2 py-0.5 border border-primary/30">
-            Live Arena
-          </span>
+        <div data-hero-meta className="flex flex-wrap items-center gap-3">
+          {matchState.status === "concluded" ? (
+            <span className="font-label text-[10px] uppercase tracking-[0.2em] text-outline px-2 py-0.5 border border-outline/30">
+              Concluded
+            </span>
+          ) : (
+            <span className="font-label text-[10px] uppercase tracking-[0.2em] text-primary px-2 py-0.5 border border-primary/30">
+              Live Arena
+            </span>
+          )}
           <span className="font-label text-[10px] uppercase tracking-[0.2em] text-outline">
             ID: {argumentHeaderData.statementId}
           </span>
+          {matchState.status === "live" && matchState.closesAt && (
+            <Countdown closesAt={matchState.closesAt} />
+          )}
         </div>
         <h1
           ref={headlineRef}
@@ -72,7 +85,21 @@ const ArgumentHeader = ({
         </h1>
       </div>
 
-      <ArgumentProbability argumentHeaderData={argumentHeaderData} />
+      {matchState.status === "concluded" && (
+        <VerdictBanner
+          winner={matchState.winner}
+          margin={matchState.margin}
+          mvpUsername={matchState.mvpUsername}
+          verdictText={matchState.verdictText}
+          affirmative={matchState.affirmative}
+          negative={matchState.negative}
+        />
+      )}
+
+      <ArgumentProbability
+        argumentHeaderData={argumentHeaderData}
+        status={matchState.status}
+      />
     </div>
   );
 };

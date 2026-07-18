@@ -58,6 +58,16 @@ export async function getProfileDataById(req: Request, res: Response) {
 
     const globalRank = Number(rankQuery.rows[0].global_rank);
 
+    const recordRes = await pool.query(
+      `SELECT
+         COUNT(*) FILTER (WHERE outcome = 'win')::int  AS wins,
+         COUNT(*) FILTER (WHERE outcome = 'loss')::int AS losses,
+         COUNT(*) FILTER (WHERE outcome = 'draw')::int AS draws
+       FROM debate_results WHERE user_id = $1`,
+      [id],
+    );
+    const record = recordRes.rows[0] ?? { wins: 0, losses: 0, draws: 0 };
+
     const userHeadInfo = {
       name: data1.rows[0].name,
       username: data1.rows[0].username,
@@ -66,6 +76,7 @@ export async function getProfileDataById(req: Request, res: Response) {
       description: data1.rows[0].description,
       reputation: data1.rows[0].logic_score,
       globalRank: globalRank,
+      record: record,
     };
 
     const data2 = await pool.query(
