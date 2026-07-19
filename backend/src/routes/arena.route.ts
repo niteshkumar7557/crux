@@ -4,6 +4,7 @@ import {
   getLeaderboardData,
   getNewestCardData,
   getSidebarData,
+  getSitemapData,
   getStatements,
   getTrendingCardData,
 } from "../controllers/arena.controller.js";
@@ -18,6 +19,7 @@ arenaRoutes.get("/active/newest", getNewestCardData);
 arenaRoutes.get("/sidebar", getSidebarData);
 arenaRoutes.get("/leaderboard", getLeaderboardData);
 arenaRoutes.get("/statements", getStatements);
+arenaRoutes.get("/sitemap", getSitemapData);
 arenaRoutes.post("/vote/:id", authMiddleware, toggleVote);
 arenaRoutes.get("/vote/:id", authMiddleware, getVote);
 

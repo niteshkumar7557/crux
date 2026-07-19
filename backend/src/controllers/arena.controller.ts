@@ -208,10 +208,28 @@ export async function getLeaderboardData(req: Request, res: Response) {
   }
 }
 
+// §11 SEO: flat list of every debate (id + claim + keyword) for the sitemap.
+export async function getSitemapData(_req: Request, res: Response) {
+  try {
+    const r = await pool.query(
+      `SELECT id, content, content_keyword, status
+       FROM arguments ORDER BY id DESC LIMIT 5000`,
+    );
+    res.status(200).json(r.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(200).json([]);
+  }
+}
+
 export async function getStatements(req: Request, res: Response) {
   try {
     const domainId = Number.parseInt(String(req.query.domainId ?? ""), 10);
     const hasDomain = Number.isInteger(domainId) && domainId > 0;
+
+    const keyword =
+      typeof req.query.keyword === "string" ? req.query.keyword.trim() : "";
+    const hasKeyword = keyword.length > 0;
 
     let pageSize = Number.parseInt(String(req.query.pageSize ?? ""), 10);
     if (!Number.isInteger(pageSize)) pageSize = 12;
@@ -220,12 +238,17 @@ export async function getStatements(req: Request, res: Response) {
     let page = Number.parseInt(String(req.query.page ?? ""), 10);
     if (!Number.isInteger(page) || page < 1) page = 1;
 
-    const filterParams: number[] = [];
-    let where = "";
+    const filterParams: (number | string)[] = [];
+    const conds: string[] = [];
     if (hasDomain) {
       filterParams.push(domainId);
-      where = `WHERE a.domain_id = $${filterParams.length}`;
+      conds.push(`a.domain_id = $${filterParams.length}`);
     }
+    if (hasKeyword) {
+      filterParams.push(keyword);
+      conds.push(`LOWER(a.content_keyword) = LOWER($${filterParams.length})`);
+    }
+    const where = conds.length ? `WHERE ${conds.join(" AND ")}` : "";
 
     const totalResult = await pool.query(
       `SELECT COUNT(*)::int AS total FROM arguments a ${where};`,
