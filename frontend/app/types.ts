@@ -12,6 +12,7 @@ export interface MainTrendingArenaCardProps {
   closesAt?: string | null;
   winner?: string | null;
   margin?: number | null;
+  isDotd?: boolean;
 }
 export type MainTrendingArenaCardData = MainTrendingArenaCardProps[];
 
@@ -28,6 +29,7 @@ export interface TrendingArenaCardProps {
   closesAt?: string | null;
   winner?: string | null;
   margin?: number | null;
+  votes?: number;
 }
 export type TrendingArenaCardData = TrendingArenaCardProps[];
 
@@ -67,6 +69,7 @@ export interface NewestCardProps {
   closesAt?: string | null;
   winner?: string | null;
   margin?: number | null;
+  votes?: number;
 }
 export type NewestCardData = NewestCardProps[];
 

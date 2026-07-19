@@ -29,6 +29,8 @@ export interface MatchState {
   verdictText: string | null;
   affirmative: number;
   negative: number;
+  isUpset: boolean;
+  votes: number;
 }
 
 export interface CommentSide {

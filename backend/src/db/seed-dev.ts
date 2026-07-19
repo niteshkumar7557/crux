@@ -65,6 +65,13 @@ const seed = async () => {
 		);
 		console.log(`✅ Seeded ${commentRows.length} comments`);
 
+		// §9: pin two debates onto the Main Stage so a fresh dev DB shows a
+		// populated stage immediately (the featuring poller also fills it by heat).
+		await client.query(
+			`UPDATE arguments SET featured_override = TRUE WHERE id IN (1, 2)`,
+		);
+		console.log("✅ Pinned 2 Main Stage override debates");
+
 		await client.query("COMMIT");
 		console.log('🎉 Dev seeding complete! (every user\'s password is "secret")');
 	} catch (err) {

@@ -101,10 +101,11 @@ const ActiveArguments = ({
                 argumentId={e.argumentId}
               />
             ))}
+            <div className="font-label text-[10px] text-tertiary uppercase tracking-[0.25em] mt-6 mb-1">
+              Main Stage — Featured Live Matches
+            </div>
             <div className="mb-5 md:flex md:flex-wrap md:justify-between">
               {trendingArenaCardData
-                // the first trending item is already shown above as the main card
-                .filter((_, i) => i !== 0)
                 .map((e, i) => (
                   <ArenaCard
                     key={i}
@@ -118,6 +119,7 @@ const ActiveArguments = ({
                     status={e.status}
                     closesAt={e.closesAt}
                     winner={e.winner}
+                    votes={e.votes}
                     className="md:w-[49%]"
                     footerLeft={`${e.active_minds} Active ${e.active_minds === 1 ? "Mind" : "Minds"}`}
                   />

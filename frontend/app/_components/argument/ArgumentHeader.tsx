@@ -4,15 +4,18 @@ import { ArgumentHeaderProps, MatchState } from "@/app/argument/types";
 import ArgumentProbability from "./ArgumentProbability";
 import Countdown from "./Countdown";
 import VerdictBanner from "./VerdictBanner";
+import VoteButton from "@/app/_components/arena/VoteButton";
 import { gsap, useGSAP, SplitText, MOTION_OK } from "@/app/_utils/gsap";
 
 const ArgumentHeader = ({
   argumentHeaderData,
   matchState,
+  argumentId,
   shareUrl,
 }: {
   argumentHeaderData: ArgumentHeaderProps;
   matchState: MatchState;
+  argumentId: number;
   shareUrl: string;
 }) => {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -74,6 +77,13 @@ const ArgumentHeader = ({
           {matchState.status === "live" && matchState.closesAt && (
             <Countdown closesAt={matchState.closesAt} />
           )}
+          {matchState.status === "live" && (
+            <VoteButton
+              argumentId={argumentId}
+              initialVotes={matchState.votes}
+              fetchState
+            />
+          )}
         </div>
         <h1
           ref={headlineRef}
@@ -93,6 +103,7 @@ const ArgumentHeader = ({
           margin={matchState.margin}
           mvpUsername={matchState.mvpUsername}
           standoutUsername={matchState.standoutUsername}
+          isUpset={matchState.isUpset}
           verdictText={matchState.verdictText}
           affirmative={matchState.affirmative}
           negative={matchState.negative}

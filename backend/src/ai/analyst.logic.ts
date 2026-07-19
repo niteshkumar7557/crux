@@ -42,3 +42,18 @@ export function applyRepeatDecay(points: number, priorCount: number): number {
   if (priorCount < REPEAT_GRACE) return points;
   return Math.max(1, Math.floor(points / 2));
 }
+
+// §9.3 scarce-side surge: a comment on the trailing side (strictly fewer
+// comments than the opponent) earns 1.5× logic. Applied after the 1–8 clamp
+// and repeat-decay; may exceed 8 — that is the deliberate surge price.
+export const UNDERDOG_MULTIPLIER = 1.5;
+
+export function applyUnderdogMultiplier(
+  points: number,
+  ownSideCount: number,
+  oppSideCount: number,
+): number {
+  return ownSideCount < oppSideCount
+    ? Math.round(points * UNDERDOG_MULTIPLIER)
+    : points;
+}

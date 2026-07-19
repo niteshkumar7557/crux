@@ -127,3 +127,16 @@ export function resolvePayouts(input: {
 export function walkoverPayout(authorId: number): Payouts {
   return { results: [], logicAwards: [{ userId: authorId, amount: AUTHOR_WALKOVER_BONUS }] };
 }
+
+// §9.3: the winning side won "from behind" if its forecast ever dipped to ≤40%.
+export const UPSET_LOW_THRESHOLD = 40;
+
+export function resolveUpset(
+  winner: string,
+  forLow: number,
+  againstLow: number,
+): boolean {
+  if (winner === "for") return forLow <= UPSET_LOW_THRESHOLD;
+  if (winner === "against") return againstLow <= UPSET_LOW_THRESHOLD;
+  return false;
+}

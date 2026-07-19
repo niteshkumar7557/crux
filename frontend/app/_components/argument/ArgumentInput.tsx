@@ -54,6 +54,12 @@ const ArgumentInput = ({
   const lockedSide =
     commentSides.find((c) => c.post_user_id === user.id)?.side ?? null;
 
+  // §9.3 discovery: flag the trailing (scarce) side, where comments earn 1.5×.
+  const forCount = commentSides.filter((c) => c.side === "for").length;
+  const againstCount = commentSides.filter((c) => c.side === "against").length;
+  const underdog =
+    forCount === againstCount ? null : forCount < againstCount ? "for" : "against";
+
   async function handleBtn(side: string) {
     if (input.length === 0) return;
     try {
@@ -107,6 +113,17 @@ const ArgumentInput = ({
 
   return (
     <div className="sticky bottom-0 bg-surface-container-lowest/80 backdrop-blur-xl border-t border-outline-variant/20 py-4 px-4 md:py-6 md:px-6 z-40">
+      {underdog && (
+        <div className="max-w-screen-2xl mx-auto mb-2 text-center md:text-left">
+          <span
+            className={`font-label text-[10px] uppercase tracking-[0.2em] ${
+              underdog === "for" ? "text-primary" : "text-secondary"
+            }`}
+          >
+            Underdog side · {underdog === "for" ? "Affirmative" : "Negative"} · 1.5× logic
+          </span>
+        </div>
+      )}
       <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center gap-3 md:gap-6">
         <div className="flex-1 w-full relative">
           <input

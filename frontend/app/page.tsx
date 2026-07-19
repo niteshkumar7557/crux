@@ -27,6 +27,7 @@ function buildMainTrendingArenaCardData(
         typeof mainPayload.closesAt === "string" ? mainPayload.closesAt : null,
       winner: typeof mainPayload.winner === "string" ? mainPayload.winner : null,
       margin: typeof mainPayload.margin === "number" ? mainPayload.margin : null,
+      isDotd: mainPayload.isDotd === true,
     },
   ];
 }

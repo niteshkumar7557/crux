@@ -76,6 +76,8 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
     verdictText: data.data.verdict_text,
     affirmative: data.data.affirmative,
     negative: data.data.negative,
+    isUpset: data.data.is_upset ?? false,
+    votes: data.data.votes ?? 0,
   } as const;
 
   return (
@@ -85,6 +87,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
         <ArgumentHeader
           argumentHeaderData={argumentHeaderData}
           matchState={matchState}
+          argumentId={id}
           shareUrl={`${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/argument/${argumentHeaderData.statementId}`}
         />
         <ArgumentArena aiAnalysis={aiAnalysis} comments={comments.data} />

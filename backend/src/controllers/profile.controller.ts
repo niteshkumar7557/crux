@@ -60,11 +60,13 @@ export async function getProfileDataById(req: Request, res: Response) {
 
     const recordRes = await pool.query(
       `SELECT
-         COUNT(*) FILTER (WHERE outcome = 'win')::int  AS wins,
-         COUNT(*) FILTER (WHERE outcome = 'loss')::int AS losses,
-         COUNT(*) FILTER (WHERE outcome = 'draw')::int AS draws,
-         COUNT(*) FILTER (WHERE is_standout)::int      AS standouts
-       FROM debate_results WHERE user_id = $1`,
+         COUNT(*) FILTER (WHERE r.outcome = 'win')::int  AS wins,
+         COUNT(*) FILTER (WHERE r.outcome = 'loss')::int AS losses,
+         COUNT(*) FILTER (WHERE r.outcome = 'draw')::int AS draws,
+         COUNT(*) FILTER (WHERE r.is_standout)::int      AS standouts,
+         COUNT(*) FILTER (WHERE r.outcome = 'win' AND a.is_upset)::int AS upsets
+       FROM debate_results r JOIN arguments a ON a.id = r.argument_id
+       WHERE r.user_id = $1`,
       [id],
     );
     const record = recordRes.rows[0] ?? {
@@ -72,6 +74,7 @@ export async function getProfileDataById(req: Request, res: Response) {
       losses: 0,
       draws: 0,
       standouts: 0,
+      upsets: 0,
     };
 
     const userHeadInfo = {

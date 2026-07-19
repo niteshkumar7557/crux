@@ -36,6 +36,7 @@ const VerdictBanner = ({
   margin,
   mvpUsername,
   standoutUsername,
+  isUpset,
   verdictText,
   affirmative,
   negative,
@@ -45,6 +46,7 @@ const VerdictBanner = ({
   margin: number | null;
   mvpUsername: string | null;
   standoutUsername: string | null;
+  isUpset: boolean;
   verdictText: string | null;
   affirmative: number;
   negative: number;
@@ -74,6 +76,12 @@ const VerdictBanner = ({
       {showMargin && (
         <div className="font-label text-xs uppercase tracking-[0.2em] text-on-surface-variant mb-2">
           {affirmative} – {negative} · margin {margin}
+        </div>
+      )}
+
+      {isUpset && (
+        <div className="font-label text-xs uppercase tracking-[0.2em] text-tertiary mb-2">
+          Upset — won from behind
         </div>
       )}
 

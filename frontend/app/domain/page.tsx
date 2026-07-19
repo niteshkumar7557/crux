@@ -151,6 +151,7 @@ const DomainPage = async ({ searchParams }: { searchParams: SearchParams }) => {
               status={e.status}
               closesAt={e.closesAt}
               winner={e.winner}
+              votes={e.votes}
               time={timeAgo(e.time)}
               footerLeft={
                 <>

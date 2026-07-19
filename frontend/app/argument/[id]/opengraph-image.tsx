@@ -62,6 +62,8 @@ async function fetchModel(rawId: string): Promise<VerdictCardModel | null> {
       verdictText: row.verdict_text,
       affirmative: row.affirmative,
       negative: row.negative,
+      isUpset: row.is_upset ?? false,
+      votes: row.votes ?? 0,
     };
     return buildVerdictCard(state, String(row.content));
   } catch (err) {
@@ -216,6 +218,11 @@ export default async function Image({
             {model.standoutUsername && (
               <div style={{ fontSize: 18, color: TOKENS.outline }}>
                 {`Standout in defeat  @${model.standoutUsername}`}
+              </div>
+            )}
+            {model.isUpset && (
+              <div style={{ fontSize: 18, color: TOKENS.amber }}>
+                UPSET · won from behind
               </div>
             )}
           </div>

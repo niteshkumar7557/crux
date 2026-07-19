@@ -4,6 +4,7 @@ import {
   resolveVerdict,
   resolvePayouts,
   resolveStandout,
+  resolveUpset,
   walkoverPayout,
   type RawVerdict,
   type Participant,
@@ -31,7 +32,7 @@ export async function concludeDebate(argumentId: number): Promise<void> {
     await client.query("BEGIN");
 
     const argRes = await client.query(
-      `SELECT id, user_id, content, for_analysis, against_analysis, status
+      `SELECT id, user_id, content, for_analysis, against_analysis, status, for_low, against_low
        FROM arguments WHERE id = $1 FOR UPDATE`,
       [argumentId],
     );
@@ -147,6 +148,8 @@ ${commentBlock}`,
       );
     }
 
+    const isUpset = resolveUpset(winner, arg.for_low, arg.against_low);
+
     await client.query(
       `UPDATE arguments SET
          status = 'concluded',
@@ -156,9 +159,10 @@ ${commentBlock}`,
          mvp_user_id = $4,
          verdict_text = $5,
          affirmative = COALESCE($6, affirmative),
-         negative = COALESCE($7, negative)
+         negative = COALESCE($7, negative),
+         is_upset = $8
        WHERE id = $1`,
-      [argumentId, winner, margin, mvpUserId, verdictText, affirmative, negative],
+      [argumentId, winner, margin, mvpUserId, verdictText, affirmative, negative, isUpset],
     );
 
     await client.query("COMMIT");

@@ -5,10 +5,10 @@ export async function getActiveCardData(req: Request, res: Response) {
   try {
     const argument = await pool.query(`
                 SELECT a.id, a.user_id, a.content, d.name AS domain, a.affirmative, a.negative,
-                       a.status, a.closes_at, a.winner, a.margin
+                       a.status, a.closes_at, a.winner, a.margin, a.is_dotd
                 FROM arguments a
                 JOIN domains d ON d.id = a.domain_id
-                ORDER BY a.id DESC
+                ORDER BY a.is_dotd DESC, a.heat DESC, a.id DESC
                 LIMIT 1;
             `);
     if (argument.rows.length === 0) {
@@ -39,6 +39,7 @@ export async function getActiveCardData(req: Request, res: Response) {
       closesAt: argument.rows[0].closes_at,
       winner: argument.rows[0].winner,
       margin: argument.rows[0].margin,
+      isDotd: argument.rows[0].is_dotd,
       count_comments: parseInt(comments.rows[0].count),
     });
   } catch (err) {
@@ -62,14 +63,16 @@ export async function getTrendingCardData(req: Request, res: Response) {
                     a.closes_at AS "closesAt",
                     a.winner,
                     a.margin,
+                    a.votes,
                     COUNT(DISTINCT c.user_id)::int AS active_minds
                 FROM arguments a
                 JOIN users u ON a.user_id = u.id
                 JOIN domains d ON d.id = a.domain_id
                 LEFT JOIN comments c ON c.argument_id = a.id
+                WHERE a.featured = TRUE AND a.is_dotd = FALSE
                 GROUP BY a.id, u.username, u.avatar, d.name, a.content, a.affirmative, a.negative
-                ORDER BY a.id DESC
-                LIMIT 7;
+                ORDER BY a.heat DESC, a.featured_at ASC NULLS LAST
+                LIMIT 6;
             `);
     if (argument.rows.length === 0) {
       return res.status(200).json({});
@@ -97,6 +100,7 @@ export async function getNewestCardData(req: Request, res: Response) {
                     a.closes_at AS "closesAt",
                     a.winner,
                     a.margin,
+                    a.votes,
                     a.created_at AT TIME ZONE 'UTC' AS time,
                     COALESCE(c.count, 0)::int AS "argumentNum"
                 FROM arguments a
@@ -246,6 +250,7 @@ export async function getStatements(req: Request, res: Response) {
                     a.closes_at AS "closesAt",
                     a.winner,
                     a.margin,
+                    a.votes,
                     a.created_at AT TIME ZONE 'UTC' AS time,
                     COALESCE(c.count, 0)::int AS "argumentNum"
                 FROM arguments a

@@ -1,7 +1,11 @@
 import type { Request, Response } from "express";
 import pool from "../db/index.js";
 import { llmJson } from "../ai/llm.js";
-import { buildAnalystPrompt, applyRepeatDecay } from "../ai/analyst.logic.js";
+import {
+  buildAnalystPrompt,
+  applyRepeatDecay,
+  applyUnderdogMultiplier,
+} from "../ai/analyst.logic.js";
 
 const MODERATOR_ANALYST_SYSTEM_PROMPT = `You are CRUX ANALYST for a debate arena. A statement has a FOR and an AGAINST side, each with a running analysis. A user posted a new comment on one side. You see that side (OWN SIDE ANALYSIS), the other side (OPPONENT ANALYSIS), and the comment. First moderate the comment, then score it by how it engages the live thread, then update the OWN side's analysis.
 
@@ -50,7 +54,9 @@ AGAINST analysis: ${rows[0].against_analysis}`;
     `
             UPDATE arguments
             SET affirmative = $1,
-                negative = $2
+                negative = $2,
+                for_low = LEAST(for_low, $1),
+                against_low = LEAST(against_low, $2)
             WHERE id = $3
         `,
     [affirmative, negative, argumentId],
@@ -145,13 +151,19 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
       return res.status(409).json({ reason: "side_locked" });
     }
 
-    const { rows: existing } = await pool.query(
-      `
-            SELECT id FROM comments WHERE argument_id = $1 AND side = $2;
-            `,
-      [argumentId, side],
+    // Pre-insert side counts drive both the opener exception (own side empty)
+    // and the §9.3 scarce-side multiplier (own side trailing the opponent).
+    const sideCountRes = await pool.query(
+      `SELECT COUNT(*) FILTER (WHERE side = 'for')     AS for_count,
+              COUNT(*) FILTER (WHERE side = 'against') AS against_count
+       FROM comments WHERE argument_id = $1`,
+      [argumentId],
     );
-    const first = existing.length === 0;
+    const forCountPre = Number(sideCountRes.rows[0].for_count);
+    const againstCountPre = Number(sideCountRes.rows[0].against_count);
+    const ownSideCount = side === "for" ? forCountPre : againstCountPre;
+    const oppSideCount = side === "for" ? againstCountPre : forCountPre;
+    const first = ownSideCount === 0;
 
     // Prior comments by this user in this debate (captured before the new row
     // is inserted, so a user's first comment sees priorCount 0).
@@ -189,7 +201,9 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
     );
 
     const safePoints = Math.min(8, Math.max(1, Math.round(points)));
-    const awarded = applyRepeatDecay(safePoints, priorCount);
+    const decayed = applyRepeatDecay(safePoints, priorCount);
+    // §9.3: surge-price the scarce side (own side had fewer comments pre-insert).
+    const awarded = applyUnderdogMultiplier(decayed, ownSideCount, oppSideCount);
     await pool.query(
       `
             UPDATE users

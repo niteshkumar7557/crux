@@ -30,6 +30,7 @@ export interface VerdictCardModel {
   heroLine: string;
   claim: string;
   liveNote: string | null;
+  isUpset: boolean;
 }
 
 export function truncate(text: string, max: number): string {
@@ -77,6 +78,7 @@ export function buildVerdictCard(
       heroLine: claim,
       claim,
       liveNote: liveNoteFrom(state.closesAt),
+      isUpset: false,
     };
   }
 
@@ -98,5 +100,6 @@ export function buildVerdictCard(
     heroLine: hero,
     claim,
     liveNote: null,
+    isUpset: isWalkover ? false : state.isUpset,
   };
 }

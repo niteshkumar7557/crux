@@ -75,6 +75,12 @@ const UserHeadInfo = ({
                 · {record.standouts} standout
               </span>
             )}
+            {record.upsets > 0 && (
+              <span className="text-lg text-outline">
+                {" "}
+                · {record.upsets} upset{record.upsets === 1 ? "" : "s"}
+              </span>
+            )}
           </span>
         </div>
       </div>

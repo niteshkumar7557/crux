@@ -20,6 +20,7 @@ const MainTrendingArenaCard = ({
   status,
   closesAt,
   winner,
+  isDotd,
 }: MainTrendingArenaCardProps) => {
   const isConcluded = status === "concluded";
   const isLive = status === "live";
@@ -39,7 +40,7 @@ const MainTrendingArenaCard = ({
           <Avatar username={username} src={avatar} size="md" />
           <div className="flex flex-col">
             <span className="font-label text-[10px] text-primary uppercase tracking-[0.2em]">
-              Proposed By
+              {isDotd ? "Debate of the Day" : "Proposed By"}
             </span>
             <span className="font-body text-xs font-bold text-on-surface">
               {username}

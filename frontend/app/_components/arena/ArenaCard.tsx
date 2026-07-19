@@ -5,6 +5,7 @@ import Avatar from "@/app/_components/ui/Avatar";
 import ScoreBar from "./ScoreBar";
 import Countdown from "@/app/_components/argument/Countdown";
 import { settledSide } from "./settledSides";
+import VoteButton from "./VoteButton";
 import { gsap, MOTION_OK } from "@/app/_utils/gsap";
 
 // The compact feed card used by both the trending grid and the newest tab.
@@ -21,6 +22,7 @@ export interface ArenaCardComponentProps {
   status?: string;
   closesAt?: string | null;
   winner?: string | null;
+  votes?: number;
   className?: string;
 }
 
@@ -37,6 +39,7 @@ const ArenaCard = ({
   status,
   closesAt,
   winner,
+  votes,
   className = "",
 }: ArenaCardComponentProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -105,19 +108,24 @@ const ArenaCard = ({
           <ScoreBar affirmative={affirmativescore} negative={negativescore} />
           <div className="flex justify-between items-center font-label text-[10px] text-outline uppercase tracking-widest">
             <span>{footerLeft}</span>
-            {isConcluded ? (
-              <span className={ruling.cls}>
-                {ruling.label} · {affirmativescore}–{negativescore}
-              </span>
-            ) : affirmativescore > negativescore ? (
-              <span className="text-primary-container">
-                {affirmativescore}% Favor
-              </span>
-            ) : (
-              <span className="text-secondary-container">
-                {negativescore}% Against
-              </span>
-            )}
+            <span className="flex items-center gap-3">
+              {isLive && votes !== undefined && (
+                <VoteButton argumentId={argumentid} initialVotes={votes} compact />
+              )}
+              {isConcluded ? (
+                <span className={ruling.cls}>
+                  {ruling.label} · {affirmativescore}–{negativescore}
+                </span>
+              ) : affirmativescore > negativescore ? (
+                <span className="text-primary-container">
+                  {affirmativescore}% Favor
+                </span>
+              ) : (
+                <span className="text-secondary-container">
+                  {negativescore}% Against
+                </span>
+              )}
+            </span>
           </div>
         </div>
       </Link>
