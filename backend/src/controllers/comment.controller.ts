@@ -6,6 +6,7 @@ import {
   applyRepeatDecay,
   applyUnderdogMultiplier,
 } from "../ai/analyst.logic.js";
+import { notifyOpposition } from "../notifications/notify.js";
 
 const MODERATOR_ANALYST_SYSTEM_PROMPT = `You are CRUX ANALYST for a debate arena. A statement has a FOR and an AGAINST side, each with a running analysis. A user posted a new comment on one side. You see that side (OWN SIDE ANALYSIS), the other side (OPPONENT ANALYSIS), and the comment. First moderate the comment, then score it by how it engages the live thread, then update the OWN side's analysis.
 
@@ -222,6 +223,12 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
         `,
         [newAnalysis, argumentId],
       );
+    }
+
+    // §10 return trigger: a new participant joining tells the opposing side +
+    // the author. Best-effort — never blocks the comment response.
+    if (priorCount === 0) {
+      void notifyOpposition(argumentId, side, userId);
     }
 
     const { rows } = await pool.query(

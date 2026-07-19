@@ -8,6 +8,7 @@ import { useUser } from "../_hooks/useUser";
 import Avatar from "./ui/Avatar";
 import SearchBar from "./SearchBar";
 import Button from "./ui/Button";
+import NotificationBell from "./NotificationBell";
 
 const navLinks = [
   { label: "Arena", href: "/" },
@@ -69,6 +70,7 @@ const Navbar = () => {
         <Button href={user === null ? "/login" : "/statement"} size="sm">
           NEW STATEMENT
         </Button>
+        {user && <NotificationBell />}
         <Link
           href={user ? `/profile/${user.id}` : "/login"}
           aria-label={user ? "Your profile" : "Log in"}

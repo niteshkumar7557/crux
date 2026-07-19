@@ -1,5 +1,6 @@
 import pool from "../db/index.js";
 import { llmJson } from "./llm.js";
+import { notifyVerdict } from "../notifications/notify.js";
 import {
   resolveVerdict,
   resolvePayouts,
@@ -167,6 +168,18 @@ ${commentBlock}`,
 
     await client.query("COMMIT");
     console.log(`⚖️  concluded debate ${argumentId} → ${winner}`);
+
+    // §10 return trigger: tell every participant the verdict is in. Best-effort,
+    // post-commit so a notification failure can't roll back the conclusion.
+    void notifyVerdict(
+      argumentId,
+      payouts.results.map((r) => ({
+        userId: r.userId,
+        outcome: r.outcome,
+        isMvp: r.isMvp,
+      })),
+      isUpset,
+    );
   } catch (err) {
     await client.query("ROLLBACK");
     console.error(`❌ failed to conclude debate ${argumentId}:`, err);
