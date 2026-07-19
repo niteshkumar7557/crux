@@ -4,7 +4,8 @@ import pool from "../db/index.js";
 export async function getActiveCardData(req: Request, res: Response) {
   try {
     const argument = await pool.query(`
-                SELECT a.id, a.user_id, a.content, d.name AS domain, a.affirmative, a.negative
+                SELECT a.id, a.user_id, a.content, d.name AS domain, a.affirmative, a.negative,
+                       a.status, a.closes_at, a.winner, a.margin
                 FROM arguments a
                 JOIN domains d ON d.id = a.domain_id
                 ORDER BY a.id DESC
@@ -34,6 +35,10 @@ export async function getActiveCardData(req: Request, res: Response) {
       content: argument.rows[0].content,
       affirmative: argument.rows[0].affirmative,
       negative: argument.rows[0].negative,
+      status: argument.rows[0].status,
+      closesAt: argument.rows[0].closes_at,
+      winner: argument.rows[0].winner,
+      margin: argument.rows[0].margin,
       count_comments: parseInt(comments.rows[0].count),
     });
   } catch (err) {
@@ -53,6 +58,10 @@ export async function getTrendingCardData(req: Request, res: Response) {
                     a.affirmative AS affirmativeScore,
                     a.negative AS negativeScore,
                     a.id AS argumentId,
+                    a.status,
+                    a.closes_at AS "closesAt",
+                    a.winner,
+                    a.margin,
                     COUNT(DISTINCT c.user_id)::int AS active_minds
                 FROM arguments a
                 JOIN users u ON a.user_id = u.id
@@ -84,6 +93,10 @@ export async function getNewestCardData(req: Request, res: Response) {
                     a.affirmative AS affirmativeScore,
                     a.negative AS negativeScore,
                     a.id AS argumentId,
+                    a.status,
+                    a.closes_at AS "closesAt",
+                    a.winner,
+                    a.margin,
                     a.created_at AT TIME ZONE 'UTC' AS time,
                     COALESCE(c.count, 0)::int AS "argumentNum"
                 FROM arguments a
@@ -229,6 +242,10 @@ export async function getStatements(req: Request, res: Response) {
                     a.affirmative AS affirmativeScore,
                     a.negative AS negativeScore,
                     a.id AS argumentId,
+                    a.status,
+                    a.closes_at AS "closesAt",
+                    a.winner,
+                    a.margin,
                     a.created_at AT TIME ZONE 'UTC' AS time,
                     COALESCE(c.count, 0)::int AS "argumentNum"
                 FROM arguments a

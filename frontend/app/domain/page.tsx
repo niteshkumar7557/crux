@@ -148,6 +148,9 @@ const DomainPage = async ({ searchParams }: { searchParams: SearchParams }) => {
               affirmativescore={e.affirmativescore}
               negativescore={e.negativescore}
               argumentid={e.argumentid}
+              status={e.status}
+              closesAt={e.closesAt}
+              winner={e.winner}
               time={timeAgo(e.time)}
               footerLeft={
                 <>

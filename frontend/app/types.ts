@@ -8,6 +8,10 @@ export interface MainTrendingArenaCardProps {
   affirmativeScore: number;
   negativeScore: number;
   argumentId: string;
+  status?: string;
+  closesAt?: string | null;
+  winner?: string | null;
+  margin?: number | null;
 }
 export type MainTrendingArenaCardData = MainTrendingArenaCardProps[];
 
@@ -20,6 +24,10 @@ export interface TrendingArenaCardProps {
   negativescore: number;
   argumentid: number;
   active_minds: number;
+  status?: string;
+  closesAt?: string | null;
+  winner?: string | null;
+  margin?: number | null;
 }
 export type TrendingArenaCardData = TrendingArenaCardProps[];
 
@@ -55,6 +63,10 @@ export interface NewestCardProps {
   argumentid: number;
   argumentNum: number;
   time: string;
+  status?: string;
+  closesAt?: string | null;
+  winner?: string | null;
+  margin?: number | null;
 }
 export type NewestCardData = NewestCardProps[];
 

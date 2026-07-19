@@ -115,6 +115,9 @@ const ActiveArguments = ({
                     affirmativescore={e.affirmativescore}
                     negativescore={e.negativescore}
                     argumentid={e.argumentid}
+                    status={e.status}
+                    closesAt={e.closesAt}
+                    winner={e.winner}
                     className="md:w-[49%]"
                     footerLeft={`${e.active_minds} Active ${e.active_minds === 1 ? "Mind" : "Minds"}`}
                   />
