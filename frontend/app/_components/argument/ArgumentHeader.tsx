@@ -92,6 +92,7 @@ const ArgumentHeader = ({
           winner={matchState.winner}
           margin={matchState.margin}
           mvpUsername={matchState.mvpUsername}
+          standoutUsername={matchState.standoutUsername}
           verdictText={matchState.verdictText}
           affirmative={matchState.affirmative}
           negative={matchState.negative}

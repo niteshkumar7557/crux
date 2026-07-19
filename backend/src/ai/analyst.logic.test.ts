@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { buildAnalystPrompt, NONE_YET } from "./analyst.logic.js";
+import {
+  buildAnalystPrompt,
+  NONE_YET,
+  applyRepeatDecay,
+  REPEAT_GRACE,
+} from "./analyst.logic.js";
 
 const base = {
   statement: "AI should have legal personhood.",
@@ -70,5 +75,22 @@ describe("buildAnalystPrompt", () => {
       ownIsFirst: false,
     });
     expect(out).toContain(`OPPONENT ANALYSIS: ${NONE_YET}`);
+  });
+});
+
+describe("applyRepeatDecay", () => {
+  it("first REPEAT_GRACE comments (priorCount 0,1,2) score full", () => {
+    expect(applyRepeatDecay(8, 0)).toBe(8);
+    expect(applyRepeatDecay(6, 1)).toBe(6);
+    expect(applyRepeatDecay(5, 2)).toBe(5);
+    expect(REPEAT_GRACE).toBe(3);
+  });
+
+  it("4th comment onward (priorCount >= 3) is halved, floored", () => {
+    expect(applyRepeatDecay(8, 3)).toBe(4);
+    expect(applyRepeatDecay(6, 4)).toBe(3);
+    expect(applyRepeatDecay(5, 5)).toBe(2); // floor(5/2)=2
+    expect(applyRepeatDecay(1, 9)).toBe(1); // floor(1/2)=0 → clamped to 1
+    expect(applyRepeatDecay(2, 3)).toBe(1); // floor(2/2)=1
   });
 });

@@ -62,11 +62,17 @@ export async function getProfileDataById(req: Request, res: Response) {
       `SELECT
          COUNT(*) FILTER (WHERE outcome = 'win')::int  AS wins,
          COUNT(*) FILTER (WHERE outcome = 'loss')::int AS losses,
-         COUNT(*) FILTER (WHERE outcome = 'draw')::int AS draws
+         COUNT(*) FILTER (WHERE outcome = 'draw')::int AS draws,
+         COUNT(*) FILTER (WHERE is_standout)::int      AS standouts
        FROM debate_results WHERE user_id = $1`,
       [id],
     );
-    const record = recordRes.rows[0] ?? { wins: 0, losses: 0, draws: 0 };
+    const record = recordRes.rows[0] ?? {
+      wins: 0,
+      losses: 0,
+      draws: 0,
+      standouts: 0,
+    };
 
     const userHeadInfo = {
       name: data1.rows[0].name,

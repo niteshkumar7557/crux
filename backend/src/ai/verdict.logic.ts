@@ -5,6 +5,7 @@ export interface RawVerdict {
   against: number;
   winner: string;
   mvp_username: string | null;
+  standout_username: string | null;
   closing: string;
 }
 
@@ -42,6 +43,22 @@ export function resolveVerdict(
   return { affirmative, negative, winner, margin, mvpUsername };
 }
 
+// §8.3: the sharpest debater on the LOSING side of a decisive match, never the
+// MVP. Null on a draw/walkover, an unknown name, or a winning-side name.
+export function resolveStandout(
+  rawStandout: string | null,
+  winner: Side | "draw",
+  participants: { userId: number; side: Side; username: string }[],
+  mvpUserId: number | null,
+): number | null {
+  if (!rawStandout || winner === "draw") return null;
+  const p = participants.find((x) => x.username === rawStandout);
+  if (!p) return null;
+  if (p.side === winner) return null; // must be on the losing side
+  if (p.userId === mvpUserId) return null; // never double with the MVP
+  return p.userId;
+}
+
 export type Outcome = "win" | "loss" | "draw";
 
 export interface Participant {
@@ -54,6 +71,7 @@ export interface DebateResultRow {
   side: Side;
   outcome: Outcome;
   isMvp: boolean;
+  isStandout: boolean;
 }
 
 export interface LogicAward {
@@ -67,6 +85,7 @@ export interface Payouts {
 }
 
 export const MVP_BONUS = 10;
+export const STANDOUT_BONUS = 5;
 export const AUTHOR_BASE_BONUS = 4;
 export const AUTHOR_BONUS_CAP = 8;
 export const AUTHOR_WALKOVER_BONUS = 2;
@@ -75,18 +94,28 @@ export function resolvePayouts(input: {
   winner: Side | "draw";
   participants: Participant[];
   mvpUserId: number | null;
+  standoutUserId?: number | null;
   authorId: number;
 }): Payouts {
   const { winner, participants, mvpUserId, authorId } = input;
+  const standoutUserId = input.standoutUserId ?? null;
 
   const results: DebateResultRow[] = participants.map((p) => {
     const outcome: Outcome =
       winner === "draw" ? "draw" : p.side === winner ? "win" : "loss";
-    return { userId: p.userId, side: p.side, outcome, isMvp: p.userId === mvpUserId };
+    return {
+      userId: p.userId,
+      side: p.side,
+      outcome,
+      isMvp: p.userId === mvpUserId,
+      isStandout: p.userId === standoutUserId,
+    };
   });
 
   const logicAwards: LogicAward[] = [];
   if (mvpUserId !== null) logicAwards.push({ userId: mvpUserId, amount: MVP_BONUS });
+  if (standoutUserId !== null)
+    logicAwards.push({ userId: standoutUserId, amount: STANDOUT_BONUS });
   logicAwards.push({
     userId: authorId,
     amount: AUTHOR_BASE_BONUS + Math.min(participants.length, AUTHOR_BONUS_CAP),

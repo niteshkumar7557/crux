@@ -33,3 +33,12 @@ OWN SIDE ANALYSIS: ${own}
 OPPONENT ANALYSIS: ${opponent}
 COMMENT: "${comment}"`;
 }
+
+export const REPEAT_GRACE = 3;
+
+// §8.5 #3 "deflate the ratchet": a user's first REPEAT_GRACE comments in a
+// debate score full; every comment after that is halved (never below 1).
+export function applyRepeatDecay(points: number, priorCount: number): number {
+  if (priorCount < REPEAT_GRACE) return points;
+  return Math.max(1, Math.floor(points / 2));
+}

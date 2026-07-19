@@ -58,6 +58,7 @@ async function fetchModel(rawId: string): Promise<VerdictCardModel | null> {
       winner: row.winner,
       margin: row.margin,
       mvpUsername: row.mvp_username,
+      standoutUsername: row.standout_username,
       verdictText: row.verdict_text,
       affirmative: row.affirmative,
       negative: row.negative,
@@ -208,8 +209,15 @@ export default async function Image({
             color: TOKENS.outline,
           }}
         >
-          <div style={{ color: model.mvpUsername ? TOKENS.amber : TOKENS.bg }}>
-            {model.mvpUsername ? `MVP  @${model.mvpUsername}` : ""}
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <div style={{ color: model.mvpUsername ? TOKENS.amber : TOKENS.bg }}>
+              {model.mvpUsername ? `MVP  @${model.mvpUsername}` : ""}
+            </div>
+            {model.standoutUsername && (
+              <div style={{ fontSize: 18, color: TOKENS.outline }}>
+                {`Standout in defeat  @${model.standoutUsername}`}
+              </div>
+            )}
           </div>
           <div>{`crux · /argument/${id}`}</div>
         </div>

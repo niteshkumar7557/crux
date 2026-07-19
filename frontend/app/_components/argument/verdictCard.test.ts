@@ -8,6 +8,7 @@ const base: MatchState = {
   winner: "for",
   margin: 26,
   mvpUsername: "ada",
+  standoutUsername: null,
   verdictText: "The crux held: coordination beats raw incentive.",
   affirmative: 63,
   negative: 37,

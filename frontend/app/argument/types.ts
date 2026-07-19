@@ -25,6 +25,7 @@ export interface MatchState {
   winner: "for" | "against" | "draw" | "walkover" | null;
   margin: number | null;
   mvpUsername: string | null;
+  standoutUsername: string | null;
   verdictText: string | null;
   affirmative: number;
   negative: number;

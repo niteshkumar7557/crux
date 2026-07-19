@@ -69,6 +69,12 @@ const UserHeadInfo = ({
             {record.draws > 0 && (
               <span className="text-lg text-outline"> · {record.draws} draws</span>
             )}
+            {record.standouts > 0 && (
+              <span className="text-lg text-outline">
+                {" "}
+                · {record.standouts} standout
+              </span>
+            )}
           </span>
         </div>
       </div>

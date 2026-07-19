@@ -72,6 +72,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
     winner: data.data.winner,
     margin: data.data.margin,
     mvpUsername: data.data.mvp_username,
+    standoutUsername: data.data.standout_username,
     verdictText: data.data.verdict_text,
     affirmative: data.data.affirmative,
     negative: data.data.negative,

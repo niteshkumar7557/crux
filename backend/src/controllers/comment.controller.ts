@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import pool from "../db/index.js";
 import { llmJson } from "../ai/llm.js";
-import { buildAnalystPrompt } from "../ai/analyst.logic.js";
+import { buildAnalystPrompt, applyRepeatDecay } from "../ai/analyst.logic.js";
 
 const MODERATOR_ANALYST_SYSTEM_PROMPT = `You are CRUX ANALYST for a debate arena. A statement has a FOR and an AGAINST side, each with a running analysis. A user posted a new comment on one side. You see that side (OWN SIDE ANALYSIS), the other side (OPPONENT ANALYSIS), and the comment. First moderate the comment, then score it by how it engages the live thread, then update the OWN side's analysis.
 
@@ -153,6 +153,14 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
     );
     const first = existing.length === 0;
 
+    // Prior comments by this user in this debate (captured before the new row
+    // is inserted, so a user's first comment sees priorCount 0).
+    const priorRes = await pool.query(
+      `SELECT COUNT(*)::int AS n FROM comments WHERE argument_id = $1 AND user_id = $2`,
+      [argumentId, userId],
+    );
+    const priorCount: number = priorRes.rows[0].n;
+
     const { abused, points, newAnalysis } = await moderateAndAnalyze(
       argumentId,
       side,
@@ -181,13 +189,14 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
     );
 
     const safePoints = Math.min(8, Math.max(1, Math.round(points)));
+    const awarded = applyRepeatDecay(safePoints, priorCount);
     await pool.query(
       `
             UPDATE users
             SET logic_score = logic_score + $2
             WHERE id = $1;
         `,
-      [userId, safePoints],
+      [userId, awarded],
     );
 
     if (newAnalysis) {

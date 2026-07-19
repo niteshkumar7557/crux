@@ -3,6 +3,7 @@ import { llmJson } from "./llm.js";
 import {
   resolveVerdict,
   resolvePayouts,
+  resolveStandout,
   walkoverPayout,
   type RawVerdict,
   type Participant,
@@ -12,11 +13,12 @@ import {
 
 const VERDICT_JUDGE_SYSTEM_PROMPT = `You are CRUX VERDICT JUDGE. A timed debate has closed. Read the statement, both sides' final analyses, and the scored comments, then deliver the closing ruling.
 
-Return JSON: {"for":int,"against":int,"winner":"for"|"against"|"draw","mvp_username":string|null,"closing":string}
+Return JSON: {"for":int,"against":int,"winner":"for"|"against"|"draw","mvp_username":string|null,"standout_username":string|null,"closing":string}
 
 for / against — two integers summing to 100 (each 20-80). Judge only evidence quality, logical soundness, and how well each side answered the other — not your own opinion on the topic.
 winner — the stronger side, or "draw" if genuinely level.
 mvp_username — the single sharpest debater on ANY side, copied EXACTLY from a comment author's username below. Never invent a name; use null only if no comment deserves it.
+standout_username — the single sharpest debater on the LOSING side, copied EXACTLY from a losing-side comment author's username. Different from the MVP. Use null on a draw, or if no losing-side voice stands out.
 closing — ONE short editorial paragraph (max 60 words) naming the crux of the debate and why it resolved the way it did. This is the public verdict card text.`;
 
 const MAX_COMMENTS = 40;
@@ -112,10 +114,18 @@ ${commentBlock}`,
         : undefined;
       mvpUserId = mvp ? mvp.userId : null;
 
+      const standoutUserId = resolveStandout(
+        raw.standout_username,
+        resolved.winner,
+        participants,
+        mvpUserId,
+      );
+
       payouts = resolvePayouts({
         winner: resolved.winner,
         participants,
         mvpUserId,
+        standoutUserId,
         authorId,
       });
     }
@@ -123,10 +133,10 @@ ${commentBlock}`,
     // Write debate_results rows.
     for (const r of payouts.results) {
       await client.query(
-        `INSERT INTO debate_results (argument_id, user_id, side, outcome, is_mvp)
-         VALUES ($1,$2,$3,$4,$5)
+        `INSERT INTO debate_results (argument_id, user_id, side, outcome, is_mvp, is_standout)
+         VALUES ($1,$2,$3,$4,$5,$6)
          ON CONFLICT (argument_id, user_id) DO NOTHING`,
-        [argumentId, r.userId, r.side, r.outcome, r.isMvp],
+        [argumentId, r.userId, r.side, r.outcome, r.isMvp, r.isStandout],
       );
     }
     // Apply logic awards.

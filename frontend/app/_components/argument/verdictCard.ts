@@ -26,6 +26,7 @@ export interface VerdictCardModel {
   score: string | null;
   split: { for: number; against: number } | null;
   mvpUsername: string | null;
+  standoutUsername: string | null;
   heroLine: string;
   claim: string;
   liveNote: string | null;
@@ -72,6 +73,7 @@ export function buildVerdictCard(
       score: null,
       split,
       mvpUsername: null,
+      standoutUsername: null,
       heroLine: claim,
       claim,
       liveNote: liveNoteFrom(state.closesAt),
@@ -92,6 +94,7 @@ export function buildVerdictCard(
       : `${state.affirmative}–${state.negative} · margin ${state.margin ?? 0}`,
     split: isWalkover ? null : split,
     mvpUsername: isWalkover ? null : state.mvpUsername,
+    standoutUsername: isWalkover ? null : state.standoutUsername,
     heroLine: hero,
     claim,
     liveNote: null,
