@@ -72,6 +72,14 @@ const seed = async () => {
 		);
 		console.log("✅ Pinned 2 Main Stage override debates");
 
+		// §12: seed the logic ledger from each user's all-time score so the Season
+		// board is populated on a fresh dev DB (one 'seed' event, dated now).
+		await client.query(
+			`INSERT INTO logic_events (user_id, amount, reason)
+			 SELECT id, ROUND(logic_score)::int, 'seed' FROM users WHERE logic_score <> 0`,
+		);
+		console.log("✅ Seeded logic ledger for the Season board");
+
 		await client.query("COMMIT");
 		console.log('🎉 Dev seeding complete! (every user\'s password is "secret")');
 	} catch (err) {

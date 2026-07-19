@@ -3,6 +3,7 @@ import {
   getActiveCardData,
   getLeaderboardData,
   getNewestCardData,
+  getSeasonLeaderboard,
   getSidebarData,
   getSitemapData,
   getStatements,
@@ -18,6 +19,7 @@ arenaRoutes.get("/active/trending", getTrendingCardData);
 arenaRoutes.get("/active/newest", getNewestCardData);
 arenaRoutes.get("/sidebar", getSidebarData);
 arenaRoutes.get("/leaderboard", getLeaderboardData);
+arenaRoutes.get("/leaderboard/season", getSeasonLeaderboard);
 arenaRoutes.get("/statements", getStatements);
 arenaRoutes.get("/sitemap", getSitemapData);
 arenaRoutes.post("/vote/:id", authMiddleware, toggleVote);

@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import pool from "../db/index.js";
+import { awardLogic } from "../economy/logic.js";
 
 export async function registerLike(req: Request, res: Response) {
   const { comment_id } = req.body;
@@ -45,14 +46,7 @@ export async function registerLike(req: Request, res: Response) {
             `,
       [comment_id],
     );
-    await pool.query(
-      `
-                UPDATE users
-                SET logic_score = logic_score + 2
-                WHERE id = $1;
-            `,
-      [post_user_id],
-    );
+    await awardLogic(pool, post_user_id, 2, "like");
     res.status(201).json({ message: "Successful!" });
   } catch (err) {
     res.status(500).json({ error: "Internal DB Error!" });

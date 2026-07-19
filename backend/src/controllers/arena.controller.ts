@@ -1,5 +1,9 @@
 import type { Response, Request } from "express";
 import pool from "../db/index.js";
+import {
+  currentSeasonStart,
+  currentSeasonNumber,
+} from "../economy/season.logic.js";
 
 export async function getActiveCardData(req: Request, res: Response) {
   try {
@@ -205,6 +209,34 @@ export async function getLeaderboardData(req: Request, res: Response) {
   } catch (err) {
     console.error(err);
     res.status(200).json([]);
+  }
+}
+
+// §12 Season board: ranks logic EARNED this season (the windowed ledger sum),
+// so everyone starts at 0 each month and a hot newcomer races veterans fairly.
+export async function getSeasonLeaderboard(_req: Request, res: Response) {
+  try {
+    const start = new Date(currentSeasonStart());
+    const standings = await pool.query(
+      `SELECT u.id, u.name, u.username, u.avatar,
+              COALESCE(SUM(le.amount) FILTER (WHERE le.created_at >= $1), 0)::int AS "seasonLogic",
+              RANK() OVER (
+                ORDER BY COALESCE(SUM(le.amount) FILTER (WHERE le.created_at >= $1), 0) DESC
+              )::int AS rank
+       FROM users u
+       LEFT JOIN logic_events le ON le.user_id = u.id
+       GROUP BY u.id, u.name, u.username, u.avatar
+       ORDER BY "seasonLogic" DESC, u.id ASC
+       LIMIT 50`,
+      [start],
+    );
+    res.status(200).json({
+      season: currentSeasonNumber(),
+      rows: standings.rows,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(200).json({ season: currentSeasonNumber(), rows: [] });
   }
 }
 

@@ -121,11 +121,25 @@ const PodiumSideCard = ({
   );
 };
 
+interface SeasonRow {
+  id: number;
+  name: string;
+  username: string;
+  avatar: string | null;
+  seasonLogic: number;
+  rank: number;
+}
+
 const Leaderboard = async () => {
   let standings: LeaderboardRow[] = [];
+  let season: { season: number; rows: SeasonRow[] } = { season: 0, rows: [] };
   try {
-    const { data } = await serverApi.get("/arena/leaderboard");
-    if (Array.isArray(data)) standings = data;
+    const [all, seasonRes] = await Promise.all([
+      serverApi.get("/arena/leaderboard"),
+      serverApi.get("/arena/leaderboard/season"),
+    ]);
+    if (Array.isArray(all.data)) standings = all.data;
+    if (seasonRes.data?.rows) season = seasonRes.data;
   } catch (error) {
     console.error("Failed to load leaderboard data:", error);
   }
@@ -163,6 +177,41 @@ const Leaderboard = async () => {
           </span>
         </div>
       </header>
+
+      {season.rows.length > 0 && (
+        <section data-reveal className="mb-16">
+          <div className="flex items-baseline gap-3 mb-4 border-b border-outline-variant/30 pb-2">
+            <h2 className="font-label text-sm uppercase tracking-[0.25em] text-primary">
+              This Season
+            </h2>
+            <span className="font-label text-[10px] uppercase tracking-widest text-outline">
+              Season {season.season} · logic earned this month — everyone starts at 0
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">
+            {season.rows.slice(0, 10).map((r) => (
+              <Link
+                key={r.id}
+                href={`/profile/${r.id}`}
+                className="flex items-center justify-between py-2 border-b border-outline-variant/15 hover:bg-surface-container transition-colors"
+              >
+                <span className="flex items-center gap-3 min-w-0">
+                  <span className="font-label text-xs text-outline w-6 shrink-0">
+                    #{r.rank}
+                  </span>
+                  <Avatar username={r.username} src={r.avatar} size="sm" />
+                  <span className="font-body text-sm text-on-surface truncate">
+                    {r.name}
+                  </span>
+                </span>
+                <span className="font-label text-sm font-bold text-primary shrink-0">
+                  {r.seasonLogic}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {standings.length === 0 ? (
         <div className="bg-surface-container-low border-l-2 border-outline-variant/30 p-12 text-center">

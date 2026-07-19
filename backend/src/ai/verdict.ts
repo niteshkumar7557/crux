@@ -1,6 +1,7 @@
 import pool from "../db/index.js";
 import { llmJson } from "./llm.js";
 import { notifyVerdict } from "../notifications/notify.js";
+import { awardLogic } from "../economy/logic.js";
 import {
   resolveVerdict,
   resolvePayouts,
@@ -141,12 +142,9 @@ ${commentBlock}`,
         [argumentId, r.userId, r.side, r.outcome, r.isMvp, r.isStandout],
       );
     }
-    // Apply logic awards.
+    // Apply logic awards (also ledgered for the §12 seasonal window).
     for (const a of payouts.logicAwards) {
-      await client.query(
-        `UPDATE users SET logic_score = logic_score + $2 WHERE id = $1`,
-        [a.userId, a.amount],
-      );
+      await awardLogic(client, a.userId, a.amount, "verdict");
     }
 
     const isUpset = resolveUpset(winner, arg.for_low, arg.against_low);

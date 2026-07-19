@@ -7,6 +7,7 @@ import {
   applyUnderdogMultiplier,
 } from "../ai/analyst.logic.js";
 import { notifyOpposition } from "../notifications/notify.js";
+import { awardLogic } from "../economy/logic.js";
 
 const MODERATOR_ANALYST_SYSTEM_PROMPT = `You are CRUX ANALYST for a debate arena. A statement has a FOR and an AGAINST side, each with a running analysis. A user posted a new comment on one side. You see that side (OWN SIDE ANALYSIS), the other side (OPPONENT ANALYSIS), and the comment. First moderate the comment, then score it by how it engages the live thread, then update the OWN side's analysis.
 
@@ -183,14 +184,7 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
     );
 
     if (abused) {
-      await pool.query(
-        `
-                    UPDATE users
-                    SET logic_score = logic_score - 4
-                    WHERE id = $1;
-                `,
-        [userId],
-      );
+      await awardLogic(pool, userId, -4, "abuse");
       return res.status(201).json({ abused: true });
     }
 
@@ -205,14 +199,7 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
     const decayed = applyRepeatDecay(safePoints, priorCount);
     // §9.3: surge-price the scarce side (own side had fewer comments pre-insert).
     const awarded = applyUnderdogMultiplier(decayed, ownSideCount, oppSideCount);
-    await pool.query(
-      `
-            UPDATE users
-            SET logic_score = logic_score + $2
-            WHERE id = $1;
-        `,
-      [userId, awarded],
-    );
+    await awardLogic(pool, userId, awarded, "comment");
 
     if (newAnalysis) {
       await pool.query(

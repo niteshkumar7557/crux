@@ -1,5 +1,11 @@
 import type { Response, Request } from "express";
 import pool from "../db/index.js";
+import {
+  currentSeasonStart,
+  currentSeasonNumber,
+  lpForResult,
+  divisionForLP,
+} from "../economy/season.logic.js";
 
 function convertLogicScore(score: number) {
   // Beginner       -> B   0-50
@@ -77,6 +83,37 @@ export async function getProfileDataById(req: Request, res: Response) {
       upsets: 0,
     };
 
+    // §12 progression: seasonal skill slice (windowed logic) + standing (LP → division).
+    const seasonStart = new Date(currentSeasonStart());
+    const seasonLogicRes = await pool.query(
+      `SELECT COALESCE(SUM(amount), 0)::int AS n FROM logic_events
+       WHERE user_id = $1 AND created_at >= $2`,
+      [id, seasonStart],
+    );
+    const lpRows = await pool.query(
+      `SELECT r.outcome, r.is_mvp, r.is_standout, a.is_upset
+       FROM debate_results r JOIN arguments a ON a.id = r.argument_id
+       WHERE r.user_id = $1 AND r.created_at >= $2`,
+      [id, seasonStart],
+    );
+    const seasonLP = lpRows.rows.reduce(
+      (sum, row) =>
+        sum +
+        lpForResult({
+          outcome: row.outcome,
+          isMvp: row.is_mvp,
+          isStandout: row.is_standout,
+          isUpset: row.is_upset,
+        }),
+      0,
+    );
+    const season = {
+      number: currentSeasonNumber(),
+      logic: seasonLogicRes.rows[0].n,
+      lp: seasonLP,
+      division: divisionForLP(seasonLP),
+    };
+
     const userHeadInfo = {
       name: data1.rows[0].name,
       username: data1.rows[0].username,
@@ -86,6 +123,7 @@ export async function getProfileDataById(req: Request, res: Response) {
       reputation: data1.rows[0].logic_score,
       globalRank: globalRank,
       record: record,
+      season: season,
     };
 
     const data2 = await pool.query(
