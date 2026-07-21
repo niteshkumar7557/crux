@@ -35,8 +35,6 @@ const VerdictBanner = ({
   winner,
   margin,
   mvpUsername,
-  standoutUsername,
-  isUpset,
   verdictText,
   affirmative,
   negative,
@@ -45,8 +43,6 @@ const VerdictBanner = ({
   winner: Winner;
   margin: number | null;
   mvpUsername: string | null;
-  standoutUsername: string | null;
-  isUpset: boolean;
   verdictText: string | null;
   affirmative: number;
   negative: number;
@@ -79,21 +75,9 @@ const VerdictBanner = ({
         </div>
       )}
 
-      {isUpset && (
-        <div className="font-label text-xs uppercase tracking-[0.2em] text-tertiary mb-2">
-          Upset — won from behind
-        </div>
-      )}
-
       {mvpUsername && (
         <div className="font-label text-xs uppercase tracking-[0.2em] text-tertiary mb-4">
           MVP — @{mvpUsername}
-        </div>
-      )}
-
-      {standoutUsername && (
-        <div className="font-label text-xs uppercase tracking-[0.2em] text-outline mb-4">
-          Standout in defeat — @{standoutUsername}
         </div>
       )}
 

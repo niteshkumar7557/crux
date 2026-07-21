@@ -8,12 +8,9 @@ const base: MatchState = {
   winner: "for",
   margin: 26,
   mvpUsername: "ada",
-  standoutUsername: null,
   verdictText: "The crux held: coordination beats raw incentive.",
   affirmative: 63,
   negative: 37,
-  isUpset: false,
-  votes: 0,
 };
 
 describe("truncate", () => {
@@ -100,17 +97,5 @@ describe("buildVerdictCard", () => {
       "c",
     );
     expect(m.liveNote).toBe("LIVE · closing soon");
-  });
-});
-
-describe("upset flag", () => {
-  it("flags an upset on a decisive win, not on walkover/draw", () => {
-    expect(buildVerdictCard({ ...base, isUpset: true }, "claim").isUpset).toBe(true);
-    expect(
-      buildVerdictCard({ ...base, winner: "walkover", isUpset: true }, "claim").isUpset,
-    ).toBe(false);
-    expect(buildVerdictCard({ ...base, status: "live", isUpset: true }, "claim").isUpset).toBe(
-      false,
-    );
   });
 });

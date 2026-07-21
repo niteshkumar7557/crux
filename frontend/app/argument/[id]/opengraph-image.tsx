@@ -58,12 +58,9 @@ async function fetchModel(rawId: string): Promise<VerdictCardModel | null> {
       winner: row.winner,
       margin: row.margin,
       mvpUsername: row.mvp_username,
-      standoutUsername: row.standout_username,
       verdictText: row.verdict_text,
       affirmative: row.affirmative,
       negative: row.negative,
-      isUpset: row.is_upset ?? false,
-      votes: row.votes ?? 0,
     };
     return buildVerdictCard(state, String(row.content));
   } catch (err) {
@@ -215,16 +212,6 @@ export default async function Image({
             <div style={{ color: model.mvpUsername ? TOKENS.amber : TOKENS.bg }}>
               {model.mvpUsername ? `MVP  @${model.mvpUsername}` : ""}
             </div>
-            {model.standoutUsername && (
-              <div style={{ fontSize: 18, color: TOKENS.outline }}>
-                {`Standout in defeat  @${model.standoutUsername}`}
-              </div>
-            )}
-            {model.isUpset && (
-              <div style={{ fontSize: 18, color: TOKENS.amber }}>
-                UPSET · won from behind
-              </div>
-            )}
           </div>
           <div>{`crux · /argument/${id}`}</div>
         </div>

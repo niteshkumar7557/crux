@@ -70,28 +70,15 @@ const UserHeadInfo = ({
             {record.draws > 0 && (
               <span className="text-lg text-outline"> · {record.draws} draws</span>
             )}
-            {record.standouts > 0 && (
-              <span className="text-lg text-outline">
-                {" "}
-                · {record.standouts} standout
-              </span>
-            )}
-            {record.upsets > 0 && (
-              <span className="text-lg text-outline">
-                {" "}
-                · {record.upsets} upset{record.upsets === 1 ? "" : "s"}
-              </span>
-            )}
           </span>
         </div>
         <div className="col-span-2 bg-surface-container-low p-6 border-l-4 border-primary">
           <span className="font-label text-xs text-outline uppercase tracking-widest block mb-2">
-            Season {season.number} · {season.division}
+            Season {season.number}
           </span>
           <span className="font-label text-4xl font-bold text-primary">
             {season.logic}
             <span className="text-lg text-outline"> logic</span>
-            <span className="text-lg text-outline"> · {season.lp} LP</span>
           </span>
         </div>
       </div>

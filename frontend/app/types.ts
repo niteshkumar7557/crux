@@ -10,7 +10,6 @@ export interface PrimaryCardDataType {
   status?: string;
   closesAt?: string | null;
   isDotd?: boolean;
-  votes?: number;
 }
 
 export interface SecondaryCardsDataType {
@@ -26,7 +25,6 @@ export interface SecondaryCardsDataType {
   closesAt?: string | null;
   winner?: string | null;
   margin?: number | null;
-  votes?: number;
 }
 
 export interface TrendingDomainCardProps {
@@ -65,7 +63,6 @@ export interface NewestCardProps {
   closesAt?: string | null;
   winner?: string | null;
   margin?: number | null;
-  votes?: number;
 }
 export type NewestCardData = NewestCardProps[];
 

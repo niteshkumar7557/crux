@@ -4,7 +4,6 @@ import Link from "next/link";
 import Avatar from "@/app/_components/ui/Avatar";
 import ScoreBar from "./ScoreBar";
 import Countdown from "@/app/_components/argument/Countdown";
-import VoteButton from "./VoteButton";
 
 // The compact feed card used by both the trending grid and the newest tab.
 export interface ArenaCardComponentProps {
@@ -20,7 +19,6 @@ export interface ArenaCardComponentProps {
   status?: string;
   closesAt?: string | null;
   winner?: string | null;
-  votes?: number;
   className?: string;
 }
 
@@ -34,7 +32,6 @@ const ArenaSecondaryCard = ({
   argumentid,
   footerLeft,
   closesAt,
-  votes,
   className = "",
 }: ArenaCardComponentProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -74,9 +71,6 @@ const ArenaSecondaryCard = ({
           <div className="flex justify-between items-center font-label text-[10px] text-outline uppercase tracking-widest">
             <span>{footerLeft}</span>
             <span className="flex items-center gap-3">
-              {votes !== undefined && (
-                <VoteButton argumentId={argumentid} initialVotes={votes} compact />
-              )}
               {affirmativescore > negativescore ? (
                 <span className="text-primary-container">
                   {affirmativescore}% Favor

@@ -106,7 +106,6 @@ const TrendingTab = () => {
 								argumentid={e.argumentid}
 								status={e.status}
 								closesAt={e.closesAt}
-								votes={e.votes}
 								className="md:w-[49%]"
 								footerLeft={`${e.active_minds} Active ${
 									e.active_minds === 1 ? "Mind" : "Minds"

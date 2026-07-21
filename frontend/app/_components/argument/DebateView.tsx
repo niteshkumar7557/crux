@@ -64,12 +64,9 @@ const DebateView = async ({ id }: { id: number }) => {
     winner: row.winner,
     margin: row.margin,
     mvpUsername: row.mvp_username,
-    standoutUsername: row.standout_username,
     verdictText: row.verdict_text,
     affirmative: row.affirmative,
     negative: row.negative,
-    isUpset: row.is_upset ?? false,
-    votes: row.votes ?? 0,
   } as const;
 
   const canonicalUrl = `${SITE}/debate/${debateSlug(String(row.content), Number(row.id))}`;
@@ -93,7 +90,6 @@ const DebateView = async ({ id }: { id: number }) => {
         <ArgumentHeader
           argumentHeaderData={argumentHeaderData}
           matchState={matchState}
-          argumentId={id}
           shareUrl={canonicalUrl}
         />
         <ArgumentArena aiAnalysis={aiAnalysis} comments={comments.data} />
