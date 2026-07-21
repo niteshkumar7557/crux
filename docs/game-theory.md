@@ -1,475 +1,505 @@
-# Crux — Game Theory & Product Design
+# Crux — Game Theory (v1)
 
-*Started 2026-07-18 in a brainstorming session. **§0–7 document how the app works today** (read from the code); **§8–13 are agreed future designs** decided across the brainstorming sessions. Nothing in §8+ is built — this is product design, not implementation.*
+**Crux is a debate platform where every argument ends.** You post a claim, two camps form,
+you argue for 48 hours, and then a neutral AI judge rules — a winner, a margin, an MVP, and a
+written verdict. Your reasoning earns you a score. Every month the board resets so anyone can win it.
 
-## Status & where to resume
+This document is the **complete rules of the game**. It is product design, not a build log —
+it describes v1 as it should exist, from zero. Anything designed and deliberately deferred
+lives in [`future-features.md`](./future-features.md).
 
-**Decided (in this doc):**
-- **§8 — Concluded state:** timed matches, a Verdict Judge persona, a two-axis `logic`+`record` economy, draw/walkover edge states, integrity rules (commit-to-one-side; defend the logic axis by design, not detection).
-- **§9 — Retention L1 · Liquidity:** concentrate attention (Main Stage / Undercard), hybrid-that-evolves curation, an underdog/upset bonus.
-- **§10 — Retention L2 · Return triggers:** two-tier real-time + digest notifications (in-app + email).
-- **§11 — Retention L4 · Growth:** the game-as-content-factory SEO flywheel; slug URLs + topic hubs + SSG; rounds/rematch as the bridge from concluded pages to live participation; labeled seed scaffolds; human debate as the moat.
-- **§12 — Retention L3 · Habit & progression:** every number splits into a seasonal race (resets to 0, fair for newcomers) + a career monument (never resets); one 4-week heartbeat that also gates §11.3 rematches; a weighted-LP division ladder with a soft reset; Season + Legends boards; a status-only Season Finale whose rewards buy §9.2 governance. No decay, no streaks (both designed, then cut).
-- **§13 — Live Video Arena (Premiere v1):** a hand-curated, recorded-then-premiered marquee debate — 2 dev-picked opponents, ~30 min, **5 domain-lens rounds**, an AI judge (local STT → LLM → TTS) ruling each round aloud + a spoken closing verdict. Human on-camera host + a control cockpit. Deliberately a **standalone marketing showcase** (not §12-wired); ships a Past-Video-Debates home tab + a shareable verdict card. Evolves: premiere→live, human-host→AI-host, standalone→economy-integrated.
-
-**Design complete — the whole product is now specified (§0–13).** What remains is the **build phase** (every future section carries its own "implementation consequences" notes) and the video arena's **v2 upgrades** — live-streaming, AI host, and economy-integration — which arrive together as "AI-host live."
-
-### Build progress (§8–§11 COMPLETE; §12 progression spine DONE/uncommitted; §13 not started)
+> **Companion docs:** [`README.md`](../README.md) for setup · [`CODEBASE_GUIDE.md`](./CODEBASE_GUIDE.md)
+> for how the code is organised. This file is the *why*.
 
 ---
 
-## SHIPPABLE STATUS — through §12 (finalised 2026-07-19)
+## 0. The pitch — what v1 is, in one table
 
-**The app is production-shippable at this point.** Backend compiles (`npm run build` → `dist`, 51 vitest green, `tsc` clean); frontend builds (`next build` OK — all routes incl. `/debate/[slug]`, `/topic/[keyword]`, `/sitemap.xml`, `/robots.txt`, OG image; lint + `tsc` clean, 10 vitest). Migrations `0007`–`0013` apply cleanly. **§13 (live video arena) is a separate, later effort and is NOT required for shipping the current product.**
+This is the answer to "so what does it actually do?" Every row is a feature, what it does, and
+why a user cares.
 
-**Deploy note:** set `NEXT_PUBLIC_SITE_URL` in prod (share URLs, canonical, OG, sitemap fall back to `localhost:3000`).
-
-### What's BUILT (the shippable game)
-
-- **§8 Concluded State (committed).** Timed matches + 60s conclusion poller + Verdict Judge (winner/margin/MVP/closing); W–L `record` economy + draw/walkover edge states; §8.5 integrity trio (thread-relative analyst, diminishing returns, status-in-record); losing-side standout; §8.1 hot-extension; §8.6 verdict share-card (OG) + settled feed/hero cards.
-- **§9 Retention L1 — Liquidity & Concentration (committed).** Main Stage / Undercard (heat-ranked featured set + daily Debate of the Day, 5-min featuring poller); §9.3 underdog 1.5× scarce-side multiplier + win-from-behind upset bonus; §9.2 community votes folding into the featuring rank.
-- **§10 Retention L2 — Return Triggers, in-app tier (committed).** Notifications inbox + navbar bell; enqueue hooks on a new participant joining (opposition) and the verdict; deep-links to live arenas.
-- **§11 Retention L4 — SEO Content Engine, core (committed).** Canonical `/debate/<slug>` URLs + shared `DebateView` + schema.org JSON-LD; `/topic/<keyword>` hubs; `sitemap.xml` + `robots.txt`.
-- **§12 Retention L3 — Habit & Progression, spine (uncommitted).** `logic_events` ledger + `awardLogic`; pure 28-day season windows; Season board (windowed logic) above the all-time Legends board; LP + Circuit→Champion divisions on the profile.
-
-### What's DEFERRED (backlog beyond the shippable core)
-
-- **§13 Live Video Arena** — entire subsystem (scheduled live debates, AI host, talk-show layout, marketing surfaces). Later.
-- **§11.3 Rounds / rematch** — claim entity owning multiple argument-rounds, verdict history, near-duplicate dedup/merge, seasonal rematch cadence (interlocks with §12's heartbeat). *The single biggest deferred piece.*
-- **§12 rollover & rewards** — the season-rollover job (finale snapshot, soft-reset LP to the D−1 floor, zero the seasonal-logic window, open quarter-eligible rematches), Hall of Fame pages, cosmetics by peak division, governance vote-weight in §9.2 curation, and the standalone LP division-ladder board.
-- **§10 email/digest tier** — transactional email, the daily/weekly digest job, per-category preferences/unsubscribe, the anti-annoyance daily cap, web push, and the "arenas needing your side" routing view.
-- **§11 growth extras** — evergreen House-scaffold seeding, the §9.4 challenge/duel loop, hard 301s from `CRX-id` (canonical tags used instead), Search Console/analytics wiring.
-- **§9 extras** — §9.4 AI House backstop, the 24h-DotD clock, a dedicated "Community Picks" page, any admin UI/role system.
-- **§8.5 refinement** — weighting comments that survive into the winning analysis higher (a future LLM-scoring tweak).
-- **Known pre-existing** — `postComment` has no wrapping transaction, so a rate-limited 2nd LLM call (probability) can 500 after the comment + award persist. Worth a BEGIN/COMMIT.
-
-*(Detailed per-slice build log follows below.)*
-
----
-
-- **§8 Slice 1 — Conclusion engine backend (DONE, uncommitted 2026-07-18).** Schema migration `0007` (arguments lifecycle cols + `debate_results` table), in-process 60s poller (`backend/src/jobs/conclusion.ts`), Verdict Judge persona + `concludeDebate` (`backend/src/ai/verdict.ts`), pure decision logic under vitest (`backend/src/ai/verdict.logic.ts` — 10 tests), side-lock on comment POST, `closes_at` on new statements, seed-dev seeds live 48h matches. Spec/plan: `docs/superpowers/specs/2026-07-18-conclusion-engine-design.md`, `docs/superpowers/plans/2026-07-18-conclusion-engine.md`.
-- **§8 Slice 2 — Frontend wiring (DONE, uncommitted 2026-07-18).** Live countdown, Verdict card (`VerdictBanner`), FINAL bar, read-only concluded arena, side-lock 409 toasts + opposite-side pre-disable, profile W-L record card; backend added `mvp_username` on `/argument/:id` and `record` on `/profile/:id`. Spec/plan: `docs/superpowers/specs/2026-07-18-conclusion-frontend-design.md`, `docs/superpowers/plans/2026-07-18-conclusion-frontend.md`.
-- **§8 Slice 3 — Verdict share-card (§8.6) (DONE, uncommitted 2026-07-19).** A `next/og` `opengraph-image` route (`frontend/app/argument/[id]/opengraph-image.tsx`) renders a 1200×630 Editorial verdict card per debate — 5 modes (for/against/draw/walkover/live) + a 200 fallback — driven by a pure, vitest-tested model (`frontend/app/_components/argument/verdictCard.ts`, 9 tests; vitest newly added to the frontend). `generateMetadata` + `metadataBase` auto-inject absolute `og:image`/`twitter:image` (`summary_large_image`) so pasted `/argument` links unfurl into the card. In-page Share button revived (`ShareVerdict.tsx`: Web Share API → clipboard fallback). Newsreader/Space Grotesk `.woff` bundled under `app/_fonts/` for satori. Verified: tests + tsc + lint clean, prod build traces fonts into `.next/standalone`, all modes eyeballed. Spec/plan: `docs/superpowers/specs/2026-07-18-verdict-share-card-design.md`, `docs/superpowers/plans/2026-07-18-verdict-share-card.md`. **Note:** set `NEXT_PUBLIC_SITE_URL` in prod so cards unfurl with the real domain (falls back to `localhost:3000`).
-- **§8 Slice 4 — Thread-relative analyst (§8.5 integrity #1) (DONE, uncommitted 2026-07-19).** The per-comment analyst now scores by engagement with the live thread, not abstract quality: `moderateAndAnalyze` (`backend/src/controllers/comment.controller.ts`) feeds the *opponent's* analysis into the prompt (it was previously blind to the other side), and `MODERATOR_ANALYST_SYSTEM_PROMPT` was rewritten — points **1–8** (6–8 rebuts a named opponent point / adds a genuinely new angle; 1–3 for thread-ignoring, cold-pasted, or restated boilerplate), with an **opener exception** (no penalty when the opponent is "(none yet)") and a guard that the opponent's analysis is scoring context only, never merged into the own-side `newAnalysis`. Logic floor dropped 4 → 1. Prompt construction extracted to a pure, vitest-tested `backend/src/ai/analyst.logic.ts` (5 tests). Verified live on the dev DB: generic paste +2, targeted rebuttal +7, substantive opener +7. Spec/plan: `docs/superpowers/specs/2026-07-19-thread-relative-analyst-design.md`, `docs/superpowers/plans/2026-07-19-thread-relative-analyst.md`. **Deferred within §8.5:** shift #3 (per-user diminishing returns).
-- **§8 Slice 5 — Diminishing returns (§8.5 integrity #3) (DONE, uncommitted 2026-07-19).** A user's repeated comments in one debate lose value: pure `applyRepeatDecay(points, priorCount)` in `backend/src/ai/analyst.logic.ts` (first 3 comments full, 4th onward halved, floor 1; 2 tests), wired into `postComment` via a count of the user's prior comments in the argument (applied after the 1–8 clamp). Verified live: +7/+7/+6 then +2 on the 4th. Completes the §8.5 anti-AI-paste trio.
-- **§8 Slice 6 — Losing-side standout nod (§8.3) (DONE, uncommitted 2026-07-19).** The Verdict Judge names a `standout_username`; pure `resolveStandout` (`verdict.logic.ts`) validates it (decisive match only, losing side, never the MVP) → `STANDOUT_BONUS = 5` logic + `is_standout` flag on `debate_results` (migration `0008_standout_and_hot_extension.sql`, which **also** adds `hot_extended` for Slice 7). Surfaced on `/argument/:id` (`standout_username`), `/profile/:id` (`record.standouts`), the `VerdictBanner`, the OG share card, and the profile Record card. Verified live: arg concluded → one losing-side standout crowned, not the MVP; card + profile render it. Spec (shared): `docs/superpowers/specs/2026-07-19-section-8-completion-design.md`; plans: `docs/superpowers/plans/2026-07-19-s8c-slice1-diminishing-returns.md`, `…-s8c-slice2-standout.md`.
-- **§8 Slice 7 — Hot-extension (§8.1) (DONE, uncommitted 2026-07-19).** A live debate with high comment velocity in its final 2h gets one automatic +6h extension so a swing isn't cut off. Pure predicate `shouldHotExtend` + constants (window 2h, threshold 5, extension 6h) in `backend/src/jobs/hotExtension.logic.ts` (4 vitest tests); the 60s poller (`conclusion.ts`) runs a set-based `UPDATE` pre-conclusion each tick, isolated so a failure never blocks the due sweep. Uses the `hot_extended` column (migration `0008`). Eval-verified on the dev DB: extends once then no-ops; below-threshold debates skipped.
-- **§8 Slice 8 — Feed/domain card states (DONE, uncommitted 2026-07-19).** Timed-match urgency + settled outcomes now show on cards outside the arena. `getTrendingCardData`/`getNewestCardData`/`getStatements` return `status, closesAt, winner, margin`; `ArenaCard` renders a live `Countdown` or a dimmed **SETTLED** state (winning-side label + `aff–neg`, red = against, mirroring `VerdictBanner`) via a shared `settledSides.ts` map. Threaded through the trending grid, newest tab, and domain page.
-- **§8 Slice 9 — Hero card states (DONE, uncommitted 2026-07-19).** The featured `MainTrendingArenaCard` now matches its siblings: `getActiveCardData` (`/arena/active/main`) returns the same lifecycle fields, and the hero shows a live `Countdown` or a SETTLED badge + dimmed accent + "View Verdict" footer.
-- **§8 is now COMPLETE — zero visible gaps.** The only explicitly-deferred item in the whole design is §8.5 #3's "weight comments that survive into the winning analysis higher" (a future LLM-scoring refinement, not a §8 slice). All nine slices verified (backend: vitest 27 + real conclusion/analyst/hot-extension runs; frontend: tsc + lint clean, vitest 9, card data contract verified). **Committed** as `f1003fc` (§8 slices 7–9 squashed with the doc into one commit; slices 1–6 in earlier commits).
-- **§9 Slice A — Main Stage / Undercard backbone (DONE, uncommitted 2026-07-19).** Concentrate attention onto a heat-ranked stage so debates get real opponents. Migration `0009_main_stage.sql` adds `heat, featured, featured_override, is_dotd, featured_at, dotd_at` to `arguments`. Pure `computeHeat` (velocity × balance) + `shouldRotateDotd` in `backend/src/jobs/featuring.logic.ts` (7 vitest). New in-process **featuring poller** (`backend/src/jobs/featuring.ts`, 5-min, booted from `index.ts` beside the conclusion poller): recompute heat for live debates → refresh the featured set (top-N by heat + `featured_override` pins) → crown one Debate of the Day per calendar day (DotD = hottest live debate; override only breaks ties). `getActiveCardData` serves the DotD hero (+`isDotd`); `getTrendingCardData` serves the non-DotD featured set by heat (excludes the DotD → no hero/grid dup); Undercard (newest/domains/search) untouched. Frontend: "Debate of the Day" hero eyebrow + "Main Stage" grid header; dropped the old `trending[0]` dedup hack. `seed-dev` pins two override debates. Gates: backend vitest 34 + tsc, frontend lint + tsc; poller eval-verified on the dev DB. Spec/plan: `docs/superpowers/specs/2026-07-19-section-9-main-stage-design.md`, `docs/superpowers/plans/2026-07-19-section-9-slice-a-main-stage.md`.
-- **§9 Slice B — Underdog / Upset economy (§9.3) (DONE, uncommitted 2026-07-19).** Within-debate liquidity: concentration fills debates, this fills sides. (1) **Scarce-side multiplier** — a comment on the trailing side (strictly fewer comments) earns **1.5× logic** (pure `applyUnderdogMultiplier` in `analyst.logic.ts`, may exceed 8; wired into `postComment` after the clamp + repeat-decay). (2) **Upset bonus** — migration `0010` adds `for_low`/`against_low`/`is_upset`; `updateProbability` tracks each side's forecast low-water-mark; at conclusion `resolveUpset` (pure, threshold ≤40) flags a **win-from-behind** as a marquee record flag (no new logic points). Surfaced on the verdict banner ("Upset — won from behind"), the OG share card, the profile Record card ("upset wins"), and a light arena "Underdog side · 1.5× logic" hint on the trailing side's compose bar. Gates: backend vitest 40 + tsc, frontend vitest 10 + lint + tsc; multiplier + upset flag eval-verified on the dev DB. Spec/plan: `docs/superpowers/specs/2026-07-19-section-9-slice-b-underdog-upset-design.md`, `docs/superpowers/plans/2026-07-19-section-9-slice-b-underdog-upset.md`.
-- **§9 Slice C — Community-vote candidate surface (§9.2) (DONE, uncommitted 2026-07-19).** The community can vote debates toward the Main Stage — the third featuring input alongside the Arbiter gate, heat, and the editorial override. Migration `0011` adds a `debate_votes` table (per-user, unique) + a denormalized `arguments.votes` count. A toggle endpoint (`POST`/`GET /arena/vote/:id`, authenticated, live-only) mirrors the like toggle. Votes fold into Slice A's featuring rank via pure `effectiveScore = heat + VOTE_WEIGHT*votes` (`VOTE_WEIGHT = 1.0`): `refreshFeatured` and `rotateDotd` now rank by the combined score, so a well-voted undercard debate climbs onto the stage / can take the DotD (eval-verified: a heat-0 debate with 99 votes became featured + DotD). A `VoteButton` (▲ + count, optimistic) appears in the live arena header (seeded from `GET /arena/vote/:id`) and, compact, on live feed cards (trending/newest/domain) where it stops the card-link propagation. Gates: backend vitest 41 + tsc, frontend vitest 10 + lint + tsc. Spec/plan: `docs/superpowers/specs/2026-07-19-section-9-slice-c-community-votes-design.md`, `docs/superpowers/plans/2026-07-19-section-9-slice-c-community-votes.md`.
-- **§9 is now COMPLETE.** All three slices (A Main Stage backbone, B underdog/upset economy, C community votes) built + verified, uncommitted. Deferred beyond §9: the "arenas needing your side" routing view → §10; §9.4 house backstop / challenge-duel; the 24h-DotD clock; a dedicated "Community Picks" page; any admin UI.
-- **§10 — Return Triggers, in-app tier (DONE, uncommitted 2026-07-19; fast one-pass build).** The doc's "build-first" core: an in-app notifications inbox. Migration `0012` adds a `notifications` table; a pure copy module (`verdictMessage`/`oppositionMessage`, vitest) + a best-effort `notify.ts` service; `GET /notifications` (inbox + unread) and `POST /notifications/read`. Two enqueue hooks: **a new participant joining** a debate notifies the opposing side + author (`postComment`, once per new participant), and **the verdict** fans out to every participant post-commit (`concludeDebate`). A navbar `NotificationBell` (unread badge, 30s poll, deep-links to the arena). Gates: backend 44 tests + tsc, frontend 10 tests + lint + tsc; both hooks eval-verified. **Deferred within §10:** email (transactional + daily digest), the digest job, per-category preferences/unsubscribe, the anti-annoyance daily cap, web push, and the "arenas needing your side" digest view.
-- **§11 — SEO Content Engine, indexable-artifact core (DONE, uncommitted 2026-07-19; fast one-pass build).** The growth backbone's core asset: the concluded page as an indexable artifact. **Slug URLs** — a canonical `/debate/<claim-slug>-<id>` route (slug derived from the claim; the trailing id is the key). A shared `DebateView` renderer (extracted from the argument page) serves both `/argument/CRX-…` and `/debate/…`, emits **schema.org JSON-LD** (`QAPage` — claim as question, verdict as accepted answer, XSS-safe), and every debate's canonical + OG/meta point at the one `/debate` URL (`buildDebateMetadata`). **Topic hubs** `/topic/<keyword>` aggregate debates by `content_keyword` (new `keyword` filter on `getStatements`). **Crawlability:** `sitemap.ts` (every `/debate` + `/topic`) + `robots.ts`, backed by a `GET /arena/sitemap` endpoint. Gates: backend tsc, frontend lint + tsc + 10 tests; keyword filter + sitemap eval-verified. **Deferred within §11:** §11.3 rounds/rematch (claim entity, seasons, dedup/merge — interlocks with §12), §11.4 evergreen seeding, §11.5 challenge loop, hard 301s from CRX-id (canonical tags used instead), Search Console.
-- **§12 — Habit & Progression, the spine (DONE, uncommitted 2026-07-19; fast one-pass build).** Splits every axis into a **seasonal slice** and a **career monument** (§12.2). The season window is a pure computed 28-day period from a fixed anchor (no `seasons` table, no rollover job needed for the boards). A timestamped **`logic_events` ledger** (migration `0013`) makes "logic earned this season" a windowed sum while all-time `logic_score` stays monotonic — a single `awardLogic(db, user, amount, reason)` helper does the score update + ledger insert together, wired through all four award sites (comment, abuse, like, verdict). **Season board** (`GET /arena/leaderboard/season`, windowed logic sum) sits above the all-time **Legends board** on the leaderboard. **LP + division** (§12.3: win/mvp/upset/etc weights → Circuit…Champion) computed from `debate_results` in the window and shown on the profile. Pure `season.logic.ts` (7 vitest). Gates: backend 51 tests + tsc, frontend 10 tests + lint + tsc. **Deferred within §12:** the §12.5 season-rollover job (finale, soft-reset LP to D−1, zero the window), Hall of Fame, cosmetics by division, governance vote-weight in §9.2, and the standalone LP division-ladder board. §12.6 (no decay / no streaks) is by design — nothing to build. Next: §13 live video arena.
-
-**Working rule:** the user commits — hand over a commit message, never run `git commit`.
-
----
-
-## 0. The vision (in your words)
-
-> People argue but never conclude, and there is no un-biased judge to give a verdict. Crux is a platform where users post their opinions and an AI is the neutral judge — an external LLM says how good each statement is and scores accordingly.
-
-Two ideas are load-bearing here: **judgment** (an AI referees quality) and **conclusion** (arguments should end somewhere). The current build has fully realized the first and has **not** built the second. That single gap is the spine of everything we'll discuss next.
-
----
-
-## 1. Glossary — the words, pinned down
-
-You've used *statement / argument / debate / debater / comment* loosely. Here is what each one actually maps to in the running system. We should keep these fixed from now on.
-
-| Word | What it really is in the code | Note |
+| Feature | What it is | Why a user cares |
 |---|---|---|
-| **Statement** | The claim a user submits — the raw text of one bold declarative sentence. | Lives as `arguments.content`. This is the *thing being debated*. |
-| **Argument** | The **live debate arena** built around one statement (its For case, Against case, probability, comments). One statement → one argument. | The DB table is literally `arguments`. Confusingly, this is the *container*, not a single point. |
-| **Debate** | Informal synonym for an argument-arena in motion. No separate entity. | Use interchangeably with "argument (the arena)". |
-| **Comment** | One user's contribution to **one side** (`for` / `against`) of an argument. | This is what most platforms would call "an argument" or "a point." In Crux it's a comment. |
-| **Debater / User** | A registered account with a global `logic_score` and an AI-written identity blurb. | Everyone is a debater; there is no separate role. |
-
-**The one rename worth considering later:** a "comment" is really a *contention* or *point* — it's the atomic unit of actual debating, and calling it a comment undersells it. Flagging only; no action.
+| **AI-gated statements** | An AI referee reads your claim before it goes live and rejects vague or unarguable ones, suggesting a sharper rewrite | You never walk into a debate that was doomed by a bad question |
+| **Two-sided arena** | Every debate has exactly two camps — FOR and AGAINST — each with a live AI-written case | You always know what you're up against, and what your side's best argument currently is |
+| **48-hour clock** | Every debate ends. No perpetual threads | Your effort resolves. There's a payoff moment, and a reason to come back |
+| **Side lock** | Your first comment commits you to one side for that debate | Nobody can hedge both sides to guarantee a win. The two camps are real |
+| **Direct replies** | You reply to a specific comment on the opposing side, and that reply earns the most points | Being *right at* someone is worth more than talking past them. This is what makes it a debate |
+| **Logic score** | An AI scores every contribution 1–8 on how well it engages the actual argument | Your reputation is earned by reasoning, not by follower count or upvotes |
+| **The verdict** | At 48h an AI judge names a winner, a margin, an MVP, and writes why | An unbiased conclusion — the thing normal internet arguments never produce |
+| **W–L–D record** | Permanent win/loss/draw record on your profile | A career. Proof you argue well, not just often |
+| **Monthly seasons** | The board tracks logic earned *this month* and resets on the 1st | A newcomer can top the board in week one. Nobody is locked out by a veteran's pile of points |
+| **Season titles** | The top 3 each month earn a permanent title and avatar frame | Something to keep, forever, that says you won a month |
+| **Main Stage + Debate of the Day** | The best live debates get concentrated on one stage | You never land on a dead debate with nobody to argue against |
+| **Verdict share card** | Concluded debates generate a share image — claim, winner, margin, MVP | Your win travels. It's the thing you paste in a group chat |
 
 ---
 
-## 2. The core loop (end to end)
+## 1. Vocabulary — pinned down
+
+These words are used precisely throughout the product and the code. Fix them now.
+
+| Word | Meaning |
+|---|---|
+| **Statement** | The claim being argued — one bold declarative sentence submitted by a user |
+| **Debate** (or **arena**) | The container built around one statement: its two cases, its comments, its clock, its verdict. One statement → one debate |
+| **Side** | `FOR` or `AGAINST`. There are exactly two |
+| **Case** | The AI-maintained running summary of one side's position. Rewritten as new comments land |
+| **Comment** | One user's contribution to one side. The atomic unit of arguing |
+| **Reply** | A comment that targets a specific comment on the **opposing** side |
+| **Verdict** | The AI judge's closing ruling: winner, margin, MVP, and a written explanation |
+| **Logic** | The single skill score. Earned by arguing well |
+| **Record** | Your permanent W–L–D from concluded debates |
+| **Season** | One calendar month of competition |
+
+---
+
+## 2. The loop
 
 ```
-  POST a statement                    JOIN a debate
-  ───────────────                     ─────────────
-  1. User writes a claim + picks      5. User reads the live For/Against
-     a domain (or AUTO).                 analyses + current probability.
-        │                                    │
-        ▼                                    ▼
-  2. ARBITER (LLM) judges it:         6. User posts a COMMENT on one side.
-     pass / fail.                        │
-     - fail → reason + a rewrite         ▼
-       to try instead.                7. ANALYST (LLM) moderates → scores
-        │                                 4–8 → rewrites that side's running
-        ▼  (on pass)                      analysis, crediting the commenter.
-  3. User broadcasts.                     │
-        │                                 ▼
-        ▼                             8. Commenter's global logic_score
-  4. ANALYST (LLM) writes the            += points. (Likes on it later add +2.)
-     opening FOR case and AGAINST         │
-     case. Argument arena goes live.      ▼
-        │                             9. Once BOTH sides have ≥1 comment,
-        └──────────────► arena ──────►    PROBABILITY judge sets the live
-                                          win split. Recomputed every comment.
+  POSTING                                 ARGUING
+  ───────                                 ───────
+  1. Write a claim, pick a domain      4. Read both cases + the live split.
+     (or AUTO).                            Pick a side.
+         │                                     │
+         ▼                                     ▼
+  2. ARBITER (AI) judges it.           5. Your FIRST comment LOCKS your side
+     Fail → the reason + a sharper        for this debate. Confirmed up front.
+     rewrite to try instead.                  │
+         │  (on pass)                         ▼
+         ▼                              6. Comment — standalone, or REPLY to a
+  3. OPENING ANALYST (AI) writes           specific opposing comment.
+     the strongest FOR case and               │
+     AGAINST case. The 48h clock              ▼
+     starts. The arena is live.        7. ANALYST (AI) screens for abuse, scores
+         │                                you 1–8, and rewrites your side's case.
+         │                                    │
+         │                                    ▼
+         │                             8. You see exactly what you earned and why.
+         │                                    │
+         │                                    ▼
+         │                             9. PROBABILITY JUDGE updates the live split
+         │                                (once both sides have argued).
+         │                                    │
+         └──────────► arena ◄────────────────┘
+                        │
+                        ▼  at 48:00:00
+              10. Arena LOCKS read-only.
+                  VERDICT JUDGE rules.
+                  Payouts land. Records update.
+                  Share card is generated.
 ```
 
-Then… it just keeps going. There is no step 10. The arena never closes, never declares a winner, never archives with a verdict. **That absence is deliberate — it's the piece you haven't designed yet.**
+---
+
+## 3. The clock
+
+- Every debate runs **exactly 48 hours** from the moment it goes live. No extensions, no
+  early closes.
+- The countdown is visible everywhere the debate appears — in the arena and on every card.
+- At zero the arena **locks read-only**: no new comments, no new replies, no likes. It stays
+  permanently readable.
+- The verdict fires immediately on lock.
+
+**Why a fixed clock:** it makes the deadline a shared, predictable event. "This closes tomorrow
+at 6pm" is something a user can plan around; a variable clock is something they have to check.
 
 ---
 
-## 3. The "AI judge" is actually five personas
+## 4. Sides and the lock
 
-Your vision says "an AI is the neutral judge." In the build, that judge is split across **five distinct LLM calls**, each with its own system prompt. Worth seeing them separately, because future features will attach to specific ones.
+- Every debate has exactly two sides: **FOR** and **AGAINST**.
+- **Your first comment locks your side for that debate.** You cannot argue the other side of
+  the same debate afterwards. The lock is per-debate — you're free to take FOR in one debate
+  and AGAINST in the next.
+- The lock is confirmed **before** it happens, never discovered after (see §14).
+- The statement's author is a normal participant: they can argue, and they get locked like
+  anyone else.
 
-| # | Persona | When it fires | What it decides | Model |
-|---|---|---|---|---|
-| 1 | **Arbiter** (gatekeeper) | On statement submit | pass/fail eligibility, an improved rewrite, the keyword, the domain | smart |
-| 2 | **Debate Analyst** (case-builder) | When an argument goes live | The strongest opening FOR case and AGAINST case (40–60 words each) | smart |
-| 3 | **Analyst / Moderator** (per-comment) | On every comment | Abuse check → quality score 4–8 → rewrites that side's running analysis, crediting users by name | smart |
-| 4 | **Probability judge** | On every comment once both sides are populated | The live win split (each side 20–80, sums to 100), judged on analysis quality only | smart |
-| 5 | **Debater profiler** (identity) | After you post a statement | Rewrites your profile blurb ("how you think") from your last 25 statements | fast |
-
-**Key nuance for later:** the probability judge scores the *synthesized analyses*, not raw comments or vote counts. And your identity blurb is inferred from the **statements you choose to open** — not from how you argue in comments. Neither of these is wrong, but both are design choices worth revisiting.
+**Why:** without a lock, the optimal strategy is to comment on both sides and be guaranteed a
+win. The lock is what makes the two camps real, and what makes a verdict mean something.
 
 ---
 
-## 4. The scoring economy (the actual game theory today)
+## 5. Comments and replies
 
-There is exactly **one persistent number**: a user's global `logic_score` (starts at 0). Everything social — rank, tier, profile bar — derives from it.
+Two ways to contribute:
 
-**Where logic_score comes from:**
+**Standalone comment** — you make a point on your side. It goes in your side's column.
 
-| Event | Δ logic_score | Who gets it |
+**Reply** — you pick a specific comment on the **opposing** side and answer it directly. Your
+reply still lives in **your own side's column** (side integrity is never broken), carrying a
+compact quote of what it answers. The comment you replied to shows a `↳ N replies` counter.
+
+```
+FOR                        AGAINST
+┌───────────────────────┐  ┌───────────────────────┐
+│ @maya            +7   │  │ @arjun           +6   │
+│ Nuclear is the only   │  │ Build time alone kills│
+│ baseload that scales. │  │ it — 12 yrs a plant.  │
+│              ↳ 1 reply│  │                       │
+└───────────────────────┘  └───────────────────────┘
+                           ┌───────────────────────┐
+                           │ @dev             +8   │
+                           │ ┌─replying to @maya─┐ │
+                           │ │"the only baseload"│ │
+                           │ └───────────────────┘ │
+                           │ Hydro and geothermal  │
+                           │ are both baseload...  │
+                           └───────────────────────┘
+```
+
+**Rules:**
+- **Cross-side only.** You cannot reply to your own side. A reply is by definition a rebuttal.
+- **Chains form naturally.** A reply is itself a comment on a side, so the other camp can reply
+  back to it. Real exchanges emerge.
+- **Many-to-one is fine.** Several people can reply to the same comment.
+- **Replying sets your side lock** if you haven't commented yet — you're committing to the side
+  opposite the comment you're answering.
+- Replies do not create a separate thread view. The two columns stay chronological; the
+  quote stub and the counter carry the connection.
+
+**Why replies are the centre of the design:** a reply makes "did you engage a real opponent?" a
+fact in the data, not something an AI has to infer. That is the single strongest defence
+against pasted AI text (§13), and it's also what turns parallel monologues into a debate.
+
+---
+
+## 6. Scoring — the logic score
+
+**Logic is the only skill number.** It starts at 0 and is earned by arguing.
+
+| Action | Logic |
+|---|---|
+| **Reply** to a specific opposing comment | **1–8**, judged by the AI. A sharp, targeted rebuttal earns 7–8 |
+| **Standalone** comment | **1–8 judged, then capped at 5.** It engages nothing specific |
+| Standalone when **the opposing side is still empty** | **1–8, uncapped.** There was nothing to reply to yet |
+| Your **4th and later** comment in one debate | **halved** (floor 1), after all other rules |
+| Someone **likes** your comment | **+2** to you |
+| Your comment is flagged as **abuse** | **−4**, and the comment is discarded |
+
+**Order of operations** — score the comment 1–8 → apply the standalone cap → apply the
+halving → award. The user is shown this breakdown every time (§14).
+
+**What the AI is actually judging** — not eloquence, not length, and not whether it agrees.
+It scores how much the comment *moves the argument*: does it answer a specific point, does it
+introduce something the case doesn't already contain, does it hold up. A well-written paragraph
+that ignores everything already said scores low on purpose.
+
+---
+
+## 7. The verdict
+
+At lock, the **Verdict Judge** reads the statement, both final cases, every comment, and the
+reply structure, then returns: `{ for%, against%, winner, mvp, closing }`.
+
+- **Margin = |for% − against%|.**
+- **Margin > 5 → that side wins.** (58–42 is a 16-point margin: FOR wins.)
+- **Margin ≤ 5 → draw.** (52–48 is a 4-point margin: draw.)
+- **MVP** is the single best debater **on the winning side**. There is no MVP on a draw —
+  there is no winning side to take one from.
+- **Closing** is a short written explanation naming the crux and why it resolved that way.
+  This is the capstone the whole 48 hours is building toward, and the text on the share card.
+
+**Walkover** — if one side has **zero** comments at lock, the debate concludes "unopposed."
+**Nobody scores anything** — no logic, no W/L/D, not even the author bonus. You cannot win a
+contest nobody entered, and this closes the obvious exploit of posting a statement and
+farming an uncontested win.
+
+---
+
+## 8. Payouts
+
+| Who | Logic | Record |
 |---|---|---|
-| Your comment is accepted | **+4 to +8** (AI quality score) | the commenter |
-| Someone likes your comment | **+2** | the comment's author |
-| Your comment is flagged as abuse | **−4** (and the comment is discarded) | the commenter |
+| **MVP** (winning side) | **+25** | +1 W, MVP badge |
+| Winning side, everyone else | **+10** | +1 W |
+| Losing side | **−5 to your season score only.** Your all-time logic never falls | +1 L |
+| Both sides, on a draw | 0 | +1 D |
+| Statement author, on a decisive or drawn conclusion | **+5** | — |
+| Anyone, on a walkover | 0 | — |
 
-**logic_score then maps to identity:**
+The MVP's +25 **replaces** the +10; it does not stack.
 
-| Score | Tier | Grade |
+**How the season-only penalty works:** logic is recorded as a timestamped ledger of events, so
+"logic earned this season" is a sum over the current month while the all-time score is the
+running total. A loss writes a **−5 ledger event that is excluded from the all-time total** —
+it drags your season board position down and leaves `logic_score` untouched. One number, two
+readings.
+
+**Why the loss penalty is season-only:** losing should cost you the race, not your career.
+A permanent deduction would make people avoid the unpopular side of every debate — which is
+exactly the problem a young platform cannot afford. This way a loss is a real setback in the
+month you're competing in, and invisible on the record of who you are.
+
+### Worked example
+
+Maya opens FOR while AGAINST is still empty (+7 uncapped), replies to an opponent (+6), then
+posts a standalone (judged 6, capped to 5). **In-match: +18.**
+
+The debate closes **FOR 58 – AGAINST 42**. Margin 16 > 5, so FOR wins, and Maya is MVP.
+
+- **Maya:** 18 + 25 = **+43 logic**, +1 W, MVP badge.
+- **Dev**, who argued AGAINST across three comments (+16): keeps **16 all-time**, but his
+  **season** total for those comments is 11 after the −5. +1 L.
+- **Sam**, who posted the statement and argued FOR (+12): 12 + 10 (win) + 5 (author) = **+27**, +1 W.
+
+Read the gradient: **arguing** is the base income, **winning** is worth about half a debate's
+work, and **MVP** is worth more than the arguing itself. Losing still leaves you well ahead of
+not showing up. **Nobody should ever regret participating** — that is the property these
+numbers exist to protect.
+
+---
+
+## 9. Your record and identity
+
+A profile carries:
+
+- **Logic score** — all-time, monotonic. Never falls.
+- **Record** — `W – L – D`, all-time, from concluded debates.
+- **MVP count** — all-time.
+- **Tier** — a coarse badge derived from all-time logic. Progress you can feel long before you
+  are anywhere near a leaderboard.
+
+| Logic | Tier | Grade |
 |---|---|---|
-| 0–49 | beginner | B |
-| 50–99 | intermediate | B+ |
-| 100–149 | skilled | A |
-| 150–199 | expert | A+ |
-| 200+ | master | M |
+| 0–49 | Beginner | B |
+| 50–99 | Intermediate | B+ |
+| 100–149 | Skilled | A |
+| 150–199 | Expert | A+ |
+| 200+ | Master | M |
 
-…and to a **global leaderboard rank** (ordered by logic_score).
-
-### The four holes in the current economy
-
-These aren't bugs — they're the incentive gaps that a game-theory pass should address. Naming them now so the next conversation is grounded:
-
-1. **Posting a statement earns you nothing.** Only *commenting* is scored. The person who opens a great debate gets no points for it — only the people who pile in do. The creator role is economically invisible.
-2. **Winning a debate is cosmetic.** The win-probability split is per-argument and never touches logic_score. There's no persistent payoff for being on the winning side, or for authoring a statement that the arena ultimately vindicates.
-3. **Nothing ever concludes**, so there's never a *payoff moment* — no resolution the probability is building toward. The number just drifts. Suspense with no verdict is suspense that leaks.
-4. **The score only goes up (mostly).** Apart from the abuse penalty, logic_score is a ratchet — quantity of decent comments beats quality of rare great ones over time. There's no decay, no stake, no risk. That tends to reward grinding over sharpness.
+- **Season titles and avatar frames** — permanent, stacking (§10).
+- **An AI-written blurb** describing how you think, inferred from the statements you open and
+  the arguments you make.
 
 ---
 
-## 5. What exists around the loop
+## 10. Seasons
 
-Supporting surfaces that are already built (per the frontend audit):
+- **A season is one calendar month, UTC.** Season 0 is the launch month; Season 1 is the
+  following month, and so on.
+- **The Season board** ranks users by **logic earned during this month**. Everyone starts each
+  month at 0.
+- **The Legends board** ranks users by **all-time logic**, and never resets. Two tabs, one page.
+- Your all-time logic is *not* affected by the reset — only the board's window is.
 
-- **Discovery:** home arena (featured + trending/newest), a 12-domain browser with pagination, debounced search.
-- **Identity:** profile pages (AI blurb, reputation bar, rank, recent statements, avatar — custom upload or 18 presets).
-- **Status:** leaderboard (top-50 podium + standings).
-- **Static:** rules, about.
+**Why the reset is the whole point:** if the board ranked all-time logic, a user who joined in
+month one would sit on top forever and everyone who arrives later is playing for second place.
+Ranking the month means **the current board is always winnable**, by anyone, from zero. It also
+means the number that measures "how sharp are you right now" is separate from the number that
+measures "what have you built over your career."
 
-Notably **absent** (retention surfaces that don't exist yet): notifications, follows/subscriptions, any email, personalized feed, streaks, activity history, replies/threads on comments, real sharing (the share button is a dead stub).
+### Season end
+
+At the month boundary, a rollover job:
+
+1. **Snapshots the final Season board.**
+2. **Awards the top 3** a permanent title and avatar frame:
+
+   | Rank | Title | Frame |
+   |---|---|---|
+   | 1 | **Champion of Season N** | Gold |
+   | 2 | **Challenger of Season N** | Silver |
+   | 3 | **Contender of Season N** | Bronze |
+
+3. Titles and frames are **permanent and stacking** — a profile displays every one ever earned.
+   They are the only reward that survives a season, and they are **status only**: they grant no
+   logic, no advantage, and no special powers. A season's prize is proof you won a month.
+
+Nothing else resets. There is no decay, no streak, and no penalty for taking a month off. The
+season board simply describes a window of time.
 
 ---
 
-## 6. The deliberate gaps — your stated unknowns
+## 11. The stage — how debates get found
 
-Three things you've said you want but haven't designed. Documented here as open, not as decided:
+The core problem for a young platform isn't too little content; it's attention spread so thin
+that a thousand statements each get zero opponents. The fix is **concentration**.
 
-1. **A "concluded" state for every statement.** *Not built.* The `arguments` table has no status, no winner, no `concluded_at`. Debates are perpetual. This is the biggest single lever — it turns an endless feed into a game with rounds.
-2. **A final verdict from the judge.** *Partially built.* There's a live probability, but the AI never delivers a closing judgment ("here's who won and why"). The "verdict" your vision promised is the missing capstone of the concluded state.
-3. **Live video-streaming debate arena with a speaking TTS AI judge.** *Not built, no scaffolding.* A separate, much larger product surface — a synchronous mode on top of today's asynchronous one.
+- **Debate of the Day** — one live debate, crowned once per day, on the home hero slot.
+- **Main Stage** — roughly 4 more featured live debates below it.
+- **Everything else** stays fully browsable through Newest, the 12 domains, and search. Nothing
+  is throttled or hidden — posting always works instantly and always goes live.
+
+**How the stage is picked — heat plus a pin.**
+
+**Heat** = comment velocity × side balance, computed on a short interval for every live debate.
+A debate where both sides are genuinely contesting each other outranks a lopsided one with more
+raw comments — a 50/50 fight at 10 comments an hour beats a 90/10 blowout at 20. Balance is
+weighted deliberately: the stage should showcase *contests*, not pile-ons.
+
+**The pin** — an admin (`users.role = 'admin'`) can pin any live debate onto the Main Stage or make it
+the Debate of the Day. At launch, when there is barely enough volume for heat to mean anything,
+pinning is how the stage gets its taste; as real volume arrives, heat takes over and pinning
+becomes the exception. One mechanism that is honest on day one and still correct at scale.
+
+Featured debates carry a visible **Main Stage** label and the Debate of the Day carries its own,
+so nothing about placement is mysterious.
 
 ---
 
-## 7. Observations to carry into the next discussion
+## 12. The AI — five personas
 
-When we talk features + retention, these are the threads I'd pull, in rough priority:
+Every AI call is a distinct persona with its own prompt and its own job. Naming them separately
+matters: features attach to specific personas, and a change to one should never silently
+change another.
 
-- **Conclusion is the keystone.** Almost every retention mechanic (verdicts, rewards for winning, "your debate concluded" notifications, seasons/rounds, shareable outcomes) depends on debates *ending*. Design this first; much else follows.
-- **Reward the creator.** Close hole #1 so opening a great statement is worth doing.
-- **Make winning matter.** Close hole #2 so the probability bar is playing for stakes.
-- **Add a reason to come back.** The loop has no "pull" — nothing notifies you that your argument moved, someone challenged your point, or your debate concluded. Retention lives here.
-- **Acquisition needs an artifact.** Right now there's nothing shareable that carries the product's flavor outward (a verdict card, a "I won this debate" image, a sharp statement permalink). The share button being dead is a symptom.
+| # | Persona | Fires when | Decides |
+|---|---|---|---|
+| 1 | **Arbiter** | A statement is submitted | Pass or fail, the reason, a sharper rewrite, the keyword, the domain |
+| 2 | **Opening Analyst** | A statement passes | The strongest opening FOR case and AGAINST case |
+| 3 | **Analyst / Moderator** | Every comment | Abuse screen → a 1–8 score → a rewrite of that side's running case, crediting the commenter |
+| 4 | **Probability Judge** | Every comment, once both sides have argued | The live win split, judged on the two cases |
+| 5 | **Verdict Judge** | At lock | Winner, margin, MVP, and the written closing |
+
+When a comment is a **reply**, persona 3 is additionally given the exact comment being answered,
+and scores the rebuttal against it. When it's standalone, it only sees the opposing side's case
+— and the score is capped at 5. That difference in what the AI is shown is precisely what makes
+replies worth more.
+
+The probability judge scores **the two synthesised cases**, not comment counts or votes. Being
+loud does not move the bar; being right does.
 
 ---
 
-## 8. Concluded State — Agreed Design (2026-07-18)
+## 13. Integrity — how the game stays honest
 
-*Decided in the brainstorming session. This is the first "future" subsystem, now specified at the product level. Two remain open: retention/growth and the live video arena.*
+Three structural facts, not three detectors.
 
-**In one line:** a Crux debate is a **timed match between two committed camps**; when the clock runs out a **Verdict Judge** rules a winning side + names an MVP, paying out to a new two-axis economy, with integrity rules that keep the game honest.
+**1. You must reply to score high.** A language model can write a polished, general essay about
+any claim. It cannot read the room, pick which live opponent is most vulnerable, and dismantle
+that specific point — because it doesn't know what's in the thread. Standalone comments cap at
+5; replies reach 8. The highest-scoring move in the game is the one that is hardest to automate.
 
-### 8.1 Lifecycle & trigger
-- Statement passes the Arbiter → goes live as a match with `closes_at`. **Default 48h**, with a **hot-extension** (a short auto-extension if comment velocity is high in the final hours) so a live debate doesn't die mid-swing.
-- At zero the arena **locks read-only**; the Verdict fires.
+**2. Diminishing returns.** Your first three comments in a debate score full; everything after
+is halved. Volume never beats sharpness. Flooding a debate is a losing strategy by arithmetic.
 
-### 8.2 The Verdict Judge (a 6th LLM persona)
-- During the match, the probability bar is a **running forecast**. At lock, a distinct closing call reads the statement, both final analyses, and the scored comments and returns the **ruling**: `{ winner: for|against|draw, margin, mvp:{username,side}, closing }`.
-- `closing` is a short editorial paragraph naming the crux and *why* it resolved — the capstone verdict the vision was missing, and the text on the shareable card.
+**3. The side lock.** You commit to one side, publicly, before your first comment lands. You
+cannot hedge, and you cannot farm both outcomes.
 
-### 8.3 The economy — two numbers now
-- **`logic_score` = skill.** Accrues only from in-match behavior (comment quality 4–8, +2 per like), as today.
-- **`record` = W–L.** New. Comes only from concluded debates.
+**What we deliberately do not do: run an AI-text detector.** They are unreliable, they are an
+arms race we would lose, and they systematically false-flag non-native English speakers — who
+are exactly the users a platform about reasoning should protect. We defend by design, never by
+detection. A user who uses an AI to help sharpen a genuinely targeted rebuttal is not the enemy;
+a user pasting generic filler is, and the scoring rules make that a losing move without ever
+accusing anyone.
 
-| Who | logic (skill) | record (W–L) |
+Two more guards, already covered above: the **walkover** rule (§7) kills self-farmed wins, and
+the **season-only loss penalty** (§8) means the honest move — arguing a side you believe in even
+when it's unpopular — is never punished on your permanent record.
+
+---
+
+## 14. Transparency — nothing hidden
+
+**The principle:** a strict rule discovered *by surprise* feels like punishment. The same rule,
+known *in advance*, feels like a game. Every mechanic in this document that can change a user's
+outcome must be visible at the moment it matters — **before the irreversible action, not after
+it.** A user should never be able to say "I didn't know."
+
+This is a product requirement, not polish. A rule that is not surfaced is a bug.
+
+| Rule | Surfaced where | When |
 |---|---|---|
-| Every comment, in-match | +4–8 quality / +2 per like — unchanged | — |
-| Winning-side commenters | — | +1 win |
-| MVP (best debater, any side) | + modest "sharpest mind" bonus | marquee win |
-| Losing-side standout (anti-bandwagon) | small nod *(BUILT, Slice 6: +5 `STANDOUT_BONUS`)* | "stood out in defeat" mention *(BUILT: card + profile)* |
-| Losing-side commenters | — | +1 loss (no points drained) |
-| Statement author | bonus scaled by debate quality | — ("Authored" credit) |
+| **Side lock** | A confirmation step on your first comment: *"You're committing to FOR. You will not be able to argue AGAINST in this debate."* | **Before** it happens |
+| Side lock, after | A persistent **"You're arguing FOR"** badge on the composer; the opposing side's composer visibly disabled with the reason shown | Always |
+| **Reply beats standalone** | The composer states it plainly: *"Standalone comments cap at 5 logic. Reply to an opponent to earn up to 8."* Reply buttons sit on every opposing comment | While writing |
+| **Diminishing returns** | A counter on the composer: *"Comment 2 of 3 at full value"* → then *"Half value — you've already made 3 comments here"* | While writing |
+| **What you just earned** | **The points pop-up** (below) | Immediately after posting |
+| **48h clock** | A live countdown in the arena and on every card | Always |
+| **The draw zone** | The probability bar renders the draw band (47.5–52.5) as a marked zone, so you can *see* when a debate is heading for a draw and that it's still winnable | Always |
+| **Loss costs season points** | Stated in the side-commit confirmation, and again in the verdict payout breakdown | Before **and** after |
+| **MVP comes from the winning side** | Rules page, and the verdict card | Always |
+| **Walkover risk** | A banner on any live debate with an empty side: *"Nobody has argued AGAINST yet. If nobody does, this concludes unopposed and nobody scores."* | While it applies |
+| **Season window** | A **"Season 0 · 12 days left"** strip on the leaderboard and profile | Always |
+| **Season prize** | Leaderboard header: *"The top 3 on the 1st earn a permanent title and avatar frame."* | Always |
+| **Author bonus** | On the statement composer: *"You earn +5 logic when your statement produces a real debate."* | Before posting |
+| **Abuse penalty** | Composer fine print, and stated in the rejection message | Before and after |
+| **Stage placement** | Visible **Main Stage** / **Debate of the Day** labels on the cards that have them | Always |
 
-- **Winning-side reward is deliberately small** — the real payoff (MVP, logic) needs actual contribution, so bandwagoning late onto the likely winner is low-value.
-- `record` is **all-time for now**; a **seasonal ladder** is deferred to the retention subsystem.
+### The points pop-up
 
-### 8.4 Edge states (exploit-proofing)
-- **Draw** — margin inside ~±6 (53–47 or closer): no side win; both sides log a draw; MVP still crowned.
-- **Walkover** — a side is empty at lock: concludes "unopposed," **no record rewards** (you can't win a contest nobody entered), only a reduced author credit. Kills the "post + self-comment one side to farm wins" exploit.
+The single most important piece of feedback in the product. Every time a comment is accepted,
+an animated pop-up shows **what you earned and exactly why**:
 
-### 8.5 Integrity rules
-- **Commit to one side.** Your **first comment locks your side** for that debate (per-debate, not a global stance — take the other side in a different match). Kills the "comment on both sides → guaranteed win" exploit and preserves the two-committed-camps drama. Enforced by a lookup on the user's existing side for that argument.
-- **External AI: defend by design, never by detection.** No AI-text detector — they're unreliable, an arms race, and they false-flag non-native English speakers. Instead, three scoring shifts make pasting generic AI output a *losing* strategy:
-  1. **Score thread-relative value, not abstract quality.** ✓ BUILT (Slice 4). Rewrite the analyst rubric to reward rebutting a **named opponent's specific point** and adding something **not already in the current analysis**; a cold-pasted essay that ignores the live thread scores low. *(Built: the analyst now sees the opponent's analysis; points 1–8, floor dropped 4→1.)*
-  2. **Status lives in the competitive `record`, not comment volume** — winning contested matches against committed opponents is far harder to farm than raw logic points. *(Already delivered by the §8.3 record economy, Slice 1.)*
-  3. **Deflate the ratchet** — diminishing returns on repeated comments in one debate; weight comments that **survive into the winning analysis or are credited in the verdict** higher. *(BUILT, Slice 5: a user's first 3 comments in a debate score full, the 4th onward is halved. The "weight survivors higher" refinement remains deferred.)*
+```
+        +7  logic
+   ─────────────────────
+   Targeted rebuttal of @maya — full range unlocked
 
-### 8.6 The shareable artifact — ✓ BUILT (Slice 3, see Build progress)
-- A locked debate renders a **Verdict card** (winner, margin, MVP, the closing line) — a generated share image. *(Built via `next/og`; the "existing OG cards" this once assumed did not exist — Slice 3 established that technique.)* The outward-facing unit that closes the "nothing shareable" gap and seeds acquisition. Concluded debates flow into the domain/archive browser as **settled matches**.
+   Season total  143   ·   Rank #12
+```
 
-### 8.7 Implementation consequences (for the build phase, not now)
-- **Schema:** `arguments` needs `status(live|concluded)`, `closes_at`, `concluded_at`, `winner`, `margin`, `mvp_user_id`, `verdict_text`; users need a W–L `record` (a `debate_results` table is the cleaner home).
-- **Scoring:** the per-comment analyst prompt (`MODERATOR_ANALYST_SYSTEM_PROMPT`) must be rewritten for thread-relative scoring (integrity rule #1).
-- **Jobs:** a scheduler to fire the Verdict at `closes_at` (and evaluate the hot-extension).
-- **Enforcement:** a side-lock check on the comment POST.
+When a modifier applies, the pop-up shows the arithmetic rather than hiding it:
 
----
+```
+   +5  logic          │     +3  logic
+   ─────────────      │     ─────────────
+   Judged 6           │     Judged 7
+   Capped at 5        │     Halved — 4th comment
+   (standalone)       │     in this debate
+```
 
-## 9. Retention Layer 1 — Liquidity & Concentration (Agreed Design, 2026-07-18)
+This is how the rules get taught: through play, in the moment, with the actual number. A user
+who has seen "capped at 5 (standalone)" once will use the reply button next time — and that is
+the behaviour the whole game is designed to produce.
 
-*First of the four retention layers. The reframe that drove it: for a thin userbase, retention is a **liquidity** problem before it's a notifications problem — a ping that leads someone back to a dead arena makes churn worse. So liquidity is the substrate.*
+### Return triggers
 
-**Backbone: concentrate attention** (chosen over active-matchmaking and an AI House backstop). With few users, a sprawling feed gives 1,000 statements zero opponents each; concentration gives a handful of debates a crowd each. Same users, opposite outcomes.
+Three notifications, in an in-app inbox. Every one deep-links to a live debate or a payoff:
 
-### 9.1 The "Main Stage / Undercard" structure
-- **Main Stage** = the home page: one hero **Debate of the Day** + a small rotating set (~4) of **featured live matches**. The attention pool — these reliably get opponents + momentum. Daily cadence.
-- **Undercard** = every other statement still goes live and stays browsable (domains/search), just not on the stage. **No hard throttle** — posting always works instantly; concentration without gatekeeping supply.
-- **Graduation** — an Undercard debate that earns early heat (or is elected) is promoted to the Stage. This pipeline keeps the Stage fresh and **closes hole #1**: a sharp statement earns *the spotlight* (its own reward + a near-guaranteed real contest + the author bonus). Posting finally pays.
-- **Clock coherence:** featured debates are just §8 timed matches running on stage — a DotD can run a punchier **24h** clock while off-stage debates keep the **48h** default (tunable).
-
-### 9.2 Curation: hybrid that evolves
-- Engine = **Arbiter quality-gate** (already exists) + **algorithmic heat** (comment velocity, balance) + a **community-vote** candidate surface, with an **editorial override** slot.
-- The honest cold-start→scale path: **editorial-heavy now** (low volume, you *can* hand-pick, and it sets the tone) → **heat + votes take over** as real signal appears. One design that fits both today and later.
-
-### 9.3 Within-debate liquidity: the underdog / upset bonus *(proposed economy tweak on §8 — confirm or cut)*
-Concentration fills *debates*; this fills *sides*. Surge-price the scarce side:
-- Taking the **empty or trailing side** grants a small **logic multiplier** on your comments there (pay more for supplying the scarce side).
-- **Winning from behind** grants a marquee **upset bonus** on the record — the harder achievement, anti-bandwagon, and very shareable ("won 60–40 from a side that was losing 30–70").
-- Gaming is contained by the §8.5 **commit-to-one-side** rule (you lock the underdog side deliberately; you can't flip to farm the multiplier) and by the verdict rewarding *quality*, not mere presence.
-- Surfaced via an **"arenas needing your side"** routing view (also the natural target for the return-trigger layer).
-
-### 9.4 Deferred / optional (noted, not chosen)
-- **House backstop (AI fills a side)** — kept *off by default* to protect the human-vs-human ideal; concentration + underdog bonus should make empty featured sides rare. Available later as an emergency floor if a featured debate is about to walk over.
-- **Challenge / duel** (call out a specific opponent) — moved to the **growth** layer: it's really a viral invite loop, not the liquidity backbone.
-
-### 9.5 Implementation consequences (build phase, not now)
-- **Schema/state:** a `featured` flag (or a `stage` table) on `arguments`; a `heat` score (velocity-derived); a candidate **votes** surface (later); the underdog multiplier needs each side's live comment count at post time (already queried in §8's comment flow).
-- **Jobs:** a daily scheduler to rotate the Debate of the Day and refresh the featured set as debates conclude.
-- **Queries:** the "needs an opponent / trailing side" query powers both the routing view and the underdog multiplier.
+1. **Someone replied to your comment.** Personal, specific, and time-sensitive — the strongest
+   pull in the product, and now precise because replies are explicit.
+2. **Someone joined the other side of your debate.** Your statement became a real contest.
+3. **The verdict is in.** Won, lost, drawn, or MVP.
 
 ---
 
-## 10. Retention Layer 2 — Return Triggers (Agreed Design, 2026-07-18)
+## 15. Every number in one place
 
-*Largely determined by the §8/§9 events — a quick pass. Golden rule: every notification must lead to a **live** arena, which §9's liquidity work now guarantees (a ping to a dead room makes churn worse).*
+Every tunable constant in the game. If a number is in the code, it is in this table.
 
-**Two tiers of events:**
-- **Real-time** (personal, actionable, rare — the *pull*): you were **rebutted by name**; your authored debate got its **first opponent**; your debate **closes in ~2h**; the **verdict's in** (won / lost / MVP / upset).
-- **Digest** (ambient, batched — the *habit anchor*): the Debate of the Day, **arenas needing your side** (your domains), your **record/rank movement**, debates you're in that concluded.
-
-**Channels:** in-app **inbox/bell** always; **email** for both tiers — transactional for real-time, a daily/weekly **digest** for ambient (email is the reactivation workhorse and addresses are already stored). Web push deferred.
-
-**Anti-annoyance budget:** cap real-time notifications per user per day; batch overflow into the digest; per-category unsubscribe; deep-link every notification to the live arena/payoff.
-
-**Build-first trigger:** *"someone rebutted your point"* — personal, ego-engaging, time-sensitive. Nail this before the rest.
-
-**Implementation consequences:** a `notifications` table + inbox endpoint; enqueue hooks on the comment / verdict / graduation flows; an email sender (transactional + a scheduled digest job); a user notification-preferences record.
-
----
-
-## 11. Retention Layer 4 — Growth: SEO Content Engine (Agreed Design, 2026-07-18)
-
-*Chosen backbone over challenge-loop and community-beachhead, because the game is already a content factory and its exhaust is exactly what search rewards — so growth compounds with **zero** starting audience. (Beachhead + a launch burst are still the near-term first-cohort companions; see 11.6.)*
-
-### 11.1 The flywheel (the thesis)
-**game → concluded debates → evergreen SEO pages → search traffic → conversions → more debates.** SEO is the core loop's exhaust turned back into fuel — not a bolt-on. The concluded-state work (§8) *is* the growth asset. The **moat**: real human argument + a lived verdict, which AI-content farms can't fake and which Google's helpful-content system now requires. The game keeps the SEO legitimate; the SEO feeds the game.
-
-### 11.2 The indexable artifact (the concluded page)
-- **Slug URLs:** `/debate/<claim-slug>`, canonical + permanent; opaque `CRX-id` URLs 301 → slug. The claim *is* the query — put it in the URL.
-- **Page:** verdict-answer up top (snippet / AI-overview citation bait), both final cases, MVP + top human arguments, `schema.org` markup, the verdict card as the OG image, meta from the verdict.
-- **Topic hubs:** aggregate pages on the 12 domains + the existing `content_keyword` (`/topic/<keyword>`), internally linked to every debate → crawl depth + topical authority.
-- **Render:** SSG/ISR — concluded pages are immutable → fast, cheap, perfectly indexable.
-- **Progressive access:** read free; signup wall only at *participate* (already the "spectator mode" pattern).
-
-### 11.3 The bridge-to-live: Rounds (rematch) — *the make-or-break decision*
-A locked page is a dead end unless it leads somewhere joinable.
-- A claim's canonical page accumulates **rounds** (seasons): Round 1 concludes with a preserved verdict; a fresh live **Round 2** opens on the same URL for newcomers to join.
-- **Dedup becomes a feature:** near-duplicate claims **merge into rounds of one canonical debate** instead of splitting into competing dead pages — repurposing the current similar-fights/Arbiter dedup concern into structure. One strong URL per claim, gaining authority over time.
-- **Rounds = seasons:** the rematch cadence is the *same clock* as L3's seasonal ladder (deferred). A claim re-runs per season on a cooldown, so a rematch is a deliberate event, not spam. Past rounds' verdicts + MVPs are preserved on the page.
-- **Always-on fallback:** *related live debates* (existing similar-fights / domain machinery) for topic-level conversion when no rematch is open.
-
-### 11.4 Seeding: live scaffolds, not fake verdicts
-- Seed a curated base of **evergreen** claims (targeting real search demand) as **live** debates: AI writes both cases (existing Debate Analyst), optionally the House plays a few opening exchanges. **Clearly labeled** ("opened by the House"), **open for humans** to join and conclude.
-- Honesty rule: **a seed is a live scaffold, not a fake-concluded page.** Indexable immediately (claim + both cases + "join"); it grows richer and earns a *real* verdict as humans argue. No fabricated users or verdicts → authentic + Google-safe.
-- Prefer **timeless** claims (ethics, philosophy, policy perennials) over news — evergreen compounds; news decays.
-
-### 11.5 Amplifiers (layered on the SEO backbone)
-- **Verdict card** (§8.6): the social-share unit — "I won 63–37 / I'm MVP" — and the OG image on every page.
-- **Challenge loop** (§9.4): the 1:1 active invite ("defend the other side → [link]"), also liquidity. Accelerates growth but doesn't originate it — SEO is the base, this is the multiplier.
-
-### 11.6 Honest expectations & metrics
-- **SEO is slow** — months to rank; a compounding strategy, not a spike. Pair with a **community beachhead** (first cohort whose debates become the first pages) + a one-time **launch burst** (PH/HN/social) to bootstrap.
-- Optimize: breadth of long-tail claim coverage, page depth/quality, internal linking, crawlability, Core Web Vitals. Watch: indexed pages, keyword coverage/impressions, SEO→signup conversion, rounds reopened.
-
-### 11.7 Implementation consequences (build phase)
-- **Slug/URL system** + canonical + 301s from `CRX-id`; slugify from the claim with collision handling.
-- **Rounds model:** a *claim* entity owning multiple argument-rounds; verdict history; rematch cadence + cooldown; dedup/merge on near-duplicate submit (extends the Arbiter / similar-fights path).
-- **Topic hub pages** from domains + `content_keyword`; SSG/ISR pipeline; `schema.org` + OG/meta from the verdict.
-- **Seed pipeline:** curated evergreen claim list → generate labeled, House-attributed, human-joinable live scaffolds.
-- Search Console / analytics wiring.
-
----
-
-## 12. Retention Layer 3 — Habit & Progression (Agreed Design, 2026-07-18)
-
-*The last of the four retention layers — the one §8.3 explicitly parked here ("record is all-time for now; a seasonal ladder is deferred to the retention subsystem"). It closes hole #4 (§4, the logic ratchet) and resolves the §11.3 "rounds = seasons, same clock" interlock. Two mechanics were designed in this session and then **cut**, because the reasoning is load-bearing: a continuous score **decay** (the original "pinch of C") and a **streak** system — both recorded below as dead-ends.*
-
-**In one line:** every number splits into a **seasonal race** (resets to 0 → fair for newcomers → drives the boards) and a **career monument** (grows forever, engraved), run off **one shared monthly heartbeat** that also gates §11.3's claim rematches. No decay, no streaks; season rewards are status-only and buy *influence*.
-
-### 12.1 The season heartbeat — one clock, nested periods
-- **Season = 4 weeks, global.** Everyone plays the same calendar, so "new season" is a shared, legible beat — a monthly re-engagement moment and a marketing peg.
-- **One clock, two periods (resolves §11.3).** The user ladder and claim rematches want *opposite* things from a clock: the ladder wants a frequent shared reset, rematches want staggered, infrequent, non-spammy reopenings. So "same clock" means **same heartbeat, different periods** — the ladder ticks **every** season; a claim is eligible to re-run **at most once per ~quarter** (≈3 seasons), and only when heat/demand justifies it (reuses §9.2's graduation machinery). Reopenings sprinkle across the calendar instead of dumping at the boundary, so §11's staggered-freshness need survives.
-- Both periods are tunable; 4 weeks / quarterly is the strawman.
-
-### 12.2 The four-number model — seasonal race + career monument (the spine)
-The layer rests on one move: **split every axis into a live seasonal slice and a permanent career total, and run all competition on the slice.**
-
-| Axis | Seasonal race — resets to 0 → drives a board | Career monument — monotonic, engraved |
+| Constant | Value | §  |
 |---|---|---|
-| **Skill** (`logic`) | `logic` **earned this season** → Season board | all-time `logic_score` → tier B→M + Legends board |
-| **Standing** (`record`) | **season LP** → division ladder | all-time **W–L** + trophy case |
-
-- **This is how hole #4 dies.** The all-time `logic_score` stays exactly as today — monotonic, earned from comment quality (§4). We simply **stop ranking competition on it.** The board ranks *logic earned this season*, which every player starts at **0** each month — so an all-time pile no longer buys a leaderboard seat, and a hot newcomer races veterans on equal footing. Anti-ratchet **and** newcomer-fairness fall out of the same mechanic.
-- **No decay.** Because competition moved off the all-time number, it never needs clawing back; career totals only grow, and freshness is entirely the seasonal slice's job. (This is what retired the "pinch of C": a continuous inactivity decay we specified — grace period, weekly %, floor at one tier below peak — then dropped as strictly worse than slicing.)
-- **State it plainly:** with no decay, tiers (B→M) only climb — a tier now reads as **lifetime seniority/accomplishment** (everyone trends toward Master over the years), *not* live skill. "How sharp are you right now" lives on the Season board; the tier is a monument badge, deliberately.
-
-### 12.3 The LP ladder — currency, divisions, soft reset
-- **Climbing currency = weighted Ladder Points**, not raw W–L (which rewards win-*volume* — grind again). LP is derived from §8's record events, so it adds **no third grindable number** — it's just *standing, projected onto this season*. Illustrative weights (tunable): win **+100** · MVP **+50** · upset-from-behind **+100** (§9.3) · Main-Stage marquee **×1.5** · draw **+25** (§8.4) · losing-side standout **+15** (§8.3) · loss **−25** (a sting, not a wipe).
-- **Divisions (LP thresholds):** **Circuit → Contender → Regional → National → Elite → Champion** — deliberately *not* the academic B/A/M grades of the skill axis. A "grade" reads as skill, a "division" reads as competitive standing: two vocabularies, no collision.
-- **Soft placement reset:** finish in division *D* → start next season at the **floor of D−1** (drop one). Protects the climb you invested while making you re-earn the top — the anti-ratchet on the standing axis, without a punishing wipe-to-zero.
-- Underneath, the all-time **W–L `record` never resets** — the permanent trophy the seasonal ladder rides on.
-
-### 12.4 Two boards, two paths to status
-- **Season board (primary):** ranks *logic earned this season* — the fair, habit-driving race anyone can win, reset monthly.
-- **Legends board (secondary):** ranks all-time `logic_score` — the slow monument where lifetime greatness lives permanently. Two tabs, same page.
-- **Two independent paths to status fall out of the model:** the Season board crowns the **sharpest arguer** (craft — you earn logic by commenting well, win *or* lose); the LP ladder crowns the **best competitor** (outcomes — you earn LP by winning matches). Top one without the other — different playstyles, both honoured.
-
-### 12.5 The Season Finale & rewards — status-only, and they buy influence
-- **The season concludes like a debate does** — §8's verdict thesis, fractal'd onto the ladder. Season-end is a *finale*, not just a reset.
-- **Guardrail: rewards never touch `logic`/`record`/LP.** A material kicker (say a permanent logic bonus for Champion) would reintroduce hole #4 by the back door — seasonal grinding would inflate the skill number. All seasonal payoff lives in a separate **status layer:**
-  1. **Permanent Hall of Fame** — each season enshrines every division's top plus the top logic-earners on an immutable, shareable Season page. Doubles as a §11.2 evergreen SEO artifact and a §9 re-engagement beat.
-  2. **Trophy case** (profile) — a row of per-season division finishes + peak tier + career W–L, building a legible **career arc** and a shelf to keep filling ("beat last season").
-  3. **Cosmetics by peak division** — an avatar frame + a distinctive **verdict-card style** (§8.6/§11 shareables; a Champion's cards look unmistakable).
-- **Governance lever — standing buys *influence*, not just cosmetics.** Elite/Champion players carry **weighted votes in §9.2 curation** (which Undercard debates graduate, which claims re-run as rounds). Very Crux-native: being good earns you a say in what the community argues about next.
-
-### 12.6 No decay, no streaks — where the daily pull lives
-- **No decay** (§12.2), and **no streak system** — the latter designed in full (streak = a daily scored contribution, status-only rewards, a freeze token, spanning seasons) then **cut on taste grounds**: streak-guilt is a cheap hook that reads wrong in a product for thoughtful debaters, consistent with the project's no-gimmick instinct.
-- **So nothing runs on a daily clock** — matches are 24–48h, seasons monthly. That's intentional: the **daily ritual is content cadence, not a mechanic.** §9.1 already ships a fresh **Debate of the Day** every day, and §10's digest routes you to "arenas needing your side" today. The habit is "come see today's debate / go supply a side," not "protect a flame."
-
-### 12.7 Implementation consequences (build phase, not now)
-- **Schema:** a timestamped **`logic_events` ledger** (so "logic earned this season" is a windowed sum and the all-time total is the full sum); a **`seasons`** table (boundaries + rollover state); **per-user season LP** + division thresholds; **Hall-of-Fame** records (per season, per board/division); the career **W–L `record`** already implied by §8.7.
-- **Jobs:** a **season-rollover job** on the 4-week heartbeat — snapshot the finale + Hall of Fame, grant cosmetics, soft-reset LP to the D−1 floor, zero the seasonal-logic window, and open the batch of quarter-eligible claim rematches (§11.3) staggered by heat.
-- **Queries:** Season board (windowed logic sum), Legends board (all-time), the LP division ladder, and the governance vote-weight-by-division read for §9.2.
-- **Reuses:** §9.2 graduation machinery for staggered rematch reopening; the §8.6 OG-card technique for finale/cosmetic verdict-card styling; §10 hooks for season-boundary + finale notifications.
+| Debate duration | **48 hours** | §3 |
+| Draw threshold — margin must **exceed** this | **5** points | §7 |
+| Comment score range | **1–8** | §6 |
+| Standalone comment cap | **5** | §6 |
+| Full-value comments per debate | **3**, then halved | §6 |
+| Halving floor | **1** | §6 |
+| Like bonus | **+2** | §6 |
+| Abuse penalty | **−4** | §6 |
+| MVP bonus | **+25** (replaces the win bonus) | §8 |
+| Win bonus | **+10** | §8 |
+| Loss penalty | **−5**, season score only | §8 |
+| Author bonus | **+5** | §8 |
+| Walkover payout | **0** to everyone | §7 |
+| Season length | **1 calendar month**, UTC | §10 |
+| Season awards | **Top 3** — title + frame | §10 |
+| Main Stage size | **~4** + the Debate of the Day | §11 |
+| Debate of the Day | **1 per day** | §11 |
+| Tier thresholds | 0 / 50 / 100 / 150 / 200 | §9 |
 
 ---
 
-## 13. Live Video Arena — Premiere v1 (Agreed Design, 2026-07-18)
+## 16. What v1 is not
 
-*The last subsystem — §6's third gap, the "live video-streaming debate arena with a speaking TTS judge." Designed at product level in a browser visual-companion session (arena + cockpit mockups persist in `.superpowers/brainstorm/`). The key reframe: the full synchronous vision is **deliberately scoped down for v1** into a produced, hand-curated event that ships as a **marketing showcase** — the one piece intentionally **standalone** from the §8–12 async economy — with a clear path to the bigger vision.*
+Deliberately out of scope. Every one of these is designed and preserved in
+[`future-features.md`](./future-features.md) — deferred, not discarded.
 
-**In one line:** a Crux **premiere** is a hand-curated, recorded-then-scheduled **video debate** — two dev-picked opponents argue one claim across **five domain-lens rounds**, an AI judge (local STT → LLM → TTS) rules each round aloud and delivers a spoken closing verdict — published as a watchable VOD + a shareable verdict card to **market the platform**, not to feed the ladder.
+- **Live video debate arena** with a speaking AI judge — the largest single future subsystem
+- **Rounds / rematch** — re-running a claim in a later season on one canonical page
+- **A ladder of divisions** with ladder points and placement resets
+- **Hall of Fame pages** and cosmetics beyond the top-3 titles
+- **Underdog multipliers** and upset bonuses
+- **Losing-side standout** recognition
+- **Hot extensions** to the 48h clock
+- **Community upvotes** feeding the stage
+- **Email and digest notifications**, web push
+- **AI opponents** filling an empty side
+- **Direct challenges** — calling out a specific opponent
+- **Seeded evergreen debates**
 
-### 13.1 Positioning & the evolutionary spine
-- **Standalone marketing showcase, not a ranked mode.** For v1 the arena does **not** touch `logic`/`record`/LP/seasons and mints no ranked page. Its job is *acquisition*: a premium, human, AI-judged spectacle whose VODs and share-cards pull people in. It's a **§11 growth artifact**, decoupled from the §12 game.
-- **One principle underneath it all: ship manual and controlled, automate once proven.** Three axes evolve v1 → v2:
-  1. **Container:** *premiere* (recorded → scheduled group watch) → **live-streamed**.
-  2. **Host:** *human on-camera host + a control cockpit* → **AI host**.
-  3. **Integration:** *standalone marketing* → **economy-integrated** (marquee LP, the ladder, a ranked page).
-- The v2s arrive together as **"AI-host live"** — §6's vision at full strength. v1 proves the format cheaply first.
-
-### 13.2 Curation, invite & cadence
-- **The dev is the matchmaker — and that dissolves the hardest problem.** A synchronous format normally needs two committed people *in the same ten minutes*; at this cadence the dev simply hand-picks them from the async fights (watch statements/comments → find two users genuinely on opposite sides of one live claim → pair them).
-- **Invite:** an emailed invitation to a scheduled video debate on the platform, at a fixed time.
-- **Cadence:** rare and marquee — **~2–3 per week, ~30 min** each. Scarcity is the point.
-
-### 13.3 The format — domain-lens rounds
-- **~5 rounds; each round is a domain lens.** A round assigns a domain from the fixed 12; each debater argues, **from their committed side**, whether **pro or con weighs heavier in *that* domain** ("does this claim's pro case dominate in Health? in Economics? in Ethics?").
-- **Sides are fixed across rounds** — the two keep the side they were chosen for (§8.5's commit-to-one-side, live).
-- **Why it's novel:** not a generic debate — **one crux interrogated through N domain lenses**, reusing the taxonomy the app already has.
-
-### 13.4 Scoring — the hybrid (§8's verdict, spoken)
-- **Per round the AI delivers a spoken *domain ruling* with a margin** (which side weighs heavier, e.g. 60/40 — §8's probability split scoped to one domain) **plus a *craft read*** on each debater's delivery.
-- **Match = best-of-5 rulings.** Cumulative margin + craft break ties; a **draw** is possible (2–2 + tie logic, per §8.4).
-- **A "standout debater" honor** (the §8.3/§8.4 MVP echo) can go to the sharpest arguer **even in defeat** — skill honored apart from the substance outcome.
-- **The capstone is the spoken closing verdict** — §8's Verdict Judge, finally given a *voice*. The literal realization of §6's "speaking TTS judge."
-
-### 13.5 The AI pipeline & the premiere safety net
-- **Pipeline:** a **local small STT model** transcribes speech → transcript feeds the **LLM API** (the judge) → the ruling is spoken via **TTS** onto the stage.
-- **Because v1 is recorded, all AI calls auto-fire at round-end and the ruling is pre-staged.** When a round's timer hits zero the LLM call runs automatically on the accumulated transcript; the ruling waits, ready.
-- **The host reviews before it's spoken — edit / approve / retry — off-air.** This is the safety net a recorded premiere buys and live mode gives up: a garbled STT or a weak ruling never reaches the audience. The single biggest reason premiere is the right v1.
-
-### 13.6 The stage (Layout C — "talk-show row")
-- **Three video tiles: the host anchors the center**, Pro left, Con right — a human, hosted feel over a sterile face-off.
-- **The AI judge is a quiet side-card during rounds that takes over the full screen to deliver each ruling** — the drama beat. Its voice + the takeover *is* the payoff; it needs no video tile.
-- A **scoreboard strip** carries current domain, round (3/5), running score; a **premiere chat** rail carries the audience.
-
-### 13.7 The host cockpit (host-only, overlaid on the host view)
-The pre-defined match runs itself; the host just drives it. Zones:
-- **Match header** — round stepper + current domain + running score.
-- **Timer — auto-segments with a manual override.** Segments advance themselves (Pro 90s → Con 90s → rebuttals → ⚡ judge); the host can **pause/resume**, +15s, or skip.
-- **AI Judge** — the **auto-staged ruling** with **edit / approve / retry**, then *approve & speak (TTS)*.
-- **Round flow** — the 5 pre-defined domains as a stepper; *end round → next domain*.
-- **Participants — two independent switches per person: audio (mute) and transcript-→-judge (pause).** The sharp bit: keep an off-topic debater **audible on stage but excluded from the judge's input** — natural human flow, clean judge signal.
-- **Live transcript** — the STT feed (exactly what the judge will read), paused speakers struck out.
-
-### 13.8 Marketing surfaces — the deliverables
-- **A "Past Video Debates" tab on the home page** — playable VOD cards (thumbnail + ▶, the claim, the two debaters, winner + score, duration).
-- **A shareable verdict card per debate** — the acquisition unit, the **§8.6 verdict-card technique pointed at video**: claim, both faces, round-win pips, winner + margin, the AI's one-line verdict, per-domain split chips, canonical link home. Built to travel on social and click back.
-
-### 13.9 Implementation consequences (build phase, not now)
-- **Real-time A/V:** a 3-way video room (WebRTC or a hosted SDK) + a recording pipeline for the VOD.
-- **AI:** a local streaming STT model (per-speaker, **pausable**); LLM judge calls (per-round domain ruling + margin + craft, and the closing verdict — reuse §8's Verdict-Judge prompt, domain-scoped); TTS playback to the stage.
-- **Host cockpit:** a match-runner **state machine** (segments, auto-timer, round stepper), per-speaker transcript gating, the ruling **preview → edit/approve/retry → TTS** flow, spotlight/mute.
-- **Storage & surfaces:** VOD hosting; a `video_debates` record (claim, debaters, per-round rulings, winner, margin, verdict text, VOD URL); the share-card generator (reuse the §8.6 OG technique); the home-page tab + a public VOD/card page (good for §11, even though it's ladder-standalone).
-- **Explicitly NOT wired:** no writes to `logic`/`record`/LP/`seasons`; no ranked concluded page. That coupling is the **v2** ("AI-host live").
-
----
-
-*The doc now covers the whole product (§0–13). Everything from §8 on is design, not build — each section carries its own "implementation consequences." The video arena's v2 (live-streaming + AI host + economy-integration) is the one deliberately deferred frontier.*
+v1 is the smallest complete game: **post, take a side, argue, get judged, climb the month.**
+Everything above is something to add once real users prove they want it.
