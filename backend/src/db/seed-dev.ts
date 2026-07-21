@@ -65,14 +65,13 @@ const seed = async () => {
 		);
 		console.log(`✅ Seeded ${commentRows.length} comments`);
 
-		// §9: pin two debates onto the Main Stage so a fresh dev DB shows a
+		// §11: pin two debates onto the Main Stage so a fresh dev DB shows a
 		// populated stage immediately (the featuring poller also fills it by heat).
-		await client.query(
-			`UPDATE arguments SET featured_override = TRUE WHERE id IN (1, 2)`,
-		);
-		console.log("✅ Pinned 2 Main Stage override debates");
+		// User 1 (nitesh_dev) is already seeded with role 'admin' by seed-data.ts.
+		await client.query(`UPDATE arguments SET pinned = TRUE WHERE id IN (1, 2)`);
+		console.log("✅ Pinned 2 Main Stage debates");
 
-		// §12: seed the logic ledger from each user's all-time score so the Season
+		// §10: seed the logic ledger from each user's all-time score so the Season
 		// board is populated on a fresh dev DB (one 'seed' event, dated now).
 		await client.query(
 			`INSERT INTO logic_events (user_id, amount, reason)

@@ -2,14 +2,10 @@ import { describe, it, expect } from "vitest";
 import {
   resolveVerdict,
   resolvePayouts,
-  resolveStandout,
-  resolveUpset,
   walkoverPayout,
   MVP_BONUS,
-  STANDOUT_BONUS,
   AUTHOR_BASE_BONUS,
   AUTHOR_WALKOVER_BONUS,
-  UPSET_LOW_THRESHOLD,
 } from "./verdict.logic.js";
 
 const base = { closing: "x", mvp_username: null, standout_username: null } as const;
@@ -88,72 +84,5 @@ describe("resolvePayouts", () => {
     const p = walkoverPayout(9);
     expect(p.results).toEqual([]);
     expect(p.logicAwards).toEqual([{ userId: 9, amount: AUTHOR_WALKOVER_BONUS }]);
-  });
-});
-
-describe("resolveStandout", () => {
-  const parts = [
-    { userId: 1, side: "for" as const, username: "win_a" },
-    { userId: 2, side: "against" as const, username: "lose_b" },
-    { userId: 3, side: "against" as const, username: "lose_c" },
-  ];
-
-  it("returns the losing-side participant's id", () => {
-    expect(resolveStandout("lose_b", "for", parts, 1)).toBe(2);
-  });
-
-  it("null when the named user is on the winning side", () => {
-    expect(resolveStandout("win_a", "for", parts, null)).toBeNull();
-  });
-
-  it("null when the named user is the MVP", () => {
-    expect(resolveStandout("lose_b", "for", parts, 2)).toBeNull();
-  });
-
-  it("null on a draw, a null name, or an unknown name", () => {
-    expect(resolveStandout("lose_b", "draw", parts, null)).toBeNull();
-    expect(resolveStandout(null, "for", parts, null)).toBeNull();
-    expect(resolveStandout("ghost", "for", parts, null)).toBeNull();
-  });
-});
-
-describe("resolvePayouts standout", () => {
-  const participants = [
-    { userId: 1, side: "for" as const },
-    { userId: 2, side: "against" as const },
-  ];
-
-  it("flags the standout row and awards STANDOUT_BONUS", () => {
-    const p = resolvePayouts({
-      winner: "for",
-      participants,
-      mvpUserId: 1,
-      standoutUserId: 2,
-      authorId: 9,
-    });
-    expect(p.results.filter((r) => r.isStandout).map((r) => r.userId)).toEqual([2]);
-    expect(p.logicAwards).toContainEqual({ userId: 2, amount: STANDOUT_BONUS });
-  });
-
-  it("no standout award when standoutUserId is omitted", () => {
-    const p = resolvePayouts({ winner: "for", participants, mvpUserId: 1, authorId: 9 });
-    expect(p.results.every((r) => r.isStandout === false)).toBe(true);
-    expect(p.logicAwards.some((a) => a.amount === STANDOUT_BONUS)).toBe(false);
-  });
-});
-
-describe("resolveUpset", () => {
-  it("true when the winning side was clearly behind (low ≤ 40)", () => {
-    expect(resolveUpset("for", 31, 100)).toBe(true);
-    expect(resolveUpset("against", 100, 40)).toBe(true); // boundary
-    expect(UPSET_LOW_THRESHOLD).toBe(40);
-  });
-  it("false when the winner was never behind", () => {
-    expect(resolveUpset("for", 41, 100)).toBe(false);
-    expect(resolveUpset("against", 100, 55)).toBe(false);
-  });
-  it("false for draw and walkover", () => {
-    expect(resolveUpset("draw", 20, 20)).toBe(false);
-    expect(resolveUpset("walkover", 20, 20)).toBe(false);
   });
 });

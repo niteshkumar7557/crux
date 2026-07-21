@@ -5,8 +5,6 @@ import { awardLogic } from "../economy/logic.js";
 import {
   resolveVerdict,
   resolvePayouts,
-  resolveStandout,
-  resolveUpset,
   walkoverPayout,
   type RawVerdict,
   type Participant,
@@ -34,7 +32,7 @@ export async function concludeDebate(argumentId: number): Promise<void> {
     await client.query("BEGIN");
 
     const argRes = await client.query(
-      `SELECT id, user_id, content, for_analysis, against_analysis, status, for_low, against_low
+      `SELECT id, user_id, content, for_analysis, against_analysis, status
        FROM arguments WHERE id = $1 FOR UPDATE`,
       [argumentId],
     );
@@ -117,18 +115,10 @@ ${commentBlock}`,
         : undefined;
       mvpUserId = mvp ? mvp.userId : null;
 
-      const standoutUserId = resolveStandout(
-        raw.standout_username,
-        resolved.winner,
-        participants,
-        mvpUserId,
-      );
-
       payouts = resolvePayouts({
         winner: resolved.winner,
         participants,
         mvpUserId,
-        standoutUserId,
         authorId,
       });
     }
@@ -136,18 +126,16 @@ ${commentBlock}`,
     // Write debate_results rows.
     for (const r of payouts.results) {
       await client.query(
-        `INSERT INTO debate_results (argument_id, user_id, side, outcome, is_mvp, is_standout)
-         VALUES ($1,$2,$3,$4,$5,$6)
+        `INSERT INTO debate_results (argument_id, user_id, side, outcome, is_mvp)
+         VALUES ($1,$2,$3,$4,$5)
          ON CONFLICT (argument_id, user_id) DO NOTHING`,
-        [argumentId, r.userId, r.side, r.outcome, r.isMvp, r.isStandout],
+        [argumentId, r.userId, r.side, r.outcome, r.isMvp],
       );
     }
     // Apply logic awards (also ledgered for the §12 seasonal window).
     for (const a of payouts.logicAwards) {
       await awardLogic(client, a.userId, a.amount, "verdict");
     }
-
-    const isUpset = resolveUpset(winner, arg.for_low, arg.against_low);
 
     await client.query(
       `UPDATE arguments SET
@@ -158,16 +146,15 @@ ${commentBlock}`,
          mvp_user_id = $4,
          verdict_text = $5,
          affirmative = COALESCE($6, affirmative),
-         negative = COALESCE($7, negative),
-         is_upset = $8
+         negative = COALESCE($7, negative)
        WHERE id = $1`,
-      [argumentId, winner, margin, mvpUserId, verdictText, affirmative, negative, isUpset],
+      [argumentId, winner, margin, mvpUserId, verdictText, affirmative, negative],
     );
 
     await client.query("COMMIT");
     console.log(`⚖️  concluded debate ${argumentId} → ${winner}`);
 
-    // §10 return trigger: tell every participant the verdict is in. Best-effort,
+    // §14 return trigger: tell every participant the verdict is in. Best-effort,
     // post-commit so a notification failure can't roll back the conclusion.
     void notifyVerdict(
       argumentId,
@@ -176,7 +163,7 @@ ${commentBlock}`,
         outcome: r.outcome,
         isMvp: r.isMvp,
       })),
-      isUpset,
+      false, // upset bonus is deferred (§16); B4 drops this parameter
     );
   } catch (err) {
     await client.query("ROLLBACK");

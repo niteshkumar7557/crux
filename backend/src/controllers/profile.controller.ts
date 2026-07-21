@@ -3,8 +3,6 @@ import pool from "../db/index.js";
 import {
   currentSeasonStart,
   currentSeasonNumber,
-  lpForResult,
-  divisionForLP,
 } from "../economy/season.logic.js";
 
 function convertLogicScore(score: number) {
@@ -68,49 +66,23 @@ export async function getProfileDataById(req: Request, res: Response) {
       `SELECT
          COUNT(*) FILTER (WHERE r.outcome = 'win')::int  AS wins,
          COUNT(*) FILTER (WHERE r.outcome = 'loss')::int AS losses,
-         COUNT(*) FILTER (WHERE r.outcome = 'draw')::int AS draws,
-         COUNT(*) FILTER (WHERE r.is_standout)::int      AS standouts
+         COUNT(*) FILTER (WHERE r.outcome = 'draw')::int AS draws
        FROM debate_results r JOIN arguments a ON a.id = r.argument_id
        WHERE r.user_id = $1`,
       [id],
     );
-    const record = recordRes.rows[0] ?? {
-      wins: 0,
-      losses: 0,
-      draws: 0,
-      standouts: 0,
-      upsets: 0,
-    };
+    const record = recordRes.rows[0] ?? { wins: 0, losses: 0, draws: 0 };
 
-    // §12 progression: seasonal skill slice (windowed logic) + standing (LP → division).
+    // §10 seasons: logic earned inside the current season window.
     const seasonStart = new Date(currentSeasonStart());
     const seasonLogicRes = await pool.query(
       `SELECT COALESCE(SUM(amount), 0)::int AS n FROM logic_events
        WHERE user_id = $1 AND created_at >= $2`,
       [id, seasonStart],
     );
-    const lpRows = await pool.query(
-      `SELECT r.outcome, r.is_mvp, r.is_standout
-       FROM debate_results r JOIN arguments a ON a.id = r.argument_id
-       WHERE r.user_id = $1 AND r.created_at >= $2`,
-      [id, seasonStart],
-    );
-    const seasonLP = lpRows.rows.reduce(
-      (sum, row) =>
-        sum +
-        lpForResult({
-          outcome: row.outcome,
-          isMvp: row.is_mvp,
-          isStandout: row.is_standout,
-          isUpset: row.is_upset,
-        }),
-      0,
-    );
     const season = {
       number: currentSeasonNumber(),
       logic: seasonLogicRes.rows[0].n,
-      lp: seasonLP,
-      division: divisionForLP(seasonLP),
     };
 
     const userHeadInfo = {

@@ -1,11 +1,7 @@
 import type { Request, Response } from "express";
 import pool from "../db/index.js";
 import { llmJson } from "../ai/llm.js";
-import {
-  buildAnalystPrompt,
-  applyRepeatDecay,
-  applyUnderdogMultiplier,
-} from "../ai/analyst.logic.js";
+import { buildAnalystPrompt, applyRepeatDecay } from "../ai/analyst.logic.js";
 import { notifyOpposition } from "../notifications/notify.js";
 import { awardLogic } from "../economy/logic.js";
 
@@ -56,9 +52,7 @@ AGAINST analysis: ${rows[0].against_analysis}`;
     `
             UPDATE arguments
             SET affirmative = $1,
-                negative = $2,
-                for_low = LEAST(for_low, $1),
-                against_low = LEAST(against_low, $2)
+                negative = $2
             WHERE id = $3
         `,
     [affirmative, negative, argumentId],
@@ -153,8 +147,7 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
       return res.status(409).json({ reason: "side_locked" });
     }
 
-    // Pre-insert side counts drive both the opener exception (own side empty)
-    // and the §9.3 scarce-side multiplier (own side trailing the opponent).
+    // Pre-insert side counts drive the opener exception (own side still empty).
     const sideCountRes = await pool.query(
       `SELECT COUNT(*) FILTER (WHERE side = 'for')     AS for_count,
               COUNT(*) FILTER (WHERE side = 'against') AS against_count
@@ -164,7 +157,6 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
     const forCountPre = Number(sideCountRes.rows[0].for_count);
     const againstCountPre = Number(sideCountRes.rows[0].against_count);
     const ownSideCount = side === "for" ? forCountPre : againstCountPre;
-    const oppSideCount = side === "for" ? againstCountPre : forCountPre;
     const first = ownSideCount === 0;
 
     // Prior comments by this user in this debate (captured before the new row
@@ -197,9 +189,7 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
 
     const safePoints = Math.min(8, Math.max(1, Math.round(points)));
     const decayed = applyRepeatDecay(safePoints, priorCount);
-    // §9.3: surge-price the scarce side (own side had fewer comments pre-insert).
-    const awarded = applyUnderdogMultiplier(decayed, ownSideCount, oppSideCount);
-    await awardLogic(pool, userId, awarded, "comment");
+    await awardLogic(pool, userId, decayed, "comment");
 
     if (newAnalysis) {
       await pool.query(

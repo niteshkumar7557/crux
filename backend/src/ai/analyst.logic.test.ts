@@ -4,8 +4,6 @@ import {
   NONE_YET,
   applyRepeatDecay,
   REPEAT_GRACE,
-  applyUnderdogMultiplier,
-  UNDERDOG_MULTIPLIER,
 } from "./analyst.logic.js";
 
 const base = {
@@ -94,22 +92,5 @@ describe("applyRepeatDecay", () => {
     expect(applyRepeatDecay(5, 5)).toBe(2); // floor(5/2)=2
     expect(applyRepeatDecay(1, 9)).toBe(1); // floor(1/2)=0 → clamped to 1
     expect(applyRepeatDecay(2, 3)).toBe(1); // floor(2/2)=1
-  });
-});
-
-describe("applyUnderdogMultiplier", () => {
-  it("multiplies a trailing side by 1.5, rounded", () => {
-    expect(applyUnderdogMultiplier(6, 2, 5)).toBe(9); // 6*1.5
-    expect(applyUnderdogMultiplier(5, 0, 3)).toBe(8); // empty own side, 5*1.5=7.5→8
-    expect(UNDERDOG_MULTIPLIER).toBe(1.5);
-  });
-
-  it("leaves a balanced or leading side unchanged", () => {
-    expect(applyUnderdogMultiplier(6, 3, 3)).toBe(6); // balanced
-    expect(applyUnderdogMultiplier(6, 5, 2)).toBe(6); // leading
-  });
-
-  it("may exceed the old 1–8 cap (surge price)", () => {
-    expect(applyUnderdogMultiplier(8, 1, 9)).toBe(12); // 8*1.5
   });
 });

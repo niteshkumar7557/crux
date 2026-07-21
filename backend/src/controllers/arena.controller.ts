@@ -9,7 +9,7 @@ export async function getPrimaryCardData(req: Request, res: Response) {
   try {
     const argument = await pool.query(`
                 SELECT a.id, a.user_id, a.content, a.domain_id, a.affirmative, a.negative,
-                       a.status, a.closes_at, a.is_dotd, a.votes
+                       a.status, a.closes_at, a.is_dotd
                 FROM arguments a
                 WHERE a.status = 'live' AND a.featured = TRUE AND a.is_dotd = TRUE;
             `);
@@ -47,7 +47,6 @@ export async function getPrimaryCardData(req: Request, res: Response) {
       closesAt: argument.rows[0].closes_at,
       isDotd: argument.rows[0].is_dotd,
       count_comments: parseInt(comments.rows[0].count),
-      votes: argument.rows[0].votes,
     });
   } catch (err) {
     console.error(err);
@@ -68,7 +67,6 @@ export async function getSecondaryCardsData(req: Request, res: Response) {
                     a.id AS argumentId,
                     a.status,
                     a.closes_at AS "closesAt",
-                    a.votes,
                     COUNT(DISTINCT c.user_id)::int AS active_minds
                 FROM arguments a
                 JOIN users u ON a.user_id = u.id
@@ -103,7 +101,6 @@ export async function getNewestCardData(req: Request, res: Response) {
                     a.id AS argumentId,
                     a.status,
                     a.closes_at AS "closesAt",
-                    a.votes,
                     a.created_at AT TIME ZONE 'UTC' AS time,
                     COALESCE(c.count, 0)::int AS "argumentNum"
                 FROM arguments a
@@ -302,7 +299,6 @@ export async function getStatements(req: Request, res: Response) {
                     a.id AS argumentId,
                     a.status,
                     a.closes_at AS "closesAt",
-                    a.votes,
                     a.created_at AT TIME ZONE 'UTC' AS time,
                     COALESCE(c.count, 0)::int AS "argumentNum"
                 FROM arguments a
