@@ -15,9 +15,14 @@ const ActiveArgumentsNavbar = ({
         live feed
       </span>
       <div className="mb-8 flex flex-col gap-3 md:flex-row md:justify-between md:items-baseline">
-        <h2 className="font-headline text-5xl font-medium italic">
-          Active Arguments
-        </h2>
+        <div className="flex gap-5">
+          <h2 className="font-headline text-5xl font-medium italic">
+            Active Arguments
+          </h2>
+          <div className="font-label text-[10px] text-tertiary uppercase tracking-[0.25em] mt-6 mb-1">
+						Main Stage — Featured Live Matches
+					</div>
+        </div>
         <div className="flex gap-5 font-label text-[10px] uppercase tracking-widest">
           {tabList.map((e, i) => (
             <button

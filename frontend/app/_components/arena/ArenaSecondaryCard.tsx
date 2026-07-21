@@ -4,9 +4,7 @@ import Link from "next/link";
 import Avatar from "@/app/_components/ui/Avatar";
 import ScoreBar from "./ScoreBar";
 import Countdown from "@/app/_components/argument/Countdown";
-import { settledSide } from "./settledSides";
 import VoteButton from "./VoteButton";
-import { gsap, MOTION_OK } from "@/app/_utils/gsap";
 
 // The compact feed card used by both the trending grid and the newest tab.
 export interface ArenaCardComponentProps {
@@ -26,7 +24,7 @@ export interface ArenaCardComponentProps {
   className?: string;
 }
 
-const ArenaCard = ({
+const ArenaSecondaryCard = ({
   username,
   avatar,
   domain,
@@ -35,40 +33,17 @@ const ArenaCard = ({
   negativescore,
   argumentid,
   footerLeft,
-  time,
-  status,
   closesAt,
-  winner,
   votes,
   className = "",
 }: ArenaCardComponentProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const isConcluded = status === "concluded";
-  const isLive = status === "live";
-  const ruling = settledSide(winner);
-
-  const lift = (up: boolean) => {
-    if (!cardRef.current || !window.matchMedia(MOTION_OK).matches) return;
-    gsap.to(cardRef.current, {
-      y: up ? -6 : 0,
-      duration: 0.35,
-      ease: "power2.out",
-      overwrite: "auto",
-    });
-  };
-
   return (
     <div
       ref={cardRef}
       data-reveal
-      onMouseEnter={() => lift(true)}
-      onMouseLeave={() => lift(false)}
-      className={`bg-surface-container-low cursor-pointer mt-5 p-6 border-l-2 transition-all ${
-        isConcluded
-          ? "border-outline-variant/20 opacity-80 hover:opacity-100"
-          : "border-outline-variant/30 hover:border-primary"
-      } ${className}`}
+      className={`bg-surface-container-low cursor-pointer mt-5 p-6 border-l-2 transition-all border-outline-variant/30 hover:border-primary ${className}`}
     >
       <Link
         className="flex flex-col justify-between h-full"
@@ -82,20 +57,10 @@ const ArenaCard = ({
                 {username}
               </span>
             </div>
-            {isConcluded ? (
-              <span className="font-label uppercase text-[10px] text-outline border border-outline/40 px-1.5 py-1 self-start tracking-[0.2em]">
-                Settled
-              </span>
-            ) : isLive && closesAt ? (
+            {closesAt && (
               <span className="self-start">
                 <Countdown closesAt={closesAt} />
               </span>
-            ) : (
-              time && (
-                <span className="font-label uppercase text-[10px] text-on-surface-variant bg-outline/10 px-1.5 py-1 self-start">
-                  {time}
-                </span>
-              )
             )}
           </div>
           <span className="font-label text-[10px] text-tertiary uppercase tracking-widest mb-3 block">
@@ -109,14 +74,10 @@ const ArenaCard = ({
           <div className="flex justify-between items-center font-label text-[10px] text-outline uppercase tracking-widest">
             <span>{footerLeft}</span>
             <span className="flex items-center gap-3">
-              {isLive && votes !== undefined && (
+              {votes !== undefined && (
                 <VoteButton argumentId={argumentid} initialVotes={votes} compact />
               )}
-              {isConcluded ? (
-                <span className={ruling.cls}>
-                  {ruling.label} · {affirmativescore}–{negativescore}
-                </span>
-              ) : affirmativescore > negativescore ? (
+              {affirmativescore > negativescore ? (
                 <span className="text-primary-container">
                   {affirmativescore}% Favor
                 </span>
@@ -133,4 +94,4 @@ const ArenaCard = ({
   );
 };
 
-export default ArenaCard;
+export default ArenaSecondaryCard;

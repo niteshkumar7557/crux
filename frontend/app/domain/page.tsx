@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LuMessageSquare } from "react-icons/lu";
 import serverApi from "@/app/axios.server";
-import ArenaCard from "@/app/_components/arena/ArenaCard";
+import ArenaSecondaryCard from "@/app/_components/arena/ArenaSecondaryCard";
 import Button from "@/app/_components/ui/Button";
 import Pagination from "@/app/_components/ui/Pagination";
 import Reveal from "@/app/_components/ui/Reveal";
@@ -139,7 +139,7 @@ const DomainPage = async ({ searchParams }: { searchParams: SearchParams }) => {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6">
           {result.statements.map((e) => (
-            <ArenaCard
+            <ArenaSecondaryCard
               key={e.argumentid}
               username={e.username}
               avatar={e.avatar}

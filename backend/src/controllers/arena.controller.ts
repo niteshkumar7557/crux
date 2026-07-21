@@ -5,19 +5,23 @@ import {
   currentSeasonNumber,
 } from "../economy/season.logic.js";
 
-export async function getActiveCardData(req: Request, res: Response) {
+export async function getPrimaryCardData(req: Request, res: Response) {
   try {
     const argument = await pool.query(`
-                SELECT a.id, a.user_id, a.content, d.name AS domain, a.affirmative, a.negative,
-                       a.status, a.closes_at, a.winner, a.margin, a.is_dotd
+                SELECT a.id, a.user_id, a.content, a.domain_id, a.affirmative, a.negative,
+                       a.status, a.closes_at, a.is_dotd, a.votes
                 FROM arguments a
-                JOIN domains d ON d.id = a.domain_id
-                ORDER BY a.is_dotd DESC, a.heat DESC, a.id DESC
-                LIMIT 1;
+                WHERE a.status = 'live' AND a.featured = TRUE AND a.is_dotd = TRUE;
             `);
     if (argument.rows.length === 0) {
       return res.status(200).json({});
     }
+    const domain = await pool.query(
+      `
+                SELECT name FROM domains WHERE id = $1;
+            `,
+      [argument.rows[0].domain_id],
+    );
     const user = await pool.query(
       `
                 SELECT username, avatar FROM users WHERE id = $1;
@@ -32,7 +36,7 @@ export async function getActiveCardData(req: Request, res: Response) {
     );
 
     res.status(200).json({
-      domain: argument.rows[0].domain,
+      domain: domain.rows[0].name,
       argumentId: argument.rows[0].id,
       username: user.rows[0].username,
       avatar: user.rows[0].avatar,
@@ -41,10 +45,9 @@ export async function getActiveCardData(req: Request, res: Response) {
       negative: argument.rows[0].negative,
       status: argument.rows[0].status,
       closesAt: argument.rows[0].closes_at,
-      winner: argument.rows[0].winner,
-      margin: argument.rows[0].margin,
       isDotd: argument.rows[0].is_dotd,
       count_comments: parseInt(comments.rows[0].count),
+      votes: argument.rows[0].votes,
     });
   } catch (err) {
     console.error(err);
@@ -52,7 +55,7 @@ export async function getActiveCardData(req: Request, res: Response) {
   }
 }
 
-export async function getTrendingCardData(req: Request, res: Response) {
+export async function getSecondaryCardsData(req: Request, res: Response) {
   try {
     const argument = await pool.query(`
                 SELECT
@@ -65,8 +68,6 @@ export async function getTrendingCardData(req: Request, res: Response) {
                     a.id AS argumentId,
                     a.status,
                     a.closes_at AS "closesAt",
-                    a.winner,
-                    a.margin,
                     a.votes,
                     COUNT(DISTINCT c.user_id)::int AS active_minds
                 FROM arguments a
@@ -75,7 +76,7 @@ export async function getTrendingCardData(req: Request, res: Response) {
                 LEFT JOIN comments c ON c.argument_id = a.id
                 WHERE a.featured = TRUE AND a.is_dotd = FALSE
                 GROUP BY a.id, u.username, u.avatar, d.name, a.content, a.affirmative, a.negative
-                ORDER BY a.heat DESC, a.featured_at ASC NULLS LAST
+                ORDER BY a.featured_at ASC NULLS LAST
                 LIMIT 6;
             `);
     if (argument.rows.length === 0) {
@@ -102,8 +103,6 @@ export async function getNewestCardData(req: Request, res: Response) {
                     a.id AS argumentId,
                     a.status,
                     a.closes_at AS "closesAt",
-                    a.winner,
-                    a.margin,
                     a.votes,
                     a.created_at AT TIME ZONE 'UTC' AS time,
                     COALESCE(c.count, 0)::int AS "argumentNum"
@@ -115,7 +114,7 @@ export async function getNewestCardData(req: Request, res: Response) {
                     FROM comments c
                     GROUP BY argument_id
                 ) c ON a.id = c.argument_id
-                ORDER BY a.id DESC
+                ORDER BY a.created_at DESC
                 LIMIT 20;
             `);
     if (argument.rows.length === 0) {
@@ -303,8 +302,6 @@ export async function getStatements(req: Request, res: Response) {
                     a.id AS argumentId,
                     a.status,
                     a.closes_at AS "closesAt",
-                    a.winner,
-                    a.margin,
                     a.votes,
                     a.created_at AT TIME ZONE 'UTC' AS time,
                     COALESCE(c.count, 0)::int AS "argumentNum"

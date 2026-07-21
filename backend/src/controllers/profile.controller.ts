@@ -69,8 +69,7 @@ export async function getProfileDataById(req: Request, res: Response) {
          COUNT(*) FILTER (WHERE r.outcome = 'win')::int  AS wins,
          COUNT(*) FILTER (WHERE r.outcome = 'loss')::int AS losses,
          COUNT(*) FILTER (WHERE r.outcome = 'draw')::int AS draws,
-         COUNT(*) FILTER (WHERE r.is_standout)::int      AS standouts,
-         COUNT(*) FILTER (WHERE r.outcome = 'win' AND a.is_upset)::int AS upsets
+         COUNT(*) FILTER (WHERE r.is_standout)::int      AS standouts
        FROM debate_results r JOIN arguments a ON a.id = r.argument_id
        WHERE r.user_id = $1`,
       [id],
@@ -91,7 +90,7 @@ export async function getProfileDataById(req: Request, res: Response) {
       [id, seasonStart],
     );
     const lpRows = await pool.query(
-      `SELECT r.outcome, r.is_mvp, r.is_standout, a.is_upset
+      `SELECT r.outcome, r.is_mvp, r.is_standout
        FROM debate_results r JOIN arguments a ON a.id = r.argument_id
        WHERE r.user_id = $1 AND r.created_at >= $2`,
       [id, seasonStart],

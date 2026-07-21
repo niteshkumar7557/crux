@@ -1,4 +1,3 @@
--- §10 Retention Layer 2: in-app return triggers (notifications inbox).
 CREATE TABLE notifications (
     id          SERIAL PRIMARY KEY,
     user_id     INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

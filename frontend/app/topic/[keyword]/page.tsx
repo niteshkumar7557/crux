@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { LuMessageSquare } from "react-icons/lu";
 import serverApi from "@/app/axios.server";
-import ArenaCard from "@/app/_components/arena/ArenaCard";
+import ArenaSecondaryCard from "@/app/_components/arena/ArenaSecondaryCard";
 import Button from "@/app/_components/ui/Button";
 import Reveal from "@/app/_components/ui/Reveal";
 import { timeAgo } from "@/app/_utils/timeAgo";
@@ -68,7 +68,7 @@ const TopicPage = async ({
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6">
           {statements.map((e) => (
-            <ArenaCard
+            <ArenaSecondaryCard
               key={e.argumentid}
               username={e.username}
               avatar={e.avatar}

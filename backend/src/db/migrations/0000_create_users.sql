@@ -6,5 +6,6 @@ CREATE TABLE users (
     logic_score INT DEFAULT 0,
     description TEXT DEFAULT 'Post some Statements to get to know about you.',
     email VARCHAR(50) NOT NULL UNIQUE,
-    hashed_password TEXT NOT NULL
+    hashed_password TEXT NOT NULL,
+    avatar TEXT DEFAULT NULL
 );

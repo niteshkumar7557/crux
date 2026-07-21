@@ -1,21 +1,21 @@
 import { Router } from "express";
 import {
-  getActiveCardData,
+  getPrimaryCardData,
   getLeaderboardData,
   getNewestCardData,
   getSeasonLeaderboard,
   getSidebarData,
   getSitemapData,
   getStatements,
-  getTrendingCardData,
+  getSecondaryCardsData,
 } from "../controllers/arena.controller.js";
 import { authMiddleware } from "../middlewares/auth.js";
 import { toggleVote, getVote } from "../controllers/vote.controller.js";
 
 const arenaRoutes = Router();
 
-arenaRoutes.get("/active/main", getActiveCardData);
-arenaRoutes.get("/active/trending", getTrendingCardData);
+arenaRoutes.get("/active/primary", getPrimaryCardData);
+arenaRoutes.get("/active/secondary", getSecondaryCardsData);
 arenaRoutes.get("/active/newest", getNewestCardData);
 arenaRoutes.get("/sidebar", getSidebarData);
 arenaRoutes.get("/leaderboard", getLeaderboardData);

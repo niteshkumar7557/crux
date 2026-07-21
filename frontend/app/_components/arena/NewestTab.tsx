@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import ArenaCard from "./ArenaCard";
 import api from "@/app/axios";
 import { NewestCardProps } from "@/app/types";
 import { LuMessageSquare } from "react-icons/lu";
 import { timeAgo } from "@/app/_utils/timeAgo";
+import ArenaSecondaryCard from "./ArenaSecondaryCard";
 
 const NewestTab = () => {
   const [cardsData, setCardsData] = useState<NewestCardProps[]>([]);
@@ -24,7 +24,7 @@ const NewestTab = () => {
   return (
     <div>
       {cardsData.length > 0 && cardsData.map((e, i) => (
-        <ArenaCard
+        <ArenaSecondaryCard
           key={i}
           username={e.username}
           avatar={e.avatar}

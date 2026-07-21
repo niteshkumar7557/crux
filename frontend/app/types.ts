@@ -1,22 +1,19 @@
-export interface MainTrendingArenaCardProps {
+export interface PrimaryCardDataType {
   username: string;
   avatar: string | null;
   domain: string;
-  title: string;
-  argumentNum: number;
-  argumentQuality: "low" | "medium" | "high";
-  affirmativeScore: number;
-  negativeScore: number;
+  content: string;
+  count_comments: number;
+  affirmative: number;
+  negative: number;
   argumentId: string;
   status?: string;
   closesAt?: string | null;
-  winner?: string | null;
-  margin?: number | null;
   isDotd?: boolean;
+  votes?: number;
 }
-export type MainTrendingArenaCardData = MainTrendingArenaCardProps[];
 
-export interface TrendingArenaCardProps {
+export interface SecondaryCardsDataType {
   username: string;
   avatar: string | null;
   domain: string;
@@ -31,7 +28,6 @@ export interface TrendingArenaCardProps {
   margin?: number | null;
   votes?: number;
 }
-export type TrendingArenaCardData = TrendingArenaCardProps[];
 
 export interface TrendingDomainCardProps {
   topic: string;
