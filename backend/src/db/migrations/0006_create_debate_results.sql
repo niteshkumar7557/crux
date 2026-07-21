@@ -6,7 +6,6 @@ CREATE TABLE debate_results (
     outcome      VARCHAR(8)  NOT NULL,   -- 'win' | 'loss' | 'draw'
     is_mvp       BOOLEAN NOT NULL DEFAULT FALSE,
     created_at   TIMESTAMP NOT NULL DEFAULT NOW(),
-    is_standout BOOLEAN NOT NULL DEFAULT FALSE,
     UNIQUE (argument_id, user_id)
 );
 
