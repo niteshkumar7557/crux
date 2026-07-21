@@ -2,7 +2,8 @@ import type { Response, Request } from "express";
 import pool from "../db/index.js";
 import {
   currentSeasonStart,
-  currentSeasonNumber,
+  seasonNumber,
+  daysLeftInSeason,
 } from "../economy/season.logic.js";
 
 function convertLogicScore(score: number) {
@@ -74,15 +75,18 @@ export async function getProfileDataById(req: Request, res: Response) {
     const record = recordRes.rows[0] ?? { wins: 0, losses: 0, draws: 0 };
 
     // §10 seasons: logic earned inside the current season window.
-    const seasonStart = new Date(currentSeasonStart());
+    const seasonStart = currentSeasonStart();
     const seasonLogicRes = await pool.query(
       `SELECT COALESCE(SUM(amount), 0)::int AS n FROM logic_events
        WHERE user_id = $1 AND created_at >= $2`,
       [id, seasonStart],
     );
     const season = {
-      number: currentSeasonNumber(),
+      number: seasonNumber(),
       logic: seasonLogicRes.rows[0].n,
+      // §14 puts the "Season N · D days left" strip on the profile as well as
+      // the leaderboard, so the profile needs the countdown too.
+      daysLeft: daysLeftInSeason(),
     };
 
     const userHeadInfo = {

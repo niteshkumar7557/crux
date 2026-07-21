@@ -2,7 +2,9 @@ import type { Response, Request } from "express";
 import pool from "../db/index.js";
 import {
   currentSeasonStart,
-  currentSeasonNumber,
+  seasonNumber,
+  seasonKey,
+  daysLeftInSeason,
 } from "../economy/season.logic.js";
 
 export async function getPrimaryCardData(req: Request, res: Response) {
@@ -208,11 +210,11 @@ export async function getLeaderboardData(req: Request, res: Response) {
   }
 }
 
-// §12 Season board: ranks logic EARNED this season (the windowed ledger sum),
+// §10 Season board: ranks logic EARNED this season (the windowed ledger sum),
 // so everyone starts at 0 each month and a hot newcomer races veterans fairly.
 export async function getSeasonLeaderboard(_req: Request, res: Response) {
   try {
-    const start = new Date(currentSeasonStart());
+    const start = currentSeasonStart();
     const standings = await pool.query(
       `SELECT u.id, u.name, u.username, u.avatar,
               COALESCE(SUM(le.amount) FILTER (WHERE le.created_at >= $1), 0)::int AS "seasonLogic",
@@ -227,12 +229,21 @@ export async function getSeasonLeaderboard(_req: Request, res: Response) {
       [start],
     );
     res.status(200).json({
-      season: currentSeasonNumber(),
+      season: seasonNumber(),
+      seasonKey: seasonKey(),
+      daysLeft: daysLeftInSeason(),
       rows: standings.rows,
     });
   } catch (err) {
     console.error(err);
-    res.status(200).json({ season: currentSeasonNumber(), rows: [] });
+    // Keep the shape identical on the error path — §14's season strip reads
+    // these fields unconditionally.
+    res.status(200).json({
+      season: seasonNumber(),
+      seasonKey: seasonKey(),
+      daysLeft: daysLeftInSeason(),
+      rows: [],
+    });
   }
 }
 

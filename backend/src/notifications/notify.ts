@@ -1,5 +1,5 @@
 import pool from "../db/index.js";
-import { verdictMessage, oppositionMessage } from "./messages.js";
+import { verdictMessage, oppositionMessage, replyMessage } from "./messages.js";
 
 interface Queryable {
   query: (text: string, params?: unknown[]) => Promise<{ rows: any[] }>;
@@ -66,7 +66,6 @@ export async function notifyOpposition(
 export async function notifyVerdict(
   argumentId: number,
   results: { userId: number; outcome: string; isMvp: boolean }[],
-  isUpset: boolean,
 ): Promise<void> {
   try {
     for (const r of results) {
@@ -74,10 +73,35 @@ export async function notifyVerdict(
         userId: r.userId,
         type: "verdict",
         argumentId,
-        message: verdictMessage(r.outcome, r.isMvp, isUpset),
+        message: verdictMessage(r.outcome, r.isMvp),
       });
     }
   } catch (err) {
     console.error("notifyVerdict failed:", err);
+  }
+}
+
+// §14's strongest return trigger: someone answered your argument directly.
+// Best-effort — never blocks the comment response. Replying to yourself is
+// impossible across sides, but guard anyway rather than rely on that.
+export async function notifyReply(
+  argumentId: number,
+  targetUserId: number,
+  actorId: number,
+): Promise<void> {
+  if (targetUserId === actorId) return;
+  try {
+    const actor =
+      (await pool.query(`SELECT username FROM users WHERE id = $1`, [actorId]))
+        .rows[0]?.username ?? "someone";
+    await createNotification(pool, {
+      userId: targetUserId,
+      type: "reply",
+      argumentId,
+      actor,
+      message: replyMessage(actor),
+    });
+  } catch (err) {
+    console.error("notifyReply failed:", err);
   }
 }

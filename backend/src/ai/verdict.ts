@@ -14,12 +14,11 @@ import {
 
 const VERDICT_JUDGE_SYSTEM_PROMPT = `You are CRUX VERDICT JUDGE. A timed debate has closed. Read the statement, both sides' final analyses, and the scored comments, then deliver the closing ruling.
 
-Return JSON: {"for":int,"against":int,"winner":"for"|"against"|"draw","mvp_username":string|null,"standout_username":string|null,"closing":string}
+Return JSON: {"for":int,"against":int,"winner":"for"|"against"|"draw","mvp_username":string|null,"closing":string}
 
 for / against — two integers summing to 100 (each 20-80). Judge only evidence quality, logical soundness, and how well each side answered the other — not your own opinion on the topic.
 winner — the stronger side, or "draw" if genuinely level.
-mvp_username — the single sharpest debater on ANY side, copied EXACTLY from a comment author's username below. Never invent a name; use null only if no comment deserves it.
-standout_username — the single sharpest debater on the LOSING side, copied EXACTLY from a losing-side comment author's username. Different from the MVP. Use null on a draw, or if no losing-side voice stands out.
+mvp_username — the single sharpest debater ON THE WINNING SIDE, copied EXACTLY from a winning-side comment author's username below. Use null on a draw, or if no comment deserves it.
 closing — ONE short editorial paragraph (max 60 words) naming the crux of the debate and why it resolved the way it did. This is the public verdict card text.`;
 
 const MAX_COMMENTS = 40;
@@ -81,9 +80,8 @@ export async function concludeDebate(argumentId: number): Promise<void> {
       // Walkover — no contest, no LLM call.
       winner = "walkover";
       verdictText = "Concluded unopposed — a contest needs two committed sides.";
-      payouts = walkoverPayout(authorId);
+      payouts = walkoverPayout();
     } else {
-      const usernameSet = new Set(participants.map((p) => p.username));
       const commentBlock = commentsRes.rows
         .map((c) => `@${c.username} [${c.side}, ${c.likes} likes]: ${c.content}`)
         .join("\n");
@@ -103,17 +101,15 @@ ${commentBlock}`,
         maxTokens: 2500,
       });
 
-      const resolved = resolveVerdict(raw, usernameSet);
+      const resolved = resolveVerdict(raw, participants);
       winner = resolved.winner;
       margin = resolved.margin;
       affirmative = resolved.affirmative;
       negative = resolved.negative;
       verdictText = raw.closing?.trim() || "The debate has been ruled.";
 
-      const mvp = resolved.mvpUsername
-        ? participants.find((p) => p.username === resolved.mvpUsername)
-        : undefined;
-      mvpUserId = mvp ? mvp.userId : null;
+      // §7: resolveVerdict already validated the MVP onto the winning side.
+      mvpUserId = resolved.mvpUserId;
 
       payouts = resolvePayouts({
         winner: resolved.winner,
@@ -132,9 +128,16 @@ ${commentBlock}`,
         [argumentId, r.userId, r.side, r.outcome, r.isMvp],
       );
     }
-    // Apply logic awards (also ledgered for the §12 seasonal window).
+    // Apply logic awards (also ledgered for the §10 seasonal window). The
+    // loss penalty rides in season-only, so a career total never falls (§8).
     for (const a of payouts.logicAwards) {
-      await awardLogic(client, a.userId, a.amount, "verdict");
+      await awardLogic(
+        client,
+        a.userId,
+        a.amount,
+        a.amount < 0 ? "loss" : "verdict",
+        a.seasonOnly,
+      );
     }
 
     await client.query(
@@ -163,7 +166,6 @@ ${commentBlock}`,
         outcome: r.outcome,
         isMvp: r.isMvp,
       })),
-      false, // upset bonus is deferred (§16); B4 drops this parameter
     );
   } catch (err) {
     await client.query("ROLLBACK");

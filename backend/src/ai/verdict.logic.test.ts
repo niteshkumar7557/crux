@@ -3,86 +3,153 @@ import {
   resolveVerdict,
   resolvePayouts,
   walkoverPayout,
+  DRAW_MARGIN,
   MVP_BONUS,
-  AUTHOR_BASE_BONUS,
-  AUTHOR_WALKOVER_BONUS,
+  WIN_BONUS,
+  LOSS_PENALTY,
+  AUTHOR_BONUS,
+  type RawVerdict,
+  type ParticipantWithName,
 } from "./verdict.logic.js";
 
-const base = { closing: "x", mvp_username: null, standout_username: null } as const;
+const people: ParticipantWithName[] = [
+  { userId: 1, side: "for", username: "maya" },
+  { userId: 2, side: "against", username: "dev" },
+];
+
+const raw = (over: Partial<RawVerdict> = {}): RawVerdict => ({
+  for: 58,
+  against: 42,
+  winner: "for",
+  mvp_username: "maya",
+  closing: "The crux was baseload.",
+  ...over,
+});
 
 describe("resolveVerdict", () => {
-  it("normalizes for/against to sum 100", () => {
-    const r = resolveVerdict({ ...base, for: 30, against: 10, winner: "for" }, new Set());
-    expect(r.affirmative + r.negative).toBe(100);
-    expect(r.affirmative).toBe(75);
-    expect(r.negative).toBe(25);
+  it("declares a winner when the margin exceeds 5", () => {
+    const v = resolveVerdict(raw(), people);
+    expect(v.winner).toBe("for");
+    expect(v.margin).toBe(16);
   });
 
-  it("forces a draw when the margin is within the threshold", () => {
-    const r = resolveVerdict({ ...base, for: 53, against: 47, winner: "for" }, new Set());
-    expect(r.margin).toBe(6);
-    expect(r.winner).toBe("draw");
+  it("draws at exactly the threshold", () => {
+    // 53-47 is a margin of 6 -> decisive; 52-48 is 4 -> draw.
+    expect(resolveVerdict(raw({ for: 53, against: 47 }), people).winner).toBe("for");
+    expect(resolveVerdict(raw({ for: 52, against: 48 }), people).winner).toBe("draw");
+    expect(DRAW_MARGIN).toBe(5);
   });
 
-  it("keeps a side winner when the margin exceeds the threshold", () => {
-    const r = resolveVerdict({ ...base, for: 46, against: 54, winner: "against" }, new Set());
-    expect(r.margin).toBe(8);
-    expect(r.winner).toBe("against");
+  it("normalises scores that do not sum to 100", () => {
+    const v = resolveVerdict(raw({ for: 30, against: 10 }), people);
+    expect(v.affirmative + v.negative).toBe(100);
+    expect(v.affirmative).toBe(75);
   });
 
-  it("defaults to a 50/50 draw when both scores are zero", () => {
-    const r = resolveVerdict({ ...base, for: 0, against: 0, winner: "for" }, new Set());
-    expect(r.affirmative).toBe(50);
-    expect(r.winner).toBe("draw");
+  it("accepts an MVP on the winning side", () => {
+    expect(resolveVerdict(raw(), people).mvpUserId).toBe(1);
   });
 
-  it("keeps a valid MVP username and drops an unknown one", () => {
-    const known = resolveVerdict({ ...base, for: 70, against: 30, winner: "for", mvp_username: "ada_novak" }, new Set(["ada_novak"]));
-    expect(known.mvpUsername).toBe("ada_novak");
-    const bogus = resolveVerdict({ ...base, for: 70, against: 30, winner: "for", mvp_username: "ghost" }, new Set(["ada_novak"]));
-    expect(bogus.mvpUsername).toBeNull();
+  it("rejects an MVP on the losing side", () => {
+    const v = resolveVerdict(raw({ mvp_username: "dev" }), people);
+    expect(v.mvpUserId).toBeNull();
+  });
+
+  it("rejects an MVP on a draw", () => {
+    const v = resolveVerdict(raw({ for: 51, against: 49 }), people);
+    expect(v.winner).toBe("draw");
+    expect(v.mvpUserId).toBeNull();
+  });
+
+  it("rejects an invented username", () => {
+    const v = resolveVerdict(raw({ mvp_username: "ghost" }), people);
+    expect(v.mvpUserId).toBeNull();
   });
 });
 
 describe("resolvePayouts", () => {
-  const participants = [
-    { userId: 1, side: "for" as const },
-    { userId: 2, side: "against" as const },
-    { userId: 3, side: "for" as const },
-  ];
-
-  it("maps winning side to win and losing side to loss", () => {
-    const p = resolvePayouts({ winner: "for", participants, mvpUserId: 1, authorId: 9 });
-    const byUser = Object.fromEntries(p.results.map((r) => [r.userId, r.outcome]));
-    expect(byUser[1]).toBe("win");
-    expect(byUser[3]).toBe("win");
-    expect(byUser[2]).toBe("loss");
+  it("pays the MVP 25 instead of, not on top of, the win bonus", () => {
+    const p = resolvePayouts({
+      winner: "for",
+      participants: people,
+      mvpUserId: 1,
+      authorId: 3,
+    });
+    const maya = p.logicAwards.filter((a) => a.userId === 1);
+    expect(maya).toHaveLength(1);
+    expect(maya[0]!.amount).toBe(MVP_BONUS);
+    expect(MVP_BONUS).toBe(25);
   });
 
-  it("marks only the MVP row and awards the MVP bonus", () => {
-    const p = resolvePayouts({ winner: "for", participants, mvpUserId: 1, authorId: 9 });
-    expect(p.results.filter((r) => r.isMvp).map((r) => r.userId)).toEqual([1]);
-    expect(p.logicAwards).toContainEqual({ userId: 1, amount: MVP_BONUS });
+  it("pays other winners the win bonus", () => {
+    const p = resolvePayouts({
+      winner: "for",
+      participants: [...people, { userId: 4, side: "for", username: "sam" }],
+      mvpUserId: 1,
+      authorId: 9,
+    });
+    const sam = p.logicAwards.find((a) => a.userId === 4)!;
+    expect(sam.amount).toBe(WIN_BONUS);
+    expect(sam.seasonOnly).toBe(false);
   });
 
-  it("gives every participant a draw outcome when the debate is a draw", () => {
-    const p = resolvePayouts({ winner: "draw", participants, mvpUserId: null, authorId: 9 });
+  it("docks the loser season-only", () => {
+    const p = resolvePayouts({
+      winner: "for",
+      participants: people,
+      mvpUserId: 1,
+      authorId: 9,
+    });
+    const dev = p.logicAwards.find((a) => a.userId === 2)!;
+    expect(dev.amount).toBe(LOSS_PENALTY);
+    expect(LOSS_PENALTY).toBe(-5);
+    expect(dev.seasonOnly).toBe(true);
+  });
+
+  it("pays nobody but the author on a draw", () => {
+    const p = resolvePayouts({
+      winner: "draw",
+      participants: people,
+      mvpUserId: null,
+      authorId: 9,
+    });
+    expect(p.logicAwards).toEqual([
+      { userId: 9, amount: AUTHOR_BONUS, seasonOnly: false },
+    ]);
     expect(p.results.every((r) => r.outcome === "draw")).toBe(true);
-    expect(p.logicAwards.some((a) => a.amount === MVP_BONUS)).toBe(false);
   });
 
-  it("scales the author bonus by debate size and caps it", () => {
-    const small = resolvePayouts({ winner: "for", participants, mvpUserId: null, authorId: 9 });
-    expect(small.logicAwards).toContainEqual({ userId: 9, amount: AUTHOR_BASE_BONUS + 3 });
-
-    const big = Array.from({ length: 20 }, (_, i) => ({ userId: i + 1, side: "for" as const }));
-    const capped = resolvePayouts({ winner: "for", participants: big, mvpUserId: null, authorId: 99 });
-    expect(capped.logicAwards).toContainEqual({ userId: 99, amount: AUTHOR_BASE_BONUS + 8 });
+  it("records win/loss outcomes per side", () => {
+    const p = resolvePayouts({
+      winner: "for",
+      participants: people,
+      mvpUserId: 1,
+      authorId: 9,
+    });
+    expect(p.results.find((r) => r.userId === 1)!.outcome).toBe("win");
+    expect(p.results.find((r) => r.userId === 2)!.outcome).toBe("loss");
+    expect(p.results.find((r) => r.userId === 1)!.isMvp).toBe(true);
   });
 
-  it("walkover: author credit only, no result rows", () => {
-    const p = walkoverPayout(9);
-    expect(p.results).toEqual([]);
-    expect(p.logicAwards).toEqual([{ userId: 9, amount: AUTHOR_WALKOVER_BONUS }]);
+  it("pays an author who also argued both bonuses", () => {
+    const p = resolvePayouts({
+      winner: "for",
+      participants: people,
+      mvpUserId: null,
+      authorId: 1, // maya wrote the statement AND argued for
+    });
+    const maya = p.logicAwards.filter((a) => a.userId === 1);
+    // Numeric comparator: a bare .sort() is lexicographic, so [10, 5] would
+    // "sort" to [10, 5] ("1" < "5") and never match [5, 10].
+    expect(maya.map((a) => a.amount).sort((a, b) => a - b)).toEqual([
+      AUTHOR_BONUS,
+      WIN_BONUS,
+    ]);
+  });
+});
+
+describe("walkoverPayout", () => {
+  it("pays absolutely nobody, author included", () => {
+    expect(walkoverPayout()).toEqual({ results: [], logicAwards: [] });
   });
 });

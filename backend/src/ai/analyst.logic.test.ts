@@ -1,96 +1,94 @@
 import { describe, it, expect } from "vitest";
-import {
-  buildAnalystPrompt,
-  NONE_YET,
-  applyRepeatDecay,
-  REPEAT_GRACE,
-} from "./analyst.logic.js";
+import { buildAnalystPrompt, scoreComment, NONE_YET } from "./analyst.logic.js";
 
 const base = {
-  statement: "AI should have legal personhood.",
-  author: "ada",
-  comment: "Corporations already have legal personhood, so precedent exists.",
-} as const;
+  rawPoints: 7,
+  isReply: false,
+  opponentHasComments: true,
+  priorCount: 0,
+};
 
-describe("buildAnalystPrompt", () => {
-  it("FOR: own = for_analysis, opponent = against_analysis, uppercased side", () => {
-    const out = buildAnalystPrompt({
-      ...base,
-      side: "for",
-      forAnalysis: "FOR points here",
-      againstAnalysis: "AGAINST points here",
-      ownIsFirst: false,
-    });
-    expect(out).toContain("SIDE: FOR");
-    expect(out).toContain("OWN SIDE ANALYSIS: FOR points here");
-    expect(out).toContain("OPPONENT ANALYSIS: AGAINST points here");
-    expect(out).toContain("AUTHOR: ada");
-    expect(out).toContain(`COMMENT: "${base.comment}"`);
-    expect(out).toContain(`STATEMENT: "${base.statement}"`);
+describe("scoreComment", () => {
+  it("gives a reply the full range", () => {
+    const r = scoreComment({ ...base, rawPoints: 8, isReply: true });
+    expect(r.points).toBe(8);
+    expect(r.capped).toBe(false);
+    expect(r.halved).toBe(false);
   });
 
-  it("AGAINST: own = against_analysis, opponent = for_analysis", () => {
-    const out = buildAnalystPrompt({
-      ...base,
-      side: "against",
-      forAnalysis: "FOR points here",
-      againstAnalysis: "AGAINST points here",
-      ownIsFirst: false,
-    });
-    expect(out).toContain("SIDE: AGAINST");
-    expect(out).toContain("OWN SIDE ANALYSIS: AGAINST points here");
-    expect(out).toContain("OPPONENT ANALYSIS: FOR points here");
+  it("caps a standalone comment at 5", () => {
+    const r = scoreComment({ ...base, rawPoints: 7 });
+    expect(r.judged).toBe(7);
+    expect(r.points).toBe(5);
+    expect(r.capped).toBe(true);
   });
 
-  it("opener: no opponent yet → opponent block is (none yet)", () => {
-    const out = buildAnalystPrompt({
-      ...base,
-      side: "for",
-      forAnalysis: null,
-      againstAnalysis: null,
-      ownIsFirst: true,
-    });
-    expect(out).toContain(`OWN SIDE ANALYSIS: ${NONE_YET}`);
-    expect(out).toContain(`OPPONENT ANALYSIS: ${NONE_YET}`);
+  it("does not cap a standalone below the cap", () => {
+    const r = scoreComment({ ...base, rawPoints: 3 });
+    expect(r.points).toBe(3);
+    expect(r.capped).toBe(false);
   });
 
-  it("ownIsFirst forces own block to (none yet) even if a stale analysis exists", () => {
-    const out = buildAnalystPrompt({
-      ...base,
-      side: "for",
-      forAnalysis: "stale",
-      againstAnalysis: "AGAINST points here",
-      ownIsFirst: true,
-    });
-    expect(out).toContain(`OWN SIDE ANALYSIS: ${NONE_YET}`);
-    expect(out).toContain("OPPONENT ANALYSIS: AGAINST points here");
+  it("exempts a standalone when the opposing side is empty", () => {
+    const r = scoreComment({ ...base, rawPoints: 8, opponentHasComments: false });
+    expect(r.points).toBe(8);
+    expect(r.capped).toBe(false);
   });
 
-  it("empty-string opponent analysis renders (none yet)", () => {
-    const out = buildAnalystPrompt({
-      ...base,
-      side: "against",
-      forAnalysis: "",
-      againstAnalysis: "AGAINST points here",
-      ownIsFirst: false,
-    });
-    expect(out).toContain(`OPPONENT ANALYSIS: ${NONE_YET}`);
+  it("halves the 4th comment in a debate", () => {
+    const r = scoreComment({ ...base, rawPoints: 7, isReply: true, priorCount: 3 });
+    expect(r.points).toBe(3);
+    expect(r.halved).toBe(true);
+  });
+
+  it("applies the cap before the halving", () => {
+    // judged 7 -> capped to 5 -> halved to 2
+    const r = scoreComment({ ...base, rawPoints: 7, priorCount: 3 });
+    expect(r.points).toBe(2);
+    expect(r.capped).toBe(true);
+    expect(r.halved).toBe(true);
+  });
+
+  it("never halves below 1", () => {
+    const r = scoreComment({ ...base, rawPoints: 1, isReply: true, priorCount: 9 });
+    expect(r.points).toBe(1);
+  });
+
+  it("clamps a nonsense score from the model into 1-8", () => {
+    expect(scoreComment({ ...base, rawPoints: 99, isReply: true }).points).toBe(8);
+    expect(scoreComment({ ...base, rawPoints: -4, isReply: true }).points).toBe(1);
+    expect(scoreComment({ ...base, rawPoints: NaN, isReply: true }).points).toBe(1);
   });
 });
 
-describe("applyRepeatDecay", () => {
-  it("first REPEAT_GRACE comments (priorCount 0,1,2) score full", () => {
-    expect(applyRepeatDecay(8, 0)).toBe(8);
-    expect(applyRepeatDecay(6, 1)).toBe(6);
-    expect(applyRepeatDecay(5, 2)).toBe(5);
-    expect(REPEAT_GRACE).toBe(3);
+describe("buildAnalystPrompt", () => {
+  it("shows the opponent as (none yet) when their side is empty", () => {
+    const p = buildAnalystPrompt({
+      statement: "Nuclear power is the fastest path to decarbonisation.",
+      side: "for",
+      author: "maya",
+      forAnalysis: null,
+      againstAnalysis: null,
+      ownIsFirst: true,
+      comment: "Baseload matters.",
+      replyTo: null,
+    });
+    expect(p).toContain(`OPPONENT ANALYSIS: ${NONE_YET}`);
+    expect(p).not.toContain("REPLYING TO");
   });
 
-  it("4th comment onward (priorCount >= 3) is halved, floored", () => {
-    expect(applyRepeatDecay(8, 3)).toBe(4);
-    expect(applyRepeatDecay(6, 4)).toBe(3);
-    expect(applyRepeatDecay(5, 5)).toBe(2); // floor(5/2)=2
-    expect(applyRepeatDecay(1, 9)).toBe(1); // floor(1/2)=0 → clamped to 1
-    expect(applyRepeatDecay(2, 3)).toBe(1); // floor(2/2)=1
+  it("includes the exact target comment when replying", () => {
+    const p = buildAnalystPrompt({
+      statement: "Nuclear power is the fastest path to decarbonisation.",
+      side: "against",
+      author: "dev",
+      forAnalysis: "The case for.",
+      againstAnalysis: "The case against.",
+      ownIsFirst: false,
+      comment: "Hydro is baseload too.",
+      replyTo: { username: "maya", content: "Nuclear is the only baseload." },
+    });
+    expect(p).toContain("REPLYING TO @maya");
+    expect(p).toContain("Nuclear is the only baseload.");
   });
 });
