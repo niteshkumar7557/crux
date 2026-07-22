@@ -1,5 +1,6 @@
 import type { Response, Request } from "express";
 import pool from "../db/index.js";
+import config from "../config/index.js";
 import {
   currentSeasonStart,
   seasonNumber,
@@ -200,7 +201,7 @@ export async function getLeaderboardData(req: Request, res: Response) {
                 SELECT user_id, COUNT(*) AS count FROM comments GROUP BY user_id
             ) c ON c.user_id = u.id
             ORDER BY u.logic_score DESC, u.id ASC
-            LIMIT 50;
+            LIMIT ${config.limits.leaderboard_rows};
         `);
 
     res.status(200).json(standings.rows);
@@ -225,7 +226,7 @@ export async function getSeasonLeaderboard(_req: Request, res: Response) {
        LEFT JOIN logic_events le ON le.user_id = u.id
        GROUP BY u.id, u.name, u.username, u.avatar
        ORDER BY "seasonLogic" DESC, u.id ASC
-       LIMIT 50`,
+       LIMIT ${config.limits.leaderboard_rows}`,
       [start],
     );
     res.status(200).json({
@@ -252,7 +253,7 @@ export async function getSitemapData(_req: Request, res: Response) {
   try {
     const r = await pool.query(
       `SELECT id, content, content_keyword, status
-       FROM arguments ORDER BY id DESC LIMIT 5000`,
+       FROM arguments ORDER BY id DESC LIMIT ${config.limits.sitemap_rows}`,
     );
     res.status(200).json(r.rows);
   } catch (err) {

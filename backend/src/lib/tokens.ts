@@ -11,7 +11,7 @@ interface TokenPayload {
 }
 
 export function createAccessToken(payload: TokenPayload) {
-  return jwt.sign(payload, config.jwt_secret as string, { expiresIn: "15m" });
+  return jwt.sign(payload, config.jwt_secret as string, { expiresIn: config.access_token_ttl as any });
 }
 
 export function createRefreshToken(): string {
@@ -22,10 +22,10 @@ export async function saveRefreshTokenToDB(userId: number, token: string) {
   await pool.query(
     `
       INSERT INTO refresh_tokens (user_id,token,expires_at) VALUES (
-        $1, $2, NOW() + INTERVAL '7 days'
+        $1, $2, NOW() + make_interval(days => $3)
       )
     `,
-    [userId, token],
+    [userId, token, config.refresh_token_days],
   );
 }
 

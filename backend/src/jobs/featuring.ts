@@ -1,10 +1,12 @@
 import pool from "../db/index.js";
 import {
   BALANCE_FLOOR,
-  FEATURING_TICK_MS,
   HEAT_WINDOW_HOURS,
   MAIN_STAGE_SIZE,
 } from "./featuring.logic.js";
+import config from "../config/index.js";
+
+const TICK_MS = config.jobs.featuring_tick_ms;
 
 // §11 The stage. Every tick recomputes heat, crowns the Debate of the Day, and
 // refreshes the featured set. All three steps are set-based: the stage is a
@@ -170,7 +172,7 @@ async function tick(): Promise<void> {
 }
 
 export function startFeaturingPoller(): void {
-  console.log("⏱  featuring poller started (5m)");
+  console.log(`⏱  featuring poller started (${TICK_MS / 60_000}m)`);
   void tick();
-  setInterval(() => void tick(), FEATURING_TICK_MS);
+  setInterval(() => void tick(), TICK_MS);
 }

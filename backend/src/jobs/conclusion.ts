@@ -1,8 +1,9 @@
 import pool from "../db/index.js";
+import config from "../config/index.js";
 import { concludeDebate } from "../ai/verdict.js";
 
-const TICK_MS = 60_000;
-const BATCH = 20;
+const TICK_MS = config.jobs.conclusion_tick_ms;
+const BATCH = config.jobs.conclusion_batch;
 let running = false;
 
 async function tick(): Promise<void> {
@@ -32,7 +33,7 @@ async function tick(): Promise<void> {
 }
 
 export function startConclusionPoller(): void {
-  console.log("⏱  conclusion poller started (60s)");
+  console.log(`⏱  conclusion poller started (${TICK_MS / 1000}s)`);
   void tick();
   setInterval(() => void tick(), TICK_MS);
 }

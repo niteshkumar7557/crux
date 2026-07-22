@@ -43,7 +43,7 @@ export async function addNewUser(req: Request, res: Response) {
         .json({ error: "email or username already taken!" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, config.bcrypt_rounds);
 
     const { rows } = await pool.query(
       `INSERT INTO users(username, name, email, hashed_password) VALUES (

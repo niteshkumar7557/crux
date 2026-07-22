@@ -2,6 +2,7 @@ import pool from "../db/index.js";
 import { llmJson } from "./llm.js";
 import { notifyVerdict } from "../notifications/notify.js";
 import { awardLogic } from "../economy/logic.js";
+import config from "../config/index.js";
 import {
   resolveVerdict,
   resolvePayouts,
@@ -21,7 +22,7 @@ winner — the stronger side, or "draw" if genuinely level.
 mvp_username — the single sharpest debater ON THE WINNING SIDE, copied EXACTLY from a winning-side comment author's username below. Use null on a draw, or if no comment deserves it.
 closing — ONE short editorial paragraph (max 60 words) naming the crux of the debate and why it resolved the way it did. This is the public verdict card text.`;
 
-const MAX_COMMENTS = 40;
+const MAX_COMMENTS = config.limits.verdict_comments;
 
 type ParticipantWithName = Participant & { username: string };
 

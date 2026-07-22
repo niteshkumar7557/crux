@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import type { PoolClient } from "pg";
 import { listPresets } from "../lib/avatars.js";
+import config from "../config/index.js";
 
 // Shared base dataset for both seeders:
 //   seed-dev.ts    — small, realistic data for feature development
@@ -154,7 +155,7 @@ export const insertBaseData = async (
 	);
 
 	// One shared hash: bcrypt-ing thousands of passwords individually would take minutes
-	const hashedPassword = await bcrypt.hash("secret", 10);
+	const hashedPassword = await bcrypt.hash("secret", config.bcrypt_rounds);
 
 	const userValues: unknown[] = [];
 	const userRows = USERS.map(([name, username, logicScore, description], i) => {

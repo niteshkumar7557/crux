@@ -95,6 +95,15 @@ cd backend && npm i && npm run db-init && npm run dev    # migrate + seed + star
 cd frontend && npm i && npm run dev                      # Next.js :3000
 ```
 
+- **`backend/.env.example` is the complete list of knobs**, grouped and commented, and
+  `src/config/index.ts` is the only place the app reads `process.env`. Add a setting by
+  putting it in both — never `process.env.X` at a call site. Two documented exceptions:
+  `economy/season.logic.ts` reads `CRUX_SEASON_ZERO` itself (it is a pure module and must not
+  import config, which would drag `dotenv/config` into its unit tests), and `db/seed-stress.ts`
+  reads its own `SEED_*` vars because it is a standalone dev script.
+- **Game rules are not configuration.** The §15 constants live in the four `*.logic.ts`
+  modules, are asserted by unit tests, and are printed to users on `/rules` — an env override
+  would make the UI lie. Change the spec, the code, the test, and the copy together.
 - `npm run db-init` = `db:migrate:dev` + `db:seed:dev` (30 users/statements + comments, all
   passwords `secret`). `db:seed:stress` loads millions of rows for query testing.
 - **To change an existing migration, edit it in place and reset** — `migrate.ts` records each
@@ -231,6 +240,73 @@ them. Idempotent twice over — the already-filed check and `UNIQUE (season_key,
 
 ---
 
+## 6a. Changing a §15 constant — the checklist
+
+`docs/game-theory.md` §15 is the table of every tunable number in the game. Each one is
+**deliberately not an env var** (see §3): it is asserted by a unit test and, in most cases,
+printed to users as prose. So changing one is a small edit in four or five places at once, and
+missing the copy is how the product ends up lying to its users.
+
+**The rule of thumb, in order, every time:**
+
+1. **`docs/game-theory.md`** — §15's table *and* the prose section that explains it (§3/§6/§7/
+   §8/§9/§10/§11). The spec is the source of truth; change it first.
+2. **The constant** in its `*.logic.ts` module.
+3. **Its unit test** — several assert the literal value (`expect(DRAW_MARGIN).toBe(5)`), so a
+   changed constant *fails the suite by design*. That failure is the reminder, not a bug.
+4. **Every UI surface that states the number** — §14 requires these, and none of them is
+   computed from the constant unless the table below says so.
+5. **Any LLM prompt that encodes it** — the model is told the score bands in prose.
+
+### Where each constant actually lives
+
+| §15 constant | Value | Source of truth | Also change |
+|---|---|---|---|
+| **Debate duration** | 48h | *no constant* — `INTERVAL '48 hours'` inline in `controllers/argument.controller.ts` (insert) | `db/seed-data.ts` (same literal); `/rules` rule 1 copy. Consider extracting to a constant first. |
+| **Draw threshold** | 5 | `ai/verdict.logic.ts` `DRAW_MARGIN` | `verdict.logic.test.ts`; **`_components/argument/ArgumentProbability.tsx` has its own `DRAW_MARGIN = 5`** and derives the draw band from it; `/rules` rule 5; `VerdictBanner.tsx` payout copy |
+| **Score range** | 1–8 | `ai/analyst.logic.ts` `SCORE_MIN`/`SCORE_MAX` | `analyst.logic.test.ts`; the **analyst prompt** in `comment.controller.ts` (band descriptions `7-8`/`5-6`/`3-4`/`1-2` and `6-8`/`4-5`/`1-3`); `/rules` rule 3 |
+| **Standalone cap** | 5 | `ai/analyst.logic.ts` `STANDALONE_CAP` | `analyst.logic.test.ts`; **`_components/ui/awardCopy.ts` has its own `STANDALONE_CAP = 5`** + `awardCopy.test.ts`; the composer hint in `ArgumentInput.tsx`; `/rules` rule 3 |
+| **Full-value comments** | 3 | `ai/analyst.logic.ts` `FULL_VALUE_COMMENTS` | `analyst.logic.test.ts`; **`ArgumentInput.tsx` has its own `FULL_VALUE_COMMENTS = 3`** for the counter; `awardCopy.ts` halving line; `/rules` rule 4 |
+| **Halving floor** | 1 | inline `Math.max(1, …)` in `analyst.logic.ts` `scoreComment` | `analyst.logic.test.ts` ("never halves below 1"); `/rules` rule 4 |
+| **Like bonus** | +2 | *no constant* — inline in `controllers/like.controller.ts` | nothing states it in the UI today |
+| **Abuse penalty** | −4 | *no constant* — inline in `controllers/comment.controller.ts` | the composer fine print in `ArgumentInput.tsx` ("costs 4 logic") |
+| **MVP bonus** | +25 | `ai/verdict.logic.ts` `MVP_BONUS` | `verdict.logic.test.ts`; `VerdictBanner.tsx`; `/rules` rule 6 |
+| **Win bonus** | +10 | `ai/verdict.logic.ts` `WIN_BONUS` | `verdict.logic.test.ts`; `VerdictBanner.tsx`; `/rules` rule 6 |
+| **Loss penalty** | −5 season-only | `ai/verdict.logic.ts` `LOSS_PENALTY` | `verdict.logic.test.ts`; `VerdictBanner.tsx`; **`SideLockConfirm.tsx`** (§14 needs it before *and* after); `/rules` rule 6 |
+| **Author bonus** | +5 | `ai/verdict.logic.ts` `AUTHOR_BONUS` | `verdict.logic.test.ts`; `VerdictBanner.tsx`; `StatementForm.tsx`; `/rules` rule 6 |
+| **Walkover payout** | 0 | `ai/verdict.logic.ts` `walkoverPayout()` | `verdict.logic.test.ts`; the walkover banner in `DebateView.tsx`; `VerdictBanner.tsx`; `StatementForm.tsx`; `/rules` rule 6 |
+| **Season length** | 1 calendar month | `economy/season.logic.ts` (the whole module) | `season.logic.test.ts`; the leaderboard strip and profile season card |
+| **Season awards** | top 3 | `jobs/seasonRollover.logic.ts` `TITLES` / `FRAMES` | `seasonRollover.logic.test.ts`; `_components/profile/SeasonTitles.tsx` (`FRAME_BADGE`/`FRAME_RING` maps must gain a key per new frame); the leaderboard prize line |
+| **Main Stage size** | ~4 | `jobs/featuring.logic.ts` `MAIN_STAGE_SIZE` | `featuring.logic.test.ts`. Note `getSecondaryCardsData` in `arena.controller.ts` has its own `LIMIT 6` — raise it or the extra cards never render |
+| **Debate of the Day** | 1/day | `jobs/featuring.ts` `rotateDotd()` (the UTC-day guard) | nothing else; `getPrimaryCardData` assumes exactly one |
+| **Tier thresholds** | 0/50/100/150/200 | `controllers/profile.controller.ts` `convertLogicScore()` | **`frontend/app/_utils/logicScore.ts` is a full duplicate of the same ladder** — change both or the profile and the cards disagree |
+
+### The four values that exist in two places
+
+These are duplicated across the backend/frontend boundary on purpose — the frontend cannot
+import backend modules — and they are the ones that silently drift:
+
+- `DRAW_MARGIN` → `ai/verdict.logic.ts` **and** `ArgumentProbability.tsx`
+- `STANDALONE_CAP` → `ai/analyst.logic.ts` **and** `ui/awardCopy.ts`
+- `FULL_VALUE_COMMENTS` → `ai/analyst.logic.ts` **and** `ArgumentInput.tsx`
+- the tier ladder → `profile.controller.ts` **and** `_utils/logicScore.ts`
+
+A drift here is invisible to both test suites — each side stays internally consistent while the
+UI states a different rule than the server enforces. Grep the number across both packages
+before you call the change done:
+
+```bash
+grep -rn "<the old value>" backend/src frontend/app --include="*.ts" --include="*.tsx"
+```
+
+### Finally
+
+Run all six gates. A red `*.logic.test.ts` after a deliberate change means step 3 — update the
+assertion to the new value; it is doing its job. Then re-read `/rules` in a browser and confirm
+the page and the code now say the same thing.
+
+---
+
 ## 7. The frontend (Next.js App Router)
 
 - **Server components by default** fetch via `axios.server.ts` (`serverApi`, SSR/build-time).
@@ -268,7 +344,9 @@ them. Idempotent twice over — the already-filed check and `UNIQUE (season_key,
 | Curate the stage by hand | `controllers/admin.controller.ts` + `_components/arena/PinControl.tsx` |
 | Add an API endpoint | a `routes/*.route.ts` + a `controllers/*.controller.ts`, mount in `app.ts` |
 | Change the v1 schema | **edit the existing migration in place**, then `db:reset:dev && db-init` |
+| Add or change a setting | `src/config/index.ts` **and** `backend/.env.example` — both, always |
 | Swap the LLM provider | env only (`LLM_BASE_URL`/`LLM_API_KEY`/`LLM_MODEL_*`) — no code change |
+| Retune a poller interval or a limit | env only (`*_TICK_MS`, `*_ROWS`, `VERDICT_MAX_COMMENTS`, …) |
 | Change the debate page UI | `_components/argument/DebateView.tsx` + its children |
 | Change what a pop-up/banner says | `_components/ui/awardCopy.ts` (+ test) and the §14 surfaces in §7 |
 | Add a notification type | `notifications/messages.ts` (+ test) + `notifications/notify.ts` |

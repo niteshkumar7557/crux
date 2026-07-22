@@ -8,6 +8,7 @@ import {
   uploadAvatar,
 } from "../controllers/avatar.controller.js";
 import { authMiddleware } from "../middlewares/auth.js";
+import config from "../config/index.js";
 
 const UNSUPPORTED_TYPE = "UNSUPPORTED_IMAGE_TYPE";
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -15,7 +16,7 @@ const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 // Memory storage: the raw upload never touches disk — sharp gets the buffer
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: config.limits.avatar_upload_mb * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
       return cb(new Error(UNSUPPORTED_TYPE));

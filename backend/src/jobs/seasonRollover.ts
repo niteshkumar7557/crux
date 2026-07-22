@@ -2,6 +2,7 @@ import pool from "../db/index.js";
 import { awardsForSeason, previousSeason } from "./seasonRollover.logic.js";
 import { createNotification } from "../notifications/notify.js";
 import { seasonAwardMessage } from "../notifications/messages.js";
+import config from "../config/index.js";
 
 // §10 Season end. Hourly is plenty — the trigger is a month boundary, and the
 // only cost of firing an hour late is an hour's delay on a badge.
@@ -11,7 +12,7 @@ import { seasonAwardMessage } from "../notifications/messages.js";
 // ON CONFLICT (season_key, rank) besides. It is safe to run every hour forever,
 // and safe to run twice at once.
 
-const TICK_MS = 60 * 60_000;
+const TICK_MS = config.jobs.season_rollover_tick_ms;
 let running = false;
 
 async function tick(): Promise<void> {
@@ -97,7 +98,7 @@ async function tick(): Promise<void> {
 }
 
 export function startSeasonRolloverPoller(): void {
-  console.log("⏱  season rollover poller started (1h)");
+  console.log(`⏱  season rollover poller started (${TICK_MS / 60_000}m)`);
   void tick();
   setInterval(() => void tick(), TICK_MS);
 }

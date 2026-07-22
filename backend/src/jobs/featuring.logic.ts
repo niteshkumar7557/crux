@@ -10,9 +10,6 @@ export const MAIN_STAGE_SIZE = 4;
 /** Look-back window for comment velocity. An eighth of a debate's 48h life. */
 export const HEAT_WINDOW_HOURS = 6;
 
-/** How often the stage is recomputed. */
-export const FEATURING_TICK_MS = 5 * 60_000;
-
 /**
  * Floor on the balance factor, so a one-sided debate still ranks above dead.
  * Deliberately low: §11 requires a 50/50 fight at 10 comments to outrank a
