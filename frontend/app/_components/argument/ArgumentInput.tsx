@@ -7,37 +7,25 @@ import api from "@/app/axios";
 import { isAxiosError } from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { LuTriangleAlert, LuX, LuSparkles } from "react-icons/lu";
+import { useEffect, useState, type ReactNode } from "react";
+import { LuTriangleAlert, LuX } from "react-icons/lu";
 import Button from "@/app/_components/ui/Button";
-import { gsap, MOTION_OK } from "@/app/_utils/gsap";
 import { useReplyTarget } from "./ReplyContext";
+import PointsPopup from "../ui/PointsPopup";
+import SideLockConfirm from "./SideLockConfirm";
+import type { Award } from "../ui/awardCopy";
 
 type Notice = { title: string; body: ReactNode };
 
-// §14: what a posted comment earned — the body of POST /comment/:side/:id.
-interface Award {
-  points: number;
-  judged: number;
-  capped: boolean;
-  halved: boolean;
-  isReply: boolean;
-  replyToUsername: string | null;
-  seasonLogic: number;
-  seasonRank: number;
-}
+/** A post held back until the user confirms the side lock (§14). */
+type Pending = {
+  urlSide: string;
+  side: "for" | "against";
+  replyToCommentId: number | null;
+};
 
-// The one line that explains the number. When a modifier bit, the arithmetic
-// is shown rather than hidden (§14) — the rule gets taught in the moment.
-function awardReason(a: Award): string {
-  const mods: string[] = [];
-  if (a.capped) mods.push("capped at 5 (standalone)");
-  if (a.halved) mods.push("halved — 4th+ comment here");
-  if (mods.length > 0) return `Judged ${a.judged} · ${mods.join(" · ")}`;
-  if (a.isReply && a.replyToUsername)
-    return `Targeted rebuttal of @${a.replyToUsername} — full range`;
-  return `Full value — judged ${a.judged}`;
-}
+/** §15: comments per debate at full value, before the halving. */
+const FULL_VALUE_COMMENTS = 3;
 
 const ArgumentInput = ({
   argumentId,
@@ -52,7 +40,7 @@ const ArgumentInput = ({
   const [input, setInput] = useState("");
   const [notice, setNotice] = useState<Notice | null>(null);
   const [award, setAward] = useState<Award | null>(null);
-  const awardRef = useRef<HTMLDivElement>(null);
+  const [pending, setPending] = useState<Pending | null>(null);
   const { target, setTarget } = useReplyTarget();
 
   const router = useRouter();
@@ -64,21 +52,6 @@ const ArgumentInput = ({
     }
     fetchUser();
   }, []);
-
-  // Pop the award in, then clear it after a few seconds. It survives the
-  // router.refresh() that reloads the new comment because it is client state.
-  useEffect(() => {
-    if (!award) return;
-    if (awardRef.current && window.matchMedia(MOTION_OK).matches) {
-      gsap.fromTo(
-        awardRef.current,
-        { opacity: 0, y: 16, scale: 0.96 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.35, ease: "power3.out" },
-      );
-    }
-    const t = setTimeout(() => setAward(null), 6000);
-    return () => clearTimeout(t);
-  }, [award]);
 
   // Concluded arenas are read-only — shown to everyone, logged in or not.
   if (status === "concluded") {
@@ -98,6 +71,24 @@ const ArgumentInput = ({
   const lockedSide =
     commentSides.find((c) => c.post_user_id === user.id)?.side ?? null;
 
+  // §6/§14: comments already made here, so the composer can say what the next
+  // one is worth before it is written.
+  const priorCount = commentSides.filter(
+    (c) => c.post_user_id === user.id,
+  ).length;
+  const halfValue = priorCount >= FULL_VALUE_COMMENTS;
+  const counterText = halfValue
+    ? `Half value — you've already made ${FULL_VALUE_COMMENTS} comments here`
+    : `Comment ${priorCount + 1} of ${FULL_VALUE_COMMENTS} at full value`;
+
+  // The standalone cap only bites when there is somebody to have replied to
+  // (§6). Once locked we know which side is the opponent's, so the hint can be
+  // withheld rather than promise a penalty that will not apply.
+  const opposingHasComments = lockedSide
+    ? commentSides.some((c) => c.side !== lockedSide)
+    : commentSides.length > 0;
+  const showCapHint = !target && opposingHasComments;
+
   const abuseNotice: Notice = {
     title: "Flagged for Abuse",
     body: (
@@ -113,6 +104,22 @@ const ArgumentInput = ({
       </>
     ),
   };
+
+  // §14: the lock is confirmed BEFORE it happens, never discovered after. A
+  // reply commits you too (§5 — to the side opposite the comment you answer),
+  // so it routes through the same gate rather than sneaking past it.
+  function requestPost(
+    urlSide: string,
+    side: "for" | "against",
+    replyToCommentId: number | null,
+  ) {
+    if (input.length === 0) return;
+    if (lockedSide === null) {
+      setPending({ urlSide, side, replyToCommentId });
+      return;
+    }
+    submit(urlSide, replyToCommentId);
+  }
 
   // One poster for standalone comments and cross-side replies alike. For a
   // reply the side is implied by the target (§5): the URL carries the opposite
@@ -186,6 +193,41 @@ const ArgumentInput = ({
           </button>
         </div>
       )}
+      {/* §14: everything that changes the value of the next comment, stated
+          while it is being written — never discovered afterwards. */}
+      <div className="max-w-screen-2xl mx-auto mb-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+        {lockedSide && (
+          <span
+            className={`font-label text-[10px] uppercase tracking-[0.15em] ${
+              lockedSide === "for" ? "text-primary" : "text-secondary"
+            }`}
+          >
+            You&rsquo;re arguing {lockedSide === "for" ? "FOR" : "AGAINST"}{" "}
+            <span className="text-outline normal-case tracking-normal font-body ml-2">
+              — you can&rsquo;t argue{" "}
+              {lockedSide === "for" ? "AGAINST" : "FOR"} in this debate.
+            </span>
+          </span>
+        )}
+        <span
+          className={`font-label text-[10px] uppercase tracking-[0.15em] ${
+            halfValue ? "text-tertiary" : "text-outline"
+          }`}
+        >
+          {counterText}
+        </span>
+        {showCapHint && (
+          <span className="font-body text-[11px] text-outline">
+            Standalone comments cap at 5 logic. Reply to an opponent to earn up
+            to 8.
+          </span>
+        )}
+        {/* §14: the abuse penalty is fine print on the composer as well as a
+            rejection message — stated before it can bite, not only after. */}
+        <span className="font-body text-[11px] text-outline/70">
+          Abuse is flagged, discards the comment, and costs 4 logic.
+        </span>
+      </div>
       <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center gap-3 md:gap-6">
         <div className="flex-1 w-full relative">
           <input
@@ -206,8 +248,9 @@ const ArgumentInput = ({
               size="bare"
               className="flex-1 md:flex-none px-2 py-3 md:px-8 md:py-4 text-[10px] md:text-xs"
               onClick={() =>
-                submit(
+                requestPost(
                   target.side === "for" ? "negative" : "affirmative",
+                  target.side === "for" ? "against" : "for",
                   target.commentId,
                 )
               }
@@ -223,10 +266,10 @@ const ArgumentInput = ({
                 disabled={lockedSide === "against"}
                 title={
                   lockedSide === "against"
-                    ? "You've committed to the Negative side of this debate."
+                    ? "You've committed to AGAINST in this debate."
                     : undefined
                 }
-                onClick={() => submit("affirmative", null)}
+                onClick={() => requestPost("affirmative", "for", null)}
               >
                 Support Affirmative
               </Button>
@@ -237,10 +280,10 @@ const ArgumentInput = ({
                 disabled={lockedSide === "for"}
                 title={
                   lockedSide === "for"
-                    ? "You've committed to the Affirmative side of this debate."
+                    ? "You've committed to FOR in this debate."
                     : undefined
                 }
-                onClick={() => submit("negative", null)}
+                onClick={() => requestPost("negative", "against", null)}
               >
                 Support Negative
               </Button>
@@ -248,44 +291,20 @@ const ArgumentInput = ({
           )}
         </div>
       </div>
+      {/* §14 the side lock, confirmed before it binds. */}
+      {pending && (
+        <SideLockConfirm
+          side={pending.side}
+          onCancel={() => setPending(null)}
+          onConfirm={() => {
+            setPending(null);
+            submit(pending.urlSide, pending.replyToCommentId);
+          }}
+        />
+      )}
       {/* §14 the points pop-up — what you earned and exactly why. */}
       {award && (
-        <div
-          ref={awardRef}
-          className="fixed bottom-32 right-6 z-60 max-w-xs bg-surface-container-lowest border-l-4 border-primary p-5 shadow-glow-primary flex items-start gap-4"
-        >
-          <div className="shrink-0 mt-1">
-            <LuSparkles className="text-primary text-xl" />
-          </div>
-          <div className="grow">
-            <div className="flex items-baseline gap-2">
-              <span className="font-headline text-3xl font-bold text-primary leading-none">
-                +{award.points}
-              </span>
-              <span className="font-label text-[10px] uppercase tracking-[0.2em] text-outline">
-                logic
-              </span>
-            </div>
-            <p className="font-body text-xs leading-relaxed text-on-surface-variant mt-2">
-              {awardReason(award)}
-            </p>
-            {award.capped && (
-              <p className="font-body text-xs leading-relaxed text-outline mt-1">
-                Reply to an opponent next time to earn up to 8.
-              </p>
-            )}
-            <p className="font-label text-[10px] uppercase tracking-[0.15em] text-outline mt-3 border-t border-outline-variant/20 pt-2">
-              Season total {award.seasonLogic} · Rank #{award.seasonRank}
-            </p>
-          </div>
-          <button
-            className="shrink-0 text-outline hover:text-white cursor-pointer"
-            aria-label="Dismiss"
-            onClick={() => setAward(null)}
-          >
-            <LuX className="text-sm" />
-          </button>
-        </div>
+        <PointsPopup award={award} onDismiss={() => setAward(null)} />
       )}
       {notice && (
         <div className="fixed bottom-32 right-6 z-60 max-w-sm bg-surface-container-lowest border-l-4 border-secondary p-4 shadow-glow-secondary flex items-start gap-4">

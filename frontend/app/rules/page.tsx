@@ -6,30 +6,33 @@ export const metadata: Metadata = {
   title: "Arena Rules",
 };
 
+// §14: "A rule that is not surfaced is a bug." Every number below is the real
+// one, taken from §15 of the game spec. If a number changes there, it changes
+// here — this page is a disclosure, not marketing copy.
 const RULES = [
   {
-    title: "Attack the argument, never the person",
-    body: "Ad hominem, passive aggression, and abuse are flagged before they reach the arena — and they cost you Logic Score.",
+    title: "Every debate ends in 48 hours",
+    body: "The clock starts the moment a statement passes the Arbiter and goes live. There are no extensions and no early closes. At zero the arena locks read-only and an AI judge delivers a winner, a margin, an MVP, and a written verdict.",
   },
   {
-    title: "Steel-man your opponent",
-    body: "Represent the other side at its strongest, not its weakest. The arena rewards debaters who engage the best version of the counter-case.",
+    title: "Your first comment locks your side",
+    body: "Comment once and you are committed to that side for the rest of that debate — you cannot argue the other one. Replying locks you too, to the side opposite the comment you answer. The lock is per debate: take FOR in one and AGAINST in the next.",
   },
   {
-    title: "Evidence over volume",
-    body: "The probability bar moves on rigor and logical consistency, not on how often or how loudly you post.",
+    title: "Reply to earn the most",
+    body: "Every comment is scored 1–8 on how much it moves the argument. A standalone comment is capped at 5, because it engages nothing specific. A reply to a named opponent reaches the full 8. The exception: while the opposing side is still empty there is nothing to reply to, so the cap does not apply.",
   },
   {
-    title: "Pick a side",
-    body: "Every argument supports the affirmative or the negative. There is no neutral ground in the arena.",
+    title: "Three comments at full value",
+    body: "Your first three comments in a debate score in full. The fourth and every one after is halved, with a floor of 1. Volume never beats sharpness — flooding a debate is a losing strategy by arithmetic.",
   },
   {
-    title: "The Arbiter scores, the arena decides",
-    body: "Crux AI checks every claim for eligibility and every argument for fallacies. Its verdicts feed the debate — the debate settles it.",
+    title: "The margin decides it",
+    body: "The judge splits the debate into two percentages. More than 5 points apart and that side wins; 5 or less is a draw. The MVP is the single best debater on the winning side — there is no MVP in a draw, because there is no winning side to take one from.",
   },
   {
-    title: "Your reputation is earned, not claimed",
-    body: "Logic Score rises with sound arguments and falls with fallacies and flags. Grades from B to M are recalculated as you debate.",
+    title: "Winning pays, losing costs the month",
+    body: "MVP earns +25, everyone else on the winning side +10, and the statement's author +5 for producing a real debate. A loss costs 5 points from your season score only — your all-time logic never falls. If one side never argues, the debate concludes unopposed and nobody scores at all.",
   },
 ];
 
@@ -44,8 +47,9 @@ const Rules = () => {
           Rules of Engagement
         </h1>
         <p className="mt-4 text-on-surface-variant font-body text-lg max-w-xl">
-          Six rules keep the arena sharp. Break them and the Arbiter breaks
-          you.
+          Six rules, with their real numbers. Nothing here is discovered by
+          being penalised by it — you go in knowing exactly what every move is
+          worth.
         </p>
       </div>
 

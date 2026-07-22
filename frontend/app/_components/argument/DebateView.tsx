@@ -72,6 +72,22 @@ const DebateView = async ({ id }: { id: number }) => {
 
   const canonicalUrl = `${SITE}/debate/${debateSlug(String(row.content), Number(row.id))}`;
 
+  // §7/§14 walkover risk. If a side is still empty at the deadline the debate
+  // concludes unopposed and NOBODY scores — the author included. That is a
+  // rule people must be able to act on while it still applies, not read about
+  // in a verdict.
+  const allComments: { side: "for" | "against" }[] = comments.data.comments ?? [];
+  const forCount = allComments.filter((c) => c.side === "for").length;
+  const againstCount = allComments.filter((c) => c.side === "against").length;
+  const walkoverRisk =
+    row.status === "live" && (forCount === 0 || againstCount === 0);
+  const emptySide =
+    forCount === 0 && againstCount === 0
+      ? null // neither side has spoken yet
+      : forCount === 0
+        ? "FOR"
+        : "AGAINST";
+
   return (
     <>
       <script
@@ -99,6 +115,20 @@ const DebateView = async ({ id }: { id: number }) => {
             pinned={Boolean(row.pinned)}
             isDotd={Boolean(row.is_dotd)}
           />
+          {walkoverRisk && (
+            <div className="mb-8 border-l-4 border-tertiary bg-surface-container-low p-5">
+              <span className="font-label text-[10px] uppercase tracking-[0.2em] text-tertiary block mb-2">
+                Walkover risk
+              </span>
+              <p className="font-body text-sm text-on-surface-variant leading-relaxed">
+                {emptySide
+                  ? `Nobody has argued ${emptySide} yet. If nobody does, this debate concludes unopposed and `
+                  : "Nobody has argued this debate yet. If either side is still empty at the deadline, it concludes unopposed and "}
+                <span className="text-on-surface font-bold">nobody scores</span>
+                {" — including the author."}
+              </p>
+            </div>
+          )}
           <ArgumentArena aiAnalysis={aiAnalysis} comments={comments.data} />
         </section>
         <ArgumentInput

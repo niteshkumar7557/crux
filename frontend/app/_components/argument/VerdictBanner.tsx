@@ -31,6 +31,23 @@ const RULINGS: Record<
   },
 };
 
+/**
+ * §14 the payout breakdown. Two rows of the transparency table land here: the
+ * season-only loss penalty must be stated "before AND after" (the side-lock
+ * confirmation is the before), and "MVP comes from the winning side" has to be
+ * on the verdict card as well as the rules page — otherwise a draw with no MVP
+ * just looks like the judge forgot.
+ */
+function payoutBreakdown(winner: Winner): string {
+  if (winner === "walkover") {
+    return "One side never argued, so this concluded unopposed: nobody scored anything — no logic, no record, not even the author's bonus.";
+  }
+  if (winner === "draw") {
+    return "A draw pays nothing to either side, and names no MVP — there is no winning side to take one from. The statement's author still earns +5 logic.";
+  }
+  return "Winning side +10 logic, and +25 instead for the MVP — always chosen from the winning side. The author earns +5. The losing side loses 5 points from their season score only; all-time logic never falls.";
+}
+
 const VerdictBanner = ({
   winner,
   margin,
@@ -86,6 +103,10 @@ const VerdictBanner = ({
           {verdictText}
         </p>
       )}
+
+      <p className="mt-6 pt-4 border-t border-outline-variant/20 font-body text-[11px] text-outline leading-relaxed max-w-3xl">
+        {payoutBreakdown(winner)}
+      </p>
     </div>
   );
 };

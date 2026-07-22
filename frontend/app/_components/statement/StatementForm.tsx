@@ -281,6 +281,20 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
 						{composeNotice}
 					</p>
 				)}
+				{/* §14: the author bonus, and the condition attached to it, stated
+				    before posting rather than discovered at the verdict. */}
+				<p className="font-body text-[11px] text-outline leading-relaxed">
+					You earn +5 logic when your statement produces a real debate —
+					both sides must argue. If one side is still empty at the deadline it
+					concludes unopposed and nobody scores, you included.{" "}
+					<Link
+						href="/rules"
+						className="text-primary underline underline-offset-2 hover:text-white"
+					>
+						Read the rules
+					</Link>
+					.
+				</p>
 				<div className="pt-6 border-t border-outline-variant/30 flex flex-col md:flex-row gap-6 items-center justify-between">
 					<div className="flex items-center gap-4 text-on-surface-variant">
 						<div className="flex">
