@@ -89,6 +89,16 @@ export async function getProfileDataById(req: Request, res: Response) {
       daysLeft: daysLeftInSeason(),
     };
 
+    // §10: permanent, stacking season titles — every one ever earned. Newest
+    // first, so the most recent season leads the row.
+    const titlesRes = await pool.query(
+      `SELECT season_key AS "seasonKey", season_number AS "seasonNumber",
+              rank, title, frame
+       FROM season_awards WHERE user_id = $1
+       ORDER BY season_number DESC, rank ASC`,
+      [id],
+    );
+
     const userHeadInfo = {
       name: data1.rows[0].name,
       username: data1.rows[0].username,
@@ -99,6 +109,7 @@ export async function getProfileDataById(req: Request, res: Response) {
       globalRank: globalRank,
       record: record,
       season: season,
+      titles: titlesRes.rows,
     };
 
     const data2 = await pool.query(

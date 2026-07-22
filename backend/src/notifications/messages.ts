@@ -20,3 +20,11 @@ export function replyMessage(actor: string): string {
 export function oppositionMessage(actor: string): string {
   return `@${actor} joined the opposing side of your debate.`;
 }
+
+/**
+ * §10: a season closed and you placed. The title is the only reward that
+ * survives a season, so the copy says "permanently" out loud.
+ */
+export function seasonAwardMessage(title: string, rank: number): string {
+  return `You finished #${rank} last season — "${title}" is yours, permanently.`;
+}

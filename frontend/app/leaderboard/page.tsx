@@ -132,7 +132,11 @@ interface SeasonRow {
 
 const Leaderboard = async () => {
   let standings: LeaderboardRow[] = [];
-  let season: { season: number; rows: SeasonRow[] } = { season: 0, rows: [] };
+  let season: { season: number; daysLeft: number; rows: SeasonRow[] } = {
+    season: 0,
+    daysLeft: 0,
+    rows: [],
+  };
   try {
     const [all, seasonRes] = await Promise.all([
       serverApi.get("/arena/leaderboard"),
@@ -178,16 +182,24 @@ const Leaderboard = async () => {
         </div>
       </header>
 
-      {season.rows.length > 0 && (
-        <section data-reveal className="mb-16">
-          <div className="flex items-baseline gap-3 mb-4 border-b border-outline-variant/30 pb-2">
-            <h2 className="font-label text-sm uppercase tracking-[0.25em] text-primary">
-              This Season
-            </h2>
-            <span className="font-label text-[10px] uppercase tracking-widest text-outline">
-              Season {season.season} · logic earned this month — everyone starts at 0
-            </span>
-          </div>
+      {/* §14: the season window and its prize are stated unconditionally — an
+          empty board is exactly when a newcomer most needs to know the month is
+          still winnable. */}
+      <section data-reveal className="mb-16">
+        <div className="flex items-baseline gap-3 mb-2 border-b border-outline-variant/30 pb-2">
+          <h2 className="font-label text-sm uppercase tracking-[0.25em] text-primary">
+            This Season
+          </h2>
+          <span className="font-label text-[10px] uppercase tracking-widest text-outline">
+            Season {season.season} · {season.daysLeft}{" "}
+            {season.daysLeft === 1 ? "day" : "days"} left · logic earned this
+            month — everyone starts at 0
+          </span>
+        </div>
+        <p className="font-body text-sm text-on-surface-variant mb-4">
+          The top 3 on the 1st earn a permanent title and avatar frame.
+        </p>
+        {season.rows.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">
             {season.rows.slice(0, 10).map((r) => (
               <Link
@@ -210,8 +222,12 @@ const Leaderboard = async () => {
               </Link>
             ))}
           </div>
-        </section>
-      )}
+        ) : (
+          <p className="font-body text-sm text-outline italic">
+            Nobody has scored yet this season. The board is wide open.
+          </p>
+        )}
+      </section>
 
       {standings.length === 0 ? (
         <div className="bg-surface-container-low border-l-2 border-outline-variant/30 p-12 text-center">
