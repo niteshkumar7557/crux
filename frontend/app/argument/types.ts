@@ -6,9 +6,14 @@ export interface UserArgumentCardProps {
   grade: string;
   comment: string;
   likes: number;
-  user_id?: number;
+  user_id?: number; // the viewer's id (undefined when logged out)
   comment_id: number;
   post_user_id: number;
+  // §5: the opposing comment this one answers, or null for a standalone.
+  replyTo: { username: string; content: string } | null;
+  replyCount: number; // "↳ N replies" shown on the target comment
+  firstReplyId: number | null; // scroll anchor for the replies link
+  viewerLockedSide: "for" | "against" | null; // gates the cross-side Reply button
 }
 
 export interface ArgumentHeaderProps {

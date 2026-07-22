@@ -1,6 +1,7 @@
 import ArgumentArena from "./ArgumentArena";
 import ArgumentHeader from "./ArgumentHeader";
 import ArgumentInput from "./ArgumentInput";
+import { ReplyProvider } from "./ReplyContext";
 import serverApi from "@/app/axios.server";
 import { isAxiosError } from "axios";
 import { notFound } from "next/navigation";
@@ -86,24 +87,28 @@ const DebateView = async ({ id }: { id: number }) => {
         }}
       />
       <div className="absolute inset-0 perspective-grid -z-10 pointer-events-none"></div>
-      <section className="max-w-screen-2xl mx-auto px-6 pt-12 pb-16">
-        <ArgumentHeader
-          argumentHeaderData={argumentHeaderData}
-          matchState={matchState}
-          shareUrl={canonicalUrl}
+      {/* §5: one provider over the arena and the composer, so a Reply button in
+          a column can arm the composer at the bottom without prop-drilling. */}
+      <ReplyProvider>
+        <section className="max-w-screen-2xl mx-auto px-6 pt-12 pb-16">
+          <ArgumentHeader
+            argumentHeaderData={argumentHeaderData}
+            matchState={matchState}
+            shareUrl={canonicalUrl}
+          />
+          <ArgumentArena aiAnalysis={aiAnalysis} comments={comments.data} />
+        </section>
+        <ArgumentInput
+          argumentId={id}
+          status={matchState.status}
+          commentSides={(comments.data.comments ?? []).map(
+            (c: { post_user_id: number; side: "for" | "against" }) => ({
+              post_user_id: c.post_user_id,
+              side: c.side,
+            }),
+          )}
         />
-        <ArgumentArena aiAnalysis={aiAnalysis} comments={comments.data} />
-      </section>
-      <ArgumentInput
-        argumentId={id}
-        status={matchState.status}
-        commentSides={(comments.data.comments ?? []).map(
-          (c: { post_user_id: number; side: "for" | "against" }) => ({
-            post_user_id: c.post_user_id,
-            side: c.side,
-          }),
-        )}
-      />
+      </ReplyProvider>
     </>
   );
 };

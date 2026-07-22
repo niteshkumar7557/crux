@@ -76,20 +76,8 @@ const CaseColumn = ({
         </div>
       </div>
       <div className="flex flex-col gap-10">
-        {comments.map((e, i) => (
-          <UserArgumentCard
-            key={i}
-            side={e.side}
-            reputation={e.reputation}
-            username={e.username}
-            avatar={e.avatar}
-            grade={e.grade}
-            comment={e.comment}
-            likes={e.likes}
-            user_id={e.user_id}
-            comment_id={e.comment_id}
-            post_user_id={e.post_user_id}
-          />
+        {comments.map((e) => (
+          <UserArgumentCard key={e.comment_id} {...e} />
         ))}
       </div>
     </div>

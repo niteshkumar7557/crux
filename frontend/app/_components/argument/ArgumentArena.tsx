@@ -16,6 +16,9 @@ interface RawComment {
   content: string;
   likes: number;
   post_user_id: number;
+  reply_to_comment_id: number | null;
+  reply_to_username: string | null;
+  reply_to_content: string | null;
 }
 
 const ArgumentArena = ({
@@ -63,11 +66,34 @@ const ArgumentArena = ({
     { scope: arenaRef },
   );
 
+  // §5: a reply targets a specific opposing comment. Count replies per target
+  // (the "↳ N replies" badge) and remember the earliest one (the scroll anchor).
+  // Comments arrive chronologically, so the first reply seen for a target wins.
+  const replyCounts = new Map<number, number>();
+  const firstReplyIds = new Map<number, number>();
+  comments.comments.forEach((c) => {
+    if (c.reply_to_comment_id !== null) {
+      replyCounts.set(
+        c.reply_to_comment_id,
+        (replyCounts.get(c.reply_to_comment_id) ?? 0) + 1,
+      );
+      if (!firstReplyIds.has(c.reply_to_comment_id)) {
+        firstReplyIds.set(c.reply_to_comment_id, c.comment_id);
+      }
+    }
+  });
+
+  // §4: the viewer's locked side, read off their own comments. Gates the
+  // cross-side-only Reply button on each card.
+  const viewerLockedSide: "for" | "against" | null = user
+    ? (comments.comments.find((c) => c.post_user_id === user.id)?.side ?? null)
+    : null;
+
   const forCaseComments: UserArgumentCardProps[] = [];
   const againstCaseComments: UserArgumentCardProps[] = [];
   comments.comments.forEach((e) => {
     const logicStats = convertLogicScore(e.logic_score);
-    const arenaComment = {
+    const arenaComment: UserArgumentCardProps = {
       side: e.side,
       reputation: logicStats.reputation,
       username: e.username,
@@ -78,6 +104,16 @@ const ArgumentArena = ({
       user_id: user?.id,
       comment_id: e.comment_id,
       post_user_id: e.post_user_id,
+      replyTo:
+        e.reply_to_comment_id !== null
+          ? {
+              username: e.reply_to_username ?? "",
+              content: e.reply_to_content ?? "",
+            }
+          : null,
+      replyCount: replyCounts.get(e.comment_id) ?? 0,
+      firstReplyId: firstReplyIds.get(e.comment_id) ?? null,
+      viewerLockedSide,
     };
     if (e.side === "for") {
       forCaseComments.push(arenaComment);
