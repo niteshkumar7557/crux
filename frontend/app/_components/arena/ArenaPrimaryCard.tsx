@@ -52,10 +52,6 @@ const ArenaPrimaryCard = ({
           <LuMessageSquare className="inline text-primary" /> {count_comments}{" "}
           {count_comments === 1 ? "Argument" : "Arguments"}
         </span>
-        {/* <span className="font-label text-xs text-outline uppercase tracking-widest">
-          <LuBadgeCheck className="inline text-tertiary" /> Argument Quality:{" "}
-          {argumentQuality}
-        </span> */}
       </div>
       <div className="py-5">
         <div className="flex justify-between gap-4 font-label text-[10px] uppercase tracking-[0.25em] mb-3">
@@ -72,7 +68,7 @@ const ArenaPrimaryCard = ({
           size="lg"
         />
         <div className="mt-7 flex justify-between items-center gap-4">
-          <Button href={`/argument/${argumentId}`} variant="outline" size="sm">Enter Argument</Button>
+          <Button href={`/argument/CRX-${argumentId}-A`} variant="outline" size="sm">Enter Argument</Button>
         </div>
       </div>
     </div>

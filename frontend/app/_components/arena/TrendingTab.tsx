@@ -21,6 +21,11 @@ const TrendingTab = () => {
 
 	useGSAP(
 		() => {
+			// The container is always mounted (the loading state renders inside
+			// it), but bail defensively -- a null scope makes gsap fall back to
+			// the context selector and warn "Invalid scope".
+			if (!containerRef.current) return;
+
 			const cards = gsap.utils.toArray(
 				"[data-reveal]",
 				containerRef.current,
@@ -44,7 +49,9 @@ const TrendingTab = () => {
 		},
 		{
 			scope: containerRef,
-			dependencies: [primaryCardData, secondaryCardsData],
+			// `loading` matters too: when the fetch fails the data deps never
+			// change, so without it the reveal would never fire.
+			dependencies: [loading, primaryCardData, secondaryCardsData],
 		},
 	);
 
@@ -73,13 +80,11 @@ const TrendingTab = () => {
 		fetchData();
 	}, []);
 
-	if (loading) {
-		return <div>Loading...</div>;
-	}
-
 	return (
 		<div ref={containerRef}>
-			{primaryCardData || secondaryCardsData.length > 0 ? (
+			{loading ? (
+				<div>Loading...</div>
+			) : primaryCardData || secondaryCardsData.length > 0 ? (
 				<div>
 					{primaryCardData && (
 						<ArenaPrimaryCard
