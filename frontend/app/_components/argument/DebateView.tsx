@@ -95,6 +95,9 @@ const DebateView = async ({ id }: { id: number }) => {
             argumentHeaderData={argumentHeaderData}
             matchState={matchState}
             shareUrl={canonicalUrl}
+            argumentId={id}
+            pinned={Boolean(row.pinned)}
+            isDotd={Boolean(row.is_dotd)}
           />
           <ArgumentArena aiAnalysis={aiAnalysis} comments={comments.data} />
         </section>

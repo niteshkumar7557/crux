@@ -15,6 +15,7 @@ import searchRoutes from "./routes/search.route.js";
 import avatarRoutes from "./routes/avatar.route.js";
 import domainRoutes from "./routes/domain.route.js";
 import notificationRoutes from "./routes/notification.route.js";
+import adminRoutes from "./routes/admin.route.js";
 
 const app = express();
 
@@ -43,5 +44,6 @@ app.use("/search", searchRoutes);
 app.use("/domains", domainRoutes);
 app.use("/avatar", avatarRoutes);
 app.use("/notifications", notificationRoutes);
+app.use("/admin", adminRoutes);
 
 export default app;

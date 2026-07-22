@@ -4,16 +4,23 @@ import { ArgumentHeaderProps, MatchState } from "@/app/argument/types";
 import ArgumentProbability from "./ArgumentProbability";
 import Countdown from "./Countdown";
 import VerdictBanner from "./VerdictBanner";
+import PinControl from "../arena/PinControl";
 import { gsap, useGSAP, SplitText, MOTION_OK } from "@/app/_utils/gsap";
 
 const ArgumentHeader = ({
   argumentHeaderData,
   matchState,
   shareUrl,
+  argumentId,
+  pinned,
+  isDotd,
 }: {
   argumentHeaderData: ArgumentHeaderProps;
   matchState: MatchState;
   shareUrl: string;
+  argumentId: number;
+  pinned: boolean;
+  isDotd: boolean;
 }) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const headlineRef = useRef<HTMLHeadingElement>(null);
@@ -73,6 +80,14 @@ const ArgumentHeader = ({
           </span>
           {matchState.status === "live" && matchState.closesAt && (
             <Countdown closesAt={matchState.closesAt} />
+          )}
+          {/* §11: admin-only, and only while there is still a stage to curate. */}
+          {matchState.status === "live" && (
+            <PinControl
+              argumentId={argumentId}
+              pinned={pinned}
+              isDotd={isDotd}
+            />
           )}
         </div>
         <h1

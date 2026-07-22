@@ -8,9 +8,10 @@ import api from "@/app/axios";
 import { gsap, useGSAP } from "@/app/_utils/gsap";
 
 const TrendingTab = () => {
-	const [primaryCardData, setPrimaryCardData] = useState<
-		PrimaryCardDataType[]
-	>([]);
+	// The hero is ONE debate (§11's Debate of the Day), so the API returns a
+	// single object -- and an empty {} when nothing is crowned.
+	const [primaryCardData, setPrimaryCardData] =
+		useState<PrimaryCardDataType | null>(null);
 	const [secondaryCardsData, setSecondaryCardsData] = useState<
 		SecondaryCardsDataType[]
 	>([]);
@@ -20,8 +21,6 @@ const TrendingTab = () => {
 
 	useGSAP(
 		() => {
-			if (!primaryCardData.length) return;
-
 			const cards = gsap.utils.toArray(
 				"[data-reveal]",
 				containerRef.current,
@@ -45,7 +44,7 @@ const TrendingTab = () => {
 		},
 		{
 			scope: containerRef,
-			dependencies: [primaryCardData],
+			dependencies: [primaryCardData, secondaryCardsData],
 		},
 	);
 
@@ -56,8 +55,14 @@ const TrendingTab = () => {
 					api.get("/arena/active/primary"),
 					api.get("/arena/active/secondary"),
 				]);
-				setPrimaryCardData(primaryResponse.data ?? []);
-				setSecondaryCardsData(secondaryResponse.data ?? []);
+				// Both endpoints answer with a bare {} when the stage is empty.
+				const primary = primaryResponse.data as PrimaryCardDataType | null;
+				setPrimaryCardData(primary?.argumentId ? primary : null);
+				setSecondaryCardsData(
+					Array.isArray(secondaryResponse.data)
+						? secondaryResponse.data
+						: [],
+				);
 			} catch (error) {
 				console.error("Failed to load homepage arena data:", error);
 			} finally {
@@ -74,24 +79,23 @@ const TrendingTab = () => {
 
 	return (
 		<div ref={containerRef}>
-			{primaryCardData.length > 0 && secondaryCardsData.length > 0 ? (
+			{primaryCardData || secondaryCardsData.length > 0 ? (
 				<div>
-					{primaryCardData.map((e) => (
+					{primaryCardData && (
 						<ArenaPrimaryCard
-							key={e.argumentId}
-							domain={e.domain}
-							username={e.username}
-							avatar={e.avatar}
-							content={e.content}
-							count_comments={e.count_comments}
-							affirmative={e.affirmative}
-							negative={e.negative}
-							argumentId={e.argumentId}
-                            status={e.status}
-                            closesAt={e.closesAt}
-                            isDotd={e.isDotd}
+							domain={primaryCardData.domain}
+							username={primaryCardData.username}
+							avatar={primaryCardData.avatar}
+							content={primaryCardData.content}
+							count_comments={primaryCardData.count_comments}
+							affirmative={primaryCardData.affirmative}
+							negative={primaryCardData.negative}
+							argumentId={primaryCardData.argumentId}
+							status={primaryCardData.status}
+							closesAt={primaryCardData.closesAt}
+							isDotd={primaryCardData.isDotd}
 						/>
-					))}
+					)}
 
 					<div className="mb-5 md:flex md:flex-wrap md:justify-between">
 						{secondaryCardsData.map((e) => (
