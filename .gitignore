@@ -3,3 +3,5 @@ pgadmin.env
 .superpowers/
 docs/superpowers/
 .claude
+.DS_Store
+**/.DS_Store

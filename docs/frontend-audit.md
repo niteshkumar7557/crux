@@ -2,7 +2,15 @@
 
 *Updated 2026-07-14 on branch `frontend-makeover` (HEAD `be3b0ab`). This replaces the original pre-makeover audit: all 10 items of that plan have shipped. This document describes the **final state** of the frontend so a fresh session can start improvements without re-deriving context.*
 
-*Updated 2026-07-17: the `/statement` posting flow was redesigned (see §4a and the spec at `docs/superpowers/specs/2026-07-16-statement-posting-ux-design.md` + plan at `docs/superpowers/plans/2026-07-16-statement-posting-ux.md`).*
+*Updated 2026-07-17: the `/statement` posting flow was redesigned (see §4a).*
+
+> **Scope note (2026-07-22).** This file is the **frontend design system and working
+> rules** — tokens, motion, component conventions, and the verification workflow. It is
+> still current for all of that. It predates the v1 game restructure, so for anything about
+> *game rules, schema, or backend flows* read [`game-theory.md`](./game-theory.md) (the
+> spec) and [`CODEBASE_GUIDE.md`](./CODEBASE_GUIDE.md) (the code map) instead — they win on
+> those topics. §8's list of rough edges is a backlog, not a status report; several items
+> have since been fixed.
 
 **Direction (agreed, still in force):** audience = general consumers · vibe = sleek dark-tech · motion = tasteful accents (GSAP).
 
@@ -74,7 +82,7 @@ Tokens live in `frontend/app/globals.css` `@theme` (M3-style dark ramp):
 
 ## 4a. Statement posting flow (`_components/statement/`, redesigned 2026-07-17)
 
-One evolving surface driven by a state machine in `StatementForm.tsx` (container — TAB indentation inside function bodies): `compose → checking → verdict(pass|fail|unavailable) → casting → redirect`. Editing text or switching domain voids the verdict with a notice. Spec: `docs/superpowers/specs/2026-07-16-statement-posting-ux-design.md`.
+One evolving surface driven by a state machine in `StatementForm.tsx` (container — TAB indentation inside function bodies): `compose → checking → verdict(pass|fail|unavailable) → casting → redirect`. Editing text or switching domain voids the verdict with a notice.
 
 | Component | Responsibility |
 |---|---|
@@ -149,29 +157,3 @@ Reduced-motion users get the server-rendered end state (verified via emulation).
 3. Screenshot desktop (1440) and mobile (390) for visual changes; check `scrollWidth === clientWidth` at 390px.
 4. For motion work: emulate `prefers-reduced-motion: reduce` and assert no element is left dimmed/transformed; assert end states are `opacity: 1` / `transform: none`.
 5. Backend endpoint changes hot-reload via tsx watch; probe with `curl localhost:8000/...`.
-
-## 10. §8 Conclusion engine wiring (2026-07-18, uncommitted)
-
-The §8 "concluded state" was surfaced in the UI (spec:
-`docs/superpowers/specs/2026-07-18-conclusion-frontend-design.md`). New on the debate page
-(`/argument/[id]`): a `matchState` object (status/closesAt/winner/margin/mvpUsername/
-verdictText) flows from `page.tsx` into `ArgumentHeader` and `ArgumentInput`.
-
-- `_components/argument/Countdown.tsx` — live ticking "CLOSES IN Xh Ym / mm:ss" chip
-  (tertiary); ticks for everyone (it's info, not decorative motion).
-- `_components/argument/VerdictBanner.tsx` — concluded-only ruling card: AFFIRMATIVE WINS
-  (primary) / NEGATIVE WINS (secondary) / DRAW (tertiary) / UNOPPOSED (outline), margin
-  readout, `MVP — @username`, and the closing line in `font-headline` italic. Per-accent
-  **literal** class strings (RULINGS map) so Tailwind keeps them.
-- `ArgumentHeader` — badge flips Live Arena→Concluded; renders Countdown (live) / VerdictBanner
-  (concluded); passes `status` to `ArgumentProbability`.
-- `ArgumentProbability` — `status` prop; concluded skips the count-up/draw entrance and labels
-  the bars `FINAL`.
-- `ArgumentInput` — concluded = read-only strip (shown logged-out too); generalized `notice`
-  toast handles the POST 409s (`side_locked`, `locked`) + the abuse case; opposite-side
-  button pre-disabled from the viewer's own comment side (`commentSides` prop).
-- Profile: `UserHeadInfo` gained a **Record** card (`border-l-4 border-tertiary`, `W–L`,
-  spanning both columns) from `record` on `GET /profile/:id`. `GET /argument/:id` now returns
-  `mvp_username`.
-
-Deferred: feed/domain card countdown+concluded states; the verdict share-card image (§8.6).
