@@ -1,5 +1,5 @@
 {
-  "name": "backend",
+  "name": "crux-backend",
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
@@ -15,7 +15,8 @@
     "db-init": "npm run db:migrate:dev && npm run db:seed:dev",
     "development": "npm run db:migrate:dev && npm run db:seed:dev && npm run dev",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "eval": "npx tsx src/ai/eval/run.ts"
   },
   "keywords": [],
   "author": "",

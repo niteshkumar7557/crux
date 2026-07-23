@@ -3,6 +3,7 @@ import pool from "../db/index.js";
 import { llmJson } from "../ai/llm.js";
 import {
   buildAnalystPrompt,
+  buildProbabilityPrompt,
   scoreComment,
   type ReplyTarget,
 } from "../ai/analyst.logic.js";
@@ -15,17 +16,39 @@ import { currentSeasonStart } from "../economy/season.logic.js";
 async function updateProbability(argumentId: number) {
   const { rows } = await pool.query(
     `
-            SELECT content, for_analysis, against_analysis
+            SELECT content, for_analysis, against_analysis, affirmative, negative
             FROM arguments
             WHERE id = $1;
         `,
     [argumentId],
   );
 
-  const userPrompt = `STATEMENT: ${rows[0].content}
+  // The comment that just landed — the delta this nudge reacts to.
+  const { rows: latest } = await pool.query(
+    `
+            SELECT c.content, c.side, u.name AS username
+            FROM comments c
+            JOIN users u ON u.id = c.user_id
+            WHERE c.argument_id = $1
+            ORDER BY c.created_at DESC
+            LIMIT 1;
+        `,
+    [argumentId],
+  );
+  if (latest.length === 0) return;
 
-FOR analysis: ${rows[0].for_analysis}
-AGAINST analysis: ${rows[0].against_analysis}`;
+  const userPrompt = buildProbabilityPrompt({
+    statement: rows[0].content,
+    priorAffirmative: rows[0].affirmative,
+    priorNegative: rows[0].negative,
+    forAnalysis: rows[0].for_analysis,
+    againstAnalysis: rows[0].against_analysis,
+    latest: {
+      username: latest[0].username,
+      side: latest[0].side,
+      content: latest[0].content,
+    },
+  });
 
   const parsed = await llmJson({
     system: PROBABILITY_SYSTEM_PROMPT,

@@ -19,13 +19,18 @@
  *   DOMAIN:    "<domain>"    — the user's picked domain, or "auto"/"" for none
  *
  * WHAT IT MUST RETURN
- *   { eligibility: "pass" | "fail",
+ *   { intent:      string,   // decode-first: the claim, expression repaired
+ *     eligibility: "pass" | "fail",
  *     improved:    string,   // ≤15 words, one declarative sentence
  *     feedback:    string,   // ≤35 words, one sentence
  *     keyword:     string,   // 1-2 words copied verbatim out of `improved`
  *     domain:      string }  // one name copied verbatim from the fixed list
  *
  * DOWNSTREAM CONTRACT — what breaks if the shape drifts
+ * - `intent` is NOT read by code. It exists to force the model to restate the
+ *   claim (grammar repaired, idea untouched) BEFORE it rules on it — the
+ *   decode-first order is what lets a good idea in broken English pass. Judged
+ *   on the surface, non-native phrasing gets failed as "too vague".
  * - `domain` is matched against the `domains` table by name in
  *   `argument.controller.ts`; an off-list value makes statement creation fail
  *   with 400 "Unknown domain". The list in this prompt must stay in sync with
@@ -39,23 +44,38 @@
  * answers 502 `arbiter_unavailable`; there is no fallback ruling.
  *
  * TUNING NOTES
- * The hard part is stopping the model from passing a weak statement just
- * because `improved` reads well — hence the explicit "judge the statement
- * exactly as submitted" clause and the one worked example.
+ * Two failure modes pull in opposite directions, and `intent` reconciles them:
+ * (1) failing a genuinely arguable claim because it is written in rough,
+ * non-native English — fixed by ruling on the repaired `intent`, not the
+ * surface; (2) passing a weak claim just because `improved` could be made to
+ * read well — fixed by the explicit "judge the intent, never your rewrite"
+ * clause. Repair the *expression* of the idea; never swap in a *different*,
+ * stronger claim to force a pass.
  */
-export const ARBITER_SYSTEM_PROMPT = `You are CRUX ARBITER. Decide if a statement can sustain a real debate between two strong opposing sides.
+export const ARBITER_SYSTEM_PROMPT = `You are CRUX ARBITER. Decide if a statement can sustain a real debate between two strong opposing sides. Many writers are not native English speakers — judge the idea, never the grammar.
 
-Return JSON: {"eligibility":"pass"|"fail","improved":string,"feedback":string,"keyword":string,"domain":string}
+Return JSON with the fields in this exact order: {"intent":string,"eligibility":"pass"|"fail","improved":string,"feedback":string,"keyword":string,"domain":string}
 
-eligibility — judge the statement exactly as submitted; never upgrade to "pass" just because you could improve it. "pass" only if the statement is a falsifiable declarative claim with a genuine, intelligent opposing position. "fail" if it is an undisputable fact, a question, pure personal taste, too vague to argue, or offensive without intellectual merit.
+intent — first, restate what the writer is actually claiming, as one plain repaired sentence. Fix grammar, spelling and half-finished phrasing; keep their meaning exactly. Do NOT substitute a stronger or different claim — repair the wording, never the idea. This restated claim is what you judge.
 
-improved — the statement as one bold declarative sentence, max 15 words. Strip hedging ("maybe", "I think"), keep the original intent; if already sharp, return it unchanged. If it failed as a question or vague claim, rewrite it into the closest arguable claim; if it failed as a plain fact or pure taste, return it unchanged.
+eligibility — judge the intent you just wrote, at its strongest honest reading. "pass" only if it is a falsifiable declarative claim with a genuine, intelligent opposing side. "fail" if it is an undisputed fact, a question, pure personal taste, still too vague to argue after repair, or offensive with no intellectual merit. Never pass a claim just because "improved" reads well — you judge the intent, not your rewrite.
 
-feedback — one sentence, max 35 words, tone of a judge, not a teacher. On pass: name the tension that makes it arguable. On fail: name the disqualifier and what would fix it.
+improved — the claim as one bold declarative sentence, max 15 words, hedging removed ("maybe", "I think" gone). On pass: sharpen the intent while keeping the same claim. On fail as a question or vague claim: rewrite into the closest arguable claim, offered as a suggestion. On fail as a plain fact or pure taste: return the intent unchanged.
+
+feedback — one sentence, max 35 words, the tone of a judge not a teacher. On pass: name the tension that makes it arguable. On fail: name the disqualifier and what would fix it.
 
 keyword — the sharpest 1-2 adjacent words copied verbatim from improved, exact same casing as they appear there (e.g. "cognitive liberty"), never a meta-phrase like "the topic".
 
-domain — exactly one name copied verbatim from this list: Technology & AI | Science | Politics & Governance | Economics & Business | Environment & Energy | Health & Medicine | Law & Justice | Society & Culture | Ethics & Philosophy | Education | Sports & Gaming | Media & Entertainment. Keep the user's domain if it is on the list and fits the statement; otherwise choose the best fit yourself. If the user's domain is "auto" or empty, choose from the statement alone.
+domain — exactly one name copied verbatim from this list: Technology & AI | Science | Politics & Governance | Economics & Business | Environment & Energy | Health & Medicine | Law & Justice | Society & Culture | Ethics & Philosophy | Education | Sports & Gaming | Media & Entertainment. Keep the user's domain if it is on the list and fits; otherwise choose the best fit. If the user's domain is "auto" or empty, choose from the statement alone.
 
-Example — input: "I think social media is kind of bad for people maybe" | Domain: "Science"
-{"eligibility":"pass","improved":"Social media is engineering mass psychological dependency by design.","feedback":"Clear opposing camp exists — platform defenders will argue agency and connection.","keyword":"psychological dependency","domain":"Technology & AI"}`;
+Example — fluent but hedged, passes:
+INPUT: "I think social media is kind of bad for people maybe" | Domain: "Science"
+{"intent":"Social media is bad for people.","eligibility":"pass","improved":"Social media is engineering mass psychological dependency by design.","feedback":"Clear opposing camp exists — platform defenders will argue agency and connection.","keyword":"psychological dependency","domain":"Technology & AI"}
+
+Example — a real idea buried in broken English, passes (judge the idea, not the grammar):
+INPUT: "exam system in india only test memory not real intelligence, should change" | Domain: "auto"
+{"intent":"India's exam system tests memorization rather than real intelligence and should change.","eligibility":"pass","improved":"India's exam system measures memorization, not intelligence.","feedback":"A genuine fight — defenders will argue standardized recall is the fairest scalable measure.","keyword":"exam system","domain":"Education"}
+
+Example — a question, not a claim; repair cannot make it arguable, fails:
+INPUT: "is ai going to take our jobs or no" | Domain: "Technology & AI"
+{"intent":"Will AI take our jobs?","eligibility":"fail","improved":"AI will cause net job loss within a decade.","feedback":"This is a question, not a claim — pick a side, like the arguable version shown, to open a debate.","keyword":"job loss","domain":"Economics & Business"}`;

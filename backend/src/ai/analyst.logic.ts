@@ -54,6 +54,35 @@ OPPONENT ANALYSIS: ${opponent}${replyBlock}
 COMMENT: "${comment}"`;
 }
 
+export interface ProbabilityPromptInput {
+  statement: string;
+  /** arguments.affirmative — the split the debate currently shows. */
+  priorAffirmative: number | null;
+  priorNegative: number | null;
+  forAnalysis: string | null;
+  againstAnalysis: string | null;
+  /** The comment that just landed — the delta the nudge reacts to. */
+  latest: { username: string; side: Side; content: string };
+}
+
+/**
+ * §12 — the Probability Judge's user message. Unlike the Analyst prompt this
+ * one is *stateful*: it carries the PRIOR SPLIT and the comment that just
+ * landed, so the judge nudges the bar from where it was instead of re-deriving
+ * it cold. The prior defaults to 50/50 (the `arguments.affirmative/negative`
+ * column default), so a null can never render a broken prompt.
+ */
+export function buildProbabilityPrompt(input: ProbabilityPromptInput): string {
+  const aff = input.priorAffirmative ?? 50;
+  const neg = input.priorNegative ?? 100 - aff;
+  return `STATEMENT: "${input.statement}"
+PRIOR SPLIT: FOR ${aff} / AGAINST ${neg}
+LATEST COMMENT — @${input.latest.username} [${input.latest.side.toUpperCase()}]: "${input.latest.content}"
+
+FOR analysis: ${orNoneYet(input.forAnalysis)}
+AGAINST analysis: ${orNoneYet(input.againstAnalysis)}`;
+}
+
 export interface ScoreInput {
   /** The raw 1-8 the model returned. May be out of range or NaN. */
   rawPoints: number;

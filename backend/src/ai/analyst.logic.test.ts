@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { buildAnalystPrompt, scoreComment, NONE_YET } from "./analyst.logic.js";
+import {
+  buildAnalystPrompt,
+  buildProbabilityPrompt,
+  scoreComment,
+  NONE_YET,
+} from "./analyst.logic.js";
 
 const base = {
   rawPoints: 7,
@@ -90,5 +95,36 @@ describe("buildAnalystPrompt", () => {
     });
     expect(p).toContain("REPLYING TO @maya");
     expect(p).toContain("Nuclear is the only baseload.");
+  });
+});
+
+describe("buildProbabilityPrompt", () => {
+  const probInput = {
+    statement: "Nuclear power is the only realistic path to decarbonise.",
+    priorAffirmative: 60,
+    priorNegative: 40,
+    forAnalysis: "The case for.",
+    againstAnalysis: "The case against.",
+    latest: { username: "dev", side: "against" as const, content: "France was a one-off." },
+  };
+
+  it("renders the prior split and the latest comment, side uppercased", () => {
+    const p = buildProbabilityPrompt(probInput);
+    expect(p).toContain("PRIOR SPLIT: FOR 60 / AGAINST 40");
+    expect(p).toContain(`LATEST COMMENT — @dev [AGAINST]: "France was a one-off."`);
+  });
+
+  it("defaults a null prior split to 50/50", () => {
+    const p = buildProbabilityPrompt({
+      ...probInput,
+      priorAffirmative: null,
+      priorNegative: null,
+    });
+    expect(p).toContain("PRIOR SPLIT: FOR 50 / AGAINST 50");
+  });
+
+  it("shows an empty analysis as (none yet)", () => {
+    const p = buildProbabilityPrompt({ ...probInput, forAnalysis: null });
+    expect(p).toContain(`FOR analysis: ${NONE_YET}`);
   });
 });
