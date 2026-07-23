@@ -6,6 +6,11 @@ import serverApi from "@/app/axios.server";
 import { isAxiosError } from "axios";
 import { notFound } from "next/navigation";
 import { debateSlug } from "@/app/_utils/slugify";
+import {
+  atWalkoverRisk,
+  emptySideLabel,
+  WALKOVER_WARNING_HOURS,
+} from "./walkoverRisk";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -75,20 +80,31 @@ const DebateView = async ({ id }: { id: number }) => {
   const canonicalUrl = `${SITE}/debate/${debateSlug(String(row.content), Number(row.id))}`;
 
   // §7/§14 walkover risk. If a side is still empty at the deadline the debate
-  // concludes unopposed and NOBODY scores — the author included. That is a
-  // rule people must be able to act on while it still applies, not read about
-  // in a verdict.
+  // concludes unopposed and NOBODY scores — the author included. That is a rule
+  // people must be able to act on while they still can, not read about in a
+  // verdict.
+  //
+  // Only in the final hours, though: an empty side on a debate's first morning
+  // is not a risk, it is a young debate. Warning then would fire on nearly
+  // every new statement and teach people to scroll past the banner — so it is
+  // held back until an empty side is the likely ending rather than a normal
+  // early state (§7).
   const allComments: { side: "for" | "against" }[] = comments.data.comments ?? [];
   const forCount = allComments.filter((c) => c.side === "for").length;
   const againstCount = allComments.filter((c) => c.side === "against").length;
-  const walkoverRisk =
-    row.status === "live" && (forCount === 0 || againstCount === 0);
-  const emptySide =
-    forCount === 0 && againstCount === 0
-      ? null // neither side has spoken yet
-      : forCount === 0
-        ? "FOR"
-        : "AGAINST";
+  // This is an async server component: it runs once per request, so reading the
+  // clock here is a property of the response, not unstable render state. The
+  // purity rule cannot tell the two apart.
+  // eslint-disable-next-line react-hooks/purity
+  const now = Date.now();
+  const walkoverRisk = atWalkoverRisk({
+    status: row.status,
+    closesAt: row.closes_at ?? null,
+    forCount,
+    againstCount,
+    now,
+  });
+  const emptySide = emptySideLabel(forCount, againstCount);
 
   return (
     <>
@@ -123,9 +139,10 @@ const DebateView = async ({ id }: { id: number }) => {
                 Walkover risk
               </span>
               <p className="font-body text-sm text-on-surface-variant leading-relaxed">
+                {`Under ${WALKOVER_WARNING_HOURS} hours left and `}
                 {emptySide
-                  ? `Nobody has argued ${emptySide} yet. If nobody does, this debate concludes unopposed and `
-                  : "Nobody has argued this debate yet. If either side is still empty at the deadline, it concludes unopposed and "}
+                  ? `nobody has argued ${emptySide}. If nobody does, this debate concludes unopposed and `
+                  : "nobody has argued this debate at all. If either side is still empty at the deadline, it concludes unopposed and "}
                 <span className="text-on-surface font-bold">nobody scores</span>
                 {" — including the author."}
               </p>

@@ -276,6 +276,7 @@ missing the copy is how the product ends up lying to its users.
 | **Loss penalty** | −5 season-only | `ai/verdict.logic.ts` `LOSS_PENALTY` | `verdict.logic.test.ts`; `VerdictBanner.tsx`; **`SideLockConfirm.tsx`** (§14 needs it before *and* after); `/rules` rule 6 |
 | **Author bonus** | +5 | `ai/verdict.logic.ts` `AUTHOR_BONUS` | `verdict.logic.test.ts`; `VerdictBanner.tsx`; `StatementForm.tsx`; `/rules` rule 6 |
 | **Walkover payout** | 0 | `ai/verdict.logic.ts` `walkoverPayout()` | `verdict.logic.test.ts`; the walkover banner in `DebateView.tsx`; `VerdictBanner.tsx`; `StatementForm.tsx`; `/rules` rule 6 |
+| **Walkover warning window** | 6h | `_components/argument/walkoverRisk.ts` `WALKOVER_WARNING_HOURS` (frontend-only — it changes *when the warning shows*, never a payout) | `walkoverRisk.test.ts` (asserts the boundary); the banner copy in `DebateView.tsx` states the number; game-theory §7 + §14 |
 | **Season length** | 1 calendar month | `economy/season.logic.ts` (the whole module) | `season.logic.test.ts`; the leaderboard strip and profile season card |
 | **Season awards** | top 3 | `jobs/seasonRollover.logic.ts` `TITLES` / `FRAMES` | `seasonRollover.logic.test.ts`; `_components/profile/SeasonTitles.tsx` (`FRAME_BADGE`/`FRAME_RING` maps must gain a key per new frame); the leaderboard prize line |
 | **Main Stage size** | ~4 | `jobs/featuring.logic.ts` `MAIN_STAGE_SIZE` | `featuring.logic.test.ts`. Note `getSecondaryCardsData` in `arena.controller.ts` has its own `LIMIT 6` — raise it or the extra cards never render |

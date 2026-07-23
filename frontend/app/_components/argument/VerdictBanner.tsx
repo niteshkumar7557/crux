@@ -84,11 +84,7 @@ const VerdictBanner = ({
           Verdict
         </span>
         <span className="ml-auto self-center">
-          <ShareVerdict
-            url={shareUrl}
-            title={ruling.label}
-            certificateHref={certificateHref}
-          />
+          <ShareVerdict url={shareUrl} certificateHref={certificateHref} />
         </span>
       </div>
 

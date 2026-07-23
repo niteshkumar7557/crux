@@ -206,6 +206,11 @@ reply structure, then returns: `{ for%, against%, winner, mvp, closing }`.
 contest nobody entered, and this closes the obvious exploit of posting a statement and
 farming an uncontested win.
 
+The risk is surfaced (§14) only in the **final 6 hours**. A debate with an empty side on its
+first morning is not at risk, it is simply young — warning then would cry wolf on nearly every
+new statement and train people to ignore the banner. The window is the point at which an empty
+side stops being normal and starts being the likely outcome.
+
 ---
 
 ## 8. Payouts
@@ -413,7 +418,7 @@ This is a product requirement, not polish. A rule that is not surfaced is a bug.
 | **The draw zone** | The probability bar renders the draw band (47.5–52.5) as a marked zone, so you can *see* when a debate is heading for a draw and that it's still winnable | Always |
 | **Loss costs season points** | Stated in the side-commit confirmation, and again in the verdict payout breakdown | Before **and** after |
 | **MVP comes from the winning side** | Rules page, and the verdict card | Always |
-| **Walkover risk** | A banner on any live debate with an empty side: *"Nobody has argued AGAINST yet. If nobody does, this concludes unopposed and nobody scores."* | While it applies |
+| **Walkover risk** | A banner on a live debate with an empty side, once **under 6 hours** remain: *"Under 6 hours left and nobody has argued AGAINST. If nobody does, this concludes unopposed and nobody scores."* | Final 6 hours |
 | **Season window** | A **"Season 0 · 12 days left"** strip on the leaderboard and profile | Always |
 | **Season prize** | Leaderboard header: *"The top 3 on the 1st earn a permanent title and avatar frame."* | Always |
 | **Author bonus** | On the statement composer: *"You earn +5 logic when your statement produces a real debate."* | Before posting |
