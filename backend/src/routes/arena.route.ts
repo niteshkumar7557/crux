@@ -2,7 +2,6 @@ import { Router } from "express";
 import {
   getPrimaryCardData,
   getLeaderboardData,
-  getNewestCardData,
   getSeasonLeaderboard,
   getSidebarData,
   getSitemapData,
@@ -14,7 +13,6 @@ const arenaRoutes = Router();
 
 arenaRoutes.get("/active/primary", getPrimaryCardData);
 arenaRoutes.get("/active/secondary", getSecondaryCardsData);
-arenaRoutes.get("/active/newest", getNewestCardData);
 arenaRoutes.get("/sidebar", getSidebarData);
 arenaRoutes.get("/leaderboard", getLeaderboardData);
 arenaRoutes.get("/leaderboard/season", getSeasonLeaderboard);

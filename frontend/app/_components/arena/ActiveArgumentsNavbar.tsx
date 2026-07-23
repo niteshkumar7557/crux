@@ -1,13 +1,17 @@
+import Link from "next/link";
+
 interface ActiveNavbarProps {
   tabList: string[];
   active: string;
-  changeActive: (a: string) => void;
+  /** Builds the href for a tab; the tab lives in the URL so it survives a
+   *  refresh and a pager link can name the tab it belongs to. */
+  hrefFor: (tab: string) => string;
 }
 
 const ActiveArgumentsNavbar = ({
   tabList,
   active,
-  changeActive,
+  hrefFor,
 }: ActiveNavbarProps) => {
   return (
     <div>
@@ -24,14 +28,16 @@ const ActiveArgumentsNavbar = ({
 					</div>
         </div>
         <div className="flex gap-5 font-label text-[10px] uppercase tracking-widest">
-          {tabList.map((e, i) => (
-            <button
-              key={i}
-              onClick={() => changeActive(e)}
+          {tabList.map((e) => (
+            <Link
+              key={e}
+              href={hrefFor(e)}
+              scroll={false}
+              aria-current={e === active ? "page" : undefined}
               className={`${e === active ? "text-primary border-b uppercase border-primary pb-1 cursor-pointer" : "text-outline border-b border-transparent pb-1 hover:text-on-surface uppercase transition-colors cursor-pointer"}`}
             >
               {e}
-            </button>
+            </Link>
           ))}
         </div>
       </div>

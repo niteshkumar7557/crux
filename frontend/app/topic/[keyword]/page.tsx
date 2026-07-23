@@ -4,9 +4,10 @@ import { LuMessageSquare } from "react-icons/lu";
 import serverApi from "@/app/axios.server";
 import ArenaSecondaryCard from "@/app/_components/arena/ArenaSecondaryCard";
 import Button from "@/app/_components/ui/Button";
+import Pagination from "@/app/_components/ui/Pagination";
 import Reveal from "@/app/_components/ui/Reveal";
 import { timeAgo } from "@/app/_utils/timeAgo";
-import { NewestCardProps } from "@/app/types";
+import { PaginatedStatements } from "@/app/types";
 
 export async function generateMetadata({
   params,
@@ -23,24 +24,40 @@ export async function generateMetadata({
 
 const TopicPage = async ({
   params,
+  searchParams,
 }: {
   params: Promise<{ keyword: string }>;
+  searchParams: Promise<{ page?: string }>;
 }) => {
   const { keyword } = await params;
+  const { page: pageParam } = await searchParams;
   const kw = decodeURIComponent(keyword);
+  const parsedPage = Number.parseInt(pageParam ?? "1", 10);
+  const requestedPage =
+    Number.isInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1;
 
-  let statements: NewestCardProps[] = [];
+  let result: PaginatedStatements = {
+    statements: [],
+    total: 0,
+    page: 1,
+    pageSize: 12,
+  };
   try {
     const { data } = await serverApi.get("/arena/statements", {
-      params: { keyword: kw, pageSize: 50 },
+      params: { keyword: kw, page: requestedPage },
     });
-    if (Array.isArray(data.statements)) statements = data.statements;
+    if (Array.isArray(data.statements)) result = data;
   } catch (error) {
     console.error("Failed to load topic statements:", error);
   }
 
+  const totalPages = Math.max(Math.ceil(result.total / result.pageSize), 1);
+
   return (
-    <Reveal key={kw} className="max-w-6xl mx-auto px-6 md:px-8 py-12">
+    <Reveal
+      key={`${kw}-${result.page}`}
+      className="max-w-6xl mx-auto px-6 md:px-8 py-12"
+    >
       <div data-reveal className="mb-12 border-l-4 border-tertiary pl-6">
         <span className="font-label text-tertiary text-xs uppercase tracking-[0.3em] mb-2 block">
           TOPIC
@@ -49,11 +66,11 @@ const TopicPage = async ({
           {kw}
         </h1>
         <p className="mt-4 text-on-surface-variant font-body text-lg max-w-xl">
-          {statements.length} debate{statements.length === 1 ? "" : "s"} on this topic.
+          {result.total} debate{result.total === 1 ? "" : "s"} on this topic.
         </p>
       </div>
 
-      {statements.length === 0 ? (
+      {result.statements.length === 0 ? (
         <div
           data-reveal
           className="bg-surface-container-low border-l-2 border-outline-variant/30 p-12 text-center"
@@ -67,7 +84,7 @@ const TopicPage = async ({
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6">
-          {statements.map((e) => (
+          {result.statements.map((e) => (
             <ArenaSecondaryCard
               key={e.argumentid}
               username={e.username}
@@ -91,6 +108,16 @@ const TopicPage = async ({
           ))}
         </div>
       )}
+
+      <div data-reveal>
+        <Pagination
+          page={result.page}
+          totalPages={totalPages}
+          totalItems={result.total}
+          itemLabel={result.total === 1 ? "debate" : "debates"}
+          hrefFor={(p) => `/topic/${encodeURIComponent(kw)}?page=${p}`}
+        />
+      </div>
     </Reveal>
   );
 };

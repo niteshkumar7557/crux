@@ -91,43 +91,6 @@ export async function getSecondaryCardsData(req: Request, res: Response) {
   }
 }
 
-export async function getNewestCardData(req: Request, res: Response) {
-  try {
-    const argument = await pool.query(`
-                SELECT
-                    u.username,
-                    u.avatar,
-                    d.name AS domain,
-                    a.content AS title,
-                    a.affirmative AS affirmativeScore,
-                    a.negative AS negativeScore,
-                    a.id AS argumentId,
-                    a.status,
-                    a.closes_at AS "closesAt",
-                    a.created_at AT TIME ZONE 'UTC' AS time,
-                    COALESCE(c.count, 0)::int AS "argumentNum"
-                FROM arguments a
-                JOIN users u ON a.user_id = u.id
-                JOIN domains d ON d.id = a.domain_id
-                LEFT JOIN (
-                    SELECT argument_id, COUNT(*) AS count
-                    FROM comments c
-                    GROUP BY argument_id
-                ) c ON a.id = c.argument_id
-                ORDER BY a.created_at DESC
-                LIMIT 20;
-            `);
-    if (argument.rows.length === 0) {
-      return res.status(200).json({});
-    }
-
-    res.status(200).json(argument.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(200).json({});
-  }
-}
-
 export async function getSidebarData(req: Request, res: Response) {
   try {
     const data1 = await pool.query(`
@@ -312,6 +275,8 @@ export async function getStatements(req: Request, res: Response) {
                     a.id AS argumentId,
                     a.status,
                     a.closes_at AS "closesAt",
+                    a.winner,
+                    a.margin,
                     a.created_at AT TIME ZONE 'UTC' AS time,
                     COALESCE(c.count, 0)::int AS "argumentNum"
                 FROM arguments a
