@@ -98,6 +98,32 @@ describe("buildCertificate", () => {
   });
 });
 
+describe("buildCertificate analysis", () => {
+  const withAnalysis = {
+    ...source,
+    forAnalysis: "It holds.\n\n### Key Points\n- Precedent exists",
+    againstAnalysis: "It does not.\n\n### Key Points\n- Costs bite",
+  };
+
+  it("carries both sides when both parse", () => {
+    const m = buildCertificate(concluded, "c", withAnalysis)!;
+    expect(m.analysis?.for.lead).toBe("It holds.");
+    expect(m.analysis?.against.points).toEqual(["Costs bite"]);
+  });
+
+  it("drops the whole block when one side is missing — never a lone column", () => {
+    const m = buildCertificate(concluded, "c", {
+      ...withAnalysis,
+      againstAnalysis: "",
+    })!;
+    expect(m.analysis).toBeNull();
+  });
+
+  it("drops the block when the row carries no analysis at all", () => {
+    expect(buildCertificate(concluded, "c", source)!.analysis).toBeNull();
+  });
+});
+
 describe("certificateFilename", () => {
   it("names the file after the debate", () => {
     expect(certificateFilename("CRX-12-A")).toBe("crux-verdict-CRX-12-A.png");

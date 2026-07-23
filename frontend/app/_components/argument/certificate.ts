@@ -1,5 +1,10 @@
 import type { MatchState } from "@/app/argument/types";
 import { buildVerdictCard, truncate, type VerdictCardModel } from "./verdictCard";
+import {
+  isEmptyAnalysis,
+  parseAnalysis,
+  type AnalysisModel,
+} from "./certificateAnalysis";
 
 // The certificate is the OG card's settled sibling: same tokens, same ruling
 // vocabulary, but it is a document somebody downloads and keeps rather than a
@@ -16,6 +21,9 @@ export interface CertificateSource {
   debateId: number;
   authorUsername: string;
   concludedAt: string | null;
+  /** Raw Markdown from the arbiter; parsed here, never rendered as Markdown. */
+  forAnalysis?: unknown;
+  againstAnalysis?: unknown;
 }
 
 export interface CertificateModel {
@@ -28,6 +36,8 @@ export interface CertificateModel {
   concludedOn: string | null;
   /** The one-line footer: MVP · opened by · date, already assembled. */
   footer: string;
+  /** Both sides of the Crux AI reading, or null when neither survived parsing. */
+  analysis: { for: AnalysisModel; against: AnalysisModel } | null;
 }
 
 const MONTHS = [
@@ -64,9 +74,19 @@ export function buildCertificate(
   parts.push(`OPENED BY @${source.authorUsername}`);
   if (concludedOn) parts.push(concludedOn);
 
+  // Both columns stand or fall together: one lone side would read as though the
+  // arbiter only bothered to argue one case.
+  const forAnalysis = parseAnalysis(source.forAnalysis);
+  const againstAnalysis = parseAnalysis(source.againstAnalysis);
+  const hasAnalysis =
+    !isEmptyAnalysis(forAnalysis) && !isEmptyAnalysis(againstAnalysis);
+
   return {
     card,
     reference: `CRX-${source.debateId}-A`,
+    analysis: hasAnalysis
+      ? { for: forAnalysis, against: againstAnalysis }
+      : null,
     // The certificate gives the claim more room than the OG card does — it is
     // the subject of the document, not a caption above a headline.
     claim: truncate(claimRaw, CERT_CLAIM_MAX),

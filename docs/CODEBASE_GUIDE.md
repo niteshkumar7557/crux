@@ -324,7 +324,7 @@ the page and the code now say the same thing.
   `/statement`, `/rules`, `(auth)/login|register`, plus `sitemap.ts` + `robots.ts`.
 - **Component folders** under `_components/`: `arena/` (feed cards, Main Stage, `PinControl`),
   `argument/` (the debate page: header, arena columns, composer, reply context, side-lock
-  confirmation, verdict banner, OG card), `profile/`, `statement/`, `ui/` (primitives +
+  confirmation, verdict banner, OG card, verdict certificate), `profile/`, `statement/`, `ui/` (primitives +
   `PointsPopup`). `Navbar.tsx` hosts the `NotificationBell`.
 - **`_utils/`** holds pure helpers (`slugify`, `debateMeta`, `timeAgo`, `logicScore`, gsap setup).
 - **Motion has two kinds, and they are gated differently.** An *entrance* (a page introducing
