@@ -1,26 +1,8 @@
 import type { Response, Request } from "express";
 import pool from "../db/index.js";
 import { llmJson } from "../ai/llm.js";
-
-const DESCRIPTION_SYSTEM_PROMPT = `You infer a debater's intellectual identity from the argument statements they have posted.
-
-Return JSON: {"newDescription":string}
-
-- Max 2 sentences. Third person, present tense. Sharp and editorial — a magazine-profile character sketch, not a resume.
-- Describe how they think (systems thinker, moral absolutist, contrarian, pragmatist...), what kind of mind they have, what drives their positions. Never mention any specific topic they debated.
-
-Good: "Operates at the intersection of moral philosophy and structural power, where idealism meets institutional reality. Drawn instinctively to the arguments others refuse to make."
-Bad: "Has debated topics related to AI, economics, and climate policy."`;
-
-const ARGUMENT_SYSTEM_PROMPT = `You are a debate analyst. Given a statement and its domain, write the strongest possible case for each side.
-
-Return JSON: {"for_analysis":string,"against_analysis":string}
-
-- for_analysis argues fully IN FAVOUR of the statement; against_analysis argues fully AGAINST it. No hedging or balance within a side — each is fully committed.
-- Each value is Markdown with newlines escaped as \\n: one sharp opening sentence (no heading), then "### Key Points" with 2-3 specific, grounded bullets. 40-60 words per side. No vague generalities.
-
-Example for_analysis for "AI should be granted legal personhood":
-"Autonomous systems need legal standing to function as independent agents in society.\\n\\n### Key Points\\n- Enables AI to enter contracts and own intellectual property\\n- Creates clear accountability as AI grows more capable\\n- Establishes liability frameworks before systems become uncontrollable"`;
+import { DEBATER_PROFILER_SYSTEM_PROMPT } from "../ai/prompts/debater-profiler.prompt.js";
+import { OPENING_ANALYST_SYSTEM_PROMPT } from "../ai/prompts/opening-analyst.prompt.js";
 
 async function updateDesciption(user_id: number) {
   const { rows } = await pool.query(
@@ -39,7 +21,7 @@ async function updateDesciption(user_id: number) {
 ${allPastArguments.map((r: { content: string }, i: number) => `${i + 1}. "${r.content}"`).join("\n")}`;
 
   const parsed = await llmJson({
-    system: DESCRIPTION_SYSTEM_PROMPT,
+    system: DEBATER_PROFILER_SYSTEM_PROMPT,
     user: userPrompt,
     temperature: 0.6,
     maxTokens: 500,
@@ -83,7 +65,7 @@ Domain: ${domainName}`;
 
   try {
     const parsed = await llmJson({
-      system: ARGUMENT_SYSTEM_PROMPT,
+      system: OPENING_ANALYST_SYSTEM_PROMPT,
       user: userPrompt,
       maxTokens: 3000,
     });

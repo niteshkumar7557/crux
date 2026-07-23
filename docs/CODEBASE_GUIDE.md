@@ -186,7 +186,10 @@ so a pre-launch month can never be awarded.
 ### The six LLM "personas"
 All go through `ai/llm.ts` (`llmJson()` → an OpenAI-compatible `/chat/completions` endpoint;
 OpenRouter, `deepseek/deepseek-v4-flash`, swappable via env). **One model runs all six** —
-there is no smart/fast split. Each persona is a system prompt:
+there is no smart/fast split. Each persona is a system prompt, and all six live one-per-file in
+**`ai/prompts/`** — those files are the live strings the controllers import, and each carries a
+header comment covering its inputs, its JSON contract and what the code re-validates. See
+`ai/prompts/README.md`. The call sites are:
 
 1. **Arbiter** — gates a new statement (pass/fail + reason + a sharper rewrite + keyword +
    domain). `controllers/ai.controller.ts` (`POST /ai/statement`, body field **`content`**).
