@@ -22,6 +22,8 @@ export interface ArgumentHeaderProps {
   statementKeyword: string;
   affirmativeProbability: number;
   negativeProbability: number;
+  authorUsername: string;
+  authorAvatar: string | null;
 }
 
 export interface MatchState {

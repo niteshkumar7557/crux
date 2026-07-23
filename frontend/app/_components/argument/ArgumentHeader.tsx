@@ -1,6 +1,8 @@
 "use client";
 import { useRef } from "react";
+import Link from "next/link";
 import { ArgumentHeaderProps, MatchState } from "@/app/argument/types";
+import Avatar from "@/app/_components/ui/Avatar";
 import ArgumentProbability from "./ArgumentProbability";
 import Countdown from "./Countdown";
 import VerdictBanner from "./VerdictBanner";
@@ -65,7 +67,10 @@ const ArgumentHeader = ({
   return (
     <div ref={rootRef}>
       <div className="flex flex-col items-start gap-4 mb-8">
-        <div data-hero-meta className="flex flex-wrap items-center gap-3">
+        <div
+          data-hero-meta
+          className="w-full flex flex-wrap items-center gap-x-3 gap-y-2"
+        >
           {matchState.status === "concluded" ? (
             <span className="font-label text-[10px] uppercase tracking-[0.2em] text-outline px-2 py-0.5 border border-outline/30">
               Concluded
@@ -78,17 +83,36 @@ const ArgumentHeader = ({
           <span className="font-label text-[10px] uppercase tracking-[0.2em] text-outline">
             ID: {argumentHeaderData.statementId}
           </span>
-          {matchState.status === "live" && matchState.closesAt && (
-            <Countdown closesAt={matchState.closesAt} />
-          )}
-          {/* §11: admin-only, and only while there is still a stage to curate. */}
-          {matchState.status === "live" && (
-            <PinControl
-              argumentId={argumentId}
-              pinned={pinned}
-              isDotd={isDotd}
+          {/* Whose claim this is. Every comment names its debater; the statement
+              itself did not, so the one person on the hook for it was anonymous. */}
+          <Link
+            href={`/profile/${argumentHeaderData.authorUsername}`}
+            className="flex items-center gap-2 text-outline hover:text-primary transition-colors"
+          >
+            <Avatar
+              username={argumentHeaderData.authorUsername}
+              src={argumentHeaderData.authorAvatar}
+              size="sm"
             />
-          )}
+            <span className="font-label text-[10px] uppercase tracking-[0.2em]">
+              Opened by @{argumentHeaderData.authorUsername}
+            </span>
+          </Link>
+          {/* The clock and the curation control sit on the right edge, away
+              from the identity of the claim. */}
+          <div className="ml-auto flex items-center gap-3">
+            {/* §11: admin-only, and only while there is still a stage to curate. */}
+            {matchState.status === "live" && (
+              <PinControl
+                argumentId={argumentId}
+                pinned={pinned}
+                isDotd={isDotd}
+              />
+            )}
+            {matchState.status === "live" && matchState.closesAt && (
+              <Countdown closesAt={matchState.closesAt} />
+            )}
+          </div>
         </div>
         <h1
           ref={headlineRef}
@@ -117,6 +141,7 @@ const ArgumentHeader = ({
       <ArgumentProbability
         argumentHeaderData={argumentHeaderData}
         status={matchState.status}
+        winner={matchState.winner}
       />
     </div>
   );

@@ -127,10 +127,13 @@ export async function getArgumentById(req: Request, res: Response) {
     const { rows } = await pool.query(
       `
                 SELECT a.*, d.name AS domain,
-                       u.username AS mvp_username
+                       mvp.username AS mvp_username,
+                       author.username AS author_username,
+                       author.avatar AS author_avatar
                 FROM arguments a
                 JOIN domains d ON d.id = a.domain_id
-                LEFT JOIN users u ON u.id = a.mvp_user_id
+                JOIN users author ON author.id = a.user_id
+                LEFT JOIN users mvp ON mvp.id = a.mvp_user_id
                 WHERE a.id = $1;
             `,
       [id],

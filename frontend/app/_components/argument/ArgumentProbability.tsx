@@ -1,6 +1,6 @@
 "use client";
 import { useRef } from "react";
-import { ArgumentHeaderProps } from "@/app/argument/types";
+import { ArgumentHeaderProps, MatchState } from "@/app/argument/types";
 import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
 
 // §15: the margin must EXCEED this for a side to win.
@@ -10,12 +10,50 @@ const DRAW_MARGIN = 5;
 const DRAW_BAND_START = 50 - DRAW_MARGIN / 2;
 const DRAW_BAND_END = 50 + DRAW_MARGIN / 2;
 
+/**
+ * §14 on a settled bar. The threshold still has to be stated — otherwise a
+ * two-point win reads as a win — but it is now a fact about a finished result
+ * rather than a target, so it is written out instead of drawn on the bar.
+ */
+const SettledMargin = ({
+  winner,
+  margin,
+}: {
+  winner: MatchState["winner"];
+  margin: number;
+}) => {
+  if (winner === "walkover") {
+    return (
+      <>
+        Concluded unopposed — one side never argued, so the {DRAW_MARGIN}-point
+        draw threshold never came into play.
+      </>
+    );
+  }
+  if (winner === "draw") {
+    return (
+      <span className="text-tertiary">
+        Final margin {margin} — inside the {DRAW_MARGIN}-point draw threshold, so
+        this ended in a draw and nobody was named MVP.
+      </span>
+    );
+  }
+  return (
+    <>
+      Final margin {margin} — past the {DRAW_MARGIN}-point draw threshold, so the
+      leading side takes it.
+    </>
+  );
+};
+
 const ArgumentProbability = ({
   argumentHeaderData,
   status,
+  winner,
 }: {
   argumentHeaderData: ArgumentHeaderProps;
   status: "live" | "concluded";
+  winner: MatchState["winner"];
 }) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const { affirmativeProbability, negativeProbability } = argumentHeaderData;
@@ -48,8 +86,12 @@ const ArgumentProbability = ({
   // §7: a side wins only when the margin EXCEEDS 5. With the two shares summing
   // to 100, |for - against| <= 5 is exactly for in [47.5, 52.5] — so the draw
   // is a band on this bar, not a knife edge, and §14 requires it to be visible.
-  const inDrawZone =
-    Math.abs(affirmativeProbability - negativeProbability) <= DRAW_MARGIN;
+  const finalMargin = Math.abs(affirmativeProbability - negativeProbability);
+  const inDrawZone = finalMargin <= DRAW_MARGIN;
+  // Once the result is final the band is a threshold nobody can still cross —
+  // it would read as a live target on a bar that can no longer move. The rule
+  // itself still has to be stated (§14), so it becomes a settled sentence.
+  const showDrawBand = status === "live";
 
   return (
     <div ref={rootRef} className="mb-12">
@@ -67,17 +109,19 @@ const ArgumentProbability = ({
         </div>
         {/* §14 the draw band — you can see a debate heading for a draw, and
             that it is still winnable, without being told after the fact. */}
-        <div
-          className="absolute top-0 bottom-0 z-10 pointer-events-none border-x border-dashed border-white/50 bg-white/5 flex items-center justify-center"
-          style={{
-            left: `${DRAW_BAND_START}%`,
-            width: `${DRAW_BAND_END - DRAW_BAND_START}%`,
-          }}
-        >
-          <span className="font-label text-[8px] tracking-[0.15em] text-white/70 hidden sm:block">
-            DRAW
-          </span>
-        </div>
+        {showDrawBand && (
+          <div
+            className="absolute top-0 bottom-0 z-10 pointer-events-none border-x border-dashed border-white/50 bg-white/5 flex items-center justify-center"
+            style={{
+              left: `${DRAW_BAND_START}%`,
+              width: `${DRAW_BAND_END - DRAW_BAND_START}%`,
+            }}
+          >
+            <span className="font-label text-[8px] tracking-[0.15em] text-white/70 hidden sm:block">
+              DRAW
+            </span>
+          </div>
+        )}
         <div
           data-divider
           className="absolute top-0 bottom-0 w-0.5 bg-white z-20 shadow-glow-marker"
@@ -96,11 +140,12 @@ const ArgumentProbability = ({
         </div>
       </div>
       <p className="mt-2 font-body text-[11px] text-outline">
-        {inDrawZone ? (
+        {status === "concluded" ? (
+          <SettledMargin winner={winner} margin={finalMargin} />
+        ) : inDrawZone ? (
           <span className="text-tertiary">
             Inside the draw zone — a margin of {DRAW_MARGIN} points or less ends
-            in a draw, and nobody is named MVP.{" "}
-            {status === "live" && "There is still time to move it."}
+            in a draw, and nobody is named MVP. There is still time to move it.
           </span>
         ) : (
           <>

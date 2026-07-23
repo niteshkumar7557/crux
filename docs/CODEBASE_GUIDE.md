@@ -328,7 +328,9 @@ the page and the code now say the same thing.
 - **The transparency layer is a product requirement, not polish.** §14 of the spec lists every
   rule that must be visible *before* it can bite. In the code that means: the side-lock
   confirmation before a first comment, the "arguing FOR" badge and comment counter on the
-  composer, the points pop-up after posting, the draw band on the probability bar, the walkover
+  composer, the points pop-up after posting, the draw band on the probability bar (live only —
+  once concluded the band becomes a settled sentence stating the final margin against the
+  threshold, since a band on a frozen bar reads as a target nobody can still reach), the walkover
   banner, and the payout breakdown on the verdict card. **If you add a rule that changes a
   user's outcome, you owe it a surface.**
 - **Tailwind cannot see class names built at runtime.** Colour-by-variant (award frames, verdict

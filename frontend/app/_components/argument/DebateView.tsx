@@ -57,6 +57,8 @@ const DebateView = async ({ id }: { id: number }) => {
     statementKeyword: row.content_keyword,
     affirmativeProbability: row.affirmative,
     negativeProbability: row.negative,
+    authorUsername: row.author_username,
+    authorAvatar: row.author_avatar ?? null,
   };
 
   const matchState = {
