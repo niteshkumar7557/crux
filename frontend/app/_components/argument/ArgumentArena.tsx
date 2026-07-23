@@ -4,8 +4,10 @@ import { getUser } from "@/app/_utils/getUser";
 import { jwtPayload } from "@/app/_types/jwt";
 import { UserArgumentCardProps } from "@/app/argument/types";
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { convertLogicScore } from "@/app/_utils/logicScore";
 import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
+import { shouldAnimate } from "@/app/_utils/animateOnce";
 
 interface RawComment {
   comment_id: number;
@@ -30,6 +32,7 @@ const ArgumentArena = ({
 }) => {
   const [user, setUser] = useState<jwtPayload | null>(null);
   const arenaRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
   useEffect(() => {
     async function fetchUser() {
       const userInfo = await getUser();
@@ -41,6 +44,7 @@ const ArgumentArena = ({
   // Each case column slides in once from its own side of the argument.
   useGSAP(
     () => {
+      if (!shouldAnimate(pathname)) return;
       const mm = gsap.matchMedia();
       mm.add(MOTION_OK, () => {
         const sides = [

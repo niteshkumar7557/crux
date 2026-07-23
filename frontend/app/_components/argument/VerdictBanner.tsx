@@ -56,6 +56,7 @@ const VerdictBanner = ({
   affirmative,
   negative,
   shareUrl,
+  certificateHref,
 }: {
   winner: Winner;
   margin: number | null;
@@ -64,6 +65,7 @@ const VerdictBanner = ({
   affirmative: number;
   negative: number;
   shareUrl: string;
+  certificateHref: string;
 }) => {
   const ruling = RULINGS[winner ?? "draw"];
   const showMargin = winner !== "walkover" && margin !== null;
@@ -82,7 +84,11 @@ const VerdictBanner = ({
           Verdict
         </span>
         <span className="ml-auto self-center">
-          <ShareVerdict url={shareUrl} title={ruling.label} />
+          <ShareVerdict
+            url={shareUrl}
+            title={ruling.label}
+            certificateHref={certificateHref}
+          />
         </span>
       </div>
 

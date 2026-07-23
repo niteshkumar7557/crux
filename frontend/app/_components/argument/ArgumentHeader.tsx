@@ -1,8 +1,10 @@
 "use client";
 import { useRef } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ArgumentHeaderProps, MatchState } from "@/app/argument/types";
 import Avatar from "@/app/_components/ui/Avatar";
+import { shouldAnimate } from "@/app/_utils/animateOnce";
 import ArgumentProbability from "./ArgumentProbability";
 import Countdown from "./Countdown";
 import VerdictBanner from "./VerdictBanner";
@@ -26,6 +28,7 @@ const ArgumentHeader = ({
 }) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const headlineRef = useRef<HTMLHeadingElement>(null);
+  const pathname = usePathname();
 
   const { statement, statementKeyword } = argumentHeaderData;
   const matchIndex = statementKeyword
@@ -43,6 +46,10 @@ const ArgumentHeader = ({
 
   useGSAP(
     () => {
+      // The header, the arena columns and the probability bar all mount in the
+      // same commit and share one key: the debate introduces itself once, as a
+      // whole, rather than in three independently-gated pieces.
+      if (!shouldAnimate(pathname)) return;
       const mm = gsap.matchMedia();
       mm.add(MOTION_OK, () => {
         if (!headlineRef.current) return;
@@ -135,6 +142,7 @@ const ArgumentHeader = ({
           affirmative={matchState.affirmative}
           negative={matchState.negative}
           shareUrl={shareUrl}
+          certificateHref={`/argument/${argumentHeaderData.statementId}/certificate`}
         />
       )}
 

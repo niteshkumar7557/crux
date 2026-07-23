@@ -10,6 +10,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import api from "@/app/axios";
 import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
+import { shouldAnimate } from "@/app/_utils/animateOnce";
 
 const ArenaSidebar = () => {
   const [trendingDomainsData, setTrendingDomainsData] =
@@ -42,6 +43,9 @@ const ArenaSidebar = () => {
 
   useGSAP(
     () => {
+      // The arena sidebar is client-fetched, so it lands on its own commit and
+      // carries its own key rather than sharing the home page's.
+      if (!shouldAnimate("/#sidebar")) return;
       const mm = gsap.matchMedia();
       mm.add(MOTION_OK, () => {
         gsap.fromTo(

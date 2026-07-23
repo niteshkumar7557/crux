@@ -6,6 +6,7 @@ import ThesisCard from "./ThesisCard";
 import { PrimaryCardDataType, SecondaryCardsDataType } from "@/app/types";
 import api from "@/app/axios";
 import { gsap, useGSAP } from "@/app/_utils/gsap";
+import { shouldAnimate } from "@/app/_utils/animateOnce";
 
 const TrendingTab = () => {
 	// The hero is ONE debate (§11's Debate of the Day), so the API returns a
@@ -25,6 +26,11 @@ const TrendingTab = () => {
 			// it), but bail defensively -- a null scope makes gsap fall back to
 			// the context selector and warn "Invalid scope".
 			if (!containerRef.current) return;
+
+			// Client-fetched, and re-mounted on every tab switch, so it owns its
+			// key. The tab-switch crossfade in ActiveArguments is NOT gated —
+			// that one answers a click and has to fire every time.
+			if (!shouldAnimate("/#trending")) return;
 
 			const cards = gsap.utils.toArray(
 				"[data-reveal]",

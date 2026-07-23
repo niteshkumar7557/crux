@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import api from "@/app/axios";
 import Skeleton from "@/app/_components/ui/Skeleton";
 import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
+import { shouldAnimate } from "@/app/_utils/animateOnce";
 import type { ProfileActivityData } from "@/app/profile/types";
 import ArenaNow from "./ArenaNow";
 import ArgumentPattern from "./ArgumentPattern";
@@ -47,6 +48,10 @@ const ProfileActivity = ({
   useGSAP(
     () => {
       if (!data) return;
+      // Its own key, not the bare pathname: this section arrives on a later
+      // commit than the identity half above it, so it cannot share that
+      // decision — the page's own batch has long been released by then.
+      if (!shouldAnimate(`/profile/${username}#activity`)) return;
       const mm = gsap.matchMedia();
       mm.add(MOTION_OK, () => {
         gsap.from("[data-activity-section]", {

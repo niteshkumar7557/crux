@@ -325,6 +325,14 @@ the page and the code now say the same thing.
   confirmation, verdict banner, OG card), `profile/`, `statement/`, `ui/` (primitives +
   `PointsPopup`). `Navbar.tsx` hosts the `NotificationBell`.
 - **`_utils/`** holds pure helpers (`slugify`, `debateMeta`, `timeAgo`, `logicScore`, gsap setup).
+- **Motion has two kinds, and they are gated differently.** An *entrance* (a page introducing
+  itself: `Reveal`, the score-bar draw, the debate headline split, the sidebar stagger) runs
+  **once per page per session** — wrap it in `shouldAnimate(key)` from `_utils/animateOnce.ts`,
+  keyed on the pathname. *Interaction feedback* (the like pulse, the tab crossfade, the points
+  pop-up) answers a click and is never gated. Surfaces that mount on a later commit than the
+  page — anything client-fetched — need their own `pathname#suffix` key, because the batch memo
+  that keeps sibling components in agreement only spans one commit. Everything decorative still
+  goes inside `gsap.matchMedia().add(MOTION_OK, …)` on top of that.
 - **The transparency layer is a product requirement, not polish.** §14 of the spec lists every
   rule that must be visible *before* it can bite. In the code that means: the side-lock
   confirmation before a first comment, the "arguing FOR" badge and comment counter on the

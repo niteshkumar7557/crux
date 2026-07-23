@@ -1,7 +1,9 @@
 "use client";
 import { useRef } from "react";
+import { usePathname } from "next/navigation";
 import { ArgumentHeaderProps, MatchState } from "@/app/argument/types";
 import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
+import { shouldAnimate } from "@/app/_utils/animateOnce";
 
 // §15: the margin must EXCEED this for a side to win.
 const DRAW_MARGIN = 5;
@@ -56,10 +58,12 @@ const ArgumentProbability = ({
   winner: MatchState["winner"];
 }) => {
   const rootRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
   const { affirmativeProbability, negativeProbability } = argumentHeaderData;
 
   useGSAP(
     () => {
+      if (!shouldAnimate(pathname)) return;
       const mm = gsap.matchMedia();
       mm.add(MOTION_OK, () => {
         // Concluded bars are a frozen final result, not a running forecast —

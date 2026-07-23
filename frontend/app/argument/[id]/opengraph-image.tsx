@@ -1,6 +1,4 @@
 import { ImageResponse } from "next/og";
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 import { isAxiosError } from "axios";
 import serverApi from "@/app/axios.server";
 import type { MatchState } from "@/app/argument/types";
@@ -9,41 +7,12 @@ import {
   TOKENS,
   type VerdictCardModel,
 } from "@/app/_components/argument/verdictCard";
+import { loadOgFonts, MONO, SERIF } from "@/app/_utils/ogFonts";
 
 export const runtime = "nodejs";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt = "Crux verdict card";
-
-const FONT_DIR = join(process.cwd(), "app", "_fonts");
-
-async function loadFonts() {
-  const [newsreader, grotesk, groteskBold] = await Promise.all([
-    readFile(join(FONT_DIR, "Newsreader-Italic.woff")),
-    readFile(join(FONT_DIR, "SpaceGrotesk-Regular.woff")),
-    readFile(join(FONT_DIR, "SpaceGrotesk-Bold.woff")),
-  ]);
-  return [
-    {
-      name: "Newsreader",
-      data: newsreader,
-      weight: 400 as const,
-      style: "italic" as const,
-    },
-    {
-      name: "Grotesk",
-      data: grotesk,
-      weight: 400 as const,
-      style: "normal" as const,
-    },
-    {
-      name: "Grotesk",
-      data: groteskBold,
-      weight: 700 as const,
-      style: "normal" as const,
-    },
-  ];
-}
 
 async function fetchModel(rawId: string): Promise<VerdictCardModel | null> {
   const id = Number(rawId.split("-")[1]);
@@ -69,9 +38,6 @@ async function fetchModel(rawId: string): Promise<VerdictCardModel | null> {
   }
 }
 
-const MONO = "Grotesk";
-const SERIF = "Newsreader";
-
 export default async function Image({
   params,
 }: {
@@ -79,7 +45,7 @@ export default async function Image({
 }) {
   const { id } = await params;
   const model = await fetchModel(id);
-  const fonts = await loadFonts();
+  const fonts = await loadOgFonts();
 
   const frame = {
     width: "100%",
