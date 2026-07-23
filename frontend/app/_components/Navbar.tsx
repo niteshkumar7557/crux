@@ -73,7 +73,7 @@ const Navbar = () => {
         </Button>
         {user && <NotificationBell />}
         <Link
-          href={user ? `/profile/${user.id}` : "/login"}
+          href={user ? "/profile/me" : "/login"}
           aria-label={user ? "Your profile" : "Log in"}
           className="cursor-pointer text-outline hover:text-primary-container transition-colors"
         >

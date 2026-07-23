@@ -147,6 +147,7 @@ export async function getSidebarData(req: Request, res: Response) {
     const data2 = await pool.query(`
             SELECT
                 name,
+                username,
                 avatar,
                 logic_score AS "logicScore",
                 id,

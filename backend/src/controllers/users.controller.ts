@@ -10,6 +10,7 @@ import {
   findRefreshToken,
   saveRefreshTokenToDB,
 } from "../lib/tokens.js";
+import { validateUsername } from "../lib/username.logic.js";
 
 const isProduction = config.node_env === "production";
 const cookieOptions: CookieOptions = {
@@ -29,12 +30,20 @@ export async function addNewUser(req: Request, res: Response) {
       .json({ error: "Please provide every Required field!" });
   }
 
+  // The username becomes a URL segment, so it is validated before anything
+  // else touches it — and stored normalised, so `/profile/<username>` is
+  // case-safe without a case-insensitive index.
+  const handle = validateUsername(userName);
+  if (!handle.ok) {
+    return res.status(400).json({ error: handle.reason });
+  }
+
   try {
     const exisiting = await pool.query(
       `
         SELECT id FROM users WHERE email = $1 OR username = $2;
       `,
-      [email, userName],
+      [email, handle.value],
     );
 
     if (exisiting.rows.length > 0) {
@@ -49,7 +58,7 @@ export async function addNewUser(req: Request, res: Response) {
       `INSERT INTO users(username, name, email, hashed_password) VALUES (
                 $1,$2,$3,$4
           ) RETURNING id, role, username, email `,
-      [userName, name, email, hashedPassword],
+      [handle.value, name, email, hashedPassword],
     );
 
     const user = rows[0];

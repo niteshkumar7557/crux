@@ -59,7 +59,7 @@ const PodiumSideCard = ({
   const share = topScore > 0 ? (debater.logicScore / topScore) * 100 : 0;
   return (
     <Link
-      href={`/profile/${debater.id}`}
+      href={`/profile/${debater.username}`}
       data-reveal
       className={`md:col-span-3 ${style.order}`}
     >
@@ -204,7 +204,7 @@ const Leaderboard = async () => {
             {season.rows.slice(0, 10).map((r) => (
               <Link
                 key={r.id}
-                href={`/profile/${r.id}`}
+                href={`/profile/${r.username}`}
                 className="flex items-center justify-between py-2 border-b border-outline-variant/15 hover:bg-surface-container transition-colors"
               >
                 <span className="flex items-center gap-3 min-w-0">
@@ -248,7 +248,7 @@ const Leaderboard = async () => {
               <PodiumSideCard debater={podium[1]} place={2} topScore={topScore} />
 
               <Link
-                href={`/profile/${podium[0].id}`}
+                href={`/profile/${podium[0].username}`}
                 data-reveal
                 className="md:col-span-6 order-1 md:order-2 z-10"
               >
@@ -332,7 +332,7 @@ const Leaderboard = async () => {
                 {rest.map((debater, i) => (
                   <Link
                     key={debater.id}
-                    href={`/profile/${debater.id}`}
+                    href={`/profile/${debater.username}`}
                     data-reveal
                     className={`grid grid-cols-12 px-8 py-6 ${i % 2 === 0 ? "bg-surface" : "bg-surface-container-lowest"} hover:bg-surface-container-low transition-colors items-center group border-l-2 border-transparent hover:border-primary`}
                   >

@@ -181,17 +181,37 @@ the grind problem through the back door. **All seasonal payoff stays status-only
 
 ---
 
-## 5. Governance — standing buys influence
+## 5. The AI-written profile blurb
+
+§9 of the spec describes "an AI-written blurb describing how you think, inferred from the
+statements you open and the arguments you make." It is the one identity feature v1 does not
+build.
+
+**Why it's deferred:** §12 fixes the AI at five personas, each with one job, and none of them
+writes profile copy. A blurb needs a sixth persona, a prompt, a regeneration trigger (on a
+comment-count threshold, or a background job), and a decision about what happens when the user
+disagrees with what it says about them. v1 ships an editable bio instead — one endpoint, no LLM
+cost, and it replaces the dead default text ("Post some Statements to get to know about you.")
+that most profiles show today.
+
+**The shape if it's built:** generate on a threshold rather than per comment (it is expensive and
+changes slowly), keep the user's manual override winning over the generated text, and show which
+one is being displayed. A profile that silently rewrites itself is unsettling; one that offers to
+is a feature.
+
+---
+
+## 6. Governance — standing buys influence
 
 Top-division players carry **weighted votes on curation**: which debates get promoted to the
 Main Stage, and which claims re-run as rounds. Very Crux-native — being good at arguing earns you
 a say in what the community argues about next.
 
-Depends on both the division ladder (§3) and community voting (§7).
+Depends on both the division ladder (§3) and community voting (§8).
 
 ---
 
-## 6. Underdog multiplier and upset bonus
+## 7. Underdog multiplier and upset bonus
 
 Within-debate liquidity: concentration fills *debates*, this fills *sides*.
 
@@ -209,7 +229,7 @@ rule. Add it if empty sides turn out to be the actual bottleneck.
 
 ---
 
-## 7. Community upvotes on the stage
+## 8. Community upvotes on the stage
 
 Users upvote live debates toward the Main Stage; votes fold into the featuring rank alongside
 heat and the admin pin. The honest cold-start-to-scale path is editorial-heavy first (you can
@@ -220,7 +240,7 @@ covers both ends of that path.
 
 ---
 
-## 8. Losing-side standout
+## 9. Losing-side standout
 
 The verdict judge names the sharpest debater **on the losing side** of a decisive match — never
 the MVP — for a small bonus and a "stood out in defeat" mention. Anti-bandwagon: it says craft is
@@ -231,7 +251,7 @@ winning side" is a rule that fits in one sentence.
 
 ---
 
-## 9. Hot extension
+## 10. Hot extension
 
 A live debate with high comment velocity in its final two hours gets one automatic extension
 (+6h), so a genuine late swing isn't cut off mid-argument.
@@ -242,7 +262,7 @@ debates really do die mid-swing, revisit.
 
 ---
 
-## 10. Email and digests
+## 11. Email and digests
 
 v1 ships in-app notifications only. The full design:
 
@@ -262,7 +282,7 @@ ping that lands someone in a dead room makes churn worse, not better.
 
 ---
 
-## 11. AI House backstop
+## 12. AI House backstop
 
 An AI opponent that fills an empty side so a featured debate doesn't walk over.
 
@@ -272,14 +292,14 @@ to die unopposed, and it would have to be clearly labelled as the House.
 
 ---
 
-## 12. Direct challenges
+## 13. Direct challenges
 
 Call out a specific opponent: *"defend the other side of this → [link]."* It's really a viral
 invite loop wearing a liquidity costume — it accelerates growth but doesn't originate it.
 
 ---
 
-## 13. Seeded evergreen debates
+## 14. Seeded evergreen debates
 
 Seed a curated base of evergreen claims (targeting real search demand) as **live** debates: the
 AI writes both cases, and they're open for humans to join and conclude.

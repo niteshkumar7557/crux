@@ -37,6 +37,7 @@ export type TrendingDomainCardData = TrendingDomainCardProps[];
 
 export interface TopDebatersCardProps {
   name: string;
+  username: string;
   avatar: string | null;
   logicScore: number;
   id: number;

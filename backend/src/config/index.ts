@@ -85,6 +85,12 @@ const config = {
     sitemap_rows: num("SITEMAP_ROWS", 5000),
     /** Max avatar upload, in megabytes. */
     avatar_upload_mb: num("AVATAR_UPLOAD_MB", 5),
+    /** Concluded debates listed on a profile. */
+    profile_history_rows: num("PROFILE_HISTORY_ROWS", 10),
+    /** Live debates listed on a profile. */
+    profile_live_rows: num("PROFILE_LIVE_ROWS", 6),
+    /** Weeks of the logic ledger charted on a profile. */
+    profile_ledger_weeks: num("PROFILE_LEDGER_WEEKS", 12),
   },
 };
 

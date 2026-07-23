@@ -5,13 +5,13 @@ import Avatar from "@/app/_components/ui/Avatar";
 const TopDebatersCard = ({
   rank,
   name,
+  username,
   avatar,
   logicScore,
-  id,
 }: TopDebatersCardProps) => {
   return (
     <Link
-      href={`/profile/${id}`}
+      href={`/profile/${username}`}
       className="flex cursor-pointer items-center gap-4 p-3 bg-surface-container-low hover:bg-surface-container-high transition-colors"
     >
       <span
@@ -19,7 +19,7 @@ const TopDebatersCard = ({
       >
         {rank < 10 ? `0${rank}` : rank}
       </span>
-      <Avatar username={name} src={avatar} size="lg" />
+      <Avatar username={username} src={avatar} size="lg" />
       <div>
         <div className="text-sm font-bold">{name}</div>
         <div className="text-[10px] font-label text-outline uppercase tracking-widest">

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 const Profile = () => {
-  redirect("/");
+  redirect("/profile/me");
 };
 
 export default Profile;

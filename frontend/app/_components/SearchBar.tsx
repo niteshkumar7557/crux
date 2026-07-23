@@ -226,7 +226,7 @@ export default function SearchBar() {
                       {results.users.map((result) => (
                         <Link
                           key={`user-${result.id}`}
-                          href={`/profile/${result.id}`}
+                          href={`/profile/${result.username}`}
                           onClick={close}
                           className="w-full text-left px-4 py-3 flex items-center space-x-3 text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface border-l-2 border-transparent"
                         >

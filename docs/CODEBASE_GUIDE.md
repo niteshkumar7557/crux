@@ -25,7 +25,7 @@ breadth-first through every folder:
 1. **Entry points.** `backend/src/index.ts` (boots the server + three background jobs) and
    `backend/src/app.ts` (mounts every route group). On the frontend, `frontend/app/layout.tsx`
    + `frontend/app/page.tsx` (the home "Arena"). Ten minutes here tells you the shape.
-2. **The data model.** Read `backend/src/db/migrations/*.sql` **in numeric order** — ten files,
+2. **The data model.** Read `backend/src/db/migrations/*.sql` **in numeric order** — eleven files,
    and together they are the whole schema. (Section 4 narrates them.)
 3. **Trace one request end-to-end.** Pick "post a comment" and follow it: route →
    controller → the AI calls → the SQL writes → the response. Do this once and 80% of the
@@ -127,10 +127,10 @@ cd frontend && npm i && npm run dev                      # Next.js :3000
 
 ---
 
-## 4. The data model — ten migrations, one schema
+## 4. The data model — eleven migrations, one schema
 
 Postgres, raw SQL, applied by a home-grown runner (`db/migrate.ts`, tracks applied files in a
-`_migrations` table, filename-ordered). These ten files *are* the schema — read them in order
+`_migrations` table, filename-ordered). These eleven files *are* the schema — read them in order
 and you have the whole data model.
 
 | Migration | Table | What it means |
@@ -145,6 +145,7 @@ and you have the whole data model.
 | `0007` | `season_awards` | §10 season titles. Permanent, stacking, status-only. `UNIQUE (season_key, rank)` is what makes the rollover job idempotent. |
 | `0008` | `notifications` | In-app return triggers (`opposition`, `reply`, `verdict`, `season`). |
 | `0009` | `logic_events` | The timestamped logic ledger. `season_only = TRUE` writes a ledger row **without** touching `logic_score` — that is how a loss costs the month's race and never the career total. |
+| `0010` | *(indexes only)* | Indexes the profile filters on: `comments(user_id)`, `arguments(user_id)`, `users(logic_score DESC, id ASC)`. Postgres does not auto-index foreign keys, and every profile query filters on those columns. |
 
 **Two things to internalise:** there is no `seasons` table (a season is a **computed calendar
 month**, §5), and `arguments.pinned` is the admin override — not a separate curation table.
@@ -280,8 +281,9 @@ missing the copy is how the product ends up lying to its users.
 | **Main Stage size** | ~4 | `jobs/featuring.logic.ts` `MAIN_STAGE_SIZE` | `featuring.logic.test.ts`. Note `getSecondaryCardsData` in `arena.controller.ts` has its own `LIMIT 6` — raise it or the extra cards never render |
 | **Debate of the Day** | 1/day | `jobs/featuring.ts` `rotateDotd()` (the UTC-day guard) | nothing else; `getPrimaryCardData` assumes exactly one |
 | **Tier thresholds** | 0/50/100/150/200 | `controllers/profile.controller.ts` `convertLogicScore()` | **`frontend/app/_utils/logicScore.ts` is a full duplicate of the same ladder** — change both or the profile and the cards disagree |
+| **Username rule** | `^[a-z0-9_]{3,20}$` | `lib/username.logic.ts` | `username.logic.test.ts`; **`frontend/app/_utils/username.ts` is a full duplicate**; the register form's hint copy |
 
-### The four values that exist in two places
+### The five values that exist in two places
 
 These are duplicated across the backend/frontend boundary on purpose — the frontend cannot
 import backend modules — and they are the ones that silently drift:
@@ -290,6 +292,7 @@ import backend modules — and they are the ones that silently drift:
 - `STANDALONE_CAP` → `ai/analyst.logic.ts` **and** `ui/awardCopy.ts`
 - `FULL_VALUE_COMMENTS` → `ai/analyst.logic.ts` **and** `ArgumentInput.tsx`
 - the tier ladder → `profile.controller.ts` **and** `_utils/logicScore.ts`
+- the username rule → `lib/username.logic.ts` **and** `app/_utils/username.ts`
 
 A drift here is invisible to both test suites — each side stays internally consistent while the
 UI states a different rule than the server enforces. Grep the number across both packages
@@ -314,7 +317,8 @@ the page and the code now say the same thing.
   `localStorage`, base `/api`). Knowing which axios you're in explains most data-flow questions.
 - **Routes** (`frontend/app/*`): `/` (Arena home), `/argument/[id]` and the canonical SEO alias
   `/debate/[slug]` (both render the shared `_components/argument/DebateView.tsx`), `/domain`,
-  `/topic/[keyword]` (SEO hubs), `/leaderboard` (Season + Legends boards), `/profile/[id]`,
+  `/topic/[keyword]` (SEO hubs), `/leaderboard` (Season + Legends boards), `/profile/me`
+  (client shim → canonical URL) and `/profile/[username]` (numeric segments redirect),
   `/statement`, `/rules`, `(auth)/login|register`, plus `sitemap.ts` + `robots.ts`.
 - **Component folders** under `_components/`: `arena/` (feed cards, Main Stage, `PinControl`),
   `argument/` (the debate page: header, arena columns, composer, reply context, side-lock
@@ -379,8 +383,10 @@ the page and the code now say the same thing.
   writes in `BEGIN/COMMIT` is the fix.
 - **`POST /ai/statement` does not validate its body.** A missing `content` interpolates the
   string `"undefined"` into the prompt and spends an LLM call judging it.
-- **`Countdown` hydrates with a mismatch** on every debate page — the server renders one minute
-  and the client hydrates on the next. Harmless, noisy in the console.
+- **`Countdown` hydrates with a mismatch** on every debate page (`/argument/[id]`,
+  `/debate/[slug]`) — the server renders one minute and the client hydrates on the next.
+  Harmless, noisy in the console. The profile's **In The Arena** renders the same component but
+  does *not* reproduce it: that section is client-fetched, so it never server-renders.
 - **Vocabulary is inconsistent.** The spec fixes the two sides as **FOR / AGAINST**, but the
   composer buttons and the probability bar say *Affirmative / Negative*. A rename is a
   product-wide decision, not a local fix.
@@ -390,7 +396,7 @@ the page and the code now say the same thing.
 ## 10. A suggested first afternoon
 
 1. Read `docs/game-theory.md` end to end (30 min). It is short and it is the spec.
-2. Read the migrations `0000`→`0009` in order (20 min) — you now know the data model.
+2. Read the migrations `0000`→`0010` in order (20 min) — you now know the data model.
 3. Read `index.ts`, `app.ts`, then `comment.controller.ts` top to bottom, opening
    `analyst.logic.ts` when it's referenced (45 min) — you now know one full flow + the
    pure-logic convention.

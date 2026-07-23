@@ -15,6 +15,7 @@ import {
 import Button from "@/app/_components/ui/Button";
 import { isAxiosError } from "axios";
 import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
+import { normalizeUsername, validateUsername } from "@/app/_utils/username";
 
 const Register = () => {
   const [name, setName] = useState<string>("");
@@ -23,6 +24,7 @@ const Register = () => {
   const [password, setPassword] = useState<string>("");
 
   const [error, setError] = useState("");
+  const [userNameError, setUserNameError] = useState("");
 
   const router = useRouter();
   const rootRef = useRef<HTMLElement>(null);
@@ -59,9 +61,14 @@ const Register = () => {
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
+    const handle = validateUsername(userName);
+    if (!handle.ok) {
+      setUserNameError(handle.reason);
+      return;
+    }
     const info = {
       name,
-      userName,
+      userName: handle.value,
       email,
       password,
     };
@@ -137,14 +144,36 @@ const Register = () => {
                   <input
                     className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-outline transition-all font-body text-sm"
                     id="username"
-                    placeholder="Pick a username"
+                    placeholder="pick_a_username"
                     required={true}
                     type="text"
                     autoComplete="username"
+                    maxLength={20}
+                    aria-invalid={userNameError !== ""}
+                    aria-describedby="username-hint"
                     value={userName}
-                    onChange={(e) => setUserName(e.currentTarget.value)}
+                    onChange={(e) => {
+                      // Lowercase as you type, so the normalisation the server
+                      // performs is visible rather than a surprise after submit.
+                      const next = normalizeUsername(e.currentTarget.value);
+                      setUserName(next);
+                      if (next === "") {
+                        setUserNameError("");
+                        return;
+                      }
+                      const check = validateUsername(next);
+                      setUserNameError(check.ok ? "" : check.reason);
+                    }}
                   />
                 </div>
+                <p
+                  id="username-hint"
+                  className={`font-label text-[10px] uppercase tracking-widest ${
+                    userNameError ? "text-secondary" : "text-outline"
+                  }`}
+                >
+                  {userNameError || "Lowercase letters, numbers and underscores. This becomes your profile URL."}
+                </p>
               </div>
               <div data-auth-field className="space-y-2">
                 <label

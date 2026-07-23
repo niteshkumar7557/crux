@@ -37,7 +37,7 @@ These came from explicit user feedback during the makeover. Do not relitigate th
 | Icons | **Lucide only** (`react-icons/lu`) — the 13 mixed families were purged. react-icons is v5.6.0: several older Lucide aliases don't exist (`LuUserCircle2`, `LuAlertTriangle`, `LuBarChart3` → use `LuCircleUserRound`, `LuTriangleAlert`, `LuChartColumn`). **Verify exports with `node -e "require('react-icons/lu')"` before using a new icon.** |
 | Data | Server components fetch via `app/axios.server.ts` (baseURL from `NEXT_PUBLIC_API_URL` = `http://localhost:8000`); client via `app/axios.ts` (Bearer from localStorage, 401→refresh interceptor). |
 | Auth | JWT in localStorage (`access_token`), decoded shape in `app/_types/jwt.ts` (`jwtPayload`: id, role, username, email, exp, iat). `getUser()` in `_utils/getUser.ts` handles decode + refresh. |
-| Quality gates | `npx tsc --noEmit` clean, `npm run lint` **0 problems** (was 31 pre-makeover). Keep both at zero. |
+| Quality gates | `npx tsc --noEmit` clean; `npm run lint` **0 errors** (was 31 problems pre-makeover). Keep errors at zero. Three `no-unused-vars` **warnings** currently sit in `_components/arena/ArenaPrimaryCard.tsx` (`settledSide`, `LuBadgeCheck`, `status`) — pre-existing and unrelated to the profile redesign; clear them when that card is next touched. |
 | Dev servers | frontend `npm run dev` → :3000 (Next 16 daemonizes; logs at `.next/dev/logs/next-development.log`); backend `npm run dev` (tsx watch) → :8000; Postgres via `docker-compose.dev.yml`. |
 
 ### Routes (all real — no stubs remain)
@@ -48,12 +48,12 @@ These came from explicit user feedback during the makeover. Do not relitigate th
 | `/login`, `/register` | Auth pages (route group hides navbar/footer via `ConditionalLayout`); consumer labels, GSAP entrances. |
 | `/statement` | Staged claim submission (2026-07-17 redesign): compose → Arbiter verdict → broadcast on one evolving surface with a progress rail. See §4a. |
 | `/argument/[id]` | Debate arena: SplitText hero, probability bar draw + count-up, For/Against `CaseColumn`s, sticky `ArgumentInput`. |
-| `/profile/[id]` | Head info, reputation bar chart (animated draw), active statements, CTA. 404s cleanly on bad ids. |
+| `/profile/me`, `/profile/[username]` | Career dossier. Identity + standing SSR; ledger, argument pattern, live debates and concluded history in one client fetch below the fold. `/profile/me` is a client shim to the canonical handle URL; numeric segments redirect. |
 | `/leaderboard` | **Real page** ("The Elite Hierarchy"): asymmetric top-3 podium (crowned apex + silver/bronze flanks) + striped standings table. Data from new backend endpoint `GET /arena/leaderboard` (top 50: id, name, username, logicScore, rank, statementCount, argumentCount). Podium requires ≥3 ranked users, else flat list. |
 | `/rules` | Real static "Rules of Engagement" (6 numbered rules + CTA). Linked from footer and the abuse toast. |
 | `/about` | Real static "Where logic decides." (3 accent pillars + CTAs). |
 | `/domain` | Canonical **domain browser** (`?q=<slug>` or `?q=all`, `&page=<n>`; replaced the old `/archive`). Server-filtered via `GET /arena/statements`, all-12 seeded chips, `ArenaCard` grid, `ui/Pagination` footer. Slugs via `_utils/domainSlug.ts` (`"Technology & AI"` → `technology-ai`). Search domain results and the sidebar's Trending Domains link here; navbar has a Domains tab. |
-| Page states | Root `loading.tsx`, `error.tsx`, branded `not-found.tsx`; route-level `loading.tsx` for `/argument/[id]` and `/profile/[id]`. |
+| Page states | Root `loading.tsx`, `error.tsx`, branded `not-found.tsx`; route-level `loading.tsx` for `/argument/[id]` and `/profile/[username]`. |
 
 ## 3. Design system reference
 
@@ -71,7 +71,7 @@ Tokens live in `frontend/app/globals.css` `@theme` (M3-style dark ramp):
 
 **`ui/` primitives:**
 - `Button.tsx` — the only CTA. Variants `solid | outline | outline-secondary | outline-neutral`, sizes `sm | md | lg | bare` (bare = caller controls padding). Renders `<Link>` when `href` is passed. Has real disabled styling.
-- `Avatar.tsx` — brand avatar. Optional `src` (the `users.avatar` path, e.g. `/avatars/presets/preset-07.svg` or `/uploads/avatars/u2-<uuid>.webp`) renders the image via `next/image` (`fill`, `unoptimized`, prefixed with `/api` so the Next rewrite proxies to the backend). Without `src`: initials (splits on space/`_`/`.`/`-`) on `surface-container-high` chip, accent auto-hashed from username (cyan/amber only) or forced via `accent="primary"|"secondary"` (comment cards pass stance). Sizes `sm md lg xl 2xl`. The picker/upload UI is `profile/AvatarEditor.tsx`, shown on your own `/profile/[id]`.
+- `Avatar.tsx` — brand avatar. Optional `src` (the `users.avatar` path, e.g. `/avatars/presets/preset-07.svg` or `/uploads/avatars/u2-<uuid>.webp`) renders the image via `next/image` (`fill`, `unoptimized`, prefixed with `/api` so the Next rewrite proxies to the backend). Without `src`: initials (splits on space/`_`/`.`/`-`) on `surface-container-high` chip, accent auto-hashed from username (cyan/amber only) or forced via `accent="primary"|"secondary"` (comment cards pass stance). Sizes `sm md lg xl 2xl`. The picker/upload UI is `profile/AvatarEditor.tsx`, shown on your own `/profile/[username]`.
 - `Reveal.tsx` — client wrapper for server pages: batch-staggers every `[data-reveal]` descendant via `ScrollTrigger.batch` (start "top 88%", `once`, initial dim 0.25 → rise). Used by statement, profile, leaderboard, rules, about, archive.
 - `Skeleton.tsx` — loading-state building block.
 - `Pagination.tsx` — reusable pager (props: `page`, `totalPages`, `totalItems`, `itemLabel`, `hrefFor(page)`). Hairline-topped readout row + windowed zero-padded page cells (first/last/current ±1, inert `…` gaps), chip-style active state, disabled edge Prev/Next. Renders `null` at ≤1 page. Used by `/domain`; drop-in for future paginated pages.
@@ -153,7 +153,7 @@ Reduced-motion users get the server-rendered end state (verified via emulation).
 ## 9. Verification workflow used throughout (repeat it)
 
 1. `cd frontend && npx tsc --noEmit` and `npm run lint` — both must stay at zero.
-2. Playwright MCP sweep: navigate `/`, `/login`, `/register`, `/statement`, `/argument/CRX-1-A`, `/profile/1`, `/leaderboard`, `/rules`, `/about`, `/domain?q=all` collecting console errors + pageerrors — must be zero (ignore one-time `ChunkLoadError` right after a dev-server restart; re-run to confirm).
+2. Playwright MCP sweep: navigate `/`, `/login`, `/register`, `/statement`, `/argument/CRX-1-A`, `/profile/me`, `/profile/nitesh_dev`, `/profile/1`, `/profile/nope`, `/leaderboard`, `/rules`, `/about`, `/domain?q=all` collecting console errors + pageerrors — must be zero (ignore one-time `ChunkLoadError` right after a dev-server restart; re-run to confirm).
 3. Screenshot desktop (1440) and mobile (390) for visual changes; check `scrollWidth === clientWidth` at 390px.
 4. For motion work: emulate `prefers-reduced-motion: reduce` and assert no element is left dimmed/transformed; assert end states are `opacity: 1` / `transform: none`.
 5. Backend endpoint changes hot-reload via tsx watch; probe with `curl localhost:8000/...`.

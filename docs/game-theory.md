@@ -270,8 +270,10 @@ A profile carries:
 | 200+ | Master | M |
 
 - **Season titles and avatar frames** — permanent, stacking (§10).
-- **An AI-written blurb** describing how you think, inferred from the statements you open and
-  the arguments you make.
+- **A short bio**, written by the user. §12 defines five AI personas and none of them writes
+  profile copy, so v1 ships an editable bio; the AI-written blurb — inferred from the statements
+  you open and the arguments you make — is designed and deferred in
+  [`future-features.md`](./future-features.md).
 
 ---
 
