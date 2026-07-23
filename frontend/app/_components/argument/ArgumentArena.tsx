@@ -107,6 +107,7 @@ const ArgumentArena = ({
       replyTo:
         e.reply_to_comment_id !== null
           ? {
+              commentId: e.reply_to_comment_id,
               username: e.reply_to_username ?? "",
               content: e.reply_to_content ?? "",
             }

@@ -1,10 +1,12 @@
 "use client";
 import { UserArgumentCardProps } from "@/app/argument/types";
 import api from "@/app/axios";
+import Link from "next/link";
 import { useRef, useState } from "react";
 import { LuThumbsUp } from "react-icons/lu";
 import Avatar from "@/app/_components/ui/Avatar";
 import { gsap, MOTION_OK } from "@/app/_utils/gsap";
+import { focusComment } from "@/app/_utils/focusComment";
 import { useReplyTarget } from "./ReplyContext";
 
 const UserArgumentCard = ({
@@ -26,6 +28,12 @@ const UserArgumentCard = ({
   const [liked, setLiked] = useState(false);
   const likeRef = useRef<HTMLButtonElement>(null);
   const { setTarget } = useReplyTarget();
+
+  // Every footer control is the same tiny label that warms to the column's
+  // accent on hover; only the like button adds a filled state on top.
+  const actionClass = `font-label text-[10px] uppercase text-outline cursor-pointer transition-colors ${
+    side === "for" ? "hover:text-primary" : "hover:text-secondary"
+  }`;
 
   // Cross-side only (§5): you can reply to an opposing comment, never your own
   // side. A viewer with no side yet may reply to anyone — it locks them to the
@@ -52,32 +60,23 @@ const UserArgumentCard = ({
         );
       }
       setLikeCount((e) => e + 1);
-      if (user_id) {
-        await api.post(
-          "/like",
-          { comment_id },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            },
+      // Only rendered for a signed-in viewer, so there is always a token here.
+      await api.post(
+        "/like",
+        { comment_id },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           },
-        );
-      }
+        },
+      );
     } else {
       setLikeCount((e) => e - 1);
     }
   }
 
-  // The target reply lives in the opposing column; jump straight to it.
-  function scrollToFirstReply() {
-    if (firstReplyId === null) return;
-    document
-      .getElementById(`comment-${firstReplyId}`)
-      ?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
-
   return (
-    <div id={`comment-${comment_id}`}>
+    <div id={`comment-${comment_id}`} data-side={side}>
       <div
         className={`group mb-2 relative bg-surface-container-low p-6 border-l ${side === "for" ? "border-primary/20 hover:border-primary/60" : "border-secondary/20 hover:border-secondary/60"}  transition-all`}
       >
@@ -109,10 +108,14 @@ const UserArgumentCard = ({
           </div>
         </div>
         {/* §5: the quoted stub of the opposing comment this reply answers. The
-            border takes the opponent's accent so it reads as a foreign quote. */}
+            border takes the opponent's accent so it reads as a foreign quote,
+            and the whole stub jumps to the comment it is quoting. */}
         {replyTo && (
-          <div
-            className={`mb-4 border-l-2 pl-3 py-2 bg-surface-container-lowest/60 ${side === "for" ? "border-secondary/40" : "border-primary/40"}`}
+          <button
+            type="button"
+            onClick={() => focusComment(replyTo.commentId)}
+            aria-label={`Go to the comment by @${replyTo.username} this answers`}
+            className={`block w-full text-left cursor-pointer mb-4 border-l-2 pl-3 py-2 bg-surface-container-lowest/60 hover:bg-surface-container-lowest transition-colors ${side === "for" ? "border-secondary/40 hover:border-secondary" : "border-primary/40 hover:border-primary"}`}
           >
             <p className="font-label text-[9px] uppercase tracking-[0.15em] text-outline mb-1">
               replying to @{replyTo.username}
@@ -124,37 +127,52 @@ const UserArgumentCard = ({
                 : replyTo.content}
               &rdquo;
             </p>
-          </div>
+          </button>
         )}
         <p className="font-body text-base leading-relaxed text-on-surface-variant mb-6 italic">
           &ldquo;{comment}&rdquo;
         </p>
         <div className="flex gap-4 items-center">
-          <button
-            ref={likeRef}
-            onClick={handleClick}
-            className={`flex items-center gap-2 font-label text-[10px] uppercase text-outline ${liked && side === "for" && "text-primary"} ${liked && side === "against" && "text-secondary"} ${side === "for" ? "hover:text-primary" : "hover:text-secondary"}  transition-colors`}
-          >
-            <LuThumbsUp
-              className={`text-sm ${liked ? `fill-current ${side === "for" ? "text-primary" : "text-secondary"}` : ""}`}
-            />{" "}
-            {likeCount}
-          </button>
+          {/* A like is a logic award to the author (§6), so it needs an account.
+              Logged-out viewers still see the count — they just get sent to log
+              in instead of a like that would silently go nowhere. */}
+          {user_id === undefined ? (
+            <Link
+              href="/login"
+              title="Log in to like this argument"
+              className={`${actionClass} flex items-center gap-2`}
+            >
+              <LuThumbsUp className="text-sm" /> {likeCount}
+            </Link>
+          ) : (
+            <button
+              ref={likeRef}
+              onClick={handleClick}
+              className={`${actionClass} flex items-center gap-2 ${liked && side === "for" ? "text-primary" : ""} ${liked && side === "against" ? "text-secondary" : ""}`}
+            >
+              <LuThumbsUp
+                className={`text-sm ${liked ? `fill-current ${side === "for" ? "text-primary" : "text-secondary"}` : ""}`}
+              />{" "}
+              {likeCount}
+            </button>
+          )}
           {canReply && (
             <button
               onClick={() =>
-                setTarget({ commentId: comment_id, username, content: comment, side })
+                setTarget({
+                  commentId: comment_id,
+                  username,
+                  content: comment,
+                  side,
+                })
               }
-              className={`font-label text-[10px] uppercase text-outline ${side === "for" ? "hover:text-primary" : "hover:text-secondary"} transition-colors`}
+              className={actionClass}
             >
               Reply
             </button>
           )}
-          {replyCount > 0 && (
-            <button
-              onClick={scrollToFirstReply}
-              className={`font-label text-[10px] uppercase text-outline ${side === "for" ? "hover:text-primary" : "hover:text-secondary"} transition-colors`}
-            >
+          {replyCount > 0 && firstReplyId !== null && (
+            <button onClick={() => focusComment(firstReplyId)} className={actionClass}>
               ↳ {replyCount} {replyCount === 1 ? "reply" : "replies"}
             </button>
           )}

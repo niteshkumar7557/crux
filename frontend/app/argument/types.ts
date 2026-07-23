@@ -10,7 +10,8 @@ export interface UserArgumentCardProps {
   comment_id: number;
   post_user_id: number;
   // §5: the opposing comment this one answers, or null for a standalone.
-  replyTo: { username: string; content: string } | null;
+  // `commentId` is the jump target behind the quoted stub.
+  replyTo: { commentId: number; username: string; content: string } | null;
   replyCount: number; // "↳ N replies" shown on the target comment
   firstReplyId: number | null; // scroll anchor for the replies link
   viewerLockedSide: "for" | "against" | null; // gates the cross-side Reply button

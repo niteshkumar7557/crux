@@ -383,6 +383,11 @@ the page and the code now say the same thing.
 - **`postComment` has no wrapping transaction.** If the second LLM call (probability)
   rate-limits, the comment and the logic award persist but the client gets a 500. Wrapping the
   writes in `BEGIN/COMMIT` is the fix.
+- **There is no unlike.** `POST /like` is insert-once and idempotent (a second call answers
+  `"Already Liked!"`), but `UserCommentCard` lets a viewer toggle the thumb back off and
+  decrements the count locally. The server never hears about it, so the count is wrong until
+  the next load. Either an unlike endpoint or a one-way button is the fix; the button is now
+  only rendered for signed-in viewers, so this is the last hole in the like flow.
 - **`POST /ai/statement` does not validate its body.** A missing `content` interpolates the
   string `"undefined"` into the prompt and spends an LLM call judging it.
 - **`Countdown` hydrates with a mismatch** on every debate page (`/argument/[id]`,
