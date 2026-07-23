@@ -27,7 +27,7 @@ CRUX is an AI-powered debate platform where statements are judged before they re
 | Frontend | Next.js 16, TypeScript, Tailwind CSS v4 |
 | Backend | Node.js, Express, TypeScript |
 | Database | PostgreSQL |
-| AI | Groq API (LLaMA + GPT OSS) |
+| AI | OpenRouter (DeepSeek V4 Flash) |
 | Auth | JWT (Access and Refresh tokens) |
 | Containerization | Docker + Docker Compose |
 
@@ -72,7 +72,7 @@ crux/
 ### Prerequisites
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed
-- A [Groq API key](https://console.groq.com/) (free tier available)
+- An [OpenRouter API key](https://openrouter.ai/keys) with credit on it
 
 ---
 
@@ -91,18 +91,29 @@ Rename `pgadmin.example.env` to `pgadmin.env` and replace email password of your
 
 Rename `.env.example` file in both `frontend/` and `backend/` directories to `.env`
 
-and add your Groq api key inside `backend/.env`
+and add your OpenRouter api key inside `backend/.env` as `OPENROUTER_API_KEY`.
 
-**LLM provider (optional).** By default the backend talks to Groq using `GROQ_API_KEY`. To point it at any OpenAI-compatible provider (e.g. OpenRouter) without code changes, set:
+**LLM provider.** The backend talks to OpenRouter and runs every AI persona on a
+single model, `deepseek/deepseek-v4-flash` — 1M context, $0.098 in / $0.196 out
+per 1M tokens. The client speaks plain OpenAI-compatible `/chat/completions`, so
+the provider is env-only, no code change:
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `LLM_BASE_URL` | `https://api.groq.com/openai/v1` | Chat-completions base URL |
-| `LLM_API_KEY` | falls back to `GROQ_API_KEY` | API key for the provider |
-| `LLM_MODEL_SMART` | `openai/gpt-oss-120b` | Model for the arbiter, analysis, and scoring calls |
-| `LLM_MODEL_FAST` | `llama-3.3-70b-versatile` | Model for the debater-description call |
+| `LLM_BASE_URL` | `https://openrouter.ai/api/v1` | Chat-completions base URL |
+| `LLM_API_KEY` | falls back to `OPENROUTER_API_KEY` | API key for the provider |
+| `LLM_MODEL` | `deepseek/deepseek-v4-flash` | The one model behind all six personas |
+| `LLM_REASONING` | `off` | `off` \| `high` \| `xhigh` — see below |
 
-Example for OpenRouter: `LLM_BASE_URL=https://openrouter.ai/api/v1`, `LLM_API_KEY=sk-or-...`, `LLM_MODEL_SMART=deepseek/deepseek-v4-flash`.
+**Leave `LLM_REASONING=off`.** V4 Flash is a reasoning model, and its thinking
+tokens are billed as output *and* count against `max_tokens`. Every persona
+returns a rubric-scored JSON object rather than a derivation, so thinking buys
+nothing here and costs roughly 5-7x the output tokens — measured, it turned a
+40-token reply into 267. It also eats the budget on the tighter calls (the
+debater-description call caps at 500) until JSON mode returns a truncated body.
+
+Running cost is roughly **$0.0002 per statement published, $0.00014 per comment,
+$0.00017 per verdict** — see §6 of `docs/CODEBASE_GUIDE.md` for the full model.
 
 ---
 

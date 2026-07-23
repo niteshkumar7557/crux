@@ -41,7 +41,6 @@ ${allPastArguments.map((r: { content: string }, i: number) => `${i + 1}. "${r.co
   const parsed = await llmJson({
     system: DESCRIPTION_SYSTEM_PROMPT,
     user: userPrompt,
-    model: "fast",
     temperature: 0.6,
     maxTokens: 500,
   });

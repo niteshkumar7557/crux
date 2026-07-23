@@ -51,16 +51,23 @@ const config = {
 
   // ── LLM provider ──────────────────────────────────────────────────────────
   llm: {
-    base_url: str("LLM_BASE_URL", "https://api.groq.com/openai/v1"),
-    api_key: process.env.LLM_API_KEY ?? process.env.GROQ_API_KEY,
-    model_smart: str("LLM_MODEL_SMART", "openai/gpt-oss-120b"),
-    model_fast: str("LLM_MODEL_FAST", "llama-3.3-70b-versatile"),
+    base_url: str("LLM_BASE_URL", "https://openrouter.ai/api/v1"),
+    api_key: process.env.LLM_API_KEY ?? process.env.OPENROUTER_API_KEY,
+    /** One model for every persona. See docs/CODEBASE_GUIDE.md §6. */
+    model: str("LLM_MODEL", "deepseek/deepseek-v4-flash"),
     /** Per-request abort, in ms. */
     timeout_ms: num("LLM_TIMEOUT_MS", 30_000),
     /** Attempts after the first one fails. */
     retries: num("LLM_RETRIES", 2),
     temperature: num("LLM_TEMPERATURE", 0.2),
     max_tokens: num("LLM_MAX_TOKENS", 3000),
+    /**
+     * "off" | "high" | "xhigh". DeepSeek V4 Flash is a reasoning model whose
+     * thinking tokens are billed as output AND count toward max_tokens, so
+     * leaving it on truncates the shorter calls into invalid JSON. Every
+     * persona returns a rubric-scored JSON object, not a derivation — off.
+     */
+    reasoning: str("LLM_REASONING", "off"),
   },
 
   // ── Background jobs (in-process setInterval pollers) ──────────────────────

@@ -1,14 +1,21 @@
 import { jsonrepair } from "jsonrepair";
 import config from "../config/index.js";
 
-const { base_url: BASE_URL, api_key: API_KEY } = config.llm;
-const MODEL_SMART = config.llm.model_smart;
-const MODEL_FAST = config.llm.model_fast;
+const { base_url: BASE_URL, api_key: API_KEY, model: MODEL } = config.llm;
+
+// OpenRouter's shape: `{ enabled: false }` suppresses thinking entirely,
+// `{ effort }` picks a budget. Anything else and we send no field at all,
+// leaving the model on its own default.
+const REASONING =
+  config.llm.reasoning === "off"
+    ? { enabled: false }
+    : config.llm.reasoning === "high" || config.llm.reasoning === "xhigh"
+      ? { effort: config.llm.reasoning }
+      : undefined;
 
 type LlmOpts = {
   system: string;
   user: string;
-  model?: "smart" | "fast";
   temperature?: number;
   maxTokens?: number;
 };
@@ -21,10 +28,11 @@ async function callOnce(opts: Required<LlmOpts>): Promise<string> {
       Authorization: `Bearer ${API_KEY}`,
     },
     body: JSON.stringify({
-      model: opts.model === "fast" ? MODEL_FAST : MODEL_SMART,
+      model: MODEL,
       temperature: opts.temperature,
       max_tokens: opts.maxTokens,
       response_format: { type: "json_object" },
+      ...(REASONING ? { reasoning: REASONING } : {}),
       messages: [
         { role: "system", content: opts.system },
         { role: "user", content: opts.user },
@@ -43,11 +51,10 @@ export async function llmJson<T = any>(opts: LlmOpts): Promise<T> {
   const filled: Required<LlmOpts> = {
     system: opts.system,
     user: opts.user,
-    model: opts.model ?? "smart",
     temperature: opts.temperature ?? config.llm.temperature,
-    // The default "smart" model (gpt-oss-120b) is a reasoning model: reasoning
-    // tokens count toward max_tokens and vary a lot (~200-1400), so the ceiling
-    // must be generous or JSON mode returns a truncated, invalid body (HTTP 400).
+    // Keep this ceiling generous. If LLM_REASONING is turned back on, thinking
+    // tokens count toward max_tokens and vary a lot, so a tight value returns
+    // truncated, invalid JSON rather than a clean error.
     maxTokens: opts.maxTokens ?? config.llm.max_tokens,
   };
 
