@@ -318,7 +318,8 @@ the page and the code now say the same thing.
 - **Routes** (`frontend/app/*`): `/` (Arena home), `/argument/[id]` and the canonical SEO alias
   `/debate/[slug]` (both render the shared `_components/argument/DebateView.tsx`), `/domain`,
   `/archive` (the settled record — concluded debates, filtered by outcome and domain),
-  `/topic/[keyword]` (SEO hubs), `/leaderboard` (Season + Legends boards), `/profile/me`
+  `/topic/[keyword]` (SEO hubs), `/leaderboard` (season board by default, `?tab=all-time` for
+  the career board; both paginated through the same podium + table), `/profile/me`
   (client shim → canonical URL) and `/profile/[username]` (numeric segments redirect),
   `/statement`, `/rules`, `(auth)/login|register`, plus `sitemap.ts` + `robots.ts`.
 - **Component folders** under `_components/`: `arena/` (feed cards, Main Stage, `PinControl`),

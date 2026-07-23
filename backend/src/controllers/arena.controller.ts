@@ -145,70 +145,117 @@ export async function getSidebarData(req: Request, res: Response) {
   }
 }
 
-export async function getLeaderboardData(req: Request, res: Response) {
-  try {
-    const standings = await pool.query(`
-            SELECT
-                u.id,
-                u.name,
-                u.username,
-                u.avatar,
-                u.logic_score AS "logicScore",
-                RANK () OVER (ORDER BY u.logic_score DESC, u.id ASC)::int AS rank,
-                COALESCE(a.count, 0)::int AS "statementCount",
-                COALESCE(c.count, 0)::int AS "argumentCount"
-            FROM users u
-            LEFT JOIN (
-                SELECT user_id, COUNT(*) AS count FROM arguments GROUP BY user_id
-            ) a ON a.user_id = u.id
-            LEFT JOIN (
-                SELECT user_id, COUNT(*) AS count FROM comments GROUP BY user_id
-            ) c ON c.user_id = u.id
-            ORDER BY u.logic_score DESC, u.id ASC
-            LIMIT ${config.limits.leaderboard_rows};
-        `);
+/**
+ * Both boards are a window onto a capped ranking, not the whole user table:
+ * `leaderboard_rows` still decides how deep the board goes, and paging walks
+ * that same depth. So the constant keeps the meaning it always had.
+ */
+const LEADERBOARD_PAGE_SIZE = 20;
 
-    res.status(200).json(standings.rows);
+function leaderboardPaging(req: Request) {
+  const cap = config.limits.leaderboard_rows;
+  let pageSize = Number.parseInt(String(req.query.pageSize ?? ""), 10);
+  if (!Number.isInteger(pageSize)) pageSize = LEADERBOARD_PAGE_SIZE;
+  pageSize = Math.min(Math.max(pageSize, 1), 50);
+
+  let page = Number.parseInt(String(req.query.page ?? ""), 10);
+  if (!Number.isInteger(page) || page < 1) page = 1;
+
+  return { cap, page, pageSize };
+}
+
+/** Ranked users, capped — the denominator both boards page through. */
+async function rankedTotal(cap: number): Promise<number> {
+  const { rows } = await pool.query(`SELECT COUNT(*)::int AS total FROM users`);
+  return Math.min(rows[0].total, cap);
+}
+
+export async function getLeaderboardData(req: Request, res: Response) {
+  const { cap, pageSize } = leaderboardPaging(req);
+  let { page } = leaderboardPaging(req);
+  try {
+    const total = await rankedTotal(cap);
+    const totalPages = Math.max(Math.ceil(total / pageSize), 1);
+    if (page > totalPages) page = totalPages;
+
+    // Rank over everyone first, then take the capped board, then the page —
+    // so a rank means the same thing on page 3 as it does on page 1.
+    const standings = await pool.query(
+      `
+            WITH board AS (
+                SELECT
+                    u.id,
+                    u.name,
+                    u.username,
+                    u.avatar,
+                    u.logic_score AS "logicScore",
+                    RANK () OVER (ORDER BY u.logic_score DESC, u.id ASC)::int AS rank,
+                    COALESCE(a.count, 0)::int AS "statementCount",
+                    COALESCE(c.count, 0)::int AS "argumentCount"
+                FROM users u
+                LEFT JOIN (
+                    SELECT user_id, COUNT(*) AS count FROM arguments GROUP BY user_id
+                ) a ON a.user_id = u.id
+                LEFT JOIN (
+                    SELECT user_id, COUNT(*) AS count FROM comments GROUP BY user_id
+                ) c ON c.user_id = u.id
+                ORDER BY u.logic_score DESC, u.id ASC
+                LIMIT $1
+            )
+            SELECT * FROM board ORDER BY rank ASC, id ASC LIMIT $2 OFFSET $3;
+        `,
+      [cap, pageSize, (page - 1) * pageSize],
+    );
+
+    res
+      .status(200)
+      .json({ rows: standings.rows, total, page, pageSize });
   } catch (err) {
     console.error(err);
-    res.status(200).json([]);
+    res.status(200).json({ rows: [], total: 0, page: 1, pageSize });
   }
 }
 
 // §10 Season board: ranks logic EARNED this season (the windowed ledger sum),
 // so everyone starts at 0 each month and a hot newcomer races veterans fairly.
-export async function getSeasonLeaderboard(_req: Request, res: Response) {
+export async function getSeasonLeaderboard(req: Request, res: Response) {
+  const { cap, pageSize } = leaderboardPaging(req);
+  let { page } = leaderboardPaging(req);
+  // §14's season strip reads these unconditionally, so they are assembled
+  // before anything can fail and reused on the error path.
+  const meta = {
+    season: seasonNumber(),
+    seasonKey: seasonKey(),
+    daysLeft: daysLeftInSeason(),
+  };
   try {
     const start = currentSeasonStart();
+    const total = await rankedTotal(cap);
+    const totalPages = Math.max(Math.ceil(total / pageSize), 1);
+    if (page > totalPages) page = totalPages;
+
     const standings = await pool.query(
-      `SELECT u.id, u.name, u.username, u.avatar,
-              COALESCE(SUM(le.amount) FILTER (WHERE le.created_at >= $1), 0)::int AS "seasonLogic",
-              RANK() OVER (
-                ORDER BY COALESCE(SUM(le.amount) FILTER (WHERE le.created_at >= $1), 0) DESC
-              )::int AS rank
-       FROM users u
-       LEFT JOIN logic_events le ON le.user_id = u.id
-       GROUP BY u.id, u.name, u.username, u.avatar
-       ORDER BY "seasonLogic" DESC, u.id ASC
-       LIMIT ${config.limits.leaderboard_rows}`,
-      [start],
+      `WITH board AS (
+         SELECT u.id, u.name, u.username, u.avatar,
+                COALESCE(SUM(le.amount) FILTER (WHERE le.created_at >= $1), 0)::int AS "seasonLogic",
+                RANK() OVER (
+                  ORDER BY COALESCE(SUM(le.amount) FILTER (WHERE le.created_at >= $1), 0) DESC
+                )::int AS rank
+         FROM users u
+         LEFT JOIN logic_events le ON le.user_id = u.id
+         GROUP BY u.id, u.name, u.username, u.avatar
+         ORDER BY "seasonLogic" DESC, u.id ASC
+         LIMIT $2
+       )
+       SELECT * FROM board ORDER BY rank ASC, id ASC LIMIT $3 OFFSET $4`,
+      [start, cap, pageSize, (page - 1) * pageSize],
     );
-    res.status(200).json({
-      season: seasonNumber(),
-      seasonKey: seasonKey(),
-      daysLeft: daysLeftInSeason(),
-      rows: standings.rows,
-    });
+    res
+      .status(200)
+      .json({ ...meta, rows: standings.rows, total, page, pageSize });
   } catch (err) {
     console.error(err);
-    // Keep the shape identical on the error path — §14's season strip reads
-    // these fields unconditionally.
-    res.status(200).json({
-      season: seasonNumber(),
-      seasonKey: seasonKey(),
-      daysLeft: daysLeftInSeason(),
-      rows: [],
-    });
+    res.status(200).json({ ...meta, rows: [], total: 0, page: 1, pageSize });
   }
 }
 
