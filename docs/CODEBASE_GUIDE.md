@@ -317,6 +317,7 @@ the page and the code now say the same thing.
   `localStorage`, base `/api`). Knowing which axios you're in explains most data-flow questions.
 - **Routes** (`frontend/app/*`): `/` (Arena home), `/argument/[id]` and the canonical SEO alias
   `/debate/[slug]` (both render the shared `_components/argument/DebateView.tsx`), `/domain`,
+  `/archive` (the settled record — concluded debates, filtered by outcome and domain),
   `/topic/[keyword]` (SEO hubs), `/leaderboard` (Season + Legends boards), `/profile/me`
   (client shim → canonical URL) and `/profile/[username]` (numeric segments redirect),
   `/statement`, `/rules`, `(auth)/login|register`, plus `sitemap.ts` + `robots.ts`.

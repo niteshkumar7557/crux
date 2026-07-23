@@ -14,7 +14,7 @@ const navLinks = [
   { label: "Arena", href: "/" },
   { label: "Domains", href: "/domain?q=all" },
   { label: "Leaderboard", href: "/leaderboard" },
-  { label: "Archive", href: "/archive" }, // for future use, not yet implemented
+  { label: "Archive", href: "/archive" },
 ];
 
 const Navbar = () => {

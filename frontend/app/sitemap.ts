@@ -10,6 +10,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticUrls: MetadataRoute.Sitemap = [
     { url: `${SITE}/`, changeFrequency: "hourly", priority: 1 },
     { url: `${SITE}/domain?q=all`, changeFrequency: "daily", priority: 0.8 },
+    // The settled record — a stable, link-worthy index of finished debates.
+    { url: `${SITE}/archive`, changeFrequency: "daily", priority: 0.6 },
     { url: `${SITE}/leaderboard`, changeFrequency: "daily", priority: 0.5 },
   ];
 

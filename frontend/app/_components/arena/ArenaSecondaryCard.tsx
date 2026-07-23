@@ -4,6 +4,7 @@ import Link from "next/link";
 import Avatar from "@/app/_components/ui/Avatar";
 import ScoreBar from "./ScoreBar";
 import Countdown from "@/app/_components/argument/Countdown";
+import { settledSide } from "./settledSides";
 
 // The compact feed card used by both the trending grid and the newest tab.
 export interface ArenaCardComponentProps {
@@ -31,10 +32,17 @@ const ArenaSecondaryCard = ({
   negativescore,
   argumentid,
   footerLeft,
+  status,
   closesAt,
+  winner,
   className = "",
 }: ArenaCardComponentProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
+  // A settled card must not read like a live one. Where a live card counts
+  // down, a concluded card names its ruling — otherwise the archive is a wall
+  // of debates that all look like they are still running.
+  const concluded = status === "concluded";
+  const ruling = concluded ? settledSide(winner) : null;
 
   return (
     <div
@@ -54,10 +62,18 @@ const ArenaSecondaryCard = ({
                 {username}
               </span>
             </div>
-            {closesAt && (
-              <span className="self-start">
-                <Countdown closesAt={closesAt} />
+            {ruling ? (
+              <span
+                className={`self-start font-label text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border ${ruling.chip}`}
+              >
+                {ruling.label}
               </span>
+            ) : (
+              closesAt && (
+                <span className="self-start">
+                  <Countdown closesAt={closesAt} />
+                </span>
+              )
             )}
           </div>
           <span className="font-label text-[10px] text-tertiary uppercase tracking-widest mb-3 block">

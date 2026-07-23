@@ -235,6 +235,17 @@ export async function getStatements(req: Request, res: Response) {
       typeof req.query.keyword === "string" ? req.query.keyword.trim() : "";
     const hasKeyword = keyword.length > 0;
 
+    // §11 the archive reads the settled record: `status` splits live from
+    // concluded, `outcome` narrows to one ruling. Both are validated against a
+    // closed list rather than interpolated — an unknown value is ignored, not
+    // passed to SQL.
+    const STATUSES = ["live", "concluded"];
+    const OUTCOMES = ["for", "against", "draw", "walkover"];
+    const status = String(req.query.status ?? "");
+    const hasStatus = STATUSES.includes(status);
+    const outcome = String(req.query.outcome ?? "");
+    const hasOutcome = OUTCOMES.includes(outcome);
+
     let pageSize = Number.parseInt(String(req.query.pageSize ?? ""), 10);
     if (!Number.isInteger(pageSize)) pageSize = 12;
     pageSize = Math.min(Math.max(pageSize, 1), 50);
@@ -251,6 +262,14 @@ export async function getStatements(req: Request, res: Response) {
     if (hasKeyword) {
       filterParams.push(keyword);
       conds.push(`LOWER(a.content_keyword) = LOWER($${filterParams.length})`);
+    }
+    if (hasStatus) {
+      filterParams.push(status);
+      conds.push(`a.status = $${filterParams.length}`);
+    }
+    if (hasOutcome) {
+      filterParams.push(outcome);
+      conds.push(`a.winner = $${filterParams.length}`);
     }
     const where = conds.length ? `WHERE ${conds.join(" AND ")}` : "";
 
