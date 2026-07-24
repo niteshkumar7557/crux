@@ -148,11 +148,17 @@ const DebateView = async ({ id }: { id: number }) => {
               </p>
             </div>
           )}
-          <ArgumentArena aiAnalysis={aiAnalysis} comments={comments.data} />
+          <ArgumentArena
+            aiAnalysis={aiAnalysis}
+            comments={comments.data}
+            argumentId={id}
+            authorId={Number(row.user_id)}
+          />
         </section>
         <ArgumentInput
           argumentId={id}
           status={matchState.status}
+          authorId={Number(row.user_id)}
           commentSides={(comments.data.comments ?? []).map(
             (c: { post_user_id: number; side: "for" | "against" }) => ({
               post_user_id: c.post_user_id,

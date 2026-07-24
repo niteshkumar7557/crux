@@ -19,15 +19,27 @@ const UserArgumentCard = ({
   likes,
   user_id,
   comment_id,
+  initiallyLiked,
   replyTo,
   replyCount,
   firstReplyId,
   viewerLockedSide,
 }: UserArgumentCardProps) => {
   const [likeCount, setLikeCount] = useState(likes);
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(initiallyLiked);
+  const [busy, setBusy] = useState(false);
   const likeRef = useRef<HTMLButtonElement>(null);
   const { setTarget } = useReplyTarget();
+
+  // The viewer's like state loads a beat after mount (client-only JWT). Adopt it
+  // when it arrives by comparing against the last value we synced — the React
+  // "adjust state while rendering" pattern, so no effect and no extra render.
+  // A toggle already in flight wins, so a mid-load tap is never clobbered.
+  const [syncedInit, setSyncedInit] = useState(initiallyLiked);
+  if (initiallyLiked !== syncedInit) {
+    setSyncedInit(initiallyLiked);
+    if (!busy) setLiked(initiallyLiked);
+  }
 
   // Every footer control is the same tiny label that warms to the column's
   // accent on hover; only the like button adds a filled state on top.
@@ -43,35 +55,40 @@ const UserArgumentCard = ({
     (viewerLockedSide === null || viewerLockedSide !== side);
 
   async function handleClick() {
-    setLiked(!liked);
-    if (!liked) {
-      if (likeRef.current && window.matchMedia(MOTION_OK).matches) {
-        gsap.fromTo(
-          likeRef.current,
-          { scale: 1 },
-          {
-            scale: 1.25,
-            duration: 0.12,
-            yoyo: true,
-            repeat: 1,
-            ease: "power2.out",
-            overwrite: "auto",
-          },
-        );
-      }
-      setLikeCount((e) => e + 1);
-      // Only rendered for a signed-in viewer, so there is always a token here.
-      await api.post(
-        "/like",
-        { comment_id },
+    if (busy) return;
+    const next = !liked;
+    // Optimistic: flip the button and count now, reconcile with the server, and
+    // roll back both if the call fails so the UI never lies about the count.
+    setLiked(next);
+    setLikeCount((e) => e + (next ? 1 : -1));
+    if (next && likeRef.current && window.matchMedia(MOTION_OK).matches) {
+      gsap.fromTo(
+        likeRef.current,
+        { scale: 1 },
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
+          scale: 1.25,
+          duration: 0.12,
+          yoyo: true,
+          repeat: 1,
+          ease: "power2.out",
+          overwrite: "auto",
         },
       );
-    } else {
-      setLikeCount((e) => e - 1);
+    }
+    setBusy(true);
+    try {
+      // Only rendered for a signed-in viewer, so the axios token interceptor
+      // always has a token to attach.
+      if (next) {
+        await api.post("/like", { comment_id });
+      } else {
+        await api.delete("/like", { data: { comment_id } });
+      }
+    } catch {
+      setLiked(!next);
+      setLikeCount((e) => e + (next ? -1 : 1));
+    } finally {
+      setBusy(false);
     }
   }
 

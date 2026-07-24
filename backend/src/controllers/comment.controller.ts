@@ -158,7 +158,7 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
 
     // Arena is read-only once concluded.
     const statusRes = await pool.query(
-      `SELECT status FROM arguments WHERE id = $1`,
+      `SELECT status, user_id AS author_id FROM arguments WHERE id = $1`,
       [argumentId],
     );
     if (statusRes.rows.length === 0) {
@@ -167,6 +167,7 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
     if (statusRes.rows[0].status !== "live") {
       return res.status(409).json({ reason: "locked" });
     }
+    const authorId: number = statusRes.rows[0].author_id;
 
     // Commit-to-one-side (§4): the user's first comment locks their side.
     const sideRes = await pool.query(
@@ -209,6 +210,14 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
       replyTargetUserId = target.user_id;
     } else if (lockedSide !== null && lockedSide !== side) {
       return res.status(409).json({ reason: "side_locked" });
+    }
+
+    // The statement's author owns the affirmative case: they may only argue FOR
+    // their own claim, never against it (whether by a direct post or a reply
+    // that would derive AGAINST). Enforced server-side so it holds even if the
+    // UI's disabled button is bypassed.
+    if (Number(userId) === Number(authorId) && effectiveSide === "against") {
+      return res.status(409).json({ reason: "author_affirmative_only" });
     }
 
     // Pre-insert side counts drive the opener exception (own side still empty)

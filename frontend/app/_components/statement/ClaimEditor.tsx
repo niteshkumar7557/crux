@@ -1,4 +1,5 @@
 import { LuPenLine, LuTriangleAlert } from "react-icons/lu";
+import AutoGrowTextarea from "@/app/_components/ui/AutoGrowTextarea";
 
 export const MIN_CHARS = 35;
 export const MAX_CHARS = 120;
@@ -54,9 +55,10 @@ const ClaimEditor = ({ text, onChange, locked }: ClaimEditorProps) => {
         <LuPenLine className="text-sm" />
         YOUR CLAIM
       </label>
-      <textarea
+      <AutoGrowTextarea
         id="claim"
-        className={`w-full focus:outline-none bg-surface-container-highest border-0 focus:ring-1 focus:ring-primary min-h-60 p-6 font-headline text-2xl italic placeholder:text-outline text-on-surface resize-none transition-opacity ${
+        maxHeight={400}
+        className={`w-full focus:outline-none bg-surface-container-highest border-0 focus:ring-1 focus:ring-primary min-h-60 p-6 font-headline text-2xl italic placeholder:text-outline text-on-surface transition-opacity ${
           locked ? "opacity-60" : ""
         }`}
         placeholder="Make a claim worth fighting over..."
@@ -65,7 +67,7 @@ const ClaimEditor = ({ text, onChange, locked }: ClaimEditorProps) => {
         readOnly={locked}
         aria-busy={locked}
         onChange={(e) => onChange(e.target.value)}
-      ></textarea>
+      />
       <div className="flex justify-between items-center gap-4 text-[10px] font-label text-outline uppercase tracking-tighter">
         <span>
           {remaining > 0

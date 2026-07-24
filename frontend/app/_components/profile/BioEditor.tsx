@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
 import api from "@/app/axios";
 import Button from "@/app/_components/ui/Button";
+import AutoGrowTextarea from "@/app/_components/ui/AutoGrowTextarea";
 
 /** Mirrors BIO_MAX in backend/src/controllers/profile.controller.ts. */
 const BIO_MAX = 280;
@@ -39,13 +40,13 @@ const BioEditor = ({ bio, onDone }: { bio: string; onDone: () => void }) => {
       <label htmlFor="bio" className="sr-only">
         Your bio
       </label>
-      <textarea
+      <AutoGrowTextarea
         id="bio"
         rows={3}
         value={value}
         onChange={(e) => setValue(e.currentTarget.value)}
         placeholder="Post some Statements to get to know about you."
-        className="w-full bg-surface-container-highest border-none text-on-surface p-4 focus:ring-1 focus:ring-primary placeholder:text-outline font-body text-base resize-none"
+        className="w-full bg-surface-container-highest border-none text-on-surface p-4 focus:ring-1 focus:ring-primary placeholder:text-outline font-body text-base"
       />
       <div className="flex items-center justify-between gap-4 mt-3">
         <span

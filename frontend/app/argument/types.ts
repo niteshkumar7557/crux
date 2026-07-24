@@ -9,6 +9,7 @@ export interface UserArgumentCardProps {
   user_id?: number; // the viewer's id (undefined when logged out)
   comment_id: number;
   post_user_id: number;
+  initiallyLiked: boolean; // §5: filled on load when the viewer already liked it
   // §5: the opposing comment this one answers, or null for a standalone.
   // `commentId` is the jump target behind the quoted stub.
   replyTo: { commentId: number; username: string; content: string } | null;

@@ -3,6 +3,7 @@ import CaseColumn from "./CaseColumn";
 import { getUser } from "@/app/_utils/getUser";
 import { jwtPayload } from "@/app/_types/jwt";
 import { UserArgumentCardProps } from "@/app/argument/types";
+import api from "@/app/axios";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { convertLogicScore } from "@/app/_utils/logicScore";
@@ -26,11 +27,19 @@ interface RawComment {
 const ArgumentArena = ({
   aiAnalysis,
   comments,
+  argumentId,
+  authorId,
 }: {
   aiAnalysis: [string, string];
   comments: { comments: RawComment[] };
+  argumentId: number;
+  authorId: number;
 }) => {
   const [user, setUser] = useState<jwtPayload | null>(null);
+  // §5: which comments the viewer has already liked. The JWT is client-only, so
+  // the SSR fetch can't tell — we load it here after the user resolves so the
+  // hearts render already filled.
+  const [likedIds, setLikedIds] = useState<Set<number>>(new Set());
   const arenaRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   useEffect(() => {
@@ -40,6 +49,20 @@ const ArgumentArena = ({
     }
     fetchUser();
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    api
+      .get(`/like/mine/${argumentId}`)
+      .then(({ data }) => {
+        if (alive) setLikedIds(new Set<number>(data.likedCommentIds ?? []));
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [user, argumentId]);
 
   // Each case column slides in once from its own side of the argument.
   useGSAP(
@@ -88,10 +111,17 @@ const ArgumentArena = ({
   });
 
   // §4: the viewer's locked side, read off their own comments. Gates the
-  // cross-side-only Reply button on each card.
-  const viewerLockedSide: "for" | "against" | null = user
-    ? (comments.comments.find((c) => c.post_user_id === user.id)?.side ?? null)
-    : null;
+  // cross-side-only Reply button on each card. The statement's author is bound
+  // to the affirmative from the start — even before their first comment — so
+  // their Reply button never appears on a FOR comment (which would derive
+  // AGAINST) and only on the opposing case.
+  const viewerLockedSide: "for" | "against" | null =
+    user && user.id === authorId
+      ? "for"
+      : user
+        ? (comments.comments.find((c) => c.post_user_id === user.id)?.side ??
+          null)
+        : null;
 
   const forCaseComments: UserArgumentCardProps[] = [];
   const againstCaseComments: UserArgumentCardProps[] = [];
@@ -108,6 +138,7 @@ const ArgumentArena = ({
       user_id: user?.id,
       comment_id: e.comment_id,
       post_user_id: e.post_user_id,
+      initiallyLiked: likedIds.has(e.comment_id),
       replyTo:
         e.reply_to_comment_id !== null
           ? {

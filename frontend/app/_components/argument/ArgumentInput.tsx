@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { LuTriangleAlert, LuX } from "react-icons/lu";
 import Button from "@/app/_components/ui/Button";
+import AutoGrowTextarea from "@/app/_components/ui/AutoGrowTextarea";
 import { useReplyTarget } from "./ReplyContext";
 import PointsPopup from "../ui/PointsPopup";
 import SideLockConfirm from "./SideLockConfirm";
@@ -30,10 +31,12 @@ const FULL_VALUE_COMMENTS = 3;
 const ArgumentInput = ({
   argumentId,
   status,
+  authorId,
   commentSides,
 }: {
   argumentId: number;
   status: "live" | "concluded";
+  authorId: number;
   commentSides: CommentSide[];
 }) => {
   const [user, setUser] = useState<jwtPayload | null>(null);
@@ -66,10 +69,16 @@ const ArgumentInput = ({
 
   if (!user) return null;
 
+  // The statement's author owns the affirmative case: they are locked to FOR
+  // from the very first comment, so the AGAINST button is disabled before it can
+  // be pressed and the server rejects it either way (author_affirmative_only).
+  const isAuthor = user.id === authorId;
+
   // The viewer's first comment locks their side for this debate; the opposite
   // side's button is pre-disabled so the lock is visible before they hit it.
-  const lockedSide =
-    commentSides.find((c) => c.post_user_id === user.id)?.side ?? null;
+  const lockedSide = isAuthor
+    ? "for"
+    : (commentSides.find((c) => c.post_user_id === user.id)?.side ?? null);
 
   // §6/§14: comments already made here, so the composer can say what the next
   // one is worth before it is written.
@@ -151,6 +160,11 @@ const ArgumentInput = ({
             title: "Side Locked",
             body: "You've committed to the other side of this debate.",
           });
+        } else if (reason === "author_affirmative_only") {
+          setNotice({
+            title: "Author Argues For",
+            body: "You posted this statement, so you can only argue FOR it — never against your own claim.",
+          });
         } else if (reason === "bad_reply_target") {
           setTarget(null);
           setNotice({
@@ -204,8 +218,9 @@ const ArgumentInput = ({
           >
             You&rsquo;re arguing {lockedSide === "for" ? "FOR" : "AGAINST"}{" "}
             <span className="text-outline normal-case tracking-normal font-body ml-2">
-              — you can&rsquo;t argue{" "}
-              {lockedSide === "for" ? "AGAINST" : "FOR"} in this debate.
+              {isAuthor
+                ? "— you posted this statement, so you can only argue FOR it."
+                : `— you can't argue ${lockedSide === "for" ? "AGAINST" : "FOR"} in this debate.`}
             </span>
           </span>
         )}
@@ -230,11 +245,11 @@ const ArgumentInput = ({
       </div>
       <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center gap-3 md:gap-6">
         <div className="flex-1 w-full relative">
-          <input
-            className="w-full bg-surface-container border border-outline-variant/50 focus:border-primary px-4 py-3 md:px-6 md:py-4 font-body text-on-surface placeholder:text-outline transition-all"
+          <AutoGrowTextarea
+            className="w-full bg-surface-container border border-outline-variant/50 focus:border-primary focus:outline-none px-4 py-3 md:px-6 md:py-4 font-body text-on-surface placeholder:text-outline transition-all block"
             placeholder={target ? "Write your reply..." : "Join the Argument..."}
             aria-label={target ? "Write your reply" : "Join the argument"}
-            type="text"
+            maxHeight={160}
             value={input}
             onChange={(e) => setInput(e.currentTarget.value)}
           />
@@ -279,9 +294,11 @@ const ArgumentInput = ({
                 className="flex-1 md:flex-none px-2 py-3 md:px-8 md:py-4 text-[10px] md:text-xs"
                 disabled={lockedSide === "for"}
                 title={
-                  lockedSide === "for"
-                    ? "You've committed to FOR in this debate."
-                    : undefined
+                  isAuthor
+                    ? "You posted this statement — you can only argue FOR it."
+                    : lockedSide === "for"
+                      ? "You've committed to FOR in this debate."
+                      : undefined
                 }
                 onClick={() => requestPost("negative", "against", null)}
               >
