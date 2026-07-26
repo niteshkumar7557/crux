@@ -12,6 +12,8 @@ import { PROBABILITY_SYSTEM_PROMPT } from "../ai/prompts/probability.prompt.js";
 import { notifyOpposition, notifyReply } from "../notifications/notify.js";
 import { awardLogic } from "../economy/logic.js";
 import { currentSeasonStart } from "../economy/season.logic.js";
+import { checkText } from "../lib/validate.js";
+import logger from "../lib/logger.js";
 
 async function updateProbability(argumentId: number) {
   const { rows } = await pool.query(
@@ -73,7 +75,7 @@ async function updateProbability(argumentId: number) {
 async function moderateAndAnalyze(
   argumentId: number,
   side: string,
-  userId: string,
+  userId: number,
   input: string,
   first: boolean = false,
   replyTo: ReplyTarget | null = null,
@@ -142,8 +144,13 @@ export async function getComments(req: Request, res: Response) {
 
 async function postComment(req: Request, res: Response, side: "for" | "against") {
   const { id } = req.params;
-  const { userId, input } = req.body;
+  const userId = req.user!.id; // authMiddleware ran; body userId is ignored
+  const { input } = req.body;
   const argumentId = Number(id);
+
+  const checkedInput = checkText(input, { field: "input", max: 2000 });
+  if (!checkedInput.ok)
+    return res.status(400).json({ error: checkedInput.reason });
 
   const rawReplyTo = req.body.replyToCommentId;
   const replyToCommentId =
@@ -216,7 +223,7 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
     // their own claim, never against it (whether by a direct post or a reply
     // that would derive AGAINST). Enforced server-side so it holds even if the
     // UI's disabled button is bypassed.
-    if (Number(userId) === Number(authorId) && effectiveSide === "against") {
+    if (userId === Number(authorId) && effectiveSide === "against") {
       return res.status(409).json({ reason: "author_affirmative_only" });
     }
 
@@ -248,7 +255,7 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
       argumentId,
       effectiveSide,
       userId,
-      input,
+      checkedInput.value,
       first,
       replyTarget,
     );
@@ -267,36 +274,42 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
     });
 
     // §14: the award is stored on the row so the arena can show what each
-    // comment earned without recomputing it.
-    await pool.query(
-      `INSERT INTO comments (argument_id, user_id, content, side, reply_to_comment_id, points)
-       VALUES ($1,$2,$3,$4,$5,$6)`,
-      [
-        argumentId,
-        userId,
-        input,
-        effectiveSide,
-        replyToCommentId,
-        breakdown.points,
-      ],
-    );
-
-    await awardLogic(pool, userId, breakdown.points, "comment");
-
-    if (newAnalysis) {
-      await pool.query(
-        `
-            UPDATE arguments
-            SET ${effectiveSide}_analysis = $1
-            WHERE id = $2;
-        `,
-        [newAnalysis, argumentId],
+    // comment earned without recomputing it. Insert + award + analysis commit
+    // or roll back together — a failure between them must never leave a
+    // half-persisted comment (CODEBASE_GUIDE §9 gap).
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query(
+        `INSERT INTO comments (argument_id, user_id, content, side, reply_to_comment_id, points)
+         VALUES ($1,$2,$3,$4,$5,$6)`,
+        [
+          argumentId,
+          userId,
+          checkedInput.value,
+          effectiveSide,
+          replyToCommentId,
+          breakdown.points,
+        ],
       );
+      await awardLogic(client, userId, breakdown.points, "comment");
+      if (newAnalysis) {
+        await client.query(
+          `UPDATE arguments SET ${effectiveSide}_analysis = $1 WHERE id = $2;`,
+          [newAnalysis, argumentId],
+        );
+      }
+      await client.query("COMMIT");
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
     }
 
     // §14 return triggers, both best-effort — neither blocks the response.
     if (replyTargetUserId !== null) {
-      void notifyReply(argumentId, replyTargetUserId, Number(userId));
+      void notifyReply(argumentId, replyTargetUserId, userId);
     }
     if (priorCount === 0) {
       void notifyOpposition(argumentId, effectiveSide, userId);
@@ -317,7 +330,17 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
     const againstCount = Number(rows[0].against_count);
 
     if (forCount >= 1 && againstCount >= 1) {
-      await updateProbability(argumentId);
+      // Best-effort: the comment is already committed; a rate-limited or failed
+      // probability call must not turn a successful post into a 500
+      // (CODEBASE_GUIDE §9 gap).
+      try {
+        await updateProbability(argumentId);
+      } catch (err) {
+        logger.warn(
+          { argumentId, err: String(err) },
+          "probability nudge failed",
+        );
+      }
     }
 
     // §14: the season standing the points pop-up reconciles the award against.

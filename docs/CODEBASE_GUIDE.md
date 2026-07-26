@@ -4,7 +4,10 @@ You are looking at a mid-sized full-stack app: an AI-refereed debate platform. T
 guide is written the way you'd want to receive a large open-source repo — not a feature
 list, but a **map + a method** so you can find your way and change things with confidence.
 
-### The four docs, and which one owns what
+### The docs, and which one owns what
+
+The first four are the design record; the last two cover running it in
+production.
 
 | File | Owns | Read it when |
 |---|---|---|
@@ -12,6 +15,8 @@ list, but a **map + a method** so you can find your way and change things with c
 | **`CODEBASE_GUIDE.md`** (this file) | How the code is organised and how a request flows. | Before changing backend code or tracing a flow. |
 | [`frontend-audit.md`](./frontend-audit.md) | The frontend **design system** — tokens, motion, component conventions, working rules. | Before changing UI. It predates the v1 restructure, so it does not own game rules. |
 | [`future-features.md`](./future-features.md) | Designed-and-deferred features. | Before "adding" something — it may already have a shape. |
+| [`RUNBOOK.md`](./RUNBOOK.md) | Operating the production deployment — launch, deploy, backups, logs, monitors. | When running or maintaining the live server. |
+| [`PRODUCTION_LEARNING.md`](./PRODUCTION_LEARNING.md) | The concepts behind the production setup, plus the learn-later tools list. | To understand *why* the production pieces exist. |
 
 Product pitch & local setup live in the root [`README.md`](../README.md).
 
@@ -430,19 +435,15 @@ the page and the code now say the same thing.
 
 ### Known gaps, flagged and unfixed
 
-- **`POST /comment/*` is unauthenticated.** `routes/comment.route.ts` mounts both post handlers
-  with no `authMiddleware`, and the controller trusts `req.body.userId`. Anyone can post as
-  anyone with `curl` and no token. Fixing it changes the frontend contract.
-- **`postComment` has no wrapping transaction.** If the second LLM call (probability)
-  rate-limits, the comment and the logic award persist but the client gets a 500. Wrapping the
-  writes in `BEGIN/COMMIT` is the fix.
 - **There is no unlike.** `POST /like` is insert-once and idempotent (a second call answers
   `"Already Liked!"`), but `UserCommentCard` lets a viewer toggle the thumb back off and
   decrements the count locally. The server never hears about it, so the count is wrong until
   the next load. Either an unlike endpoint or a one-way button is the fix; the button is now
   only rendered for signed-in viewers, so this is the last hole in the like flow.
-- **`POST /ai/statement` does not validate its body.** A missing `content` interpolates the
-  string `"undefined"` into the prompt and spends an LLM call judging it.
+- **Rate limits are in-memory** (`middlewares/rateLimit.ts`) — a second backend instance resets
+  and splits every counter, so a "10 / 15 min" limit becomes 20 and buckets clear on each deploy.
+  That's the Redis trigger (see `PRODUCTION_LEARNING.md` §3), and the same single-instance
+  assumption the in-process pollers already require.
 - **`Countdown` hydrates with a mismatch** on every debate page (`/argument/[id]`,
   `/debate/[slug]`) — the server renders one minute and the client hydrates on the next.
   Harmless, noisy in the console. The profile's **In The Arena** renders the same component but

@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { getUser } from "@/app/_utils/getUser";
 import { jwtPayload } from "@/app/_types/jwt";
 import api from "@/app/axios";
+import { isAxiosError } from "axios";
 import Button from "@/app/_components/ui/Button";
 import StageRail from "./StageRail";
 import DomainPicker from "./DomainPicker";
@@ -182,7 +183,15 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
 			similarSeq.current++;
 			setSimilar([]);
 			if (next.status === "pass") fetchSimilar(next.keyword);
-		} catch {
+		} catch (err) {
+			if (isAxiosError(err) && err.response?.status === 429) {
+				setVerdict(null);
+				setComposeNotice(
+					err.response.data?.message ??
+						"Too many checks — try again in a minute.",
+				);
+				return;
+			}
 			setVerdict({
 				status: "unavailable",
 				original: text,
@@ -213,7 +222,6 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
 			const { data } = await api.post(
 				"/argument",
 				{
-					user_id: user.id,
 					content,
 					content_keyword: verdict.keyword,
 					domain: verdict.domain,
@@ -226,7 +234,15 @@ const StatementForm = ({ domains }: { domains: DomainClassification }) => {
 			} catch {}
 			router.push(`/argument/CRX-${data.id}-A`);
 			// Keep `casting` true — the redirect is the success state.
-		} catch {
+		} catch (err) {
+			if (isAxiosError(err) && err.response?.status === 429) {
+				setCastNotice(
+					err.response.data?.message ??
+						"You're casting fast — try again in a minute.",
+				);
+				setCasting(false);
+				return;
+			}
 			setCastNotice(
 				"Broadcast failed — the arena couldn't be reached. Everything is preserved; try again.",
 			);

@@ -7,12 +7,15 @@ import {
   logoutUser,
 } from "../controllers/users.controller.js";
 import { authMiddleware } from "../middlewares/auth.js";
+import { authLimiter } from "../middlewares/rateLimit.js";
 
 const userRoutes = Router();
 
-userRoutes.post("/register", addNewUser);
-userRoutes.post("/login", loginUser);
+userRoutes.post("/register", authLimiter, addNewUser);
+userRoutes.post("/login", authLimiter, loginUser);
 
+// NOTE: /refresh stays un-tiered on purpose — every page load may refresh;
+// the global limiter still covers it.
 userRoutes.post("/refresh", generateNewAccess);
 
 // Authorized routes

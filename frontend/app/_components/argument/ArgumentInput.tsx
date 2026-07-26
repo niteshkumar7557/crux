@@ -137,7 +137,6 @@ const ArgumentInput = ({
     if (input.length === 0) return;
     try {
       const { data } = await api.post(`/comment/${urlSide}/${argumentId}`, {
-        userId: user?.id,
         input,
         replyToCommentId,
       });
@@ -153,6 +152,15 @@ const ArgumentInput = ({
       }
     } catch (err) {
       setAward(null);
+      if (isAxiosError(err) && err.response?.status === 429) {
+        setNotice({
+          title: "Easy There",
+          body:
+            err.response.data?.message ??
+            "You're posting fast — try again in a minute.",
+        });
+        return;
+      }
       if (isAxiosError(err) && err.response?.status === 409) {
         const reason = err.response.data?.reason;
         if (reason === "side_locked") {

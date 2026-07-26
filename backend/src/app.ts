@@ -16,6 +16,12 @@ import avatarRoutes from "./routes/avatar.route.js";
 import domainRoutes from "./routes/domain.route.js";
 import notificationRoutes from "./routes/notification.route.js";
 import adminRoutes from "./routes/admin.route.js";
+import { globalLimiter, clientIp } from "./middlewares/rateLimit.js";
+import { pinoHttp } from "pino-http";
+import * as Sentry from "@sentry/node";
+import logger from "./lib/logger.js";
+import pool from "./db/index.js";
+import { makeHealthHandler } from "./lib/health.js";
 
 const app = express();
 
@@ -31,8 +37,27 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(PUBLIC_DIR));
 
+// After static (avatars don't spend budget), before every API route.
+app.use(globalLimiter);
+
+// One JSON line per request; /health is noise (polled every few seconds).
+app.use(
+  pinoHttp({
+    logger,
+    autoLogging: { ignore: (req) => req.url === "/health" },
+    customProps: (req) => ({
+      clientIp: clientIp(req as any),
+      userId: (req as any).user?.id,
+    }),
+    serializers: {
+      req: (req: any) => ({ method: req.method, url: req.url }),
+      res: (res: any) => ({ status: res.statusCode }),
+    },
+  }),
+);
+
 // routes
-app.get("/health", (req, res) => res.sendStatus(200));
+app.get("/health", makeHealthHandler(() => pool.query("SELECT 1")));
 app.use("/user", userRoutes);
 app.use("/argument", argumentRoutes);
 app.use("/comment", commentRoutes);
@@ -45,5 +70,8 @@ app.use("/domains", domainRoutes);
 app.use("/avatar", avatarRoutes);
 app.use("/notifications", notificationRoutes);
 app.use("/admin", adminRoutes);
+
+// After all routes; a no-op when init() didn't run (dev, CI, no DSN).
+Sentry.setupExpressErrorHandler(app);
 
 export default app;

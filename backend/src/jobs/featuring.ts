@@ -1,4 +1,5 @@
 import pool from "../db/index.js";
+import logger from "../lib/logger.js";
 import {
   BALANCE_FLOOR,
   HEAT_WINDOW_HOURS,
@@ -95,7 +96,10 @@ async function rotateDotd(): Promise<void> {
     );
     await client.query("COMMIT");
     if (crowned.rows.length > 0) {
-      console.log(`👑 Debate of the Day → ${crowned.rows[0].id}`);
+      logger.info(
+        { argumentId: crowned.rows[0].id },
+        "debate of the day crowned",
+      );
     }
   } catch (err) {
     await client.query("ROLLBACK");
@@ -165,14 +169,14 @@ async function tick(): Promise<void> {
     await rotateDotd();
     await refreshFeatured();
   } catch (err) {
-    console.error("❌ featuring poller tick failed:", err);
+    logger.error({ err: String(err) }, "featuring tick failed");
   } finally {
     running = false;
   }
 }
 
 export function startFeaturingPoller(): void {
-  console.log(`⏱  featuring poller started (${TICK_MS / 60_000}m)`);
+  logger.info({ tick_m: TICK_MS / 60_000 }, "featuring poller started");
   void tick();
   setInterval(() => void tick(), TICK_MS);
 }

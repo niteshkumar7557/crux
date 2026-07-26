@@ -59,6 +59,13 @@ const Login = () => {
         router.push(dest);
       }, 1000);
     } catch (err) {
+      if (isAxiosError(err) && err.response?.status === 429) {
+        setError(
+          err.response.data?.message ??
+            "Too many attempts. Try again in a few minutes.",
+        );
+        return;
+      }
       setError(
         (isAxiosError<{ error?: string }>(err) &&
           err.response?.data?.error) ||

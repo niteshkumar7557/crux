@@ -5,3 +5,7 @@ docs/superpowers/
 .claude
 .DS_Store
 **/.DS_Store
+ops/.env.ops
+ops/deploy.log
+docs/PRODUCTION_LEARNING.md
+docs/RUNBOOK.md

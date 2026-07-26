@@ -16,7 +16,10 @@ const isProduction = config.node_env === "production";
 const cookieOptions: CookieOptions = {
   httpOnly: true,
   secure: isProduction,
-  sameSite: isProduction ? "none" : "lax",
+  // v1 is same-origin end to end (browser -> frontend domain -> /api proxy),
+  // so "lax" holds everywhere and blocks cross-site sends. The old production
+  // "none" was for v0's split-domain deploy — do not resurrect it.
+  sameSite: "lax",
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 Days
 };
 

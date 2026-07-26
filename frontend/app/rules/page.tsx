@@ -75,6 +75,16 @@ const Rules = () => {
         ))}
       </ol>
 
+      <p
+        data-reveal
+        className="mt-6 border-l-2 border-outline-variant/20 pl-6 font-body text-sm text-on-surface-variant/80 leading-relaxed"
+      >
+        One house rule beyond the six: posting is rate-limited — a handful of
+        statements or comments per minute per account. It keeps the arena
+        human-paced and the judge honest. If you hit it, you&rsquo;ll be told
+        exactly how long to wait.
+      </p>
+
       <div
         data-reveal
         className="mt-12 bg-surface-container border border-outline-variant/10 p-10 text-center"

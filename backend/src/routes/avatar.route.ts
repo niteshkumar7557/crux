@@ -8,6 +8,7 @@ import {
   uploadAvatar,
 } from "../controllers/avatar.controller.js";
 import { authMiddleware } from "../middlewares/auth.js";
+import { uploadLimiter } from "../middlewares/rateLimit.js";
 import config from "../config/index.js";
 
 const UNSUPPORTED_TYPE = "UNSUPPORTED_IMAGE_TYPE";
@@ -51,7 +52,13 @@ const avatarRoutes = Router();
 avatarRoutes.get("/presets", getAvatarPresets);
 
 // Authorized routes
-avatarRoutes.post("/upload", authMiddleware, uploadAvatarImage, uploadAvatar);
+avatarRoutes.post(
+  "/upload",
+  authMiddleware,
+  uploadLimiter,
+  uploadAvatarImage,
+  uploadAvatar,
+);
 avatarRoutes.put("/preset", authMiddleware, setPresetAvatar);
 avatarRoutes.delete("/", authMiddleware, deleteAvatar);
 

@@ -26,6 +26,9 @@ COPY --from=builder /home/build/dist dist/
 COPY --from=builder /home/build/package*.json .
 COPY --from=builder /home/build/src/db dist/db/
 
+# Preset avatars + static files. Without this, listPresets() ENOENTs in prod.
+COPY public/ public/
+
 RUN npm install --omit=dev
 
 CMD ["npm","start"]

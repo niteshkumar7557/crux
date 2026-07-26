@@ -1,5 +1,6 @@
 import pool from "../db/index.js";
 import config from "../config/index.js";
+import logger from "../lib/logger.js";
 import { concludeDebate } from "../ai/verdict.js";
 
 const TICK_MS = config.jobs.conclusion_tick_ms;
@@ -26,14 +27,14 @@ async function tick(): Promise<void> {
       }
     }
   } catch (err) {
-    console.error("❌ conclusion poller tick failed:", err);
+    logger.error({ err: String(err) }, "conclusion tick failed");
   } finally {
     running = false;
   }
 }
 
 export function startConclusionPoller(): void {
-  console.log(`⏱  conclusion poller started (${TICK_MS / 1000}s)`);
+  logger.info({ tick_s: TICK_MS / 1000 }, "conclusion poller started");
   void tick();
   setInterval(() => void tick(), TICK_MS);
 }

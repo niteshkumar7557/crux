@@ -35,6 +35,10 @@ const config = {
   server_port: num("SERVER_PORT", 8000),
   client_url: process.env.CLIENT_URL,
   node_env: process.env.NODE_ENV,
+  /** pino level: fatal|error|warn|info|debug|trace. */
+  log_level: str("LOG_LEVEL", "info"),
+  /** Sentry DSN; empty disables the SDK (dev, CI). */
+  sentry_dsn: process.env.SENTRY_DSN,
 
   db: {
     url: process.env.DB_URL,

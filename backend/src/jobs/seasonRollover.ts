@@ -1,4 +1,5 @@
 import pool from "../db/index.js";
+import logger from "../lib/logger.js";
 import { awardsForSeason, previousSeason } from "./seasonRollover.logic.js";
 import { createNotification } from "../notifications/notify.js";
 import { seasonAwardMessage } from "../notifications/messages.js";
@@ -46,7 +47,10 @@ async function tick(): Promise<void> {
 
     const awards = awardsForSeason(board.rows, season.number, season.key);
     if (awards.length === 0) {
-      console.log(`🏁 Season ${season.number} (${season.key}) closed with nobody to award`);
+      logger.info(
+        { season: season.key, number: season.number },
+        "season closed with nobody to award",
+      );
       return;
     }
 
@@ -86,19 +90,23 @@ async function tick(): Promise<void> {
       client.release();
     }
 
-    console.log(
-      `🏆 Season ${season.number} (${season.key}) awarded: ` +
-        awards.map((a) => `#${a.rank} user ${a.userId}`).join(", "),
+    logger.info(
+      {
+        season: season.key,
+        number: season.number,
+        awards: awards.map((a) => `#${a.rank} user ${a.userId}`),
+      },
+      "season awarded",
     );
   } catch (err) {
-    console.error("❌ season rollover tick failed:", err);
+    logger.error({ err: String(err) }, "season rollover tick failed");
   } finally {
     running = false;
   }
 }
 
 export function startSeasonRolloverPoller(): void {
-  console.log(`⏱  season rollover poller started (${TICK_MS / 60_000}m)`);
+  logger.info({ tick_m: TICK_MS / 60_000 }, "season rollover poller started");
   void tick();
   setInterval(() => void tick(), TICK_MS);
 }

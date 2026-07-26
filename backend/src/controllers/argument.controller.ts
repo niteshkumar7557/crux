@@ -3,6 +3,7 @@ import pool from "../db/index.js";
 import { llmJson } from "../ai/llm.js";
 import { DEBATER_PROFILER_SYSTEM_PROMPT } from "../ai/prompts/debater-profiler.prompt.js";
 import { OPENING_ANALYST_SYSTEM_PROMPT } from "../ai/prompts/opening-analyst.prompt.js";
+import { checkText } from "../lib/validate.js";
 
 async function updateDesciption(user_id: number) {
   const { rows } = await pool.query(
@@ -38,13 +39,23 @@ ${allPastArguments.map((r: { content: string }, i: number) => `${i + 1}. "${r.co
 }
 
 export async function addNewArgument(req: Request, res: Response) {
+  const userId = req.user!.id;
   const data: {
-    user_id: number;
     content: string;
     content_keyword: string;
     domain: string;
     selected_domain?: string;
   } = req.body;
+
+  const content = checkText(req.body?.content, { field: "content", max: 1000 });
+  if (!content.ok) return res.status(400).json({ error: content.reason });
+  const keyword = checkText(req.body?.content_keyword, {
+    field: "content_keyword",
+    max: 200,
+  });
+  if (!keyword.ok) return res.status(400).json({ error: keyword.reason });
+  const domainIn = checkText(req.body?.domain, { field: "domain", max: 100 });
+  if (!domainIn.ok) return res.status(400).json({ error: domainIn.reason });
 
   const domainResult = await pool.query(
     `
@@ -53,14 +64,14 @@ export async function addNewArgument(req: Request, res: Response) {
         ORDER BY (name = $1) DESC
         LIMIT 1;
         `,
-    [data.domain, data.selected_domain ?? ""],
+    [domainIn.value, data.selected_domain ?? ""],
   );
   if (domainResult.rows.length === 0) {
     return res.status(400).json({ error: "Unknown domain." });
   }
   const { id: domainId, name: domainName } = domainResult.rows[0];
 
-  const userPrompt = `Statement: ${data.content}
+  const userPrompt = `Statement: ${content.value}
 Domain: ${domainName}`;
 
   try {
@@ -77,9 +88,9 @@ Domain: ${domainName}`;
         RETURNING id;
         `,
       [
-        data.user_id,
-        data.content_keyword,
-        data.content,
+        userId,
+        keyword.value,
+        content.value,
         domainId,
         parsed.for_analysis,
         parsed.against_analysis,
@@ -87,7 +98,7 @@ Domain: ${domainName}`;
     );
 
     try {
-      await updateDesciption(data.user_id);
+      await updateDesciption(userId);
     } catch (err) {
       console.error(err);
     }

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
 import { LuRotateCcw } from "react-icons/lu";
 import Button from "./_components/ui/Button";
 
@@ -12,6 +13,7 @@ const Error = ({
 }) => {
   useEffect(() => {
     console.error(error);
+    Sentry.captureException(error);
   }, [error]);
 
   return (

@@ -1,12 +1,16 @@
 import type { Request, Response } from "express";
 import { llmJson } from "../ai/llm.js";
 import { ARBITER_SYSTEM_PROMPT } from "../ai/prompts/arbiter.prompt.js";
+import { checkText } from "../lib/validate.js";
 
 export async function checkEligibleStatement(req: Request, res: Response) {
-	const { content, domain } = req.body;
+	const content = checkText(req.body?.content, { field: "content", max: 1000 });
+	if (!content.ok) return res.status(400).json({ error: content.reason });
+	const domain = checkText(req.body?.domain, { field: "domain", max: 100 });
+	if (!domain.ok) return res.status(400).json({ error: domain.reason });
 
-	const userPrompt = `STATEMENT: "${content}"
-DOMAIN: "${domain}"`;
+	const userPrompt = `STATEMENT: "${content.value}"
+DOMAIN: "${domain.value}"`;
 
 	try {
 		const parsed = await llmJson({
