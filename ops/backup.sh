@@ -12,9 +12,10 @@ mkdir -p "$BACKUP_DIR/daily" "$BACKUP_DIR/weekly"
 docker exec crux-db pg_dump -U "$PG_USER" -Fc "$PG_DB" \
   > "$BACKUP_DIR/daily/cruxdb-$STAMP.dump"
 
-# 2. Avatar uploads volume
-docker run --rm -v crux_avatar_uploads:/data:ro -v "$BACKUP_DIR/daily":/backup \
-  alpine tar czf "/backup/avatars-$STAMP.tar.gz" -C /data .
+# 2. Avatar uploads — a host bind mount, so tar it directly (mkdir guards the
+#    first run before compose has created the dir; empty is a valid archive)
+mkdir -p "$AVATAR_DIR"
+tar czf "$BACKUP_DIR/daily/avatars-$STAMP.tar.gz" -C "$AVATAR_DIR" .
 
 # 3. Sunday copies become weeklies
 if [ "$(date +%u)" = "7" ]; then

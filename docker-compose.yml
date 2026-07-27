@@ -35,7 +35,9 @@ services:
     env_file:
       - ./backend/.env
     volumes:
-      - crux_avatar_uploads:/home/app/public/uploads/avatars
+      # Bind mount, not a named volume: uploads are visible on the host at
+      # <repo>/uploads/avatars and the backup can tar a plain directory.
+      - ./uploads/avatars:/home/app/public/uploads/avatars
     healthcheck:
       test: [ "CMD-SHELL", "wget -qO- http://localhost:4001/health || exit 1" ]
       interval: 10s
@@ -97,4 +99,3 @@ networks:
 volumes:
   crux_postgres_data:
   crux_pgadmin_data:
-  crux_avatar_uploads:
