@@ -1,4 +1,4 @@
-NOTES.TXT
+notes.md
 pgadmin.env
 .superpowers/
 docs/superpowers/
@@ -9,3 +9,4 @@ ops/.env.ops
 ops/deploy.log
 docs/PRODUCTION_LEARNING.md
 docs/RUNBOOK.md
+backups/
