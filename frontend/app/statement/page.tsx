@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import StatementHeader from "../_components/statement/StatementHeader";
 import CruxAIRoleInfo from "../_components/statement/CruxAIRoleInfo";
 import { DomainClassification } from "./types";
