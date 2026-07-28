@@ -152,6 +152,17 @@ const ArgumentInput = ({
             title: "Author Argues For",
             body: "You posted this statement, so you can only argue FOR it — never against your own claim.",
           });
+        } else if (reason === "duplicate_own") {
+          setNotice({
+            title: "Already Said",
+            body: "You've already posted this comment in this debate. Make a new point, or add a reason or example to the one you made.",
+          });
+        } else if (reason === "duplicate_other") {
+          const who = err.response.data?.username;
+          setNotice({
+            title: "Already Argued",
+            body: `That comment has already been made${who ? ` by @${who}` : ""}. Reposting it earns nothing — argue it further or take it somewhere new.`,
+          });
         } else if (reason === "bad_reply_target") {
           setTarget(null);
           setNotice({

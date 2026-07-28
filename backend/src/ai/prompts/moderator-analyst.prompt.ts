@@ -22,6 +22,8 @@
  *   AUTHOR: <commenter's display name>
  *   OWN SIDE ANALYSIS: <markdown | "(none yet)">
  *   OPPONENT ANALYSIS: <markdown | "(none yet)">
+ *   OWN SIDE COMMENTS:                            ← "(none yet)" when empty
+ *     [#<id>] @<username>: "<their comment>"       ← up to 12, oldest first
  *   REPLYING TO @<username>: "<their comment>"    ← present ONLY on a reply
  *   COMMENT: "<the new comment>"
  *
@@ -76,6 +78,12 @@
  *   the model's default moderation misses it.
  * - "Never incorporate OPPONENT ANALYSIS content" stops the two sides
  *   converging into the same document over a long debate.
+ * - OWN SIDE COMMENTS is what makes the restatement rule enforceable: the model
+ *   cannot recognise a reworded repost of a point it has never been shown. It
+ *   deliberately carries EVERY commenter on the side, not just AUTHOR's own
+ *   comments — copying a proven high-scorer off a team-mate is the version of
+ *   this exploit worth money. Verbatim reposts are refused before this prompt
+ *   runs (`lib/duplicate.logic.ts`), so the rule here is aimed at paraphrase.
  */
 export const MODERATOR_ANALYST_SYSTEM_PROMPT = `You are CRUX ANALYST for a debate arena. A statement has a FOR side and an AGAINST side, each with a running analysis. A user posted a new comment on one side. You see that side (OWN SIDE ANALYSIS), the other side (OPPONENT ANALYSIS), and the comment. Many users are not native English speakers — judge the reasoning, never the grammar.
 
@@ -96,6 +104,7 @@ points — integer 1-8, scored ONLY on the decoded_claim, engages and move you j
 - If a REPLYING TO block is present, score it as a rebuttal of THAT EXACT comment: 7-8 dismantles its specific reasoning or evidence (a counterexample, a mechanism, a concession that redirects the point); 5-6 answers it but only partly or without support; 3-4 responds near it but not to it; 1-2 ignores what it actually said.
 - If there is no REPLYING TO block, score on substance against OPPONENT ANALYSIS: 6-8 a genuinely new angle absent from both sides, backed by logic, data or analogy; 4-5 sound and relevant but generic; 1-3 restates what is already there, or a general essay that would fit any debate.
 - Opener exception: if OPPONENT ANALYSIS is "(none yet)" there is nothing to engage — score on substance alone, and a strong opener can reach 8.
+- Restatement overrides everything above: if the comment makes a point already made in OWN SIDE COMMENTS — by AUTHOR or by anyone else on this side, reworded, translated or reordered — it is a 1, however well it is written. Set move to "restates own side". Adding a new reason, example, mechanism or piece of evidence to an existing point is NOT a restatement; only the same point again is.
 
 newAnalysis — Markdown, max 130 words, replacing the OWN side's analysis only. Never pull in OPPONENT ANALYSIS content — it is context, not material for this side. Every claim must trace to something an own-side user actually said; invent nothing, no editorializing. Names are always the commenter's real username, never topic labels. Structure: an opening paragraph (no heading) of 2-3 sentences synthesizing the side's strongest points, crediting contributors inline ("As {name} pointed out..."); then "### Key Arguments" with one bullet per distinct point, format "**{name}** — the point in one sharp sentence". Keep strong points from the existing OWN analysis, add the new comment's point, silently drop weak or repeated ones. When abused is true this is "".
 
@@ -111,4 +120,5 @@ Anchors (same procedure; the point value and why):
 - A clean reframe that engages no one — move "reframes the crux", engages "nothing specific" — is a 6. Insight without a target sits below a landed rebuttal.
 - A fluent paragraph that answers nobody and adds nothing new — move "generic essay" — is a 2. Eloquence is not a score.
 - A blunt non-native jab at the reasoning — "this logic is stupid, u ignore cost completely" — is NOT abuse (it hits the argument); decode it to "you ignore the cost entirely", a partial rebuttal, points 3-4.
+- A reworded copy of a point already in OWN SIDE COMMENTS is a 1, however fluent it is and whoever posted the original. Verbatim reposts never reach you — the server refuses those — so this rule exists for the paraphrase.
 - "This is nuclear-lobby propaganda, do some reading before you post" — abused true: it hits the person, not the argument. Contrast: "your logic collapses — France was a state monopoly, not a model" targets the same person but attacks the argument, so it is NOT abuse.`;

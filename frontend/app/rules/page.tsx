@@ -24,7 +24,7 @@ const RULES = [
   },
   {
     title: "Three comments at full value",
-    body: "Your first three comments in a debate score in full. The fourth and every one after is halved, with a floor of 1. Volume never beats sharpness — flooding a debate is a losing strategy by arithmetic.",
+    body: "Your first three comments in a debate score in full. The fourth and every one after is halved, with a floor of 1. Reposting a comment word for word is refused outright — yours or anyone else's — and making a point that has already been made on your side scores 1, however it is reworded. Volume never beats sharpness; flooding a debate is a losing strategy by arithmetic.",
   },
   {
     title: "Attack the argument, never the person",

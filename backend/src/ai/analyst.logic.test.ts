@@ -1,9 +1,12 @@
 import { describe, it, expect } from "vitest";
 import {
   buildAnalystPrompt,
+  buildOwnSideBlock,
   buildProbabilityPrompt,
   scoreComment,
   NONE_YET,
+  OWN_SIDE_COMMENT_LIMIT,
+  type OwnSideComment,
 } from "./analyst.logic.js";
 
 const base = {
@@ -77,6 +80,7 @@ describe("buildAnalystPrompt", () => {
       ownIsFirst: true,
       comment: "Baseload matters.",
       replyTo: null,
+      ownSideComments: [],
     });
     expect(p).toContain(`OPPONENT ANALYSIS: ${NONE_YET}`);
     expect(p).not.toContain("REPLYING TO");
@@ -92,9 +96,63 @@ describe("buildAnalystPrompt", () => {
       ownIsFirst: false,
       comment: "Hydro is baseload too.",
       replyTo: { username: "maya", content: "Nuclear is the only baseload." },
+      ownSideComments: [],
     });
     expect(p).toContain("REPLYING TO @maya");
     expect(p).toContain("Nuclear is the only baseload.");
+  });
+
+  it("shows the own side's comments with their ids, so a point can be traced", () => {
+    const p = buildAnalystPrompt({
+      statement: "Nuclear power is the fastest path to decarbonisation.",
+      side: "for",
+      author: "sam",
+      forAnalysis: "The case for.",
+      againstAnalysis: "The case against.",
+      ownIsFirst: false,
+      comment: "Costs are falling.",
+      replyTo: null,
+      ownSideComments: [
+        { id: 41, username: "maya", content: "Nuclear is the only baseload." },
+      ],
+    });
+    expect(p).toContain('OWN SIDE COMMENTS:\n[#41] @maya: "Nuclear is the only baseload."');
+  });
+
+  it("marks an empty own side as (none yet) rather than a blank block", () => {
+    expect(buildOwnSideBlock([])).toBe(NONE_YET);
+  });
+});
+
+describe("buildOwnSideBlock", () => {
+  const comment = (id: number, content = "A point."): OwnSideComment => ({
+    id,
+    username: `u${id}`,
+    content,
+  });
+
+  it("keeps only the most recent comments, in order", () => {
+    const many = Array.from({ length: OWN_SIDE_COMMENT_LIMIT + 4 }, (_, i) =>
+      comment(i + 1),
+    );
+    const block = buildOwnSideBlock(many);
+    const ids = [...block.matchAll(/\[#(\d+)\]/g)].map((m) => Number(m[1]));
+    expect(ids).toHaveLength(OWN_SIDE_COMMENT_LIMIT);
+    // The four oldest are dropped, and the newest is last.
+    expect(ids[0]).toBe(5);
+    expect(ids.at(-1)).toBe(OWN_SIDE_COMMENT_LIMIT + 4);
+  });
+
+  it("trims a long comment so one wall of text can't dominate the prompt", () => {
+    const block = buildOwnSideBlock([comment(1, "x".repeat(900))]);
+    expect(block).toContain("…");
+    expect(block.length).toBeLessThan(900);
+  });
+
+  it("leaves a comment under the limit untouched", () => {
+    expect(buildOwnSideBlock([comment(1, "Short and whole.")])).toContain(
+      '"Short and whole."',
+    );
   });
 });
 

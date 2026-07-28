@@ -10,7 +10,19 @@ export const STANDALONE_CAP = 5;
 /** §6: this many comments per debate score full; the rest are halved. */
 export const FULL_VALUE_COMMENTS = 3;
 
+/** §6: how many of the side's own comments the analyst is shown. */
+export const OWN_SIDE_COMMENT_LIMIT = 12;
+/** Each one trimmed to this — enough to recognise a point, not to re-read it. */
+export const OWN_SIDE_COMMENT_MAX_CHARS = 400;
+
 export interface ReplyTarget {
+  username: string;
+  content: string;
+}
+
+/** One comment already on the commenter's own side. */
+export interface OwnSideComment {
+  id: number;
   username: string;
   content: string;
 }
@@ -25,10 +37,35 @@ export interface AnalystPromptInput {
   comment: string;
   /** The opposing comment being answered, or null for a standalone. */
   replyTo: ReplyTarget | null;
+  /** Everything already argued on this side, oldest first. */
+  ownSideComments: OwnSideComment[];
 }
 
 function orNoneYet(text: string | null): string {
   return text && text.trim().length > 0 ? text : NONE_YET;
+}
+
+/**
+ * The side's existing comments, each tagged with its real comment id. The ids
+ * are what lets the analyst attribute a point to the exact comment it came
+ * from; the text is what lets it recognise a repost that this module's
+ * verbatim check could not (a reworded restatement).
+ *
+ * Only the most recent few, trimmed: a long debate would otherwise grow this
+ * block without bound on a prompt that runs on every single comment.
+ */
+export function buildOwnSideBlock(comments: OwnSideComment[]): string {
+  if (comments.length === 0) return NONE_YET;
+  return comments
+    .slice(-OWN_SIDE_COMMENT_LIMIT)
+    .map((c) => {
+      const text =
+        c.content.length > OWN_SIDE_COMMENT_MAX_CHARS
+          ? `${c.content.slice(0, OWN_SIDE_COMMENT_MAX_CHARS)}…`
+          : c.content;
+      return `[#${c.id}] @${c.username}: "${text}"`;
+    })
+    .join("\n");
 }
 
 export function buildAnalystPrompt(input: AnalystPromptInput): string {
@@ -50,7 +87,9 @@ export function buildAnalystPrompt(input: AnalystPromptInput): string {
 SIDE: ${side.toUpperCase()}
 AUTHOR: ${author}
 OWN SIDE ANALYSIS: ${own}
-OPPONENT ANALYSIS: ${opponent}${replyBlock}
+OPPONENT ANALYSIS: ${opponent}
+OWN SIDE COMMENTS:
+${buildOwnSideBlock(input.ownSideComments)}${replyBlock}
 COMMENT: "${comment}"`;
 }
 

@@ -13,7 +13,11 @@
  * Run:  npm run eval           (one pass)
  *       npm run eval -- --runs=3   (majority-of-N, smooths the jitter)
  */
-import type { AnalystPromptInput, ProbabilityPromptInput } from "../analyst.logic.js";
+import type {
+  AnalystPromptInput,
+  OwnSideComment,
+  ProbabilityPromptInput,
+} from "../analyst.logic.js";
 
 const STATEMENT = "Nuclear power is the only realistic path to decarbonize the grid.";
 
@@ -21,6 +25,27 @@ const FOR_ANALYSIS =
   "Nuclear is the only baseload that scales to civilizational demand.\n\n### Key Arguments\n- **@maya** — only nuclear delivers 24/7 baseload at the scale decarbonization needs";
 const AGAINST_ANALYSIS =
   "Nuclear is too slow and too costly to scale in time.\n\n### Key Arguments\n- **@arjun** — a single plant takes over 12 years to build";
+
+// The comments those two analyses were built from. The analyst is shown its own
+// side's comments so it can recognise a reworded repost of a point already
+// made; a case that passed `[]` here would exercise the prompt with a block the
+// real controller never sends.
+const FOR_COMMENTS: OwnSideComment[] = [
+  {
+    id: 101,
+    username: "maya",
+    content:
+      "Nuclear is the only baseload that scales to civilizational demand. Wind and solar cannot deliver 24/7 power at grid scale without storage nobody has built.",
+  },
+];
+const AGAINST_COMMENTS: OwnSideComment[] = [
+  {
+    id: 102,
+    username: "arjun",
+    content:
+      "A single plant takes over 12 years to build, from first concrete to grid connection. On that timeline nuclear cannot be the answer to a 2035 target.",
+  },
+];
 
 // ── Scoring cases ────────────────────────────────────────────────────────────
 // Asserted on scoreComment(...).judged (the model's 1-8 after clamp). The cap
@@ -45,6 +70,7 @@ export const SCORING_CASES: ScoringCase[] = [
       forAnalysis: FOR_ANALYSIS,
       againstAnalysis: AGAINST_ANALYSIS,
       ownIsFirst: false,
+      ownSideComments: AGAINST_COMMENTS,
       comment:
         "u say only nuclear scale but france 1980 build 56 reactor in 15 year and still 70% grid. so scaling possible yes but that was state monopoly + cheap debt, today no country have that. so 'only' is false",
       replyTo: { username: "maya", content: "Nuclear is the only baseload that scales." },
@@ -61,6 +87,7 @@ export const SCORING_CASES: ScoringCase[] = [
       forAnalysis: FOR_ANALYSIS,
       againstAnalysis: AGAINST_ANALYSIS,
       ownIsFirst: false,
+      ownSideComments: FOR_COMMENTS,
       comment:
         "everyone argues about nuclear cost and build time but the real question is what carries baseload at 3am with no wind and no sun. nobody against nuclear has answered that.",
       replyTo: null,
@@ -77,6 +104,7 @@ export const SCORING_CASES: ScoringCase[] = [
       forAnalysis: FOR_ANALYSIS,
       againstAnalysis: AGAINST_ANALYSIS,
       ownIsFirst: false,
+      ownSideComments: AGAINST_COMMENTS,
       comment:
         "While nuclear power undeniably offers impressive energy density and a commendable safety profile, we must weigh the broader socio-economic and environmental ramifications of over-reliance on any single technology in our pursuit of a sustainable energy future.",
       replyTo: { username: "maya", content: "Nuclear is the only baseload that scales." },
@@ -93,6 +121,7 @@ export const SCORING_CASES: ScoringCase[] = [
       forAnalysis: FOR_ANALYSIS,
       againstAnalysis: AGAINST_ANALYSIS,
       ownIsFirst: false,
+      ownSideComments: AGAINST_COMMENTS,
       comment: "this is textbook nuclear-lobby propaganda, do some reading before you post",
       replyTo: { username: "maya", content: "Nuclear is the only baseload that scales." },
     },
@@ -108,6 +137,7 @@ export const SCORING_CASES: ScoringCase[] = [
       forAnalysis: FOR_ANALYSIS,
       againstAnalysis: AGAINST_ANALYSIS,
       ownIsFirst: false,
+      ownSideComments: AGAINST_COMMENTS,
       comment: "this logic is stupid, u ignore the cost completely, nuclear is most expensive per MWh",
       replyTo: { username: "maya", content: "Nuclear is the only baseload that scales." },
     },
@@ -123,6 +153,7 @@ export const SCORING_CASES: ScoringCase[] = [
       forAnalysis: FOR_ANALYSIS,
       againstAnalysis: AGAINST_ANALYSIS,
       ownIsFirst: false,
+      ownSideComments: AGAINST_COMMENTS,
       comment:
         "aap bolte ho nuclear safe hai but Chernobyl aur Fukushima dono me government ne death toll chupaya, real numbers bahut zyada hai",
       replyTo: { username: "maya", content: "Nuclear is the safest energy source per terawatt-hour." },
@@ -139,6 +170,7 @@ export const SCORING_CASES: ScoringCase[] = [
       forAnalysis: FOR_ANALYSIS,
       againstAnalysis: AGAINST_ANALYSIS,
       ownIsFirst: false,
+      ownSideComments: AGAINST_COMMENTS,
       comment: "nuclear no good, waste stay 1000 year, my country no place for this, politics also problem, better sun and wind na",
       replyTo: null,
     },
@@ -154,6 +186,7 @@ export const SCORING_CASES: ScoringCase[] = [
       forAnalysis: FOR_ANALYSIS,
       againstAnalysis: AGAINST_ANALYSIS,
       ownIsFirst: false,
+      ownSideComments: AGAINST_COMMENTS,
       comment: "nuclear takes too long to build, more than a decade, so it cannot help in time",
       replyTo: null,
     },
@@ -169,6 +202,7 @@ export const SCORING_CASES: ScoringCase[] = [
       forAnalysis: null,
       againstAnalysis: null,
       ownIsFirst: true,
+      ownSideComments: [],
       comment:
         "nuclear has the highest capacity factor of any source, over 90%, meaning one plant runs near full output all year, which no renewable matches without storage",
       replyTo: null,
@@ -185,6 +219,7 @@ export const SCORING_CASES: ScoringCase[] = [
       forAnalysis: FOR_ANALYSIS,
       againstAnalysis: AGAINST_ANALYSIS,
       ownIsFirst: false,
+      ownSideComments: FOR_COMMENTS,
       comment:
         "think of the grid like an ICU — you can't run life support on 'mostly reliable' power. baseload isn't about average supply, it's about a guaranteed floor, and that is exactly what intermittent renewables can't promise",
       replyTo: null,
@@ -201,6 +236,7 @@ export const SCORING_CASES: ScoringCase[] = [
       forAnalysis: FOR_ANALYSIS,
       againstAnalysis: AGAINST_ANALYSIS,
       ownIsFirst: false,
+      ownSideComments: AGAINST_COMMENTS,
       comment: "nuclear accidents are scary and people don't want plants near where they live",
       replyTo: { username: "maya", content: "Nuclear is the only baseload that scales." },
     },
@@ -216,7 +252,42 @@ export const SCORING_CASES: ScoringCase[] = [
       forAnalysis: FOR_ANALYSIS,
       againstAnalysis: AGAINST_ANALYSIS,
       ownIsFirst: false,
+      ownSideComments: FOR_COMMENTS,
       comment: "i agree, nice point",
+      replyTo: null,
+    },
+  },
+  {
+    id: "score-13",
+    note: "lifts a team-mate's point and rewords it — the repost exploit, in the form the verbatim check cannot catch",
+    expect: { band: [1, 1] },
+    input: {
+      statement: STATEMENT,
+      side: "against",
+      author: "kip",
+      forAnalysis: FOR_ANALYSIS,
+      againstAnalysis: AGAINST_ANALYSIS,
+      ownIsFirst: false,
+      ownSideComments: AGAINST_COMMENTS,
+      comment:
+        "Building one reactor runs well past a decade from groundbreaking to the grid, so there is no way it arrives in time for a 2035 deadline.",
+      replyTo: null,
+    },
+  },
+  {
+    id: "score-14",
+    note: "builds on the same point with new evidence rather than repeating it — must NOT be scored as a restatement",
+    expect: { band: [4, 7] },
+    input: {
+      statement: STATEMENT,
+      side: "against",
+      author: "kip",
+      forAnalysis: FOR_ANALYSIS,
+      againstAnalysis: AGAINST_ANALYSIS,
+      ownIsFirst: false,
+      ownSideComments: AGAINST_COMMENTS,
+      comment:
+        "Vogtle 3 and 4 took 15 years and came in at $35bn, more than double the estimate — the delay compounds the cost, which is a second problem the build-time argument does not capture.",
       replyTo: null,
     },
   },

@@ -5,8 +5,10 @@ import {
   buildAnalystPrompt,
   buildProbabilityPrompt,
   scoreComment,
+  type OwnSideComment,
   type ReplyTarget,
 } from "../ai/analyst.logic.js";
+import { findDuplicate } from "../lib/duplicate.logic.js";
 import { MODERATOR_ANALYST_SYSTEM_PROMPT } from "../ai/prompts/moderator-analyst.prompt.js";
 import { PROBABILITY_SYSTEM_PROMPT } from "../ai/prompts/probability.prompt.js";
 import { notifyOpposition, notifyReply } from "../notifications/notify.js";
@@ -79,6 +81,7 @@ async function moderateAndAnalyze(
   input: string,
   first: boolean = false,
   replyTo: ReplyTarget | null = null,
+  ownSideComments: OwnSideComment[] = [],
 ) {
   const argRes = await pool.query(
     `
@@ -106,6 +109,7 @@ async function moderateAndAnalyze(
     ownIsFirst: first,
     comment: input,
     replyTo,
+    ownSideComments,
   });
 
   const parsed = await llmJson({
@@ -227,29 +231,42 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
       return res.status(409).json({ reason: "author_affirmative_only" });
     }
 
-    // Pre-insert side counts drive the opener exception (own side still empty)
-    // and §6's standalone-cap exemption (opposing side still empty).
-    const sideCountRes = await pool.query(
-      `SELECT COUNT(*) FILTER (WHERE side = 'for')     AS for_count,
-              COUNT(*) FILTER (WHERE side = 'against') AS against_count
-       FROM comments WHERE argument_id = $1`,
+    // Every comment already in this debate, read once: the side counts, the
+    // user's own prior count, the repost check and the analyst's OWN SIDE
+    // COMMENTS block are all views of the same rows. Captured before the
+    // insert, so a user's first comment sees priorCount 0.
+    const { rows: existing } = await pool.query(
+      `SELECT c.id, c.user_id, c.side, c.content, u.username
+       FROM comments c JOIN users u ON u.id = c.user_id
+       WHERE c.argument_id = $1
+       ORDER BY c.created_at ASC, c.id ASC`,
       [argumentId],
     );
-    const forCountPre = Number(sideCountRes.rows[0].for_count);
-    const againstCountPre = Number(sideCountRes.rows[0].against_count);
-    const ownSideCount =
-      effectiveSide === "for" ? forCountPre : againstCountPre;
-    const oppSideCount =
-      effectiveSide === "for" ? againstCountPre : forCountPre;
-    const first = ownSideCount === 0;
 
-    // Prior comments by this user in this debate (captured before the new row
-    // is inserted, so a user's first comment sees priorCount 0).
-    const priorRes = await pool.query(
-      `SELECT COUNT(*)::int AS n FROM comments WHERE argument_id = $1 AND user_id = $2`,
-      [argumentId, userId],
-    );
-    const priorCount: number = priorRes.rows[0].n;
+    // §6: a verbatim repost scores nothing, whether you are repeating yourself
+    // or lifting somebody else's proven comment. Refused here — before the
+    // model is called — so the exploit costs the attacker a round trip and us
+    // no tokens. Paraphrase is the analyst's job (see the restatement rule).
+    const dupe = findDuplicate(checkedInput.value, existing.map((c) => ({
+      userId: Number(c.user_id),
+      username: String(c.username),
+      content: String(c.content),
+    })), userId);
+    if (dupe.duplicate) {
+      return res.status(409).json({
+        reason: dupe.of === "self" ? "duplicate_own" : "duplicate_other",
+        ...(dupe.of === "other" ? { username: dupe.username } : {}),
+      });
+    }
+
+    // Pre-insert side counts drive the opener exception (own side still empty)
+    // and §6's standalone-cap exemption (opposing side still empty).
+    const ownSideRows = existing.filter((c) => c.side === effectiveSide);
+    const oppSideCount = existing.length - ownSideRows.length;
+    const first = ownSideRows.length === 0;
+    const priorCount = existing.filter(
+      (c) => Number(c.user_id) === userId,
+    ).length;
 
     const { abused, points, newAnalysis } = await moderateAndAnalyze(
       argumentId,
@@ -258,6 +275,11 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
       checkedInput.value,
       first,
       replyTarget,
+      ownSideRows.map((c) => ({
+        id: Number(c.id),
+        username: String(c.username),
+        content: String(c.content),
+      })),
     );
 
     if (abused) {
