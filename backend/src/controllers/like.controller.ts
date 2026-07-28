@@ -22,6 +22,15 @@ export async function registerLike(req: Request, res: Response) {
 
     const post_user_id = commentRows[0].user_id;
 
+    // A like pays the author +2 logic, so liking your own comment is minting
+    // your own currency. The UI does not offer the button, but the rule lives
+    // here — it has to hold against a direct call to the API.
+    if (Number(post_user_id) === Number(user_id)) {
+      return res
+        .status(403)
+        .json({ reason: "self_like", error: "You can't like your own comment." });
+    }
+
     const { rows } = await pool.query(
       `
                 SELECT id FROM likes

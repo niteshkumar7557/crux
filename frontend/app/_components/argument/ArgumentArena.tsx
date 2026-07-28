@@ -132,7 +132,6 @@ const ArgumentArena = ({
       reputation: logicStats.reputation,
       username: e.username,
       avatar: e.avatar,
-      grade: logicStats.grade,
       comment: e.content,
       likes: e.likes,
       user_id: user?.id,

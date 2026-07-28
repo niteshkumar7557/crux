@@ -18,6 +18,7 @@ const UserArgumentCard = ({
   likes,
   user_id,
   comment_id,
+  post_user_id,
   initiallyLiked,
   replyTo,
   replyCount,
@@ -45,6 +46,11 @@ const UserArgumentCard = ({
   const actionClass = `font-label text-[10px] uppercase text-outline cursor-pointer transition-colors ${
     side === "for" ? "hover:text-primary" : "hover:text-secondary"
   }`;
+
+  // A like pays the author +2 logic (§6), so your own comment offers no button
+  // — the count stays visible, it just isn't a control. The server refuses a
+  // self-like too; this only keeps the UI from offering what it would reject.
+  const isOwnComment = user_id !== undefined && user_id === post_user_id;
 
   // Cross-side only (§5): you can reply to an opposing comment, never your own
   // side. A viewer with no side yet may reply to anyone — it locks them to the
@@ -143,7 +149,14 @@ const UserArgumentCard = ({
           {/* A like is a logic award to the author (§6), so it needs an account.
               Logged-out viewers still see the count — they just get sent to log
               in instead of a like that would silently go nowhere. */}
-          {user_id === undefined ? (
+          {isOwnComment ? (
+            <span
+              title="You can't like your own argument"
+              className="font-label text-[10px] uppercase text-outline flex items-center gap-2"
+            >
+              <LuThumbsUp className="text-sm" /> {likeCount}
+            </span>
+          ) : user_id === undefined ? (
             <Link
               href="/login"
               title="Log in to like this argument"

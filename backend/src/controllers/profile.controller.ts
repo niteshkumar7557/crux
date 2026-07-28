@@ -12,28 +12,23 @@ import { fillLedgerWeeks } from "../lib/ledger.logic.js";
 function convertLogicScore(score: number) {
   // §9 tier ladder. Duplicated in frontend/app/_utils/logicScore.ts — see
   // docs/CODEBASE_GUIDE.md §6a.
-  // Beginner     -> B   0-49
-  // Intermediate -> B+  50-99
-  // Skilled      -> A   100-149
-  // Expert       -> A+  150-199
-  // Master       -> M   200+
+  // Beginner     0-49
+  // Intermediate 50-99
+  // Skilled      100-149
+  // Expert       150-199
+  // Master       200+
   let reputation = "beginner";
-  let grade = "B";
   if (score >= 200) {
     reputation = "master";
-    grade = "M";
   } else if (score >= 150) {
     reputation = "expert";
-    grade = "A+";
   } else if (score >= 100) {
     reputation = "skilled";
-    grade = "A";
   } else if (score >= 50) {
     reputation = "intermediate";
-    grade = "B+";
   }
 
-  return { reputation, grade };
+  return { reputation };
 }
 
 /**
@@ -139,7 +134,6 @@ export async function getProfileShell(req: Request, res: Response) {
       standing: {
         logic,
         tier: tier.reputation,
-        grade: tier.grade,
         globalRank: Number(rankRes.rows[0].rank),
         record: {
           wins: record.wins,

@@ -18,7 +18,6 @@ export interface ProfileIdentity {
 export interface ProfileStanding {
   logic: number;
   tier: string;
-  grade: string;
   globalRank: number;
   record: { wins: number; losses: number; draws: number };
   mvpCount: number;

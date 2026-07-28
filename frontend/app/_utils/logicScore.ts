@@ -1,21 +1,21 @@
-// The §9 tier ladder, as data — one source for the badge, the letter grade
-// and the profile's progress bar.
+// The §9 tier ladder, as data — one source for the reputation shown on comment
+// cards and the profile's progress bar. A score maps to a tier name and nothing
+// else; the letter grades that used to ride alongside are gone.
 //
 // Duplicated in backend/src/controllers/profile.controller.ts
 // (convertLogicScore) — the frontend cannot import backend modules. See
 // docs/CODEBASE_GUIDE.md §6a; change one and you must change the other.
 
 export const TIER_LADDER = [
-  { at: 0, tier: "beginner", grade: "B" },
-  { at: 50, tier: "intermediate", grade: "B+" },
-  { at: 100, tier: "skilled", grade: "A" },
-  { at: 150, tier: "expert", grade: "A+" },
-  { at: 200, tier: "master", grade: "M" },
+  { at: 0, tier: "beginner" },
+  { at: 50, tier: "intermediate" },
+  { at: 100, tier: "skilled" },
+  { at: 150, tier: "expert" },
+  { at: 200, tier: "master" },
 ] as const;
 
 export interface TierProgress {
   tier: string;
-  grade: string;
   /** 0–4, the index into TIER_LADDER. */
   index: number;
   /** The score at which the current tier begins. */
@@ -43,7 +43,6 @@ export function tierProgress(score: number): TierProgress {
   if (!next) {
     return {
       tier: current.tier,
-      grade: current.grade,
       index,
       floor: current.at,
       nextAt: null,
@@ -55,7 +54,6 @@ export function tierProgress(score: number): TierProgress {
 
   return {
     tier: current.tier,
-    grade: current.grade,
     index,
     floor: current.at,
     nextAt: next.at,
@@ -66,10 +64,10 @@ export function tierProgress(score: number): TierProgress {
 }
 
 /**
- * Maps a raw logic score to the reputation tier and letter grade used across
- * the arena (comment cards, leaderboard standings).
+ * Maps a raw logic score to the reputation tier shown across the arena
+ * (comment cards, leaderboard standings).
  */
 export function convertLogicScore(score: number) {
   const p = tierProgress(score);
-  return { reputation: p.tier, grade: p.grade };
+  return { reputation: p.tier };
 }

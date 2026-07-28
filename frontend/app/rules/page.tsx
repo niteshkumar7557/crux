@@ -27,6 +27,10 @@ const RULES = [
     body: "Your first three comments in a debate score in full. The fourth and every one after is halved, with a floor of 1. Volume never beats sharpness — flooding a debate is a losing strategy by arithmetic.",
   },
   {
+    title: "Attack the argument, never the person",
+    body: "Hit the reasoning as hard as you like — \"this logic collapses\" and \"that is factually wrong\" are fair play, rough phrasing included. Hit the person and the moderator flags it: the comment is discarded, it never reaches the arena, and it costs you 4 logic. Slurs, threats and spam are judged the same way, in any language.",
+  },
+  {
     title: "The margin decides it",
     body: "The judge splits the debate into two percentages. More than 5 points apart and that side wins; 5 or less is a draw. The MVP is the single best debater on the winning side — there is no MVP in a draw, because there is no winning side to take one from.",
   },
@@ -47,7 +51,7 @@ const Rules = () => {
           Rules of Engagement
         </h1>
         <p className="mt-4 text-on-surface-variant font-body text-lg max-w-xl">
-          Six rules, with their real numbers. Nothing here is discovered by
+          Seven rules, with their real numbers. Nothing here is discovered by
           being penalised by it — you go in knowing exactly what every move is
           worth.
         </p>
@@ -79,7 +83,7 @@ const Rules = () => {
         data-reveal
         className="mt-6 border-l-2 border-outline-variant/20 pl-6 font-body text-sm text-on-surface-variant/80 leading-relaxed"
       >
-        One house rule beyond the six: posting is rate-limited — a handful of
+        One house rule beyond the seven: posting is rate-limited — a handful of
         statements or comments per minute per account. It keeps the arena
         human-paced and the judge honest. If you hit it, you&rsquo;ll be told
         exactly how long to wait.

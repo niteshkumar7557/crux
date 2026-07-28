@@ -78,7 +78,7 @@ Tokens live in `frontend/app/globals.css` `@theme` (M3-style dark ramp):
 
 **Shared pieces:** `ArenaCard` (one base for trending/newest/archive cards; has `data-reveal` + GSAP hover lift built in), `ScoreBar` (+ `useScoreBarReveal` hook — bars draw from outer edges), `CaseColumn side="for"|"against"` (single implementation, literal class strings per side for Tailwind), `SearchBar` (debounced modal, dialog semantics, Escape/backdrop close, open-only GSAP choreography).
 
-**Utils:** `_utils/gsap.ts` (see §6), `_utils/logicScore.ts` (`convertLogicScore`: score → tier beginner…master / grade B…M — used by comment cards and leaderboard), `_utils/timeAgo.ts`, `_utils/getUser.ts`, `_hooks/useUser.ts`, `_hooks/useScoreBarReveal.ts`.
+**Utils:** `_utils/gsap.ts` (see §6), `_utils/logicScore.ts` (`convertLogicScore`: score → tier beginner…master — used by comment cards and leaderboard), `_utils/timeAgo.ts`, `_utils/getUser.ts`, `_hooks/useUser.ts`, `_hooks/useScoreBarReveal.ts`.
 
 ## 4a. Statement posting flow (`_components/statement/`, redesigned 2026-07-17)
 

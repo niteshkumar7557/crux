@@ -4,7 +4,19 @@ import { convertLogicScore, tierProgress, TIER_LADDER } from "./logicScore";
 describe("TIER_LADDER", () => {
   it("is §15's ladder, unchanged", () => {
     expect(TIER_LADDER.map((t) => t.at)).toEqual([0, 50, 100, 150, 200]);
-    expect(TIER_LADDER.map((t) => t.grade)).toEqual(["B", "B+", "A", "A+", "M"]);
+    expect(TIER_LADDER.map((t) => t.tier)).toEqual([
+      "beginner",
+      "intermediate",
+      "skilled",
+      "expert",
+      "master",
+    ]);
+  });
+
+  it("carries a tier name and nothing else — the letter grades are gone", () => {
+    for (const rung of TIER_LADDER) {
+      expect(Object.keys(rung).sort()).toEqual(["at", "tier"]);
+    }
   });
 });
 
@@ -12,7 +24,6 @@ describe("tierProgress", () => {
   it("puts 0 at the bottom of Beginner", () => {
     const p = tierProgress(0);
     expect(p.tier).toBe("beginner");
-    expect(p.grade).toBe("B");
     expect(p.floor).toBe(0);
     expect(p.nextAt).toBe(50);
     expect(p.nextTier).toBe("intermediate");
@@ -62,12 +73,9 @@ describe("tierProgress", () => {
 });
 
 describe("convertLogicScore", () => {
-  it("keeps its existing contract for cards and the leaderboard", () => {
-    expect(convertLogicScore(0)).toEqual({ reputation: "beginner", grade: "B" });
-    expect(convertLogicScore(75)).toEqual({
-      reputation: "intermediate",
-      grade: "B+",
-    });
-    expect(convertLogicScore(200)).toEqual({ reputation: "master", grade: "M" });
+  it("returns the reputation tier alone", () => {
+    expect(convertLogicScore(0)).toEqual({ reputation: "beginner" });
+    expect(convertLogicScore(75)).toEqual({ reputation: "intermediate" });
+    expect(convertLogicScore(200)).toEqual({ reputation: "master" });
   });
 });

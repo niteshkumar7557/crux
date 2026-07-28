@@ -3,7 +3,6 @@ export interface UserArgumentCardProps {
   reputation: string;
   username: string;
   avatar: string | null;
-  grade: string;
   comment: string;
   likes: number;
   user_id?: number; // the viewer's id (undefined when logged out)
