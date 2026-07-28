@@ -1,5 +1,5 @@
+(migrating to railway, bye!)
 # CRUX — Codebase Guide (for a new developer)
-
 You are looking at a mid-sized full-stack app: an AI-refereed debate platform. This
 guide is written the way you'd want to receive a large open-source repo — not a feature
 list, but a **map + a method** so you can find your way and change things with confidence.
