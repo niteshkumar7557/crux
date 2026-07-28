@@ -75,12 +75,13 @@ describe("buildAnalystPrompt", () => {
       statement: "Nuclear power is the fastest path to decarbonisation.",
       side: "for",
       author: "maya",
-      forAnalysis: null,
-      againstAnalysis: null,
+      ownAnalysis: "",
+      opponentAnalysis: "",
       ownIsFirst: true,
       comment: "Baseload matters.",
       replyTo: null,
       ownSideComments: [],
+      newCommentId: 63,
     });
     expect(p).toContain(`OPPONENT ANALYSIS: ${NONE_YET}`);
     expect(p).not.toContain("REPLYING TO");
@@ -91,12 +92,13 @@ describe("buildAnalystPrompt", () => {
       statement: "Nuclear power is the fastest path to decarbonisation.",
       side: "against",
       author: "dev",
-      forAnalysis: "The case for.",
-      againstAnalysis: "The case against.",
+      opponentAnalysis: "The case for.",
+      ownAnalysis: "The case against.",
       ownIsFirst: false,
       comment: "Hydro is baseload too.",
       replyTo: { username: "maya", content: "Nuclear is the only baseload." },
       ownSideComments: [],
+      newCommentId: 63,
     });
     expect(p).toContain("REPLYING TO @maya");
     expect(p).toContain("Nuclear is the only baseload.");
@@ -107,14 +109,15 @@ describe("buildAnalystPrompt", () => {
       statement: "Nuclear power is the fastest path to decarbonisation.",
       side: "for",
       author: "sam",
-      forAnalysis: "The case for.",
-      againstAnalysis: "The case against.",
+      ownAnalysis: "The case for.",
+      opponentAnalysis: "The case against.",
       ownIsFirst: false,
       comment: "Costs are falling.",
       replyTo: null,
       ownSideComments: [
         { id: 41, username: "maya", content: "Nuclear is the only baseload." },
       ],
+      newCommentId: 63,
     });
     expect(p).toContain('OWN SIDE COMMENTS:\n[#41] @maya: "Nuclear is the only baseload."');
   });

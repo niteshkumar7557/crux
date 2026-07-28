@@ -38,7 +38,7 @@ async function runScoring(c: ScoringCase): Promise<Outcome> {
     return { pass: out.abused === true, detail: `abused=${out.abused} (want true)` };
   }
 
-  const opp = c.input.side === "for" ? c.input.againstAnalysis : c.input.forAnalysis;
+  const opp = c.input.opponentAnalysis;
   const judged = scoreComment({
     rawPoints: out.points,
     isReply: c.input.replyTo != null,

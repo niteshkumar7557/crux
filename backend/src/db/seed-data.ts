@@ -131,10 +131,13 @@ export const AGAINST_COMMENTS = [
 	"The steelman of the opposing view is stronger than anything argued here.",
 ];
 
+// The structured analysis shape (see ai/analysis.logic.ts). Seeded points are
+// the AI's opening draft, so they carry no commentId — nobody argued them.
 const analysis = (lead: string, points: string[]) =>
-	`${lead}\n\n### Key Points\n${sample(points, 3)
-		.map((p) => `- ${p}`)
-		.join("\n")}`;
+	JSON.stringify({
+		lead,
+		points: sample(points, 3).map((text) => ({ author: null, commentId: null, text })),
+	});
 
 // ============================================================
 // Base insert — truncate everything, then seed the 30 real users

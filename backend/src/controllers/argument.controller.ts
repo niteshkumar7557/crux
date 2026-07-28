@@ -4,6 +4,7 @@ import { llmJson } from "../ai/llm.js";
 import { DEBATER_PROFILER_SYSTEM_PROMPT } from "../ai/prompts/debater-profiler.prompt.js";
 import { OPENING_ANALYST_SYSTEM_PROMPT } from "../ai/prompts/opening-analyst.prompt.js";
 import { checkText } from "../lib/validate.js";
+import { readAnalysis, sanitizeAnalysis, writeAnalysis } from "../ai/analysis.logic.js";
 
 async function updateDesciption(user_id: number) {
   const { rows } = await pool.query(
@@ -92,8 +93,10 @@ Domain: ${domainName}`;
         keyword.value,
         content.value,
         domainId,
-        parsed.for_analysis,
-        parsed.against_analysis,
+        // Nobody has commented, so there is nobody to credit: an empty author
+        // map nulls any id the model invented for its own draft points.
+        writeAnalysis(sanitizeAnalysis(parsed.for_analysis, new Map())),
+        writeAnalysis(sanitizeAnalysis(parsed.against_analysis, new Map())),
       ],
     );
 
@@ -130,8 +133,17 @@ export async function getArgumentById(req: Request, res: Response) {
             `,
       [id],
     );
+    // The analyses leave here already parsed. Both the arena panel and the
+    // certificate image read this one endpoint, so parsing server-side means
+    // there is no second reader on the frontend to drift out of sync — and
+    // rows still holding the old Markdown are handled in exactly one place.
+    const row = rows[0];
     res.status(200).json({
-      data: rows[0],
+      data: row && {
+        ...row,
+        for_analysis: readAnalysis(row.for_analysis),
+        against_analysis: readAnalysis(row.against_analysis),
+      },
     });
   } catch (err) {
     console.error(err);

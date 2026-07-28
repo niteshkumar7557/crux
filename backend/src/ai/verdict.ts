@@ -3,6 +3,7 @@ import { llmJson } from "./llm.js";
 import { notifyVerdict } from "../notifications/notify.js";
 import { awardLogic } from "../economy/logic.js";
 import config from "../config/index.js";
+import { readAnalysis, renderAnalysisForPrompt } from "./analysis.logic.js";
 import {
   resolveVerdict,
   resolvePayouts,
@@ -84,10 +85,10 @@ export async function concludeDebate(argumentId: number): Promise<void> {
         user: `STATEMENT: ${arg.content}
 
 FOR analysis:
-${arg.for_analysis}
+${renderAnalysisForPrompt(readAnalysis(arg.for_analysis))}
 
 AGAINST analysis:
-${arg.against_analysis}
+${renderAnalysisForPrompt(readAnalysis(arg.against_analysis))}
 
 SCORED COMMENTS:
 ${commentBlock}`,

@@ -40,7 +40,8 @@
  *     engages:       string,   // the specific thing it answers, or "nothing specific"
  *     move:          string,   // the logical move, in a few words
  *     points:        number,   // 1-8
- *     newAnalysis:   string }
+ *     newAnalysis:   { lead: string,
+ *                      points: { commentId: number | null, text: string }[] } }
  *
  * DOWNSTREAM CONTRACT — what breaks if the shape drifts
  * - `decoded_claim`, `engages`, `move` are NOT read by code. They are the
@@ -57,10 +58,14 @@
  *   empty), then halves it after 3 comments in the same debate. The user is
  *   shown that arithmetic, so the raw judged value must be defensible on its
  *   own — the code fixes range, not judgement.
- * - `newAnalysis` overwrites `arguments.{side}_analysis` verbatim. An empty
- *   string is treated as "no update" and the old analysis stands.
- * - The Markdown structure must match what `opening-analyst.prompt.ts`
- *   produces, since it is replacing that text in the same panel.
+ * - `newAnalysis` goes through `sanitizeAnalysis()` in `ai/analysis.logic.ts`
+ *   before it is stored, and that function — not this prompt — is the guard.
+ *   Authors are resolved from `commentId` against the side's real comments, so
+ *   a `commentId` this model invents costs the point its link and nothing more;
+ *   an `author` field, if it emits one, is ignored outright. An analysis that
+ *   sanitizes to empty is treated as "no update" and the old one stands.
+ * - The structure must match what `opening-analyst.prompt.ts` produces, since
+ *   it is replacing that document in the same panel.
  *
  * CALL SETTINGS
  * `maxTokens: 3000`, temperature from config (0.2). On failure the whole
@@ -106,15 +111,27 @@ points — integer 1-8, scored ONLY on the decoded_claim, engages and move you j
 - Opener exception: if OPPONENT ANALYSIS is "(none yet)" there is nothing to engage — score on substance alone, and a strong opener can reach 8.
 - Restatement overrides everything above: if the comment makes a point already made in OWN SIDE COMMENTS — by AUTHOR or by anyone else on this side, reworded, translated or reordered — it is a 1, however well it is written. Set move to "restates own side". Adding a new reason, example, mechanism or piece of evidence to an existing point is NOT a restatement; only the same point again is.
 
-newAnalysis — Markdown, max 130 words, replacing the OWN side's analysis only. Never pull in OPPONENT ANALYSIS content — it is context, not material for this side. Every claim must trace to something an own-side user actually said; invent nothing, no editorializing. Names are always the commenter's real username, never topic labels. Structure: an opening paragraph (no heading) of 2-3 sentences synthesizing the side's strongest points, crediting contributors inline ("As {name} pointed out..."); then "### Key Arguments" with one bullet per distinct point, format "**{name}** — the point in one sharp sentence". Keep strong points from the existing OWN analysis, add the new comment's point, silently drop weak or repeated ones. When abused is true this is "".
+newAnalysis — an object {"lead":string,"points":[{"commentId":integer|null,"text":string}]} replacing the OWN side's analysis only. When abused is true, {"lead":"","points":[]}.
+- lead — 2-3 sentences, max 60 words, synthesizing the side's strongest case. No heading, no names, no markdown.
+- points — max 6, one per distinct argument, strongest first. text is the point in one sharp sentence, max 30 words, no markdown and no "@name" prefix — the name is attached from commentId, not from your text.
+- commentId — the id in [#…] of the comment that made this point. Use the id from OWN SIDE COMMENTS, or YOUR COMMENT ID for the comment you were just given. When keeping a point that already exists in OWN SIDE ANALYSIS, re-use the [#…] id shown against it. Use null ONLY for a point no comment made — an opening-draft point nobody has argued yet. Never guess an id: an id that is not in front of you must be null.
+- Never pull in OPPONENT ANALYSIS content — it is context, not material for this side. Every point must trace to something an own-side user actually said; invent nothing, no editorializing. Keep strong points from the existing OWN analysis, add the new comment's point, silently drop weak or repeated ones.
 
 Calibration — one fully worked example, then the anchors that set the range.
 
 Worked example — a reply that lands, in broken English (SIDE AGAINST, AUTHOR @dev):
-OWN SIDE ANALYSIS: "The case against nuclear: @arjun notes a single plant takes over 12 years to build."
+OWN SIDE ANALYSIS: Nuclear cannot be built fast enough to matter.
+
+### Key Arguments
+- [#41] **@arjun** — a single plant takes over 12 years to build
+OWN SIDE COMMENTS:
+[#41] @arjun: "one plant is 12+ years start to finish, we do not have that long"
+YOUR COMMENT ID: 63
 REPLYING TO @maya: "Nuclear is the only baseload that scales."
 COMMENT: "u say only nuclear scale but france 1980 build 56 reactor in 15 year and still 70% grid. so scaling possible yes but that was state monopoly + cheap debt, today no country have that. so 'only' is false"
-{"abused":false,"decoded_claim":"France built 56 reactors in 15 years and still runs ~70% nuclear, so scaling is possible — but only under a state monopoly with cheap debt that no country has today.","engages":"@maya's claim that nuclear is the only baseload that scales","move":"concedes then redirects with a counterexample","points":8,"newAnalysis":"The case against isn't that nuclear can't work — it's that it can't scale under today's conditions. As @arjun noted, plant build times run past a decade, and @dev shows France's 1980s rollout only happened under a state monopoly with cheap public debt no country can replicate now.\\n\\n### Key Arguments\\n- **@arjun** — a single plant takes over 12 years to build, too slow for the timeline\\n- **@dev** — France's rollout required a state monopoly and cheap debt, conditions absent everywhere today"}
+{"abused":false,"decoded_claim":"France built 56 reactors in 15 years and still runs ~70% nuclear, so scaling is possible — but only under a state monopoly with cheap debt that no country has today.","engages":"@maya's claim that nuclear is the only baseload that scales","move":"concedes then redirects with a counterexample","points":8,"newAnalysis":{"lead":"The case against isn't that nuclear can't work — it's that it can't scale under today's conditions. The one rollout that did scale ran on public money and a state monopoly no country can reproduce.","points":[{"commentId":41,"text":"A single plant takes over 12 years to build, too slow for the timeline"},{"commentId":63,"text":"France's rollout required a state monopoly and cheap debt, conditions absent everywhere today"}]}}
+
+Note what that example did with ids: it kept @arjun's point and re-used the [#41] shown against it, and it gave the new point YOUR COMMENT ID. It invented no id and put no "@name" inside any text.
 
 Anchors (same procedure; the point value and why):
 - A clean reframe that engages no one — move "reframes the crux", engages "nothing specific" — is a 6. Insight without a target sits below a landed rebuttal.

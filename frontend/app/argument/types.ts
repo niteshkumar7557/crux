@@ -1,3 +1,23 @@
+/**
+ * The Crux AI analysis, as `GET /argument/:id` returns it. A point that came
+ * from a real comment carries that comment's id, which is what lets the panel
+ * link a named point to the argument it was made in; the AI's own opening-draft
+ * points carry neither an author nor an id.
+ *
+ * Parsed server-side (backend `ai/analysis.logic.ts`) — including the legacy
+ * Markdown rows — so there is no reader on this side to drift out of sync.
+ */
+export interface AnalysisPoint {
+  author: string | null;
+  commentId: number | null;
+  text: string;
+}
+
+export interface Analysis {
+  lead: string;
+  points: AnalysisPoint[];
+}
+
 export interface UserArgumentCardProps {
   side: "for" | "against";
   reputation: string;

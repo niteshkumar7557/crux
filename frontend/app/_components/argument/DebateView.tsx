@@ -6,6 +6,7 @@ import serverApi from "@/app/axios.server";
 import { isAxiosError } from "axios";
 import { notFound } from "next/navigation";
 import { debateSlug } from "@/app/_utils/slugify";
+import type { Analysis } from "@/app/argument/types";
 import {
   atWalkoverRisk,
   emptySideLabel,
@@ -54,7 +55,11 @@ const DebateView = async ({ id }: { id: number }) => {
   if (!data?.data) notFound();
   const row = data.data;
 
-  const aiAnalysis: [string, string] = [row.for_analysis, row.against_analysis];
+  // Already structured by the API — see Analysis in argument/types.ts.
+  const aiAnalysis: [Analysis, Analysis] = [
+    row.for_analysis,
+    row.against_analysis,
+  ];
 
   const argumentHeaderData = {
     statementId: `CRX-${row.id}-A`,

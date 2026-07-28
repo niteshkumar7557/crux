@@ -7,87 +7,80 @@ import {
   POINT_MAX,
 } from "./certificateAnalysis";
 
-// The exact shape the arbiter prompt asks for.
-const REAL = `The case in favor holds up under scrutiny.
+const point = (text: string, commentId: number | null = null) => ({
+  author: commentId === null ? null : "maya",
+  commentId,
+  text,
+});
 
-### Key Points
-- Historical precedent shows similar shifts succeeded
-- Early adopters and case studies already demonstrate the claim in practice
-- The main objections rely on worst-case scenarios, not likely ones`;
+// The exact shape `GET /argument/:id` now returns.
+const REAL = {
+  lead: "The case in favor holds up under scrutiny.",
+  points: [
+    point("Historical precedent shows similar shifts succeeded", 41),
+    point("Early adopters and case studies already demonstrate the claim"),
+    point("The main objections rely on worst-case scenarios, not likely ones"),
+  ],
+};
 
 describe("parseAnalysis", () => {
-  it("splits a real analysis into its lead and its points", () => {
-    const a = parseAnalysis(REAL);
-    expect(a.lead).toBe("The case in favor holds up under scrutiny.");
-    expect(a.points).toHaveLength(3);
-    expect(a.points[0]).toBe(
-      "Historical precedent shows similar shifts succeeded",
-    );
+  it("flattens the structured analysis into a lead and its points", () => {
+    expect(parseAnalysis(REAL)).toEqual({
+      lead: "The case in favor holds up under scrutiny.",
+      points: [
+        "Historical precedent shows similar shifts succeeded",
+        "Early adopters and case studies already demonstrate the claim",
+        "The main objections rely on worst-case scenarios, not likely ones",
+      ],
+    });
   });
 
-  it("drops the heading — it is a label, not content", () => {
-    const a = parseAnalysis(REAL);
-    expect(a.lead).not.toContain("Key Points");
-    expect(a.points.join(" ")).not.toContain("Key Points");
-  });
-
-  it("handles rows whose newlines were stored escaped", () => {
-    const escaped =
-      "One sharp opening.\\n\\n### Key Points\\n- First point\\n- Second point";
-    const a = parseAnalysis(escaped);
-    expect(a.lead).toBe("One sharp opening.");
-    expect(a.points).toEqual(["First point", "Second point"]);
-  });
-
-  it("accepts asterisk bullets too", () => {
-    const a = parseAnalysis("Lead.\n\n* Alpha\n* Beta");
-    expect(a.points).toEqual(["Alpha", "Beta"]);
-  });
-
-  it("strips inline bold, italic and code", () => {
-    const a = parseAnalysis(
-      "A **strong** lead.\n\n- **Cost** is _underestimated_\n- Uses `pipelines`",
-    );
-    expect(a.lead).toBe("A strong lead.");
-    expect(a.points).toEqual([
-      "Cost is underestimated",
-      "Uses pipelines",
-    ]);
+  it("drops attribution — a name per line crowds the card at this size", () => {
+    expect(parseAnalysis(REAL).points.join(" ")).not.toContain("maya");
   });
 
   it("caps the number of points the card can hold", () => {
-    const many = `Lead.\n\n${Array.from({ length: 8 }, (_, i) => `- Point ${i}`).join("\n")}`;
+    const many = {
+      lead: "L",
+      points: Array.from({ length: MAX_POINTS + 4 }, (_, i) =>
+        point(`point ${i}`),
+      ),
+    };
     expect(parseAnalysis(many).points).toHaveLength(MAX_POINTS);
   });
 
-  it("truncates a long lead and long points on word boundaries", () => {
-    const longLead = "word ".repeat(60).trim();
-    const longPoint = "chunk ".repeat(40).trim();
-    const a = parseAnalysis(`${longLead}\n\n- ${longPoint}`);
-    expect(a.lead.length).toBeLessThanOrEqual(LEAD_MAX + 1);
-    expect(a.lead.endsWith("…")).toBe(true);
-    expect(a.points[0].length).toBeLessThanOrEqual(POINT_MAX + 1);
-    expect(a.points[0].endsWith("…")).toBe(true);
+  it("truncates a long lead and long points", () => {
+    const flat = parseAnalysis({
+      lead: "lead ".repeat(200),
+      points: [point("point ".repeat(200))],
+    });
+    expect(flat.lead.length).toBeLessThanOrEqual(LEAD_MAX + 1);
+    expect(flat.points[0].length).toBeLessThanOrEqual(POINT_MAX + 1);
   });
 
-  it("ignores prose that trails the bullets", () => {
-    const a = parseAnalysis("Lead.\n\n- A point\n\nSome trailing note.");
-    expect(a.lead).toBe("Lead.");
-    expect(a.points).toEqual(["A point"]);
+  it("drops points with no usable text", () => {
+    const flat = parseAnalysis({ lead: "L", points: [point("   "), point("real")] });
+    expect(flat.points).toEqual(["real"]);
   });
 
-  it("survives a missing, empty or non-string analysis", () => {
-    for (const bad of [undefined, null, "", "   ", 42, {}]) {
-      const a = parseAnalysis(bad);
-      expect(a).toEqual({ lead: "", points: [] });
-      expect(isEmptyAnalysis(a)).toBe(true);
-    }
+  // The certificate renders whatever the API hands it, so a debate whose
+  // analysis never landed must produce no panel rather than a broken image.
+  it.each([
+    ["undefined", undefined],
+    ["null", null],
+    ["a leftover Markdown string", "### Key Points\n- a point"],
+    ["a number", 7],
+    ["an object with no points", { lead: "L" }],
+  ])("yields an empty model for %s", (_label, raw) => {
+    const flat = parseAnalysis(raw);
+    expect(flat).toEqual({ lead: "", points: [] });
+    expect(isEmptyAnalysis(flat)).toBe(true);
   });
 
-  it("copes with bullets but no lead", () => {
-    const a = parseAnalysis("### Key Points\n- Only a point");
-    expect(a.lead).toBe("");
-    expect(a.points).toEqual(["Only a point"]);
-    expect(isEmptyAnalysis(a)).toBe(false);
+  it("copes with points but no lead", () => {
+    const flat = parseAnalysis({ points: [point("standing alone")] });
+    expect(flat.lead).toBe("");
+    expect(flat.points).toEqual(["standing alone"]);
+    expect(isEmptyAnalysis(flat)).toBe(false);
   });
 });

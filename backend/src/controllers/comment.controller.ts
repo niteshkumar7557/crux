@@ -9,6 +9,14 @@ import {
   type ReplyTarget,
 } from "../ai/analyst.logic.js";
 import { findDuplicate } from "../lib/duplicate.logic.js";
+import {
+  isEmptyAnalysis,
+  readAnalysis,
+  renderAnalysisForPrompt,
+  renderOwnAnalysisForAnalyst,
+  sanitizeAnalysis,
+  writeAnalysis,
+} from "../ai/analysis.logic.js";
 import { MODERATOR_ANALYST_SYSTEM_PROMPT } from "../ai/prompts/moderator-analyst.prompt.js";
 import { PROBABILITY_SYSTEM_PROMPT } from "../ai/prompts/probability.prompt.js";
 import { notifyOpposition, notifyReply } from "../notifications/notify.js";
@@ -45,8 +53,10 @@ async function updateProbability(argumentId: number) {
     statement: rows[0].content,
     priorAffirmative: rows[0].affirmative,
     priorNegative: rows[0].negative,
-    forAnalysis: rows[0].for_analysis,
-    againstAnalysis: rows[0].against_analysis,
+    forAnalysis: renderAnalysisForPrompt(readAnalysis(rows[0].for_analysis)),
+    againstAnalysis: renderAnalysisForPrompt(
+      readAnalysis(rows[0].against_analysis),
+    ),
     latest: {
       username: latest[0].username,
       side: latest[0].side,
@@ -77,11 +87,12 @@ async function updateProbability(argumentId: number) {
 async function moderateAndAnalyze(
   argumentId: number,
   side: string,
-  userId: number,
+  authorUsername: string,
   input: string,
   first: boolean = false,
   replyTo: ReplyTarget | null = null,
   ownSideComments: OwnSideComment[] = [],
+  newCommentId: number | null = null,
 ) {
   const argRes = await pool.query(
     `
@@ -91,25 +102,30 @@ async function moderateAndAnalyze(
         `,
     [argumentId],
   );
-  const nameRes = await pool.query(
-    `
-            SELECT name FROM users WHERE id = $1;
-        `,
-    [userId],
-  );
   const argumentContent = argRes.rows[0].content;
-  const name = nameRes.rows[0].name;
+
+  const own = readAnalysis(
+    side === "for" ? argRes.rows[0].for_analysis : argRes.rows[0].against_analysis,
+  );
+  const opponent = readAnalysis(
+    side === "for" ? argRes.rows[0].against_analysis : argRes.rows[0].for_analysis,
+  );
 
   const userPrompt = buildAnalystPrompt({
     statement: argumentContent,
     side: side as "for" | "against",
-    author: name,
-    forAnalysis: argRes.rows[0].for_analysis,
-    againstAnalysis: argRes.rows[0].against_analysis,
+    // The username, not the display name: OWN SIDE COMMENTS lists @handles, and
+    // the restatement rule asks the model to compare this author against them.
+    author: authorUsername,
+    // Own side carries its comment ids so a kept point keeps its link;
+    // the opponent's is context only, so its ids would just be noise.
+    ownAnalysis: renderOwnAnalysisForAnalyst(own),
+    opponentAnalysis: renderAnalysisForPrompt(opponent),
     ownIsFirst: first,
     comment: input,
     replyTo,
     ownSideComments,
+    newCommentId,
   });
 
   const parsed = await llmJson({
@@ -121,7 +137,7 @@ async function moderateAndAnalyze(
   return parsed as {
     abused: boolean;
     points: number;
-    newAnalysis: string;
+    newAnalysis: unknown;
   };
 }
 
@@ -268,10 +284,22 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
       (c) => Number(c.user_id) === userId,
     ).length;
 
+    // The analyst has to attribute a point to this comment, but the row is not
+    // inserted until after it runs (an abusive comment is never inserted at
+    // all). So the id is taken from the sequence up front and the INSERT uses
+    // it explicitly. A post that fails just leaves a gap in the numbering.
+    const idRes = await pool.query(
+      `SELECT nextval(pg_get_serial_sequence('comments','id'))::int AS id,
+              (SELECT username FROM users WHERE id = $1) AS username`,
+      [userId],
+    );
+    const newCommentId = Number(idRes.rows[0].id);
+    const authorUsername = String(idRes.rows[0].username);
+
     const { abused, points, newAnalysis } = await moderateAndAnalyze(
       argumentId,
       effectiveSide,
-      userId,
+      authorUsername,
       checkedInput.value,
       first,
       replyTarget,
@@ -280,6 +308,7 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
         username: String(c.username),
         content: String(c.content),
       })),
+      newCommentId,
     );
 
     if (abused) {
@@ -303,9 +332,10 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
     try {
       await client.query("BEGIN");
       await client.query(
-        `INSERT INTO comments (argument_id, user_id, content, side, reply_to_comment_id, points)
-         VALUES ($1,$2,$3,$4,$5,$6)`,
+        `INSERT INTO comments (id, argument_id, user_id, content, side, reply_to_comment_id, points)
+         VALUES ($1,$2,$3,$4,$5,$6,$7)`,
         [
+          newCommentId,
           argumentId,
           userId,
           checkedInput.value,
@@ -315,10 +345,19 @@ async function postComment(req: Request, res: Response, side: "for" | "against")
         ],
       );
       await awardLogic(client, userId, breakdown.points, "comment");
-      if (newAnalysis) {
+      // Attribution is resolved against this side's real comments, including
+      // the one being inserted right now — so an id the model invented costs a
+      // point its link and nothing more. An analysis that sanitizes to empty
+      // means "no update", and the previous one stands.
+      const authorByCommentId = new Map<number, string>(
+        ownSideRows.map((c) => [Number(c.id), String(c.username)]),
+      );
+      authorByCommentId.set(newCommentId, authorUsername);
+      const analysis = sanitizeAnalysis(newAnalysis, authorByCommentId);
+      if (!isEmptyAnalysis(analysis)) {
         await client.query(
           `UPDATE arguments SET ${effectiveSide}_analysis = $1 WHERE id = $2;`,
-          [newAnalysis, argumentId],
+          [writeAnalysis(analysis), argumentId],
         );
       }
       await client.query("COMMIT");

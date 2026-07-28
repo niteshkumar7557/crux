@@ -99,10 +99,17 @@ describe("buildCertificate", () => {
 });
 
 describe("buildCertificate analysis", () => {
+  // The structured shape `GET /argument/:id` returns.
   const withAnalysis = {
     ...source,
-    forAnalysis: "It holds.\n\n### Key Points\n- Precedent exists",
-    againstAnalysis: "It does not.\n\n### Key Points\n- Costs bite",
+    forAnalysis: {
+      lead: "It holds.",
+      points: [{ author: null, commentId: null, text: "Precedent exists" }],
+    },
+    againstAnalysis: {
+      lead: "It does not.",
+      points: [{ author: "dev", commentId: 41, text: "Costs bite" }],
+    },
   };
 
   it("carries both sides when both parse", () => {

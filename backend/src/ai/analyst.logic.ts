@@ -31,14 +31,25 @@ export interface AnalystPromptInput {
   statement: string;
   side: Side;
   author: string;
-  forAnalysis: string | null;
-  againstAnalysis: string | null;
+  /**
+   * The commenter's own side, already rendered — with `[#id]` against each
+   * attributed point, so a point the analyst keeps can keep its link.
+   */
+  ownAnalysis: string;
+  /** The opposing side, rendered without ids: context, not material. */
+  opponentAnalysis: string;
   ownIsFirst: boolean;
   comment: string;
   /** The opposing comment being answered, or null for a standalone. */
   replyTo: ReplyTarget | null;
   /** Everything already argued on this side, oldest first. */
   ownSideComments: OwnSideComment[];
+  /**
+   * The id the comment being scored WILL have. Reserved from the sequence
+   * before the model runs, because the analyst has to be able to attribute a
+   * point to a comment that has not been inserted yet.
+   */
+  newCommentId: number | null;
 }
 
 function orNoneYet(text: string | null): string {
@@ -71,11 +82,14 @@ export function buildOwnSideBlock(comments: OwnSideComment[]): string {
 export function buildAnalystPrompt(input: AnalystPromptInput): string {
   const { statement, side, author, ownIsFirst, comment, replyTo } = input;
 
-  const ownRaw = side === "for" ? input.forAnalysis : input.againstAnalysis;
-  const opponentRaw = side === "for" ? input.againstAnalysis : input.forAnalysis;
+  const own = ownIsFirst ? NONE_YET : orNoneYet(input.ownAnalysis);
+  const opponent = orNoneYet(input.opponentAnalysis);
 
-  const own = ownIsFirst ? NONE_YET : orNoneYet(ownRaw);
-  const opponent = orNoneYet(opponentRaw);
+  // Without this the analyst can name the comment it just scored but cannot
+  // cite it, so the newest point — the one the commenter cares about — would
+  // be the only unlinked one on the panel.
+  const idBlock =
+    input.newCommentId !== null ? `\nYOUR COMMENT ID: ${input.newCommentId}` : "";
 
   // The reply target is the single most important scoring signal (§13.1), so
   // it goes in its own labelled block rather than being folded into prose.
@@ -89,7 +103,7 @@ AUTHOR: ${author}
 OWN SIDE ANALYSIS: ${own}
 OPPONENT ANALYSIS: ${opponent}
 OWN SIDE COMMENTS:
-${buildOwnSideBlock(input.ownSideComments)}${replyBlock}
+${buildOwnSideBlock(input.ownSideComments)}${idBlock}${replyBlock}
 COMMENT: "${comment}"`;
 }
 

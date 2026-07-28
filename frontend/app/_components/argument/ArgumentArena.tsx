@@ -2,7 +2,7 @@
 import CaseColumn from "./CaseColumn";
 import { getUser } from "@/app/_utils/getUser";
 import { jwtPayload } from "@/app/_types/jwt";
-import { UserArgumentCardProps } from "@/app/argument/types";
+import { Analysis, UserArgumentCardProps } from "@/app/argument/types";
 import api from "@/app/axios";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -30,7 +30,7 @@ const ArgumentArena = ({
   argumentId,
   authorId,
 }: {
-  aiAnalysis: [string, string];
+  aiAnalysis: [Analysis, Analysis];
   comments: { comments: RawComment[] };
   argumentId: number;
   authorId: number;
