@@ -51,7 +51,7 @@ jobs:
           # pg_dump runs inside the matching server image so the client version
           # can never skew from the server's. -Fc is the compressed, pg_restore-able
           # custom format, same as the laptop script produced.
-          docker run --rm -e DATABASE_PUBLIC_URL postgres:17.4 \
+          docker run --rm -e DATABASE_PUBLIC_URL postgres:18 \
             sh -c 'pg_dump -Fc "$DATABASE_PUBLIC_URL"' > "cruxdb-$STAMP.dump"
 
           # A zero-byte dump that "succeeded" is the classic silent backup
