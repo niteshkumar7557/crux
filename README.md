@@ -29,7 +29,8 @@ CRUX is an AI-powered debate platform where motions are judged before they reach
 | Database | PostgreSQL |
 | AI | OpenRouter (DeepSeek V4 Flash) |
 | Auth | JWT (Access and Refresh tokens) |
-| Containerization | Docker + Docker Compose |
+| Containerization | Docker (Docker Compose for local development) |
+| Hosting | Railway (frontend, API, Postgres) behind Cloudflare |
 
 ---
 
@@ -62,7 +63,8 @@ crux/
 │   │   ├── routes/
 │   │   └── types/
 │   └── ...
-└── docker-compose.yml
+├── ops/                    # restore drill
+└── docker-compose.dev.yml  # local Postgres + pgAdmin
 ```
 
 ---
@@ -171,6 +173,45 @@ To also remove the database volume (full reset):
 ```bash
 docker compose -f docker-compose.dev.yml down -v
 ```
+
+---
+
+## Deployment
+
+Production runs on Railway as three services, behind Cloudflare:
+
+```
+Browser ──HTTPS──> Cloudflare (DNS proxied, TLS, rate rule)
+                      │
+                      ▼
+                Railway edge ──> crux-frontend (Next.js, public)
+                                       │ /api/* rewrite
+                                       ▼
+                                 crux-backend (Express, private + volume)
+                                       │
+                                       ▼
+                                 Postgres 17 (managed)
+```
+
+The API has no public hostname. The browser only ever talks to the frontend's
+origin, and Next's `/api/:path*` rewrite proxies to the backend over Railway's
+private network — so the app is same-origin, the auth cookie stays `sameSite:
+lax`, and uploaded avatars are served through the same path. Avatar uploads live
+on a mounted volume, since container filesystems don't survive a deploy.
+
+Each service reads its own config from `backend/railway.toml` and
+`frontend/railway.toml`; the path to each must be set explicitly in that
+service's settings, because Railway does not resolve it relative to the
+service's root directory.
+
+**Deploying** is a push to `main`. CI must go green before Railway will build —
+migrations then run in a pre-deploy container, so a failed migration halts the
+deploy instead of taking the running site down with it. **Rolling back** is
+redeploying a previous deployment from the Railway dashboard.
+
+`ops/restore-drill.sh` restores a nightly dump into a throwaway container and
+prints row counts — the proof that a backup is a backup, and the recovery
+procedure if the database is ever lost.
 
 ---
 

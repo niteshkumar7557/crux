@@ -1,4 +1,3 @@
-(migrating to railway, bye!)
 # CRUX — Codebase Guide (for a new developer)
 You are looking at a mid-sized full-stack app: an AI-refereed debate platform. This
 guide is written the way you'd want to receive a large open-source repo — not a feature
@@ -424,6 +423,8 @@ the page and the code now say the same thing.
 - **Three pollers, in-process** (no external queue/cron) — they run inside the API process,
   each guarded against overlap; a `setInterval` is the whole scheduler. That means **they only
   run where the API runs**: scaling to more than one instance needs a real scheduler first.
+  This is now *enforced*, not merely assumed — `backend/railway.toml` pins `numReplicas = 1`,
+  and the attached volume makes replicas impossible anyway.
 - **Editing a migration is invisible without a reset** — see §3. If `db-init` prints
   `⏭ skipping`, your edit did not land.
 - **`docs/superpowers/` is git-ignored** — the per-feature specs/plans there are local working
@@ -443,7 +444,19 @@ the page and the code now say the same thing.
 - **Rate limits are in-memory** (`middlewares/rateLimit.ts`) — a second backend instance resets
   and splits every counter, so a "10 / 15 min" limit becomes 20 and buckets clear on each deploy.
   That's the Redis trigger (see `PRODUCTION_LEARNING.md` §3), and the same single-instance
-  assumption the in-process pollers already require.
+  assumption the in-process pollers already require. Deployment now enforces one replica, so
+  this is a ceiling on scaling rather than a live bug.
+- **`clientIp()` is the whole rate-limiting story**, and it is about *provenance*, not about
+  finding an IP. Every limiter keys off it. Return the same value for everyone and all four
+  tiers become one site-wide budget; return an attacker-chosen value and they mint a fresh
+  identity per request and no limit binds at all — including the 10-per-15-min guard on
+  `/user/login`. Cloudflare overwrites `CF-Connecting-IP`, so it cannot be forged *past
+  Cloudflare* — but a request reaching the origin directly can set it freely, and a PaaS
+  origin can't be IP-restricted to Cloudflare's ranges. So Cloudflare stamps `X-Edge-Secret`
+  (a Transform Rule) and the IP is trusted only when it matches; everything unverified shares
+  one bucket. `X-Forwarded-For` is deliberately never read — proxies *append* to it, so its
+  leftmost entry is whatever the client sent. **If you ever add a route to the API that
+  doesn't pass Cloudflare, revisit this first.**
 - **`Countdown` hydrates with a mismatch** on every debate page (`/argument/[id]`,
   `/debate/[slug]`) — the server renders one minute and the client hydrates on the next.
   Harmless, noisy in the console. The profile's **In The Arena** renders the same component but

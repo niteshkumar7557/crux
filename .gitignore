@@ -6,8 +6,6 @@ docs/superpowers/
 .DS_Store
 **/.DS_Store
 ops/.env.ops
-ops/deploy.log
-ops/backup.log
 docs/PRODUCTION_LEARNING.md
 docs/RUNBOOK.md
 backups/

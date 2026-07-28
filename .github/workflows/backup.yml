@@ -1,0 +1,94 @@
+# Nightly offsite backup. Replaces ops/backup.sh, which ran on the laptop and
+# shelled out to `docker exec crux-db` — neither of which exists any more.
+#
+# The dead-man switch is the whole point: healthchecks.io is pinged ONLY if every
+# step above it succeeded, and it alerts when a ping does not arrive. That catches
+# the failures which cannot report themselves — the job that never ran, the
+# credentials that expired, the script that died before its error handler. You
+# cannot rely on a broken thing to tell you it is broken; you rely on the absence
+# of its heartbeat.
+#
+# Note this also self-monitors GitHub: scheduled workflows are disabled after 60
+# days of repository inactivity, and a disabled workflow sends no ping either.
+#
+# Avatars are NOT backed up here — they live on a Railway volume that Actions
+# cannot reach. That is covered by Railway's scheduled volume backups instead.
+
+name: Nightly backup
+
+on:
+  schedule:
+    # 21:30 UTC = 03:00 IST. GitHub may delay scheduled runs under load; the
+    # healthchecks.io grace period should be generous enough to absorb that.
+    - cron: "30 21 * * *"
+  workflow_dispatch:
+
+# Never let a slow run overlap the next night's.
+concurrency:
+  group: nightly-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump Postgres
+        env:
+          DATABASE_PUBLIC_URL: ${{ secrets.DATABASE_PUBLIC_URL }}
+        run: |
+          set -euo pipefail
+          STAMP=$(date -u +%F)
+          echo "STAMP=$STAMP" >> "$GITHUB_ENV"
+
+          # pg_dump runs inside the matching server image so the client version
+          # can never skew from the server's. -Fc is the compressed, pg_restore-able
+          # custom format, same as the laptop script produced.
+          docker run --rm -e DATABASE_PUBLIC_URL postgres:17.4 \
+            sh -c 'pg_dump -Fc "$DATABASE_PUBLIC_URL"' > "cruxdb-$STAMP.dump"
+
+          # A zero-byte dump that "succeeded" is the classic silent backup
+          # failure. Refuse to ship one, so the ping never fires for it.
+          SIZE=$(wc -c < "cruxdb-$STAMP.dump")
+          echo "dump size: $SIZE bytes"
+          [ "$SIZE" -gt 1024 ] || { echo "dump is implausibly small — failing"; exit 1; }
+
+      - name: Install rclone
+        run: |
+          set -euo pipefail
+          curl -fsSL https://rclone.org/install.sh | sudo bash
+          rclone version
+
+      - name: Upload to R2 and rotate
+        env:
+          # rclone reads a remote named "r2" straight out of the environment,
+          # so no config file ever touches the runner's disk.
+          RCLONE_CONFIG_R2_TYPE: s3
+          RCLONE_CONFIG_R2_PROVIDER: Cloudflare
+          RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          RCLONE_CONFIG_R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          RCLONE_CONFIG_R2_ACL: private
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: |
+          set -euo pipefail
+          DUMP="cruxdb-$STAMP.dump"
+
+          rclone copyto "$DUMP" "r2:$R2_BUCKET/daily/$DUMP"
+
+          # Sunday's daily is also kept as that week's weekly.
+          if [ "$(date -u +%u)" = "7" ]; then
+            rclone copyto "$DUMP" "r2:$R2_BUCKET/weekly/$DUMP"
+          fi
+
+          # Remote rotation: ~30 days of dailies, a year of weeklies.
+          rclone delete --min-age 30d  "r2:$R2_BUCKET/daily"
+          rclone delete --min-age 365d "r2:$R2_BUCKET/weekly"
+
+          echo "── current dailies ──"
+          rclone ls "r2:$R2_BUCKET/daily"
+
+      # Reached only if every step above succeeded. This is the dead-man switch.
+      - name: Ping healthchecks.io
+        env:
+          HEALTHCHECK_URL: ${{ secrets.HEALTHCHECK_URL }}
+        run: curl -fsS -m 10 --retry 3 "$HEALTHCHECK_URL" > /dev/null

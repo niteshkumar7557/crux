@@ -32,13 +32,29 @@ function num(name: string, fallback: number): number {
 
 const config = {
   // ── Server ────────────────────────────────────────────────────────────────
-  server_port: num("SERVER_PORT", 8000),
+  /**
+   * PORT is what the hosting platform injects and must win in production;
+   * SERVER_PORT stays the local-dev knob so `.env` keeps working unchanged.
+   */
+  server_port: num("PORT", num("SERVER_PORT", 8000)),
   client_url: process.env.CLIENT_URL,
   node_env: process.env.NODE_ENV,
   /** pino level: fatal|error|warn|info|debug|trace. */
   log_level: str("LOG_LEVEL", "info"),
   /** Sentry DSN; empty disables the SDK (dev, CI). */
   sentry_dsn: process.env.SENTRY_DSN,
+  /**
+   * Shared secret the CDN stamps on every request it forwards, proving the
+   * request came through the edge. Rate limiting trusts CF-Connecting-IP only
+   * when this matches — see middlewares/rateLimit.ts. Unset in dev; unset in
+   * production means bypass traffic can forge its own identity.
+   *
+   * Read directly by rateLimit.ts rather than through this object, for the same
+   * reason CRUX_SEASON_ZERO is: that module must stay pure and importable by
+   * tests without dragging `dotenv/config` in as a side effect. It is listed
+   * here so this file remains the complete inventory of knobs.
+   */
+  edge_secret: process.env.EDGE_SECRET,
 
   db: {
     url: process.env.DB_URL,

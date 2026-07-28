@@ -1,6 +1,17 @@
 #!/usr/bin/env bash
 # Prove a dump restores: fresh scratch Postgres, pg_restore, print row counts.
+# A backup you have never restored is a belief, not a backup.
+#
 # Usage: ./restore-drill.sh /path/to/cruxdb-YYYY-MM-DD.dump
+#
+# Dumps are written nightly to R2 by .github/workflows/backup.yml. Fetch one:
+#
+#   rclone ls   r2:<bucket>/daily
+#   rclone copy r2:<bucket>/daily/cruxdb-YYYY-MM-DD.dump .
+#
+# This runs entirely on your machine against a throwaway container — it never
+# touches production, so it is safe to run any time, and is also the recovery
+# procedure when the real database is gone.
 set -euo pipefail
 DUMP="${1:?usage: restore-drill.sh <dumpfile>}"
 

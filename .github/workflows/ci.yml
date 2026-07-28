@@ -1,7 +1,11 @@
 name: CI
 
+# Railway's "Wait for CI" gates each deploy on this workflow going green, and it
+# only recognises a workflow that names its push branches explicitly. Without the
+# `branches:` line below, deploys ship without waiting for the suite.
 on:
   push:
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -49,4 +53,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker build backend
-      - run: docker build frontend --build-arg NEXT_PUBLIC_API_URL=http://crux-backend:4001
+      - run: docker build frontend --build-arg NEXT_PUBLIC_API_URL=http://crux-backend.railway.internal:8000

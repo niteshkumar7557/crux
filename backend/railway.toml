@@ -1,0 +1,42 @@
+# Railway service config — crux-backend.
+#
+# Everything in a service's Build and Deploy settings can live here instead of
+# in the dashboard, so a deploy setting is reviewable in a diff like any other
+# code. This file is the source of truth; the dashboard mirrors it.
+#
+# NOTE: Railway does NOT resolve this file relative to the service's Root
+# Directory. The path must be set explicitly in service settings as
+# `backend/railway.toml`, or it is silently ignored.
+
+[build]
+builder = "DOCKERFILE"
+
+[deploy]
+# Migrations run in their own container BEFORE the new one serves traffic. A
+# failed migration halts the deploy and leaves the previous container running —
+# unlike the old `npm start`, which migrated on boot and so crash-looped the
+# service instead. The pre-deploy container gets the service's env vars
+# (DB_URL is all this needs); it has no volume access, which does not matter
+# here because migrations only touch Postgres.
+preDeployCommand = ["npm run db:migrate"]
+
+# /health runs SELECT 1 through the pool rather than returning an unconditional
+# 200, so "healthy" means a real request would work and a dead Postgres shows up
+# as down instead of hiding behind a green check.
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+
+restartPolicyType = "ON_FAILURE"
+
+# Exactly one instance, always. The three in-process pollers (conclusion,
+# featuring, season rollover) each run on a setInterval inside this process, and
+# the rate limiter counts requests in this process's own memory — both are
+# correct at one replica and silently wrong at two, where limits double and
+# buckets split. See CODEBASE_GUIDE §9 and PRODUCTION_LEARNING §3.
+#
+# The attached volume already forbids replicas, so this is belt-and-braces:
+# stating it here means removing the volume later cannot quietly reintroduce
+# double-polling. If the volume ever does go, also set `overlapSeconds` to 0 —
+# without a volume Railway overlaps the old and new containers on deploy, which
+# briefly runs two poller sets.
+numReplicas = 1

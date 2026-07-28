@@ -37,6 +37,13 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(PUBLIC_DIR));
 
+// Above the limiter, deliberately. Unverified traffic all shares one rate-limit
+// bucket (see middlewares/rateLimit.ts), so a flood arriving off-edge would
+// exhaust it — and if /health sat below, the platform's own probe would start
+// getting 429s and cycle a perfectly healthy container. A liveness check must
+// never be starved by user traffic. It costs one `SELECT 1`.
+app.get("/health", makeHealthHandler(() => pool.query("SELECT 1")));
+
 // After static (avatars don't spend budget), before every API route.
 app.use(globalLimiter);
 
@@ -57,7 +64,6 @@ app.use(
 );
 
 // routes
-app.get("/health", makeHealthHandler(() => pool.query("SELECT 1")));
 app.use("/user", userRoutes);
 app.use("/motion", motionRoutes);
 // Arguments live under the motion they belong to: /motion/:id/arguments.

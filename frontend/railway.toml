@@ -1,0 +1,23 @@
+# Railway service config — crux-frontend.
+#
+# NOTE: Railway does NOT resolve this file relative to the service's Root
+# Directory. The path must be set explicitly in service settings as
+# `frontend/railway.toml`, or it is silently ignored.
+
+[build]
+builder = "DOCKERFILE"
+
+[deploy]
+# "/" is safe as a healthcheck: the arena feed and the sidebar are both client
+# components, so the home page server-renders without calling the API. A
+# backend that is down therefore fails ITS own healthcheck without also failing
+# the frontend's — no deadlock where neither service can finish deploying.
+healthcheckPath = "/"
+healthcheckTimeout = 300
+
+restartPolicyType = "ON_FAILURE"
+
+# One instance. Nothing here needs it structurally — Next is stateless — but a
+# second replica doubles the largest line on a $5/month budget for traffic that
+# does not exist yet.
+numReplicas = 1
