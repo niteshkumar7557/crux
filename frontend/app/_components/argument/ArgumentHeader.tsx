@@ -149,7 +149,6 @@ const ArgumentHeader = ({
       <ArgumentProbability
         argumentHeaderData={argumentHeaderData}
         status={matchState.status}
-        winner={matchState.winner}
       />
     </div>
   );

@@ -20,7 +20,16 @@ const ConditionalLayout = ({ children }: { children: React.ReactNode }) => {
         </a>
       )}
       {showNav && <Navbar />}
-      {showNav ? <main id="main-content">{children}</main> : children}
+      {/* `grow` takes the slack under a short page so the footer lands at the
+          bottom of the viewport; the inner column lets a page hand that slack
+          to one of its own sections (see DebateView). */}
+      {showNav ? (
+        <main id="main-content" className="grow flex flex-col">
+          {children}
+        </main>
+      ) : (
+        children
+      )}
       {showNav && <Footer />}
     </>
   );

@@ -41,7 +41,9 @@ export default function RootLayout({
       lang="en"
       className={`${newsreader.variable} ${manrope.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-background font-body text-on-background">
+      {/* Column so the footer can be pushed to the viewport bottom on a short
+          page (a new debate with no comments) instead of floating mid-screen. */}
+      <body className="min-h-full flex flex-col bg-background font-body text-on-background">
         <ConditionalLayout>{children}</ConditionalLayout>
       </body>
     </html>

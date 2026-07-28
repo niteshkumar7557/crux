@@ -14,7 +14,6 @@ const UserArgumentCard = ({
   reputation,
   username,
   avatar,
-  grade,
   comment,
   likes,
   user_id,
@@ -97,7 +96,7 @@ const UserArgumentCard = ({
       <div
         className={`group mb-2 relative bg-surface-container-low p-6 border-l ${side === "for" ? "border-primary/20 hover:border-primary/60" : "border-secondary/20 hover:border-secondary/60"}  transition-all`}
       >
-        <div className="flex justify-between items-start mb-4">
+        <div className="flex items-start mb-4">
           <div className="flex items-center gap-3">
             <Avatar
               username={username}
@@ -113,15 +112,6 @@ const UserArgumentCard = ({
                 @{username}
               </p>
             </div>
-          </div>
-          <div
-            className={`${side === "for" ? "bg-primary/10 border border-primary/20" : "bg-secondary/10 border border-secondary/20"}  px-3 py-1`}
-          >
-            <span
-              className={`font-label font-bold ${side === "for" ? "text-primary" : "text-secondary"} text-sm`}
-            >
-              {grade}
-            </span>
           </div>
         </div>
         {/* §5: the quoted stub of the opposing comment this reply answers. The

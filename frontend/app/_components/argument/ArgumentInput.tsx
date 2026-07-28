@@ -25,9 +25,6 @@ type Pending = {
   replyToCommentId: number | null;
 };
 
-/** §15: comments per debate at full value, before the halving. */
-const FULL_VALUE_COMMENTS = 3;
-
 const ArgumentInput = ({
   argumentId,
   status,
@@ -79,24 +76,6 @@ const ArgumentInput = ({
   const lockedSide = isAuthor
     ? "for"
     : (commentSides.find((c) => c.post_user_id === user.id)?.side ?? null);
-
-  // §6/§14: comments already made here, so the composer can say what the next
-  // one is worth before it is written.
-  const priorCount = commentSides.filter(
-    (c) => c.post_user_id === user.id,
-  ).length;
-  const halfValue = priorCount >= FULL_VALUE_COMMENTS;
-  const counterText = halfValue
-    ? `Half value — you've already made ${FULL_VALUE_COMMENTS} comments here`
-    : `Comment ${priorCount + 1} of ${FULL_VALUE_COMMENTS} at full value`;
-
-  // The standalone cap only bites when there is somebody to have replied to
-  // (§6). Once locked we know which side is the opponent's, so the hint can be
-  // withheld rather than promise a penalty that will not apply.
-  const opposingHasComments = lockedSide
-    ? commentSides.some((c) => c.side !== lockedSide)
-    : commentSides.length > 0;
-  const showCapHint = !target && opposingHasComments;
 
   const abuseNotice: Notice = {
     title: "Flagged for Abuse",
@@ -215,10 +194,10 @@ const ArgumentInput = ({
           </button>
         </div>
       )}
-      {/* §14: everything that changes the value of the next comment, stated
-          while it is being written — never discovered afterwards. */}
-      <div className="max-w-screen-2xl mx-auto mb-2 flex flex-wrap items-center gap-x-4 gap-y-1">
-        {lockedSide && (
+      {/* §14: the side lock is the one rule that has already bound by the time
+          you are typing, so it stays stated at the composer. */}
+      {lockedSide && (
+        <div className="max-w-screen-2xl mx-auto mb-2 flex flex-wrap items-center gap-x-4 gap-y-1">
           <span
             className={`font-label text-[10px] uppercase tracking-[0.15em] ${
               lockedSide === "for" ? "text-primary" : "text-secondary"
@@ -231,26 +210,8 @@ const ArgumentInput = ({
                 : `— you can't argue ${lockedSide === "for" ? "AGAINST" : "FOR"} in this debate.`}
             </span>
           </span>
-        )}
-        <span
-          className={`font-label text-[10px] uppercase tracking-[0.15em] ${
-            halfValue ? "text-tertiary" : "text-outline"
-          }`}
-        >
-          {counterText}
-        </span>
-        {showCapHint && (
-          <span className="font-body text-[11px] text-outline">
-            Standalone comments cap at 5 logic. Reply to an opponent to earn up
-            to 8.
-          </span>
-        )}
-        {/* §14: the abuse penalty is fine print on the composer as well as a
-            rejection message — stated before it can bite, not only after. */}
-        <span className="font-body text-[11px] text-outline/70">
-          Abuse is flagged, discards the comment, and costs 4 logic.
-        </span>
-      </div>
+        </div>
+      )}
       <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center gap-3 md:gap-6">
         <div className="flex-1 w-full relative">
           <AutoGrowTextarea

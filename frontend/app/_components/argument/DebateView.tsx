@@ -124,7 +124,9 @@ const DebateView = async ({ id }: { id: number }) => {
       {/* §5: one provider over the arena and the composer, so a Reply button in
           a column can arm the composer at the bottom without prop-drilling. */}
       <ReplyProvider>
-        <section className="max-w-screen-2xl mx-auto px-6 pt-12 pb-16">
+        {/* `grow` so the arena absorbs the page's spare height and the sticky
+            composer below it sits on the fold even when nobody has argued yet. */}
+        <section className="grow w-full max-w-screen-2xl mx-auto px-6 pt-12 pb-16">
           <ArgumentHeader
             argumentHeaderData={argumentHeaderData}
             matchState={matchState}

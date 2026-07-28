@@ -74,6 +74,20 @@
   outline-offset: 2px;
 } */
 
+/* Tailwind v4's preflight resets buttons to `cursor: default`, which is why
+   controls that never got an explicit `cursor-pointer` class read as dead. Every
+   control in this app is a pointer control, so it is restored once here rather
+   than class by class — a new button is then correct by default. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+summary,
+select {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+
 .perspective-grid {
   background-image:
     linear-gradient(to right, rgba(164, 230, 255, 0.05) 1px, transparent 1px),
