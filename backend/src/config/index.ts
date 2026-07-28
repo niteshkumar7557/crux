@@ -60,6 +60,20 @@ const config = {
     url: process.env.DB_URL,
   },
 
+  // ── Avatar storage (S3-compatible object storage; R2 in production) ───────
+  // All five are required to use object storage. With any of them missing the
+  // app falls back to writing uploads to the local disk, which is what dev and
+  // CI want — no credentials needed to run or contribute. See lib/avatarStorage.
+  avatar_storage: {
+    /** e.g. https://<account-id>.r2.cloudflarestorage.com */
+    endpoint: process.env.R2_ENDPOINT,
+    bucket: process.env.R2_AVATAR_BUCKET,
+    accessKeyId: process.env.R2_ACCESS_KEY_ID,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+    /** Public base the bucket is served from, e.g. https://avatars.example.com */
+    publicUrl: process.env.R2_AVATAR_PUBLIC_URL,
+  },
+
   // ── Auth ──────────────────────────────────────────────────────────────────
   jwt_secret: process.env.JWT_SECRET,
   /** Access-token lifetime — any span string jsonwebtoken accepts. */

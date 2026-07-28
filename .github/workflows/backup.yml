@@ -12,15 +12,18 @@
 # days of repository inactivity, and a disabled workflow sends no ping either.
 #
 # Railway's own scheduled volume backups are a Pro-plan feature, so on Hobby this
-# workflow is not a second layer — it is the ONLY layer. Both assets are covered
-# here, in two separate jobs on purpose:
+# workflow is not a second layer — it is the ONLY layer, and it covers the
+# database only.
 #
-#   database  the dump, and the only thing the dead-man switch guards. A lost
-#             database cannot be reconstructed by anyone.
-#   avatars   best-effort. Actions cannot mount a Railway volume, but it can
-#             stream a tar out of the container that has it mounted. Kept out of
-#             the ping so a flaky SSH can never mask a healthy database backup —
-#             and worst case users re-upload a picture.
+# Uploaded avatars are NOT backed up. An earlier version of this file streamed a
+# tar off the volume with `railway ssh`, but that command needs an SSH keypair
+# registered against the Railway *account*, and doing that from CI would mean
+# storing an account-wide API token here — broad standing access, to protect
+# files that are individually re-uploadable. The proportionate fix is to stop
+# storing them on a volume at all: move avatars to R2, where they are durable by
+# default and need no backup job. Until then this gap is accepted and known.
+#
+# See docs/RUNBOOK.md → Backups for what a loss actually looks like.
 
 name: Nightly backup
 
@@ -101,48 +104,3 @@ jobs:
           HEALTHCHECK_URL: ${{ secrets.HEALTHCHECK_URL }}
         run: curl -fsS -m 10 --retry 3 "$HEALTHCHECK_URL" > /dev/null
 
-  avatars:
-    runs-on: ubuntu-latest
-    # A red job here is visible in the Actions tab without raising a false alarm
-    # about the database backup, which is what actually matters.
-    continue-on-error: true
-    steps:
-      - name: Install Railway CLI
-        run: npm i -g @railway/cli
-
-      - name: Stream the avatar volume out of the running container
-        env:
-          # A project token. `railway ssh` runs the command non-interactively and
-          # inherits stdout, so tar can be piped straight to a file here.
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: |
-          set -euo pipefail
-          STAMP=$(date -u +%F)
-          echo "STAMP=$STAMP" >> "$GITHUB_ENV"
-
-          railway ssh --service crux-backend -- \
-            tar czf - -C /home/app/public/uploads/avatars . > "avatars-$STAMP.tar.gz"
-
-          # An empty avatars directory is a valid ~20-byte archive, so the only
-          # thing worth rejecting here is nothing at all.
-          SIZE=$(wc -c < "avatars-$STAMP.tar.gz")
-          echo "avatars archive: $SIZE bytes"
-          [ "$SIZE" -gt 0 ] || { echo "empty archive — failing"; exit 1; }
-
-      - name: Upload to R2 and rotate
-        env:
-          RCLONE_CONFIG_R2_TYPE: s3
-          RCLONE_CONFIG_R2_PROVIDER: Cloudflare
-          RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          RCLONE_CONFIG_R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
-          RCLONE_CONFIG_R2_ACL: private
-          R2_BUCKET: ${{ secrets.R2_BUCKET }}
-        run: |
-          set -euo pipefail
-          curl -fsSL https://rclone.org/install.sh | sudo bash
-          ARCHIVE="avatars-$STAMP.tar.gz"
-          rclone copyto "$ARCHIVE" "r2:$R2_BUCKET/daily/$ARCHIVE"
-          if [ "$(date -u +%u)" = "7" ]; then
-            rclone copyto "$ARCHIVE" "r2:$R2_BUCKET/weekly/$ARCHIVE"
-          fi

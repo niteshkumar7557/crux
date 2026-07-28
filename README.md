@@ -187,7 +187,7 @@ Browser ──HTTPS──> Cloudflare (DNS proxied, TLS, rate rule)
                 Railway edge ──> crux-frontend (Next.js, public)
                                        │ /api/* rewrite
                                        ▼
-                                 crux-backend (Express, private + volume)
+                                 crux-backend (Express, private)
                                        │
                                        ▼
                                  Postgres 17 (managed)
@@ -196,8 +196,12 @@ Browser ──HTTPS──> Cloudflare (DNS proxied, TLS, rate rule)
 The API has no public hostname. The browser only ever talks to the frontend's
 origin, and Next's `/api/:path*` rewrite proxies to the backend over Railway's
 private network — so the app is same-origin, the auth cookie stays `sameSite:
-lax`, and uploaded avatars are served through the same path. Avatar uploads live
-on a mounted volume, since container filesystems don't survive a deploy.
+lax`, and the API is never directly reachable.
+
+Uploaded avatars go to Cloudflare R2 rather than to disk — container filesystems
+are discarded on every deploy, and a mounted volume would forbid replicas and be
+unbackupable on Railway's Hobby plan. Locally, with no R2 credentials configured,
+uploads fall back to `backend/public/uploads/avatars` so the app runs unchanged.
 
 Each service reads its own config from `backend/railway.toml` and
 `frontend/railway.toml`; the path to each must be set explicitly in that

@@ -16,7 +16,10 @@ set -euo pipefail
 DUMP="${1:?usage: restore-drill.sh <dumpfile>}"
 
 docker rm -f crux-restore-drill 2>/dev/null || true
-docker run -d --name crux-restore-drill -e POSTGRES_PASSWORD=drill postgres:17.4
+# Must match (or exceed) the SERVER version the dump came from — pg_restore
+# cannot read a custom-format dump produced by a newer Postgres. Keep this in
+# step with the image used by .github/workflows/backup.yml.
+docker run -d --name crux-restore-drill -e POSTGRES_PASSWORD=drill postgres:18
 trap 'docker rm -f crux-restore-drill > /dev/null' EXIT
 
 until docker exec crux-restore-drill pg_isready -U postgres -q; do sleep 1; done

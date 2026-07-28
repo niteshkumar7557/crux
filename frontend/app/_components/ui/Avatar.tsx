@@ -1,10 +1,16 @@
 import Image from "next/image";
 
-// Brand avatar. With a `src` (preset or custom upload, served by the
-// backend behind the /api rewrite) it shows the image; without one it
-// falls back to initials on a surface chip, accent derived from the
-// username so the feed varies without images. Argument cards override
-// the accent to match their stance side.
+// Brand avatar. With a `src` it shows the image; without one it falls back to
+// initials on a surface chip, accent derived from the username so the feed
+// varies without images. Argument cards override the accent to match their
+// stance side.
+//
+// Two shapes arrive in `src`. Presets are static files the backend serves, so
+// they are relative and go through the /api rewrite. Uploads live in object
+// storage and arrive as absolute URLs, which must be used as-is — prefixing one
+// with /api would point at the API's own host and 404.
+const avatarSrc = (src: string) =>
+  /^https?:\/\//.test(src) ? src : `/api${src}`;
 const SIZES = {
   sm: "w-6 h-6 text-[9px]",
   md: "w-8 h-8 text-[10px]",
@@ -48,7 +54,7 @@ const Avatar = ({
         className={`relative shrink-0 block overflow-hidden bg-surface-container-high border border-outline-variant/30 select-none ${SIZES[size]} ${className}`}
       >
         <Image
-          src={`/api${src}`}
+          src={avatarSrc(src)}
           alt=""
           fill
           sizes="128px"

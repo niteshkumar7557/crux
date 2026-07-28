@@ -28,15 +28,20 @@ healthcheckTimeout = 300
 
 restartPolicyType = "ON_FAILURE"
 
-# Exactly one instance, always. The three in-process pollers (conclusion,
-# featuring, season rollover) each run on a setInterval inside this process, and
-# the rate limiter counts requests in this process's own memory — both are
-# correct at one replica and silently wrong at two, where limits double and
-# buckets split. See CODEBASE_GUIDE §9 and PRODUCTION_LEARNING §3.
+# Exactly one instance. The three in-process pollers (conclusion, featuring,
+# season rollover) each run on a setInterval inside this process, and the rate
+# limiter counts requests in this process's own memory — at two replicas the
+# limits double and the buckets split. See CODEBASE_GUIDE §9.
 #
-# The attached volume already forbids replicas, so this is belt-and-braces:
-# stating it here means removing the volume later cannot quietly reintroduce
-# double-polling. If the volume ever does go, also set `overlapSeconds` to 0 —
-# without a volume Railway overlaps the old and new containers on deploy, which
-# briefly runs two poller sets.
+# There is no volume any more (avatars live in object storage), so nothing else
+# enforces this — the line below is the enforcement. Do not raise it without
+# first moving the pollers to a real scheduler and the limiter to Redis.
+#
+# Note this does NOT cover the deploy window: Railway briefly overlaps the old
+# and new containers, so two poller sets can tick at once for a few seconds.
+# That is safe because every poller's real guard is in the database, not in the
+# `running` flag — concludeDebate re-checks status under SELECT ... FOR UPDATE
+# and rolls back before spending an LLM call, and season awards are protected by
+# UNIQUE (season_key, rank) with ON CONFLICT DO NOTHING. The in-process flag only
+# stops a slow tick from lapping itself.
 numReplicas = 1

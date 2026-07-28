@@ -1,18 +1,28 @@
 import type { Request, Response } from "express";
 import crypto from "crypto";
-import fs from "fs/promises";
-import path from "path";
 import sharp from "sharp";
 import pool from "../db/index.js";
-import {
-  UPLOADS_DIR,
-  UPLOADS_URL_PREFIX,
-  deleteCustomAvatarFile,
-  detectImageType,
-  listPresets,
-} from "../lib/avatars.js";
+import config from "../config/index.js";
+import { detectImageType, isCustomAvatar, listPresets } from "../lib/avatars.js";
+import { keyFromAvatarUrl, makeAvatarStore } from "../lib/avatarStorage.js";
 
 const AVATAR_SIZE = 256;
+const AVATAR_CONTENT_TYPE = "image/webp";
+
+export const avatarStore = makeAvatarStore(config.avatar_storage);
+
+// Presets are shared and never deleted; only a user's own upload is removed.
+// Failure here is logged, not surfaced: the DB row has already moved on, and a
+// leftover object costs a fraction of a cent, whereas failing the request would
+// tell the user their avatar change didn't work when it did.
+async function removeOldAvatar(avatar: string | null) {
+  if (!avatar || !isCustomAvatar(avatar)) return;
+  try {
+    await avatarStore.remove(keyFromAvatarUrl(avatar));
+  } catch (err) {
+    console.error("failed to delete old avatar:", err);
+  }
+}
 
 // Preset list for the picker
 export async function getAvatarPresets(req: Request, res: Response) {
@@ -54,13 +64,13 @@ export async function uploadAvatar(req: Request, res: Response) {
       .json({ error: "Could not process that image. Try a different file!" });
   }
 
-  const filename = `u${req.user!.id}-${crypto.randomUUID()}.webp`;
-  const filePath = path.join(UPLOADS_DIR, filename);
-  const avatarUrl = `${UPLOADS_URL_PREFIX}${filename}`;
+  // A fresh UUID per upload, so stored objects are immutable and can be cached
+  // forever — and so a replacement never races a reader of the old one.
+  const key = `u${req.user!.id}-${crypto.randomUUID()}.webp`;
+  const avatarUrl = avatarStore.urlFor(key);
 
   try {
-    await fs.mkdir(UPLOADS_DIR, { recursive: true });
-    await fs.writeFile(filePath, processed);
+    await avatarStore.put(key, processed, AVATAR_CONTENT_TYPE);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "avatar upload failed!" });
@@ -82,13 +92,13 @@ export async function uploadAvatar(req: Request, res: Response) {
       [avatarUrl, req.user!.id],
     );
 
-    await deleteCustomAvatarFile(oldAvatar);
+    await removeOldAvatar(oldAvatar);
 
     res.status(200).json({ avatar: avatarUrl });
   } catch (err) {
     console.error(err);
-    // the DB never saw the new file — remove it so nothing orphans
-    await fs.unlink(filePath).catch(() => {});
+    // the DB never saw the new object — remove it so nothing orphans
+    await avatarStore.remove(key).catch(() => {});
     res.status(500).json({ error: "avatar update failed!" });
   }
 }
@@ -120,7 +130,7 @@ export async function setPresetAvatar(req: Request, res: Response) {
       [preset.url, req.user!.id],
     );
 
-    await deleteCustomAvatarFile(oldAvatar);
+    await removeOldAvatar(oldAvatar);
 
     res.status(200).json({ avatar: preset.url });
   } catch (err) {
@@ -147,7 +157,7 @@ export async function deleteAvatar(req: Request, res: Response) {
       [req.user!.id],
     );
 
-    await deleteCustomAvatarFile(oldAvatar);
+    await removeOldAvatar(oldAvatar);
 
     res.status(200).json({ message: "avatar removed successfully" });
   } catch (err) {

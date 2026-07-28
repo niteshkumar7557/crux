@@ -6,6 +6,7 @@ import logger from "./lib/logger.js";
 import { startConclusionPoller } from "./jobs/conclusion.js";
 import { startFeaturingPoller } from "./jobs/featuring.js";
 import { startSeasonRolloverPoller } from "./jobs/seasonRollover.js";
+import { avatarStore } from "./controllers/avatar.controller.js";
 
 async function start() {
   try {
@@ -22,6 +23,10 @@ async function start() {
 
     await pool.query("SELECT 1");
     logger.info("Database connected");
+
+    // Which storage the avatar uploads landed in is invisible until someone
+    // uploads one, and "local" in production means they vanish on next deploy.
+    logger.info({ store: avatarStore.kind }, "avatar storage");
 
     // "::" binds every interface, IPv6 and IPv4 alike. Required: the platform's
     // private network resolves service hostnames to IPv6, so an IPv4-only bind
