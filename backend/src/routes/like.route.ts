@@ -10,6 +10,6 @@ const likeRoutes = Router();
 
 likeRoutes.post("/", authMiddleware, registerLike);
 likeRoutes.delete("/", authMiddleware, removeLike);
-likeRoutes.get("/mine/:argumentId", authMiddleware, listMyLikes);
+likeRoutes.get("/mine/:motionId", authMiddleware, listMyLikes);
 
 export default likeRoutes;

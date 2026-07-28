@@ -7,7 +7,7 @@ import api from "../axios";
 type Notif = {
   id: number;
   type: string;
-  argument_id: number | null;
+  motion_id: number | null;
   actor: string | null;
   message: string;
   is_read: boolean;
@@ -93,10 +93,10 @@ const NotificationBell = () => {
                   </span>
                 </div>
               );
-              return n.argument_id ? (
+              return n.motion_id ? (
                 <Link
                   key={n.id}
-                  href={`/argument/CRX-${n.argument_id}-A`}
+                  href={`/motion/CRX-${n.motion_id}-A`}
                   onClick={() => setOpen(false)}
                 >
                   {body}

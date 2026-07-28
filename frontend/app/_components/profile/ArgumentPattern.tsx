@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { CraftStats } from "@/app/profile/types";
 import { debateSlug } from "@/app/_utils/slugify";
 
-// §13's integrity design in one number: the reply rate. Standalone comments
+// §13's integrity design in one number: the reply rate. Standalone arguments
 // cap at 5 logic and replies reach 8, so a high reply rate is what a sharp
 // debater actually looks like. §14 says a rule that changes an outcome owes
 // itself a surface — so the rule that produced this number is printed under it.
@@ -28,7 +28,7 @@ const ArgumentPattern = ({ craft }: { craft: CraftStats }) => {
             {craft.arguments}
             <span className="text-sm text-outline">
               {" "}
-              · {craft.statements} statements
+              · {craft.motions} motions
             </span>
           </dd>
         </div>
@@ -64,7 +64,7 @@ const ArgumentPattern = ({ craft }: { craft: CraftStats }) => {
             Best argument · {craft.best.points} logic
           </span>
           <Link
-            href={`/debate/${debateSlug(craft.best.claim, craft.best.argumentId)}`}
+            href={`/debate/${debateSlug(craft.best.claim, craft.best.motionId)}`}
             className="font-body text-sm text-on-surface hover:text-primary transition-colors line-clamp-2"
           >
             {craft.best.claim}
@@ -73,7 +73,7 @@ const ArgumentPattern = ({ craft }: { craft: CraftStats }) => {
       )}
 
       <p className="font-label text-[10px] uppercase tracking-widest text-outline mt-6">
-        Standalone comments cap at 5 logic. Replies reach 8.
+        Standalone arguments cap at 5 logic. Replies reach 8.
       </p>
     </div>
   );

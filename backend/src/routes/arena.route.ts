@@ -5,7 +5,7 @@ import {
   getSeasonLeaderboard,
   getSidebarData,
   getSitemapData,
-  getStatements,
+  getMotions,
   getSecondaryCardsData,
 } from "../controllers/arena.controller.js";
 
@@ -16,7 +16,7 @@ arenaRoutes.get("/active/secondary", getSecondaryCardsData);
 arenaRoutes.get("/sidebar", getSidebarData);
 arenaRoutes.get("/leaderboard", getLeaderboardData);
 arenaRoutes.get("/leaderboard/season", getSeasonLeaderboard);
-arenaRoutes.get("/statements", getStatements);
+arenaRoutes.get("/motions", getMotions);
 arenaRoutes.get("/sitemap", getSitemapData);
 
 export default arenaRoutes;

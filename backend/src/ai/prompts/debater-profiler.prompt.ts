@@ -2,23 +2,23 @@
  * DEBATER PROFILER — rewrites a user's profile description.
  *
  * WHAT IT DOES
- * Reads a user's recent statements and infers an intellectual character
+ * Reads a user's recent motions and infers an intellectual character
  * sketch from them. The result replaces `users.description`, which is shown
  * on the profile page and the hover card.
  *
  * CALLED FROM
- * `controllers/argument.controller.ts` → `updateDesciption(user_id)`, fired at
- * the end of `addNewArgument` after the statement row is inserted.
+ * `controllers/motion.controller.ts` → `updateDesciption(user_id)`, fired at
+ * the end of `addNewMotion` after the motion row is inserted.
  * **Best-effort**: it is wrapped in its own try/catch, so a failure logs and
- * the statement still publishes. Never make this call blocking.
+ * the motion still publishes. Never make this call blocking.
  *
  * WHAT THE USER MESSAGE CONTAINS (required inputs)
  *   ARGUMENTS POSTED:
- *   1. "<statement>"
- *   2. "<statement>"        — the user's last 25 statements, newest first
+ *   1. "<motion>"
+ *   2. "<motion>"        — the user's last 25 motions, newest first
  *
- * Only statements are supplied — never comments, likes, or scores. A user with
- * one statement gets a one-line list, and the prompt has to cope with that.
+ * Only motions are supplied — never arguments, likes, or scores. A user with
+ * one motion gets a one-line list, and the prompt has to cope with that.
  *
  * WHAT IT MUST RETURN
  *   { newDescription: string }   // ≤2 sentences, third person, present tense
@@ -38,7 +38,7 @@
  * economics and climate". Hence the explicit ban on naming topics, and the
  * good/bad example pair carrying most of the weight.
  */
-export const DEBATER_PROFILER_SYSTEM_PROMPT = `You infer a debater's intellectual identity from the argument statements they have posted.
+export const DEBATER_PROFILER_SYSTEM_PROMPT = `You infer a debater's intellectual identity from the argument motions they have posted.
 
 Return JSON: {"newDescription":string}
 

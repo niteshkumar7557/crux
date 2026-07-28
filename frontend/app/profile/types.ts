@@ -49,8 +49,8 @@ export interface CraftStats {
   arguments: number;
   replies: number;
   avgLogic: number;
-  statements: number;
-  best: { points: number; argumentId: number; claim: string } | null;
+  motions: number;
+  best: { points: number; motionId: number; claim: string } | null;
 }
 
 export interface LiveDebate {
@@ -58,12 +58,12 @@ export interface LiveDebate {
   claim: string;
   closesAt: string;
   isAuthor: boolean;
-  /** The side their first comment locked (§4). Null = they have not argued. */
+  /** The side their first argument locked (§4). Null = they have not argued. */
   side: "for" | "against" | null;
 }
 
 export interface HistoryRow {
-  argumentId: number;
+  motionId: number;
   claim: string;
   side: "for" | "against";
   outcome: "win" | "loss" | "draw";

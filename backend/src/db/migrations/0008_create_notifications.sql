@@ -2,7 +2,7 @@ CREATE TABLE notifications (
     id          SERIAL PRIMARY KEY,
     user_id     INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     type        VARCHAR(24) NOT NULL,   -- 'opposition' | 'verdict'
-    argument_id INT REFERENCES arguments(id) ON DELETE CASCADE,
+    motion_id   INT REFERENCES motions(id) ON DELETE CASCADE,
     actor       VARCHAR(50),            -- username that triggered it (nullable)
     message     TEXT NOT NULL,
     is_read     BOOLEAN NOT NULL DEFAULT FALSE,

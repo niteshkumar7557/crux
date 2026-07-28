@@ -3,13 +3,13 @@ export interface PrimaryCardDataType {
   avatar: string | null;
   domain: string;
   content: string;
-  count_comments: number;
+  count_arguments: number;
   affirmative: number;
   negative: number;
-  argumentId: string;
+  motionId: string;
   status?: string;
   closesAt?: string | null;
-  isDotd?: boolean;
+  isMotd?: boolean;
 }
 
 export interface SecondaryCardsDataType {
@@ -19,7 +19,7 @@ export interface SecondaryCardsDataType {
   title: string;
   affirmativescore: number;
   negativescore: number;
-  argumentid: number;
+  motionid: number;
   active_minds: number;
   status?: string;
   closesAt?: string | null;
@@ -57,7 +57,7 @@ export interface NewestCardProps {
   title: string;
   affirmativescore: number;
   negativescore: number;
-  argumentid: number;
+  motionid: number;
   argumentNum: number;
   time: string;
   status?: string;
@@ -67,7 +67,7 @@ export interface NewestCardProps {
 }
 export type NewestCardData = NewestCardProps[];
 
-export interface StatementSearchResult {
+export interface MotionSearchResult {
   id: number;
   content: string;
   domain: string;
@@ -76,7 +76,7 @@ export interface StatementSearchResult {
 
 export interface DomainSearchResult {
   domain: string;
-  statementCount: number;
+  motionCount: number;
 }
 
 export interface UserSearchResult {
@@ -85,7 +85,7 @@ export interface UserSearchResult {
 }
 
 export interface SearchResults {
-  statements: StatementSearchResult[];
+  motions: MotionSearchResult[];
   domains: DomainSearchResult[];
   users: UserSearchResult[];
 }
@@ -95,8 +95,8 @@ export interface DomainInfo {
   name: string;
 }
 
-export interface PaginatedStatements {
-  statements: NewestCardProps[];
+export interface PaginatedMotions {
+  motions: NewestCardProps[];
   total: number;
   page: number;
   pageSize: number;

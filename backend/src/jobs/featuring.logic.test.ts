@@ -7,12 +7,12 @@ import {
 } from "./featuring.logic.js";
 
 describe("computeHeat", () => {
-  it("is zero with no comments", () => {
+  it("is zero with no arguments", () => {
     expect(computeHeat(0, 0, 0)).toBe(0);
   });
 
   it("ranks a balanced fight above a busier blowout", () => {
-    // §11: a 50/50 fight at 10 comments beats a 90/10 pile-on at 20.
+    // §11: a 50/50 fight at 10 arguments beats a 90/10 pile-on at 20.
     expect(computeHeat(10, 5, 5)).toBeGreaterThan(computeHeat(20, 18, 2));
   });
 

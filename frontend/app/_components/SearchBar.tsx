@@ -7,7 +7,7 @@ import { SearchResults } from "@/app/types";
 import { slugifyDomain } from "@/app/_utils/domainSlug";
 import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
 
-const EMPTY_RESULTS: SearchResults = { statements: [], domains: [], users: [] };
+const EMPTY_RESULTS: SearchResults = { motions: [], domains: [], users: [] };
 
 export default function SearchBar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -98,7 +98,7 @@ export default function SearchBar() {
 
   const hasQuery = searchInput.trim().length > 0;
   const hasResults =
-    results.statements.length > 0 ||
+    results.motions.length > 0 ||
     results.domains.length > 0 ||
     results.users.length > 0;
 
@@ -120,7 +120,7 @@ export default function SearchBar() {
       >
         <LuSearch className="text-xl text-outline" />
         <span className="text-sm font-body text-outline w-full text-left">
-          Search statements...
+          Search motions...
         </span>
       </button>
 
@@ -146,8 +146,8 @@ export default function SearchBar() {
               <LuSearch className="text-outline text-2xl mr-2" />
               <input
                 className="flex-1 bg-transparent border-none focus:outline-none text-lg text-on-surface placeholder:text-outline"
-                placeholder="Search statements, domains, or users..."
-                aria-label="Search statements, domains, or users"
+                placeholder="Search motions, domains, or users..."
+                aria-label="Search motions, domains, or users"
                 value={searchInput}
                 onChange={(e) => handleInputChange(e.target.value)}
                 autoFocus
@@ -176,15 +176,15 @@ export default function SearchBar() {
 
               {hasQuery && !isLoading && hasResults && (
                 <div className="py-2">
-                  {results.statements.length > 0 && (
+                  {results.motions.length > 0 && (
                     <div>
                       <div className="px-4 py-2 text-xs font-semibold text-outline uppercase tracking-wider">
-                        Statements
+                        Motions
                       </div>
-                      {results.statements.map((result) => (
+                      {results.motions.map((result) => (
                         <Link
-                          key={`statement-${result.id}`}
-                          href={`/argument/CRX-${result.id}-A`}
+                          key={`motion-${result.id}`}
+                          href={`/motion/CRX-${result.id}-A`}
                           onClick={close}
                           className="w-full text-left px-4 py-3 flex items-center justify-between gap-3 text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface border-l-2 border-transparent"
                         >
@@ -211,7 +211,7 @@ export default function SearchBar() {
                         >
                           <span className="truncate">{result.domain}</span>
                           <span className="shrink-0 text-xs text-outline">
-                            {result.statementCount} statements
+                            {result.motionCount} motions
                           </span>
                         </Link>
                       ))}

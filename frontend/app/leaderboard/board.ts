@@ -20,7 +20,7 @@ export interface BoardRow {
   score: number;
   rank: number;
   /** All-time only — the season board does not carry career counts. */
-  statementCount?: number;
+  motionCount?: number;
   argumentCount?: number;
 }
 

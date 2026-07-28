@@ -6,11 +6,11 @@ import { gsap, MOTION_OK } from "@/app/_utils/gsap";
 import { awardLedger, awardNote, type Award } from "./awardCopy";
 
 // §14 the points pop-up — "the single most important piece of feedback in the
-// product". Every accepted comment shows what it earned and exactly why, so the
+// product". Every accepted argument shows what it earned and exactly why, so the
 // scoring rules are taught through play instead of discovered by surprise.
 //
 // Shaped as a ruled slip rather than a toast, because that is the arena's own
-// vocabulary: the certificate, the profile's standing row and the comment
+// vocabulary: the certificate, the profile's standing row and the argument
 // header all state a value as a tracked label over a numeral, divided by
 // hairlines. A sparkle-and-sentence toast is the one register this product
 // does not speak — and it read as a generic app notification sitting next to

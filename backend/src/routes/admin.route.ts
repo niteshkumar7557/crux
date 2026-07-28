@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { togglePin, setDotd } from "../controllers/admin.controller.js";
+import { togglePin, setMotd } from "../controllers/admin.controller.js";
 import { authMiddleware, requireRole } from "../middlewares/auth.js";
 
 const adminRoutes = Router();
@@ -9,6 +9,6 @@ const adminRoutes = Router();
 adminRoutes.use(authMiddleware, requireRole("admin"));
 
 adminRoutes.post("/pin/:id", togglePin);
-adminRoutes.post("/dotd/:id", setDotd);
+adminRoutes.post("/motd/:id", setMotd);
 
 export default adminRoutes;

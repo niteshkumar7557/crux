@@ -1,13 +1,13 @@
 // §14 the points pop-up — the copy rules, pure and testable.
 //
 // "Every mechanic that can change a user's outcome must be visible at the
-// moment it matters." For scoring, that moment is the instant a comment is
+// moment it matters." For scoring, that moment is the instant an argument is
 // accepted, and the disclosure is the arithmetic behind the number.
 
-/** §15: a standalone comment caps here. */
+/** §15: a standalone argument caps here. */
 const STANDALONE_CAP = 5;
 
-/** §14: what a posted comment earned — the body of POST /comment/:side/:id. */
+/** §14: what a posted argument earned — the body of POST /motion/:id/arguments/:side. */
 export interface Award {
   points: number;
   judged: number;
@@ -58,7 +58,7 @@ export function awardLedger(a: Award): LedgerRow[] {
     running = STANDALONE_CAP;
   }
   if (a.halved) {
-    // §6 halves the 4th comment "and later", with a floor of 1 — so at a
+    // §6 halves the 4th argument "and later", with a floor of 1 — so at a
     // running score of 1 the halving is real but costs nothing, and the row
     // says so rather than vanishing and leaving the total unexplained.
     rows.push({ label: "Repeat halving", value: signed(a.points - running) });

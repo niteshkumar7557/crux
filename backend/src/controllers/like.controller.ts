@@ -3,7 +3,7 @@ import pool from "../db/index.js";
 import { awardLogic } from "../economy/logic.js";
 
 export async function registerLike(req: Request, res: Response) {
-  const { comment_id } = req.body;
+  const { argument_id } = req.body;
   const user_id = req.user?.id;
 
   if (!user_id) {
@@ -11,49 +11,49 @@ export async function registerLike(req: Request, res: Response) {
   }
 
   try {
-    const { rows: commentRows } = await pool.query(
-      `SELECT user_id FROM comments WHERE id = $1`,
-      [comment_id]
+    const { rows: argumentRows } = await pool.query(
+      `SELECT user_id FROM arguments WHERE id = $1`,
+      [argument_id]
     );
 
-    if (commentRows.length === 0) {
-      return res.status(404).json({ error: "Comment not found" });
+    if (argumentRows.length === 0) {
+      return res.status(404).json({ error: "Argument not found" });
     }
 
-    const post_user_id = commentRows[0].user_id;
+    const post_user_id = argumentRows[0].user_id;
 
-    // A like pays the author +2 logic, so liking your own comment is minting
+    // A like pays the author +2 logic, so liking your own argument is minting
     // your own currency. The UI does not offer the button, but the rule lives
     // here — it has to hold against a direct call to the API.
     if (Number(post_user_id) === Number(user_id)) {
       return res
         .status(403)
-        .json({ reason: "self_like", error: "You can't like your own comment." });
+        .json({ reason: "self_like", error: "You can't like your own argument." });
     }
 
     const { rows } = await pool.query(
       `
                 SELECT id FROM likes
-                WHERE user_id = $1 AND comment_id = $2;
+                WHERE user_id = $1 AND argument_id = $2;
             `,
-      [user_id, comment_id],
+      [user_id, argument_id],
     );
     if (rows.length > 0) {
       return res.status(200).json({ message: "Already Liked!" });
     }
     await pool.query(
       `
-                INSERT INTO likes(user_id ,comment_id) VALUES ($1,$2);
+                INSERT INTO likes(user_id ,argument_id) VALUES ($1,$2);
             `,
-      [user_id, comment_id],
+      [user_id, argument_id],
     );
     await pool.query(
       `
-                UPDATE comments
+                UPDATE arguments
                 SET likes = likes + 1
                 WHERE id = $1;
             `,
-      [comment_id],
+      [argument_id],
     );
     await awardLogic(pool, post_user_id, 2, "like");
     res.status(201).json({ message: "Successful!" });
@@ -67,7 +67,7 @@ export async function registerLike(req: Request, res: Response) {
 // no-op, so a double click or a stale button can't drive the count negative or
 // claw back logic twice.
 export async function removeLike(req: Request, res: Response) {
-  const { comment_id } = req.body;
+  const { argument_id } = req.body;
   const user_id = req.user?.id;
 
   if (!user_id) {
@@ -75,26 +75,26 @@ export async function removeLike(req: Request, res: Response) {
   }
 
   try {
-    const { rows: commentRows } = await pool.query(
-      `SELECT user_id FROM comments WHERE id = $1`,
-      [comment_id],
+    const { rows: argumentRows } = await pool.query(
+      `SELECT user_id FROM arguments WHERE id = $1`,
+      [argument_id],
     );
-    if (commentRows.length === 0) {
-      return res.status(404).json({ error: "Comment not found" });
+    if (argumentRows.length === 0) {
+      return res.status(404).json({ error: "Argument not found" });
     }
-    const post_user_id = commentRows[0].user_id;
+    const post_user_id = argumentRows[0].user_id;
 
     const { rowCount } = await pool.query(
-      `DELETE FROM likes WHERE user_id = $1 AND comment_id = $2`,
-      [user_id, comment_id],
+      `DELETE FROM likes WHERE user_id = $1 AND argument_id = $2`,
+      [user_id, argument_id],
     );
     if (!rowCount) {
       return res.status(200).json({ message: "Not Liked!" });
     }
 
     await pool.query(
-      `UPDATE comments SET likes = GREATEST(likes - 1, 0) WHERE id = $1`,
-      [comment_id],
+      `UPDATE arguments SET likes = GREATEST(likes - 1, 0) WHERE id = $1`,
+      [argument_id],
     );
     await awardLogic(pool, post_user_id, -2, "unlike");
     res.status(200).json({ message: "Successful!" });
@@ -103,11 +103,11 @@ export async function removeLike(req: Request, res: Response) {
   }
 }
 
-// §5 like state on load: the JWT lives in localStorage, so the SSR comment
+// §5 like state on load: the JWT lives in localStorage, so the SSR argument
 // fetch can't know the viewer. The arena calls this after mount to fill the
 // hearts the viewer already tapped.
 export async function listMyLikes(req: Request, res: Response) {
-  const { argumentId } = req.params;
+  const { motionId } = req.params;
   const user_id = req.user?.id;
 
   if (!user_id) {
@@ -116,15 +116,15 @@ export async function listMyLikes(req: Request, res: Response) {
 
   try {
     const { rows } = await pool.query(
-      `SELECT l.comment_id
+      `SELECT l.argument_id
        FROM likes l
-       JOIN comments c ON c.id = l.comment_id
-       WHERE l.user_id = $1 AND c.argument_id = $2`,
-      [user_id, Number(argumentId)],
+       JOIN arguments c ON c.id = l.argument_id
+       WHERE l.user_id = $1 AND c.motion_id = $2`,
+      [user_id, Number(motionId)],
     );
     res
       .status(200)
-      .json({ likedCommentIds: rows.map((r) => Number(r.comment_id)) });
+      .json({ likedArgumentIds: rows.map((r) => Number(r.argument_id)) });
   } catch (err) {
     res.status(500).json({ error: "Internal DB Error!" });
   }

@@ -7,7 +7,7 @@ export async function listNotifications(req: Request, res: Response) {
   if (!userId) return res.status(401).json({ error: "Unauthorized" });
   try {
     const items = await pool.query(
-      `SELECT id, type, argument_id, actor, message, is_read, created_at
+      `SELECT id, type, motion_id, actor, message, is_read, created_at
        FROM notifications WHERE user_id = $1
        ORDER BY created_at DESC LIMIT 30`,
       [userId],

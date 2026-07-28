@@ -3,13 +3,13 @@ import { llmJson } from "../ai/llm.js";
 import { ARBITER_SYSTEM_PROMPT } from "../ai/prompts/arbiter.prompt.js";
 import { checkText } from "../lib/validate.js";
 
-export async function checkEligibleStatement(req: Request, res: Response) {
+export async function checkEligibleMotion(req: Request, res: Response) {
 	const content = checkText(req.body?.content, { field: "content", max: 1000 });
 	if (!content.ok) return res.status(400).json({ error: content.reason });
 	const domain = checkText(req.body?.domain, { field: "domain", max: 100 });
 	if (!domain.ok) return res.status(400).json({ error: domain.reason });
 
-	const userPrompt = `STATEMENT: "${content.value}"
+	const userPrompt = `MOTION: "${content.value}"
 DOMAIN: "${domain.value}"`;
 
 	try {

@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     template: "%s · Crux",
   },
   description:
-    "Stake a claim, argue both sides, and let logic decide. Crux is a digital arena where every statement is tested by structured debate and AI adjudication.",
+    "Stake a claim, argue both sides, and let logic decide. Crux is a digital arena where every motion is tested by structured debate and AI adjudication.",
 };
 
 export default function RootLayout({
@@ -42,7 +42,7 @@ export default function RootLayout({
       className={`${newsreader.variable} ${manrope.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
       {/* Column so the footer can be pushed to the viewport bottom on a short
-          page (a new debate with no comments) instead of floating mid-screen. */}
+          page (a new debate with no arguments) instead of floating mid-screen. */}
       <body className="min-h-full flex flex-col bg-background font-body text-on-background">
         <ConditionalLayout>{children}</ConditionalLayout>
       </body>

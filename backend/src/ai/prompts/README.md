@@ -6,12 +6,12 @@ no second copy to keep in sync.
 
 | File | Persona | Fires | Cost of being wrong |
 | --- | --- | --- | --- |
-| `arbiter.prompt.ts` | Arbiter | user submits a statement | a bad debate gets created, or a good one is rejected |
-| `opening-analyst.prompt.ts` | Opening Analyst | statement is published | both sides start from a weak case |
-| `moderator-analyst.prompt.ts` | Moderator / Analyst | **every comment** | wrong points awarded; the public analysis degrades |
-| `probability.prompt.ts` | Probability Judge | a comment, once both sides have argued | the live win bar swings without explanation |
+| `arbiter.prompt.ts` | Arbiter | user submits a motion | a bad debate gets created, or a good one is rejected |
+| `opening-analyst.prompt.ts` | Opening Analyst | motion is published | both sides start from a weak case |
+| `moderator-analyst.prompt.ts` | Moderator / Analyst | **every argument** | wrong points awarded; the public analysis degrades |
+| `probability.prompt.ts` | Probability Judge | an argument, once both sides have argued | the live win bar swings without explanation |
 | `verdict-judge.prompt.ts` | Verdict Judge | debate closes | irreversible: winner, MVP, and the logic payouts |
-| `debater-profiler.prompt.ts` | Debater Profiler | statement is published (best-effort) | a bad profile line; nothing else breaks |
+| `debater-profiler.prompt.ts` | Debater Profiler | motion is published (best-effort) | a bad profile line; nothing else breaks |
 
 Each file's header comment documents what the persona does, where it is called from, the exact
 user-message shape it requires, the JSON it must return, and which of those fields the code

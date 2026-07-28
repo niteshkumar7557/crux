@@ -14,7 +14,7 @@ import { llmJson } from "../llm.js";
 import { ARBITER_SYSTEM_PROMPT } from "../prompts/arbiter.prompt.js";
 import { MODERATOR_ANALYST_SYSTEM_PROMPT } from "../prompts/moderator-analyst.prompt.js";
 import { PROBABILITY_SYSTEM_PROMPT } from "../prompts/probability.prompt.js";
-import { buildAnalystPrompt, buildProbabilityPrompt, scoreComment } from "../analyst.logic.js";
+import { buildAnalystPrompt, buildProbabilityPrompt, scoreArgument } from "../analyst.logic.js";
 import {
   SCORING_CASES,
   ARBITER_CASES,
@@ -39,10 +39,10 @@ async function runScoring(c: ScoringCase): Promise<Outcome> {
   }
 
   const opp = c.input.opponentAnalysis;
-  const judged = scoreComment({
+  const judged = scoreArgument({
     rawPoints: out.points,
     isReply: c.input.replyTo != null,
-    opponentHasComments: !!(opp && opp.trim()),
+    opponentHasArguments: !!(opp && opp.trim()),
     priorCount: 0,
   }).judged;
 
@@ -52,7 +52,7 @@ async function runScoring(c: ScoringCase): Promise<Outcome> {
 }
 
 async function runArbiter(c: ArbiterCase): Promise<Outcome> {
-  const user = `STATEMENT: "${c.content}"\nDOMAIN: "${c.domain}"`;
+  const user = `MOTION: "${c.content}"\nDOMAIN: "${c.domain}"`;
   const out = await llmJson<{ eligibility: string }>({
     system: ARBITER_SYSTEM_PROMPT,
     user,

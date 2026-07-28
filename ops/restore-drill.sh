@@ -16,6 +16,6 @@ docker exec crux-restore-drill pg_restore -U postgres --create -d postgres /rest
 echo "── row counts ──"
 docker exec crux-restore-drill psql -U postgres -d cruxdb -Atc \
   "SELECT 'users '||COUNT(*) FROM users
-   UNION ALL SELECT 'arguments '||COUNT(*) FROM arguments
-   UNION ALL SELECT 'comments '||COUNT(*) FROM comments;"
+   UNION ALL SELECT 'motions '||COUNT(*) FROM motions
+   UNION ALL SELECT 'arguments '||COUNT(*) FROM arguments;"
 echo "restore drill PASSED"

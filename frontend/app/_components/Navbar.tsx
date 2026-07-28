@@ -68,8 +68,8 @@ const Navbar = () => {
       </div>
       <SearchBar />
       <div className="flex items-center gap-3 shrink-0">
-        <Button href={user === null ? "/login" : "/statement"} size="sm">
-          NEW STATEMENT
+        <Button href={user === null ? "/login" : "/motion/new"} size="sm">
+          NEW MOTION
         </Button>
         {user && <NotificationBell />}
         <Link

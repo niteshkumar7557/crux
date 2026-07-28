@@ -32,7 +32,7 @@ breadth-first through every folder:
    + `frontend/app/page.tsx` (the home "Arena"). Ten minutes here tells you the shape.
 2. **The data model.** Read `backend/src/db/migrations/*.sql` **in numeric order** — eleven files,
    and together they are the whole schema. (Section 4 narrates them.)
-3. **Trace one request end-to-end.** Pick "post a comment" and follow it: route →
+3. **Trace one request end-to-end.** Pick "post an argument" and follow it: route →
    controller → the AI calls → the SQL writes → the response. Do this once and 80% of the
    codebase's conventions click. (Section 6 walks it for you.)
 4. **The background jobs.** Three in-process pollers (`jobs/conclusion.ts`, `jobs/featuring.ts`,
@@ -49,14 +49,14 @@ There are five of them, and between them they hold every rule in the game:
 
 | Pure module | Owns |
 |---|---|
-| `ai/analyst.logic.ts` | comment scoring — the 1–8 clamp, the standalone cap, the halving |
+| `ai/analyst.logic.ts` | argument scoring — the 1–8 clamp, the standalone cap, the halving |
 | `ai/verdict.logic.ts` | the draw threshold, MVP validation, every payout |
 | `economy/season.logic.ts` | calendar-month season windows |
 | `jobs/featuring.logic.ts` | `heat` = velocity × side balance, the Main Stage size |
 | `jobs/seasonRollover.logic.ts` | which three users win a finished season, and when there isn't one |
 
 The frontend has the same convention without the `.logic` infix:
-`_components/argument/verdictCard.ts` and `_components/ui/awardCopy.ts` are pure + tested.
+`_components/motion/verdictCard.ts` and `_components/ui/awardCopy.ts` are pure + tested.
 
 ---
 
@@ -85,7 +85,7 @@ uploads), `tsx` (dev/run), `vitest` (tests). LLM calls go through one thin `fetc
 - **Controllers hold the SQL.** Routes are one-liners; controllers do request parsing +
   queries + response. There is no repository/service layer except the small pure modules.
 - **Pure logic + vitest** (`*.logic.ts`), everything else eval-verified against the dev DB.
-- **The `arguments` table is the heart** — one row is a statement *and* its debate.
+- **The `motions` table is the heart** — one row is a motion *and* its debate.
 
 ---
 
@@ -100,7 +100,7 @@ cd backend && npm i && npm run db-init && npm run dev    # migrate + seed + star
 cd frontend && npm i && npm run dev                      # Next.js :3000
 ```
 
-- **`backend/.env.example` is the complete list of knobs**, grouped and commented, and
+- **`backend/.env.example` is the complete list of knobs**, grouped and argued, and
   `src/config/index.ts` is the only place the app reads `process.env`. Add a setting by
   putting it in both — never `process.env.X` at a call site. Two documented exceptions:
   `economy/season.logic.ts` reads `CRUX_SEASON_ZERO` itself (it is a pure module and must not
@@ -109,7 +109,7 @@ cd frontend && npm i && npm run dev                      # Next.js :3000
 - **Game rules are not configuration.** The §15 constants live in the four `*.logic.ts`
   modules, are asserted by unit tests, and are printed to users on `/rules` — an env override
   would make the UI lie. Change the spec, the code, the test, and the copy together.
-- `npm run db-init` = `db:migrate:dev` + `db:seed:dev` (30 users/statements + comments, all
+- `npm run db-init` = `db:migrate:dev` + `db:seed:dev` (30 users/motions + arguments, all
   passwords `secret`). `db:seed:stress` loads millions of rows for query testing.
 - **To change an existing migration, edit it in place and reset** — `migrate.ts` records each
   filename in a `_migrations` table and skips anything already there, so an edit is invisible
@@ -119,7 +119,7 @@ cd frontend && npm i && npm run dev                      # Next.js :3000
 - Backend needs an LLM key — OpenRouter, `OPENROUTER_API_KEY`, on a paid balance. The provider
   is swappable via `LLM_BASE_URL`/`LLM_API_KEY`/`LLM_MODEL` with no code change. There is no
   free tier and no token-per-minute ceiling to dodge, so hand-testing posts back to back is
-  fine; what you spend instead is money, at roughly $0.0002 a statement (costs in §6).
+  fine; what you spend instead is money, at roughly $0.0002 a motion (costs in §6).
 - **Set `CRUX_SEASON_ZERO=YYYY-MM`** to the real launch month. Season numbers are derived from
   it, so before that month the UI reads "Season -1" and the rollover job correctly awards
   nothing (see §5).
@@ -144,17 +144,17 @@ and you have the whole data model.
 | `0000` | `users` | Identity. `logic_score` = the all-time skill number; `role` (`'user'`/`'admin'`) is carried in the JWT and guarded by `requireRole`. |
 | `0001` | `refresh_tokens` | JWT refresh. |
 | `0002` | `domains` | The 12 topic domains. |
-| `0003` | `arguments` | **The core table.** One row = one *statement* AND its debate: the claim, both AI-written cases, the live `affirmative`/`negative` split, the lifecycle (`status`, `closes_at`, `winner`, `margin`, `mvp_user_id`, `verdict_text`), and the stage (`heat`, `featured`, `pinned`, `is_dotd`, `featured_at`, `dotd_at`). |
-| `0004` | `comments` | One contribution to one side. `reply_to_comment_id` is the §5 cross-side reply link (`NULL` = standalone); `points` is what the comment earned. |
-| `0005` | `likes` | +2 logic to the comment's author. |
+| `0003` | `motions` | **The core table.** One row = one *motion* AND its debate: the claim, both AI-written cases, the live `affirmative`/`negative` split, the lifecycle (`status`, `closes_at`, `winner`, `margin`, `mvp_user_id`, `verdict_text`), and the stage (`heat`, `featured`, `pinned`, `is_motd`, `featured_at`, `motd_at`). |
+| `0004` | `arguments` | One contribution to one side. `reply_to_argument_id` is the §5 cross-side reply link (`NULL` = standalone); `points` is what the argument earned. |
+| `0005` | `likes` | +2 logic to the argument's author. |
 | `0006` | `debate_results` | Per-user W/L/D outcome per concluded debate — the permanent record. |
 | `0007` | `season_awards` | §10 season titles. Permanent, stacking, status-only. `UNIQUE (season_key, rank)` is what makes the rollover job idempotent. |
 | `0008` | `notifications` | In-app return triggers (`opposition`, `reply`, `verdict`, `season`). |
 | `0009` | `logic_events` | The timestamped logic ledger. `season_only = TRUE` writes a ledger row **without** touching `logic_score` — that is how a loss costs the month's race and never the career total. |
-| `0010` | *(indexes only)* | Indexes the profile filters on: `comments(user_id)`, `arguments(user_id)`, `users(logic_score DESC, id ASC)`. Postgres does not auto-index foreign keys, and every profile query filters on those columns. |
+| `0010` | *(indexes only)* | Indexes the profile filters on: `arguments(user_id)`, `motions(user_id)`, `users(logic_score DESC, id ASC)`. Postgres does not auto-index foreign keys, and every profile query filters on those columns. |
 
 **Two things to internalise:** there is no `seasons` table (a season is a **computed calendar
-month**, §5), and `arguments.pinned` is the admin override — not a separate curation table.
+month**, §5), and `motions.pinned` is the admin override — not a separate curation table.
 
 ---
 
@@ -167,11 +167,11 @@ month**, §5), and `arguments.pinned` is the admin override — not a separate c
 | **season logic** | logic earned *this calendar month* | *computed* — a windowed `SUM(amount)` | `economy/season.logic.ts` (pure) |
 | **`record` (W–L–D)** | all-time standing | `debate_results` rows | written by `ai/verdict.ts` at conclusion |
 | **season titles** | the only thing that survives a season | `season_awards` rows | `jobs/seasonRollover.ts` |
-| **`heat`** | stage ranking — velocity × side balance | `arguments.heat` | `jobs/featuring.ts` + `.logic.ts` |
+| **`heat`** | stage ranking — velocity × side balance | `motions.heat` | `jobs/featuring.ts` + `.logic.ts` |
 
 `awardLogic(db, userId, amount, reason, seasonOnly = false)` is the **one place** that touches
 `logic_score` — it updates the score *and* inserts a ledger row together, so the all-time total
-and the seasonal window can never drift. Every award site (comment, like, verdict payouts,
+and the seasonal window can never drift. Every award site (argument, like, verdict payouts,
 abuse penalty) routes through it.
 
 **The `seasonOnly` flag is the whole trick.** `awardLogic(..., true)` writes the ledger row and
@@ -193,22 +193,22 @@ All go through `ai/llm.ts` (`llmJson()` → an OpenAI-compatible `/chat/completi
 OpenRouter, `deepseek/deepseek-v4-flash`, swappable via env). **One model runs all six** —
 there is no smart/fast split. Each persona is a system prompt, and all six live one-per-file in
 **`ai/prompts/`** — those files are the live strings the controllers import, and each carries a
-header comment covering its inputs, its JSON contract and what the code re-validates. See
+header argument covering its inputs, its JSON contract and what the code re-validates. See
 `ai/prompts/README.md`. The call sites are:
 
-1. **Arbiter** — gates a new statement (pass/fail + reason + a sharper rewrite + keyword +
-   domain). `controllers/ai.controller.ts` (`POST /ai/statement`, body field **`content`**).
-2. **Opening Analyst** — writes the initial For/Against cases. `argument.controller.ts`.
-3. **Moderator/Analyst** — per comment: screens abuse, scores 1–8, rewrites that side's running
-   case. `controllers/comment.controller.ts`; the prompt is built by pure `ai/analyst.logic.ts`.
-   **When the comment is a reply it is additionally shown the exact comment being answered** —
+1. **Arbiter** — gates a new motion (pass/fail + reason + a sharper rewrite + keyword +
+   domain). `controllers/ai.controller.ts` (`POST /ai/motion`, body field **`content`**).
+2. **Opening Analyst** — writes the initial For/Against cases. `motion.controller.ts`.
+3. **Moderator/Analyst** — per argument: screens abuse, scores 1–8, rewrites that side's running
+   case. `controllers/argument.controller.ts`; the prompt is built by pure `ai/analyst.logic.ts`.
+   **When the argument is a reply it is additionally shown the exact argument being answered** —
    that difference in what the model sees is precisely why replies are worth more.
 4. **Probability judge** — recomputes the live win split once both sides have argued.
-   `comment.controller.ts`.
+   `argument.controller.ts`.
 5. **Verdict Judge** — at close: the two percentages, winner, MVP, and the closing paragraph.
    `ai/verdict.ts` (decisions in pure `ai/verdict.logic.ts`).
-6. **Debater profiler** — rewrites a user's `description` from their last 25 statements, fired
-   after a statement is accepted. `argument.controller.ts` (`updateDesciption`, best-effort:
+6. **Debater profiler** — rewrites a user's `description` from their last 25 motions, fired
+   after a motion is accepted. `motion.controller.ts` (`updateDesciption`, best-effort:
    it is wrapped in its own try/catch so a failure never blocks the post).
 
 ### Reasoning is off, deliberately
@@ -226,41 +226,41 @@ DeepSeek's automatic prefix cache at $0.0196/1M — treat it as upside, not as t
 
 | Event | LLM calls | in | out | cost | cached |
 | --- | --- | --- | --- | --- | --- |
-| Statement published | 3 — arbiter + analysis + profiler | 1171 | 255 | **$0.000165** | $0.000101 |
-| Statement rejected | 1 — arbiter | 501 | 52 | **$0.000059** | $0.000026 |
-| Comment posted | 2 — analyst + probability | 1081 | 155 | **$0.000136** | $0.000063 |
-| Debate concluded | 1 — verdict, at the 40-comment cap | 1553 | 98 | **$0.000171** | $0.000155 |
+| Motion published | 3 — arbiter + analysis + profiler | 1171 | 255 | **$0.000165** | $0.000101 |
+| Motion rejected | 1 — arbiter | 501 | 52 | **$0.000059** | $0.000026 |
+| Argument posted | 2 — analyst + probability | 1081 | 155 | **$0.000136** | $0.000063 |
+| Debate concluded | 1 — verdict, at the 40-argument cap | 1553 | 98 | **$0.000171** | $0.000155 |
 
 A walkover conclusion costs nothing — `verdict.ts` returns before the call. Monthly, cold cache:
 
 | Traffic | Monthly LLM bill |
 | --- | --- |
-| 1k statements / 20k comments | **~$3** |
-| 10k statements / 250k comments | **~$38** |
-| 100k statements / 2.5M comments | **~$375** |
+| 1k motions / 20k arguments | **~$3** |
+| 10k motions / 250k arguments | **~$38** |
+| 100k motions / 2.5M arguments | **~$375** |
 
-**Comments are ~91% of the bill** — they are the only per-event cost that scales with
+**Arguments are ~91% of the bill** — they are the only per-event cost that scales with
 engagement rather than with content, and each one costs two calls. If the bill ever needs
-cutting, the lever is `updateProbability`: it re-runs on every accepted comment and is the
-cheapest call to make conditional (e.g. every Nth comment), not the analyst. Note also that
+cutting, the lever is `updateProbability`: it re-runs on every accepted argument and is the
+cheapest call to make conditional (e.g. every Nth argument), not the analyst. Note also that
 `LLM_RETRIES=2` means a failing call bills up to three times.
 
-### Flow A — post a statement
-`POST /ai/statement` runs the **Arbiter** gate on its own (fail → reason + rewrite, shown in the
-composer). On pass, `POST /argument` inserts the row, the **Opening Analyst** writes both cases,
+### Flow A — post a motion
+`POST /ai/motion` runs the **Arbiter** gate on its own (fail → reason + rewrite, shown in the
+composer). On pass, `POST /motion` inserts the row, the **Opening Analyst** writes both cases,
 and `closes_at` is set to +48h. The arena is live.
 
-### Flow B — post a comment (the flow to trace first)
-`POST /comment/:side/:id` → `comment.controller.ts` `postComment()`:
-1. **Validate the reply target** if `replyToCommentId` is set — it must exist, belong to this
+### Flow B — post an argument (the flow to trace first)
+`POST /motion/:id/arguments/:side` → `argument.controller.ts` `postArgument()`:
+1. **Validate the reply target** if `replyToArgumentId` is set — it must exist, belong to this
    debate, and be on the **opposite** side (409 `bad_reply_target`). Cross-side-only is a rule,
    so it is enforced server-side, not just hidden in the UI.
-2. **Side lock** — your first comment locks your side (409 `side_locked` on the other one). For
+2. **Side lock** — your first argument locks your side (409 `side_locked` on the other one). For
    a reply the side is *derived* from the target, not trusted from the URL.
-3. Pre-insert **side counts** and this user's **prior comment count** in this debate.
+3. Pre-insert **side counts** and this user's **prior argument count** in this debate.
 4. **Moderator/Analyst** LLM: `{ abused, points, newAnalysis }` (abuse → −4 logic, return).
-5. `scoreComment()` (pure): clamp 1–8 → cap a standalone at 5 (exempt while the opposing side is
-   empty) → halve past 3 comments. Insert the comment with its `points`, then `awardLogic`.
+5. `scoreArgument()` (pure): clamp 1–8 → cap a standalone at 5 (exempt while the opposing side is
+   empty) → halve past 3 arguments. Insert the argument with its `points`, then `awardLogic`.
 6. Rewrite that side's case; **Probability judge** updates `affirmative`/`negative`.
 7. Best-effort **notify**: the replied-to author, and the opposing side on a new participant.
 8. Respond with the full score breakdown — `{ points, judged, capped, halved, isReply,
@@ -268,18 +268,18 @@ and `closes_at` is set to +48h. The arena is live.
 
 ### Flow C — conclusion (background, 60s)
 `jobs/conclusion.ts` → any `live` argument past `closes_at` → `ai/verdict.ts` `concludeDebate()`
-in one transaction: fetch comments/participants → **Verdict Judge** → `resolveVerdict` +
+in one transaction: fetch arguments/participants → **Verdict Judge** → `resolveVerdict` +
 `resolvePayouts` (pure) → write `debate_results`, apply payouts via `awardLogic` (losses with
 `seasonOnly = true`), set `winner`/`margin`/`mvp_user_id`/`verdict_text` → commit → best-effort
-notifications. A side with **zero** comments short-circuits to `walkoverPayout()`: nobody scores,
+notifications. A side with **zero** arguments short-circuits to `walkoverPayout()`: nobody scores,
 the author included.
 
 ### Flow D — the stage (background, 5 min)
 `jobs/featuring.ts`, in this order: recompute `heat` for every live debate (one set-based UPDATE
-mirroring `computeHeat`) → **crown the Debate of the Day** if none is held for the current UTC
-day → refresh the featured set = the DotD + the top `MAIN_STAGE_SIZE` by heat + every admin pin.
-Order matters: the DotD is picked by heat and then force-featured, because the home hero queries
-`featured = TRUE AND is_dotd = TRUE`.
+mirroring `computeHeat`) → **crown the Motion of the Day** if none is held for the current UTC
+day → refresh the featured set = the MotD + the top `MAIN_STAGE_SIZE` by heat + every admin pin.
+Order matters: the MotD is picked by heat and then force-featured, because the home hero queries
+`featured = TRUE AND is_motd = TRUE`.
 
 ### Flow E — season rollover (background, 1 hour)
 `jobs/seasonRollover.ts`: if the previous calendar month is Season 0 or later and has no awards
@@ -310,24 +310,24 @@ missing the copy is how the product ends up lying to its users.
 
 | §15 constant | Value | Source of truth | Also change |
 |---|---|---|---|
-| **Debate duration** | 48h | *no constant* — `INTERVAL '48 hours'` inline in `controllers/argument.controller.ts` (insert) | `db/seed-data.ts` (same literal); `/rules` rule 1 copy. Consider extracting to a constant first. |
-| **Draw threshold** | 5 | `ai/verdict.logic.ts` `DRAW_MARGIN` | `verdict.logic.test.ts`; **`_components/argument/ArgumentProbability.tsx` has its own `DRAW_MARGIN = 5`** and derives the draw band from it; `/rules` rule 5; `VerdictBanner.tsx` payout copy |
-| **Score range** | 1–8 | `ai/analyst.logic.ts` `SCORE_MIN`/`SCORE_MAX` | `analyst.logic.test.ts`; the **analyst prompt** in `comment.controller.ts` (band descriptions `7-8`/`5-6`/`3-4`/`1-2` and `6-8`/`4-5`/`1-3`); `/rules` rule 3 |
+| **Debate duration** | 48h | *no constant* — `INTERVAL '48 hours'` inline in `controllers/motion.controller.ts` (insert) | `db/seed-data.ts` (same literal); `/rules` rule 1 copy. Consider extracting to a constant first. |
+| **Draw threshold** | 5 | `ai/verdict.logic.ts` `DRAW_MARGIN` | `verdict.logic.test.ts`; **`_components/motion/ArgumentProbability.tsx` has its own `DRAW_MARGIN = 5`** and derives the draw band from it; `/rules` rule 5; `VerdictBanner.tsx` payout copy |
+| **Score range** | 1–8 | `ai/analyst.logic.ts` `SCORE_MIN`/`SCORE_MAX` | `analyst.logic.test.ts`; the **analyst prompt** in `argument.controller.ts` (band descriptions `7-8`/`5-6`/`3-4`/`1-2` and `6-8`/`4-5`/`1-3`); `/rules` rule 3 |
 | **Standalone cap** | 5 | `ai/analyst.logic.ts` `STANDALONE_CAP` | `analyst.logic.test.ts`; **`_components/ui/awardCopy.ts` has its own `STANDALONE_CAP = 5`** + `awardCopy.test.ts`; the composer hint in `ArgumentInput.tsx`; `/rules` rule 3 |
-| **Full-value comments** | 3 | `ai/analyst.logic.ts` `FULL_VALUE_COMMENTS` | `analyst.logic.test.ts`; **`ArgumentInput.tsx` has its own `FULL_VALUE_COMMENTS = 3`** for the counter; `awardCopy.ts` halving line; `/rules` rule 4 |
-| **Halving floor** | 1 | inline `Math.max(1, …)` in `analyst.logic.ts` `scoreComment` | `analyst.logic.test.ts` ("never halves below 1"); `/rules` rule 4 |
+| **Full-value arguments** | 3 | `ai/analyst.logic.ts` `FULL_VALUE_ARGUMENTS` | `analyst.logic.test.ts`; **`ArgumentInput.tsx` has its own `FULL_VALUE_ARGUMENTS = 3`** for the counter; `awardCopy.ts` halving line; `/rules` rule 4 |
+| **Halving floor** | 1 | inline `Math.max(1, …)` in `analyst.logic.ts` `scoreArgument` | `analyst.logic.test.ts` ("never halves below 1"); `/rules` rule 4 |
 | **Like bonus** | +2 | *no constant* — inline in `controllers/like.controller.ts` | nothing states it in the UI today |
-| **Abuse penalty** | −4 | *no constant* — inline in `controllers/comment.controller.ts` | the composer fine print in `ArgumentInput.tsx` ("costs 4 logic") |
+| **Abuse penalty** | −4 | *no constant* — inline in `controllers/argument.controller.ts` | the composer fine print in `ArgumentInput.tsx` ("costs 4 logic") |
 | **MVP bonus** | +25 | `ai/verdict.logic.ts` `MVP_BONUS` | `verdict.logic.test.ts`; `VerdictBanner.tsx`; `/rules` rule 6 |
 | **Win bonus** | +10 | `ai/verdict.logic.ts` `WIN_BONUS` | `verdict.logic.test.ts`; `VerdictBanner.tsx`; `/rules` rule 6 |
 | **Loss penalty** | −5 season-only | `ai/verdict.logic.ts` `LOSS_PENALTY` | `verdict.logic.test.ts`; `VerdictBanner.tsx`; **`SideLockConfirm.tsx`** (§14 needs it before *and* after); `/rules` rule 6 |
-| **Author bonus** | +5 | `ai/verdict.logic.ts` `AUTHOR_BONUS` | `verdict.logic.test.ts`; `VerdictBanner.tsx`; `StatementForm.tsx`; `/rules` rule 6 |
-| **Walkover payout** | 0 | `ai/verdict.logic.ts` `walkoverPayout()` | `verdict.logic.test.ts`; the walkover banner in `DebateView.tsx`; `VerdictBanner.tsx`; `StatementForm.tsx`; `/rules` rule 6 |
-| **Walkover warning window** | 6h | `_components/argument/walkoverRisk.ts` `WALKOVER_WARNING_HOURS` (frontend-only — it changes *when the warning shows*, never a payout) | `walkoverRisk.test.ts` (asserts the boundary); the banner copy in `DebateView.tsx` states the number; game-theory §7 + §14 |
+| **Author bonus** | +5 | `ai/verdict.logic.ts` `AUTHOR_BONUS` | `verdict.logic.test.ts`; `VerdictBanner.tsx`; `MotionForm.tsx`; `/rules` rule 6 |
+| **Walkover payout** | 0 | `ai/verdict.logic.ts` `walkoverPayout()` | `verdict.logic.test.ts`; the walkover banner in `DebateView.tsx`; `VerdictBanner.tsx`; `MotionForm.tsx`; `/rules` rule 6 |
+| **Walkover warning window** | 6h | `_components/motion/walkoverRisk.ts` `WALKOVER_WARNING_HOURS` (frontend-only — it changes *when the warning shows*, never a payout) | `walkoverRisk.test.ts` (asserts the boundary); the banner copy in `DebateView.tsx` states the number; game-theory §7 + §14 |
 | **Season length** | 1 calendar month | `economy/season.logic.ts` (the whole module) | `season.logic.test.ts`; the leaderboard strip and profile season card |
 | **Season awards** | top 3 | `jobs/seasonRollover.logic.ts` `TITLES` / `FRAMES` | `seasonRollover.logic.test.ts`; `_components/profile/SeasonTitles.tsx` (`FRAME_BADGE`/`FRAME_RING` maps must gain a key per new frame); the leaderboard prize line |
 | **Main Stage size** | ~4 | `jobs/featuring.logic.ts` `MAIN_STAGE_SIZE` | `featuring.logic.test.ts`. Note `getSecondaryCardsData` in `arena.controller.ts` has its own `LIMIT 6` — raise it or the extra cards never render |
-| **Debate of the Day** | 1/day | `jobs/featuring.ts` `rotateDotd()` (the UTC-day guard) | nothing else; `getPrimaryCardData` assumes exactly one |
+| **Motion of the Day** | 1/day | `jobs/featuring.ts` `rotateMotd()` (the UTC-day guard) | nothing else; `getPrimaryCardData` assumes exactly one |
 | **Tier thresholds** | 0/50/100/150/200 | `controllers/profile.controller.ts` `convertLogicScore()` | **`frontend/app/_utils/logicScore.ts` is a full duplicate of the same ladder** — change both or the profile and the cards disagree |
 | **Username rule** | `^[a-z0-9_]{3,20}$` | `lib/username.logic.ts` | `username.logic.test.ts`; **`frontend/app/_utils/username.ts` is a full duplicate**; the register form's hint copy |
 
@@ -338,7 +338,7 @@ import backend modules — and they are the ones that silently drift:
 
 - `DRAW_MARGIN` → `ai/verdict.logic.ts` **and** `ArgumentProbability.tsx`
 - `STANDALONE_CAP` → `ai/analyst.logic.ts` **and** `ui/awardCopy.ts`
-- `FULL_VALUE_COMMENTS` → `ai/analyst.logic.ts` **and** `ArgumentInput.tsx`
+- `FULL_VALUE_ARGUMENTS` → `ai/analyst.logic.ts` **and** `ArgumentInput.tsx`
 - the tier ladder → `profile.controller.ts` **and** `_utils/logicScore.ts`
 - the username rule → `lib/username.logic.ts` **and** `app/_utils/username.ts`
 
@@ -364,15 +364,15 @@ the page and the code now say the same thing.
   **Client components** (`"use client"`) fetch via `axios.ts` (`api`, attaches the JWT from
   `localStorage`, base `/api`). Knowing which axios you're in explains most data-flow questions.
 - **Routes** (`frontend/app/*`): `/` (Arena home), `/argument/[id]` and the canonical SEO alias
-  `/debate/[slug]` (both render the shared `_components/argument/DebateView.tsx`), `/domain`,
+  `/debate/[slug]` (both render the shared `_components/motion/DebateView.tsx`), `/domain`,
   `/archive` (the settled record — concluded debates, filtered by outcome and domain),
   `/topic/[keyword]` (SEO hubs), `/leaderboard` (season board by default, `?tab=all-time` for
   the career board; both paginated through the same podium + table), `/profile/me`
   (client shim → canonical URL) and `/profile/[username]` (numeric segments redirect),
-  `/statement`, `/rules`, `(auth)/login|register`, plus `sitemap.ts` + `robots.ts`.
+  `/motion`, `/rules`, `(auth)/login|register`, plus `sitemap.ts` + `robots.ts`.
 - **Component folders** under `_components/`: `arena/` (feed cards, Main Stage, `PinControl`),
   `argument/` (the debate page: header, arena columns, composer, reply context, side-lock
-  confirmation, verdict banner, OG card, verdict certificate), `profile/`, `statement/`, `ui/` (primitives +
+  confirmation, verdict banner, OG card, verdict certificate), `profile/`, `motion/`, `ui/` (primitives +
   `PointsPopup`). `Navbar.tsx` hosts the `NotificationBell`.
 - **`_utils/`** holds pure helpers (`slugify`, `debateMeta`, `timeAgo`, `logicScore`, gsap setup).
 - **Motion has two kinds, and they are gated differently.** An *entrance* (a page introducing
@@ -385,7 +385,7 @@ the page and the code now say the same thing.
   goes inside `gsap.matchMedia().add(MOTION_OK, …)` on top of that.
 - **The transparency layer is a product requirement, not polish.** §14 of the spec lists every
   rule that must be visible *before* it can bite. In the code that means: the side-lock
-  confirmation before a first comment, the "arguing FOR" badge and comment counter on the
+  confirmation before a first argument, the "arguing FOR" badge and argument counter on the
   composer, the points pop-up after posting, the draw band on the probability bar (live only —
   once concluded the band becomes a settled sentence stating the final margin against the
   threshold, since a band on a frozen bar reads as a target nobody can still reach), the walkover
@@ -400,9 +400,9 @@ the page and the code now say the same thing.
 
 | Task | Start here |
 |---|---|
-| Change how comments are scored | `ai/analyst.logic.ts` (+ its test) then `comment.controller.ts` |
+| Change how arguments are scored | `ai/analyst.logic.ts` (+ its test) then `argument.controller.ts` |
 | Change the verdict / payouts | `ai/verdict.logic.ts` (+ test) then `ai/verdict.ts` |
-| Change what's featured / DotD | `jobs/featuring.logic.ts` + `jobs/featuring.ts` |
+| Change what's featured / MotD | `jobs/featuring.logic.ts` + `jobs/featuring.ts` |
 | Change the season window or numbering | `economy/season.logic.ts` (+ test) |
 | Change who wins a season | `jobs/seasonRollover.logic.ts` (+ test) |
 | Curate the stage by hand | `controllers/admin.controller.ts` + `_components/arena/PinControl.tsx` |
@@ -410,8 +410,8 @@ the page and the code now say the same thing.
 | Change the v1 schema | **edit the existing migration in place**, then `db:reset:dev && db-init` |
 | Add or change a setting | `src/config/index.ts` **and** `backend/.env.example` — both, always |
 | Swap the LLM provider or model | env only (`LLM_BASE_URL`/`LLM_API_KEY`/`LLM_MODEL`) — no code change |
-| Retune a poller interval or a limit | env only (`*_TICK_MS`, `*_ROWS`, `VERDICT_MAX_COMMENTS`, …) |
-| Change the debate page UI | `_components/argument/DebateView.tsx` + its children |
+| Retune a poller interval or a limit | env only (`*_TICK_MS`, `*_ROWS`, `VERDICT_MAX_ARGUMENTS`, …) |
+| Change the debate page UI | `_components/motion/DebateView.tsx` + its children |
 | Change what a pop-up/banner says | `_components/ui/awardCopy.ts` (+ test) and the §14 surfaces in §7 |
 | Add a notification type | `notifications/messages.ts` (+ test) + `notifications/notify.ts` |
 
@@ -436,7 +436,7 @@ the page and the code now say the same thing.
 ### Known gaps, flagged and unfixed
 
 - **There is no unlike.** `POST /like` is insert-once and idempotent (a second call answers
-  `"Already Liked!"`), but `UserCommentCard` lets a viewer toggle the thumb back off and
+  `"Already Liked!"`), but `UserArgumentCard` lets a viewer toggle the thumb back off and
   decrements the count locally. The server never hears about it, so the count is wrong until
   the next load. Either an unlike endpoint or a one-way button is the fix; the button is now
   only rendered for signed-in viewers, so this is the last hole in the like flow.
@@ -458,7 +458,7 @@ the page and the code now say the same thing.
 
 1. Read `docs/game-theory.md` end to end (30 min). It is short and it is the spec.
 2. Read the migrations `0000`→`0010` in order (20 min) — you now know the data model.
-3. Read `index.ts`, `app.ts`, then `comment.controller.ts` top to bottom, opening
+3. Read `index.ts`, `app.ts`, then `argument.controller.ts` top to bottom, opening
    `analyst.logic.ts` when it's referenced (45 min) — you now know one full flow + the
    pure-logic convention.
 4. Read `jobs/conclusion.ts` + `ai/verdict.ts` + `verdict.logic.ts` (30 min) — you now know how

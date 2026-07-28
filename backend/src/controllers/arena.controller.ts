@@ -10,46 +10,46 @@ import {
 
 export async function getPrimaryCardData(req: Request, res: Response) {
   try {
-    const argument = await pool.query(`
+    const motion = await pool.query(`
                 SELECT a.id, a.user_id, a.content, a.domain_id, a.affirmative, a.negative,
-                       a.status, a.closes_at, a.is_dotd
-                FROM arguments a
-                WHERE a.status = 'live' AND a.featured = TRUE AND a.is_dotd = TRUE;
+                       a.status, a.closes_at, a.is_motd
+                FROM motions a
+                WHERE a.status = 'live' AND a.featured = TRUE AND a.is_motd = TRUE;
             `);
-    if (argument.rows.length === 0) {
+    if (motion.rows.length === 0) {
       return res.status(200).json({});
     }
     const domain = await pool.query(
       `
                 SELECT name FROM domains WHERE id = $1;
             `,
-      [argument.rows[0].domain_id],
+      [motion.rows[0].domain_id],
     );
     const user = await pool.query(
       `
                 SELECT username, avatar FROM users WHERE id = $1;
             `,
-      [argument.rows[0].user_id],
+      [motion.rows[0].user_id],
     );
-    const comments = await pool.query(
+    const argumentCountRes = await pool.query(
       `
-                SELECT COUNT(id) FROM comments WHERE argument_id = $1;
+                SELECT COUNT(id) FROM arguments WHERE motion_id = $1;
             `,
-      [argument.rows[0].id],
+      [motion.rows[0].id],
     );
 
     res.status(200).json({
       domain: domain.rows[0].name,
-      argumentId: argument.rows[0].id,
+      motionId: motion.rows[0].id,
       username: user.rows[0].username,
       avatar: user.rows[0].avatar,
-      content: argument.rows[0].content,
-      affirmative: argument.rows[0].affirmative,
-      negative: argument.rows[0].negative,
-      status: argument.rows[0].status,
-      closesAt: argument.rows[0].closes_at,
-      isDotd: argument.rows[0].is_dotd,
-      count_comments: parseInt(comments.rows[0].count),
+      content: motion.rows[0].content,
+      affirmative: motion.rows[0].affirmative,
+      negative: motion.rows[0].negative,
+      status: motion.rows[0].status,
+      closesAt: motion.rows[0].closes_at,
+      isMotd: motion.rows[0].is_motd,
+      count_arguments: parseInt(argumentCountRes.rows[0].count),
     });
   } catch (err) {
     console.error(err);
@@ -59,7 +59,7 @@ export async function getPrimaryCardData(req: Request, res: Response) {
 
 export async function getSecondaryCardsData(req: Request, res: Response) {
   try {
-    const argument = await pool.query(`
+    const motion = await pool.query(`
                 SELECT
                     u.username,
                     u.avatar,
@@ -67,24 +67,24 @@ export async function getSecondaryCardsData(req: Request, res: Response) {
                     a.content AS title,
                     a.affirmative AS affirmativeScore,
                     a.negative AS negativeScore,
-                    a.id AS argumentId,
+                    a.id AS motionId,
                     a.status,
                     a.closes_at AS "closesAt",
                     COUNT(DISTINCT c.user_id)::int AS active_minds
-                FROM arguments a
+                FROM motions a
                 JOIN users u ON a.user_id = u.id
                 JOIN domains d ON d.id = a.domain_id
-                LEFT JOIN comments c ON c.argument_id = a.id
-                WHERE a.featured = TRUE AND a.is_dotd = FALSE
+                LEFT JOIN arguments c ON c.motion_id = a.id
+                WHERE a.featured = TRUE AND a.is_motd = FALSE
                 GROUP BY a.id, u.username, u.avatar, d.name, a.content, a.affirmative, a.negative
                 ORDER BY a.featured_at ASC NULLS LAST
                 LIMIT 6;
             `);
-    if (argument.rows.length === 0) {
+    if (motion.rows.length === 0) {
       return res.status(200).json({});
     }
 
-    res.status(200).json(argument.rows);
+    res.status(200).json(motion.rows);
   } catch (err) {
     console.error(err);
     res.status(200).json({});
@@ -99,9 +99,9 @@ export async function getSidebarData(req: Request, res: Response) {
                 ROUND(AVG(a.affirmative - a.negative))::numeric AS "changePercentage",
                 COUNT(DISTINCT c.id)::int AS arguments,
                 COUNT(DISTINCT a.id)::int AS "liveBattles"
-            FROM arguments a
+            FROM motions a
             JOIN domains d ON d.id = a.domain_id
-            LEFT JOIN comments c ON c.argument_id = a.id
+            LEFT JOIN arguments c ON c.motion_id = a.id
             GROUP BY d.name
             ORDER BY arguments DESC
             LIMIT 3;
@@ -125,7 +125,7 @@ export async function getSidebarData(req: Request, res: Response) {
     const data3 = await pool.query(`
                 SELECT
                     (SELECT ROUND(SUM(logic_score)::int) FROM users) AS "logicStacked",
-                    (SELECT COUNT(*)::int FROM arguments) AS "activeArenas"
+                    (SELECT COUNT(*)::int FROM motions) AS "activeArenas"
             `);
 
     if (
@@ -190,14 +190,14 @@ export async function getLeaderboardData(req: Request, res: Response) {
                     u.avatar,
                     u.logic_score AS "logicScore",
                     RANK () OVER (ORDER BY u.logic_score DESC, u.id ASC)::int AS rank,
-                    COALESCE(a.count, 0)::int AS "statementCount",
+                    COALESCE(a.count, 0)::int AS "motionCount",
                     COALESCE(c.count, 0)::int AS "argumentCount"
                 FROM users u
                 LEFT JOIN (
-                    SELECT user_id, COUNT(*) AS count FROM arguments GROUP BY user_id
+                    SELECT user_id, COUNT(*) AS count FROM motions GROUP BY user_id
                 ) a ON a.user_id = u.id
                 LEFT JOIN (
-                    SELECT user_id, COUNT(*) AS count FROM comments GROUP BY user_id
+                    SELECT user_id, COUNT(*) AS count FROM arguments GROUP BY user_id
                 ) c ON c.user_id = u.id
                 ORDER BY u.logic_score DESC, u.id ASC
                 LIMIT $1
@@ -264,7 +264,7 @@ export async function getSitemapData(_req: Request, res: Response) {
   try {
     const r = await pool.query(
       `SELECT id, content, content_keyword, status
-       FROM arguments ORDER BY id DESC LIMIT ${config.limits.sitemap_rows}`,
+       FROM motions ORDER BY id DESC LIMIT ${config.limits.sitemap_rows}`,
     );
     res.status(200).json(r.rows);
   } catch (err) {
@@ -273,7 +273,7 @@ export async function getSitemapData(_req: Request, res: Response) {
   }
 }
 
-export async function getStatements(req: Request, res: Response) {
+export async function getMotions(req: Request, res: Response) {
   try {
     const domainId = Number.parseInt(String(req.query.domainId ?? ""), 10);
     const hasDomain = Number.isInteger(domainId) && domainId > 0;
@@ -321,7 +321,7 @@ export async function getStatements(req: Request, res: Response) {
     const where = conds.length ? `WHERE ${conds.join(" AND ")}` : "";
 
     const totalResult = await pool.query(
-      `SELECT COUNT(*)::int AS total FROM arguments a ${where};`,
+      `SELECT COUNT(*)::int AS total FROM motions a ${where};`,
       filterParams,
     );
     const total: number = totalResult.rows[0].total;
@@ -329,7 +329,7 @@ export async function getStatements(req: Request, res: Response) {
     const totalPages = Math.max(Math.ceil(total / pageSize), 1);
     if (page > totalPages) page = totalPages;
 
-    const statements = await pool.query(
+    const motions = await pool.query(
       `
                 SELECT
                     u.username,
@@ -338,21 +338,21 @@ export async function getStatements(req: Request, res: Response) {
                     a.content AS title,
                     a.affirmative AS affirmativeScore,
                     a.negative AS negativeScore,
-                    a.id AS argumentId,
+                    a.id AS motionId,
                     a.status,
                     a.closes_at AS "closesAt",
                     a.winner,
                     a.margin,
                     a.created_at AT TIME ZONE 'UTC' AS time,
                     COALESCE(c.count, 0)::int AS "argumentNum"
-                FROM arguments a
+                FROM motions a
                 JOIN users u ON a.user_id = u.id
                 JOIN domains d ON d.id = a.domain_id
                 LEFT JOIN (
-                    SELECT argument_id, COUNT(*) AS count
-                    FROM comments c
-                    GROUP BY argument_id
-                ) c ON a.id = c.argument_id
+                    SELECT motion_id, COUNT(*) AS count
+                    FROM arguments c
+                    GROUP BY motion_id
+                ) c ON a.id = c.motion_id
                 ${where}
                 ORDER BY a.id DESC
                 LIMIT $${filterParams.length + 1} OFFSET $${filterParams.length + 2};
@@ -362,9 +362,9 @@ export async function getStatements(req: Request, res: Response) {
 
     res
       .status(200)
-      .json({ statements: statements.rows, total, page, pageSize });
+      .json({ motions: motions.rows, total, page, pageSize });
   } catch (err) {
     console.error(err);
-    res.status(200).json({ statements: [], total: 0, page: 1, pageSize: 12 });
+    res.status(200).json({ motions: [], total: 0, page: 1, pageSize: 12 });
   }
 }

@@ -42,7 +42,7 @@ const PodiumSideCard = ({
   const share = topScore > 0 ? (debater.score / topScore) * 100 : 0;
   // The season board carries no career counts, so the stat feet only appear
   // on a board that actually has them to show.
-  const hasCounts = debater.statementCount !== undefined;
+  const hasCounts = debater.motionCount !== undefined;
   return (
     <Link
       href={`/profile/${debater.username}`}
@@ -88,10 +88,10 @@ const PodiumSideCard = ({
           <div className="flex justify-between items-end">
             <div>
               <span className="block font-label text-[10px] text-outline uppercase">
-                Statements
+                Motions
               </span>
               <span className="font-label text-2xl font-bold text-on-background">
-                {debater.statementCount}
+                {debater.motionCount}
               </span>
             </div>
             <div className="text-right">
@@ -122,7 +122,7 @@ const Podium = ({
 }) => {
   const topScore = top[0]?.score ?? 0;
   const champion = top[0];
-  const hasCounts = champion.statementCount !== undefined;
+  const hasCounts = champion.motionCount !== undefined;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-0 mb-16 items-end">
@@ -178,10 +178,10 @@ const Podium = ({
                 <>
                   <div>
                     <span className="block font-label text-[10px] text-outline uppercase mb-1">
-                      Statements
+                      Motions
                     </span>
                     <span className="font-label text-3xl font-bold text-on-background">
-                      {champion.statementCount}
+                      {champion.motionCount}
                     </span>
                   </div>
                   <div>

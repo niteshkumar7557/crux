@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import commentRoutes from "./comment.route.js";
 import argumentRoutes from "./argument.route.js";
+import motionRoutes from "./motion.route.js";
 
 // Express 5 router internals: router.stack -> layers; layer.route.path,
 // layer.route.stack[n].name is the handler function's name.
@@ -15,36 +15,36 @@ export function routeMiddlewareNames(
   return layer ? layer.route.stack.map((s: any) => s.name) : [];
 }
 
-describe("comment routes", () => {
+describe("argument routes", () => {
   it("guards both post handlers with authMiddleware", () => {
-    for (const path of ["/affirmative/:id", "/negative/:id"]) {
-      expect(routeMiddlewareNames(commentRoutes, "post", path)).toContain(
+    for (const path of ["/:id/arguments/affirmative", "/:id/arguments/negative"]) {
+      expect(routeMiddlewareNames(argumentRoutes, "post", path)).toContain(
         "authMiddleware",
       );
     }
   });
 });
 
-describe("argument routes", () => {
-  it("guards statement posting with authMiddleware", () => {
-    expect(routeMiddlewareNames(argumentRoutes, "post", "/")).toContain(
+describe("motion routes", () => {
+  it("guards motion posting with authMiddleware", () => {
+    expect(routeMiddlewareNames(motionRoutes, "post", "/")).toContain(
       "authMiddleware",
     );
   });
 });
 
 describe("llm-cost routes carry an extra limiter layer", () => {
-  it("comment posts: authMiddleware then limiter then handler", () => {
+  it("argument posts: authMiddleware then limiter then handler", () => {
     const names = routeMiddlewareNames(
-      commentRoutes,
+      argumentRoutes,
       "post",
-      "/affirmative/:id",
+      "/:id/arguments/affirmative",
     );
     expect(names.length).toBe(3);
     expect(names[0]).toBe("authMiddleware");
   });
-  it("argument post: authMiddleware then limiter then handler", () => {
-    const names = routeMiddlewareNames(argumentRoutes, "post", "/");
+  it("motion post: authMiddleware then limiter then handler", () => {
+    const names = routeMiddlewareNames(motionRoutes, "post", "/");
     expect(names.length).toBe(3);
     expect(names[0]).toBe("authMiddleware");
   });

@@ -45,7 +45,7 @@ const BioEditor = ({ bio, onDone }: { bio: string; onDone: () => void }) => {
         rows={3}
         value={value}
         onChange={(e) => setValue(e.currentTarget.value)}
-        placeholder="Post some Statements to get to know about you."
+        placeholder="Post some Motions to get to know about you."
         className="w-full bg-surface-container-highest border-none text-on-surface p-4 focus:ring-1 focus:ring-primary placeholder:text-outline font-body text-base"
       />
       <div className="flex items-center justify-between gap-4 mt-3">

@@ -12,23 +12,23 @@ export const metadata: Metadata = {
 const RULES = [
   {
     title: "Every debate ends in 48 hours",
-    body: "The clock starts the moment a statement passes the Arbiter and goes live. There are no extensions and no early closes. At zero the arena locks read-only and an AI judge delivers a winner, a margin, an MVP, and a written verdict.",
+    body: "The clock starts the moment a motion passes the Arbiter and goes live. There are no extensions and no early closes. At zero the arena locks read-only and an AI judge delivers a winner, a margin, an MVP, and a written verdict.",
   },
   {
-    title: "Your first comment locks your side",
-    body: "Comment once and you are committed to that side for the rest of that debate — you cannot argue the other one. Replying locks you too, to the side opposite the comment you answer. The lock is per debate: take FOR in one and AGAINST in the next.",
+    title: "Your first argument locks your side",
+    body: "Argument once and you are committed to that side for the rest of that debate — you cannot argue the other one. Replying locks you too, to the side opposite the argument you answer. The lock is per debate: take FOR in one and AGAINST in the next.",
   },
   {
     title: "Reply to earn the most",
-    body: "Every comment is scored 1–8 on how much it moves the argument. A standalone comment is capped at 5, because it engages nothing specific. A reply to a named opponent reaches the full 8. The exception: while the opposing side is still empty there is nothing to reply to, so the cap does not apply.",
+    body: "Every argument is scored 1–8 on how much it moves the argument. A standalone argument is capped at 5, because it engages nothing specific. A reply to a named opponent reaches the full 8. The exception: while the opposing side is still empty there is nothing to reply to, so the cap does not apply.",
   },
   {
-    title: "Three comments at full value",
-    body: "Your first three comments in a debate score in full. The fourth and every one after is halved, with a floor of 1. Reposting a comment word for word is refused outright — yours or anyone else's — and making a point that has already been made on your side scores 1, however it is reworded. Volume never beats sharpness; flooding a debate is a losing strategy by arithmetic.",
+    title: "Three arguments at full value",
+    body: "Your first three arguments in a debate score in full. The fourth and every one after is halved, with a floor of 1. Reposting an argument word for word is refused outright — yours or anyone else's — and making a point that has already been made on your side scores 1, however it is reworded. Volume never beats sharpness; flooding a debate is a losing strategy by arithmetic.",
   },
   {
     title: "Attack the argument, never the person",
-    body: "Hit the reasoning as hard as you like — \"this logic collapses\" and \"that is factually wrong\" are fair play, rough phrasing included. Hit the person and the moderator flags it: the comment is discarded, it never reaches the arena, and it costs you 4 logic. Slurs, threats and spam are judged the same way, in any language.",
+    body: "Hit the reasoning as hard as you like — \"this logic collapses\" and \"that is factually wrong\" are fair play, rough phrasing included. Hit the person and the moderator flags it: the argument is discarded, it never reaches the arena, and it costs you 4 logic. Slurs, threats and spam are judged the same way, in any language.",
   },
   {
     title: "The margin decides it",
@@ -36,7 +36,7 @@ const RULES = [
   },
   {
     title: "Winning pays, losing costs the month",
-    body: "MVP earns +25, everyone else on the winning side +10, and the statement's author +5 for producing a real debate. A loss costs 5 points from your season score only — your all-time logic never falls. If one side never argues, the debate concludes unopposed and nobody scores at all.",
+    body: "MVP earns +25, everyone else on the winning side +10, and the motion's author +5 for producing a real debate. A loss costs 5 points from your season score only — your all-time logic never falls. If one side never argues, the debate concludes unopposed and nobody scores at all.",
   },
 ];
 
@@ -84,7 +84,7 @@ const Rules = () => {
         className="mt-6 border-l-2 border-outline-variant/20 pl-6 font-body text-sm text-on-surface-variant/80 leading-relaxed"
       >
         One house rule beyond the seven: posting is rate-limited — a handful of
-        statements or comments per minute per account. It keeps the arena
+        motions or arguments per minute per account. It keeps the arena
         human-paced and the judge honest. If you hit it, you&rsquo;ll be told
         exactly how long to wait.
       </p>
@@ -96,7 +96,7 @@ const Rules = () => {
         <p className="font-headline italic text-2xl text-on-surface mb-6">
           Agreed? Then say something worth fighting over.
         </p>
-        <Button href="/statement" size="lg">
+        <Button href="/motion/new" size="lg">
           Start a Debate
         </Button>
       </div>

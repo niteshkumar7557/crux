@@ -187,40 +187,40 @@ export async function getProfileActivity(req: Request, res: Response) {
         ),
         pool.query(
           `SELECT COUNT(*)::int                                                AS arguments,
-                  COUNT(*) FILTER (WHERE reply_to_comment_id IS NOT NULL)::int AS replies,
+                  COUNT(*) FILTER (WHERE reply_to_argument_id IS NOT NULL)::int AS replies,
                   COALESCE(ROUND(AVG(points)::numeric, 1), 0)::float           AS "avgLogic",
-                  (SELECT COUNT(*) FROM arguments WHERE user_id = $1)::int     AS statements
-           FROM comments WHERE user_id = $1;`,
+                  (SELECT COUNT(*) FROM motions WHERE user_id = $1)::int     AS motions
+           FROM arguments WHERE user_id = $1;`,
           [user.id],
         ),
         pool.query(
-          `SELECT c.points, c.argument_id AS "argumentId", a.content AS claim
-           FROM comments c JOIN arguments a ON a.id = c.argument_id
+          `SELECT c.points, c.motion_id AS "motionId", a.content AS claim
+           FROM arguments c JOIN motions a ON a.id = c.motion_id
            WHERE c.user_id = $1
            ORDER BY c.points DESC, c.id DESC LIMIT 1;`,
           [user.id],
         ),
         // One row per live debate they are in, carrying both facts: whether
-        // they authored it, and the side their FIRST comment locked (§4).
+        // they authored it, and the side their FIRST argument locked (§4).
         pool.query(
           `SELECT a.id, a.content AS claim, a.closes_at AS "closesAt",
                   (a.user_id = $1) AS "isAuthor",
-                  (SELECT c.side FROM comments c
-                    WHERE c.argument_id = a.id AND c.user_id = $1
+                  (SELECT c.side FROM arguments c
+                    WHERE c.motion_id = a.id AND c.user_id = $1
                     ORDER BY c.id ASC LIMIT 1) AS side
-           FROM arguments a
+           FROM motions a
            WHERE a.status = 'live'
              AND (a.user_id = $1
-                  OR EXISTS (SELECT 1 FROM comments c
-                              WHERE c.argument_id = a.id AND c.user_id = $1))
+                  OR EXISTS (SELECT 1 FROM arguments c
+                              WHERE c.motion_id = a.id AND c.user_id = $1))
            ORDER BY a.closes_at ASC LIMIT $2;`,
           [user.id, config.limits.profile_live_rows],
         ),
         pool.query(
-          `SELECT r.argument_id AS "argumentId", a.content AS claim, r.side,
+          `SELECT r.motion_id AS "motionId", a.content AS claim, r.side,
                   r.outcome, r.is_mvp AS "isMvp", a.margin,
                   r.created_at AS "concludedAt"
-           FROM debate_results r JOIN arguments a ON a.id = r.argument_id
+           FROM debate_results r JOIN motions a ON a.id = r.motion_id
            WHERE r.user_id = $1
            ORDER BY r.created_at DESC LIMIT $2;`,
           [user.id, config.limits.profile_history_rows],
@@ -235,7 +235,7 @@ export async function getProfileActivity(req: Request, res: Response) {
         arguments: craft.arguments,
         replies: craft.replies,
         avgLogic: craft.avgLogic,
-        statements: craft.statements,
+        motions: craft.motions,
         best: bestRes.rows[0] ?? null,
       },
       live: liveRes.rows,

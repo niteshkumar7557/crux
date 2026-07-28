@@ -11,7 +11,7 @@ export function verdictMessage(outcome: string, isMvp: boolean): string {
   return "The verdict is in — the debate ended in a draw.";
 }
 
-/** Someone replied directly to one of your comments (§14, the strongest pull). */
+/** Someone replied directly to one of your arguments (§14, the strongest pull). */
 export function replyMessage(actor: string): string {
   return `@${actor} replied directly to your argument.`;
 }

@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import ActiveArguments from "./_components/arena/ActiveArguments";
+import ActiveMotions from "./_components/arena/ActiveMotions";
 import ArenaSidebar from "./_components/arena/ArenaSidebar";
 
 const Home = () => {
@@ -9,7 +9,7 @@ const Home = () => {
 				{/* The feed reads its tab and page from the URL, so it needs a
 				    boundary to be prerendered around. */}
 				<Suspense fallback={null}>
-					<ActiveArguments />
+					<ActiveMotions />
 				</Suspense>
 			</div>
 			<ArenaSidebar />

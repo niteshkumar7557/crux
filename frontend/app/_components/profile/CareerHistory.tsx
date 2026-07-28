@@ -35,8 +35,8 @@ const CareerHistory = ({ history }: { history: HistoryRow[] }) => (
       <div className="space-y-px">
         {history.map((r, i) => (
           <Link
-            key={r.argumentId}
-            href={`/debate/${debateSlug(r.claim, r.argumentId)}`}
+            key={r.motionId}
+            href={`/debate/${debateSlug(r.claim, r.motionId)}`}
             className={`grid grid-cols-12 items-center gap-3 px-5 py-5 ${
               i % 2 === 0 ? "bg-surface" : "bg-surface-container-lowest"
             } hover:bg-surface-container-low transition-colors border-l-2 border-transparent hover:border-primary`}

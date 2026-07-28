@@ -3,7 +3,7 @@ import Image from "next/image";
 // Brand avatar. With a `src` (preset or custom upload, served by the
 // backend behind the /api rewrite) it shows the image; without one it
 // falls back to initials on a surface chip, accent derived from the
-// username so the feed varies without images. Comment cards override
+// username so the feed varies without images. Argument cards override
 // the accent to match their stance side.
 const SIZES = {
   sm: "w-6 h-6 text-[9px]",

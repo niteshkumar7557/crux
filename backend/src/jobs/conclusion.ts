@@ -12,7 +12,7 @@ async function tick(): Promise<void> {
   running = true;
   try {
     const due = await pool.query(
-      `SELECT id FROM arguments
+      `SELECT id FROM motions
        WHERE status = 'live' AND closes_at <= NOW()
        ORDER BY closes_at ASC
        LIMIT $1

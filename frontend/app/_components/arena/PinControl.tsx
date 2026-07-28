@@ -15,17 +15,17 @@ const CHIP =
   "font-label text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border transition-colors disabled:cursor-not-allowed";
 
 const PinControl = ({
-  argumentId,
+  motionId,
   pinned,
-  isDotd,
+  isMotd,
 }: {
-  argumentId: number;
+  motionId: number;
   pinned: boolean;
-  isDotd: boolean;
+  isMotd: boolean;
 }) => {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [stage, setStage] = useState({ pinned, isDotd });
-  const [busy, setBusy] = useState<"pin" | "dotd" | null>(null);
+  const [stage, setStage] = useState({ pinned, isMotd });
+  const [busy, setBusy] = useState<"pin" | "motd" | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -46,7 +46,7 @@ const PinControl = ({
   const togglePin = async () => {
     setBusy("pin");
     try {
-      const { data } = await api.post(`/admin/pin/${argumentId}`);
+      const { data } = await api.post(`/admin/pin/${motionId}`);
       // Trust the row the server actually wrote, not an optimistic flip.
       setStage((s) => ({ ...s, pinned: Boolean(data.pinned) }));
     } catch {
@@ -57,10 +57,10 @@ const PinControl = ({
   };
 
   const crown = async () => {
-    setBusy("dotd");
+    setBusy("motd");
     try {
-      await api.post(`/admin/dotd/${argumentId}`);
-      setStage((s) => ({ ...s, isDotd: true }));
+      await api.post(`/admin/motd/${motionId}`);
+      setStage((s) => ({ ...s, isMotd: true }));
     } catch {
       /* as above */
     } finally {
@@ -69,7 +69,7 @@ const PinControl = ({
   };
 
   // Dim only while a request is in flight. The `disabled:` variant would also
-  // dim "Debate of the Day", which is an *active* state, not a dead control.
+  // dim "Motion of the Day", which is an *active* state, not a dead control.
   const pending = busy !== null ? "opacity-60" : "";
 
   return (
@@ -96,20 +96,20 @@ const PinControl = ({
       <button
         type="button"
         onClick={crown}
-        disabled={busy !== null || stage.isDotd}
-        aria-pressed={stage.isDotd}
+        disabled={busy !== null || stage.isMotd}
+        aria-pressed={stage.isMotd}
         title={
-          stage.isDotd
-            ? "Already the Debate of the Day."
-            : "Crown this the Debate of the Day until tomorrow."
+          stage.isMotd
+            ? "Already the Motion of the Day."
+            : "Crown this the Motion of the Day until tomorrow."
         }
         className={`${CHIP} ${pending} ${
-          stage.isDotd
+          stage.isMotd
             ? "text-tertiary border-tertiary/40"
             : "text-outline border-outline/30 hover:text-tertiary hover:border-tertiary/40"
         }`}
       >
-        {stage.isDotd ? "Debate of the Day" : "Make DotD"}
+        {stage.isMotd ? "Motion of the Day" : "Make MotD"}
       </button>
     </span>
   );

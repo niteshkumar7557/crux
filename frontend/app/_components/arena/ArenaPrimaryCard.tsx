@@ -3,7 +3,7 @@ import { PrimaryCardDataType } from "@/app/types";
 import Avatar from "@/app/_components/ui/Avatar";
 import Button from "@/app/_components/ui/Button";
 import ScoreBar from "./ScoreBar";
-import Countdown from "@/app/_components/argument/Countdown";
+import Countdown from "@/app/_components/motion/Countdown";
 import { settledSide } from "./settledSides";
 import { LuBadgeCheck, LuMessageSquare } from "react-icons/lu";
 
@@ -12,13 +12,13 @@ const ArenaPrimaryCard = ({
   avatar,
   domain,
   content,
-  count_comments,
+  count_arguments,
   affirmative,
   negative,
-  argumentId,
+  motionId,
   status,
   closesAt,
-  isDotd,
+  isMotd,
 }: PrimaryCardDataType) => {
   return (
     <div
@@ -30,7 +30,7 @@ const ArenaPrimaryCard = ({
           <Avatar username={username} src={avatar} size="md" />
           <div className="flex flex-col">
             <span className="font-label text-[10px] text-primary uppercase tracking-[0.2em]">
-              {isDotd ? "Debate of the Day" : "Proposed By"}
+              {isMotd ? "Motion of the Day" : "Proposed By"}
             </span>
             <span className="font-body text-xs font-bold text-on-surface">
               {username}
@@ -49,8 +49,8 @@ const ArenaPrimaryCard = ({
       </h2>
       <div className="flex gap-5 border-b border-outline-variant/40 pb-5">
         <span className="font-label text-xs text-outline uppercase tracking-widest">
-          <LuMessageSquare className="inline text-primary" /> {count_comments}{" "}
-          {count_comments === 1 ? "Argument" : "Arguments"}
+          <LuMessageSquare className="inline text-primary" /> {count_arguments}{" "}
+          {count_arguments === 1 ? "Argument" : "Arguments"}
         </span>
       </div>
       <div className="py-5">
@@ -68,7 +68,7 @@ const ArenaPrimaryCard = ({
           size="lg"
         />
         <div className="mt-7 flex justify-between items-center gap-4">
-          <Button href={`/argument/CRX-${argumentId}-A`} variant="outline" size="sm">Enter Argument</Button>
+          <Button href={`/motion/CRX-${motionId}-A`} variant="outline" size="sm">Enter the Debate</Button>
         </div>
       </div>
     </div>

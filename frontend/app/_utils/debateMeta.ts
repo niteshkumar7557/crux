@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import serverApi from "@/app/axios.server";
-import { truncate } from "@/app/_components/argument/verdictCard";
+import { truncate } from "@/app/_components/motion/verdictCard";
 import { debateSlug } from "@/app/_utils/slugify";
 
 // §11 SEO: shared metadata for a debate, canonicalised to /debate/<slug> so both
-// the /argument/CRX-… and /debate/… routes consolidate onto one indexable URL.
-// The OG image reuses the existing /argument OG generator.
+// the /motion/CRX-… and /debate/… routes consolidate onto one indexable URL.
+// The OG image reuses the existing /motion OG generator.
 export async function buildDebateMetadata(id: number): Promise<Metadata> {
   if (!Number.isInteger(id) || id <= 0) return {};
   try {
-    const { data } = await serverApi.get(`/argument/${id}`);
+    const { data } = await serverApi.get(`/motion/${id}`);
     const row = data?.data;
     if (!row) return {};
     const claim = truncate(String(row.content), 70);
@@ -26,7 +26,7 @@ export async function buildDebateMetadata(id: number): Promise<Metadata> {
         title: claim,
         description,
         url: canonical,
-        images: [`/argument/CRX-${id}-A/opengraph-image`],
+        images: [`/motion/CRX-${id}-A/opengraph-image`],
       },
       twitter: { card: "summary_large_image" },
     };

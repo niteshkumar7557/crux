@@ -1,4 +1,4 @@
-import DebateView from "@/app/_components/argument/DebateView";
+import DebateView from "@/app/_components/motion/DebateView";
 import { buildDebateMetadata } from "@/app/_utils/debateMeta";
 import { idFromSlug } from "@/app/_utils/slugify";
 import type { Metadata } from "next";

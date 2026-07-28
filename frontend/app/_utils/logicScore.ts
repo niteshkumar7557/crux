@@ -1,4 +1,4 @@
-// The §9 tier ladder, as data — one source for the reputation shown on comment
+// The §9 tier ladder, as data — one source for the reputation shown on argument
 // cards and the profile's progress bar. A score maps to a tier name and nothing
 // else; the letter grades that used to ride alongside are gone.
 //
@@ -65,7 +65,7 @@ export function tierProgress(score: number): TierProgress {
 
 /**
  * Maps a raw logic score to the reputation tier shown across the arena
- * (comment cards, leaderboard standings).
+ * (argument cards, leaderboard standings).
  */
 export function convertLogicScore(score: number) {
   const p = tierProgress(score);

@@ -1,152 +1,446 @@
-import type { Response, Request } from "express";
+import type { Request, Response } from "express";
 import pool from "../db/index.js";
 import { llmJson } from "../ai/llm.js";
-import { DEBATER_PROFILER_SYSTEM_PROMPT } from "../ai/prompts/debater-profiler.prompt.js";
-import { OPENING_ANALYST_SYSTEM_PROMPT } from "../ai/prompts/opening-analyst.prompt.js";
+import {
+  buildAnalystPrompt,
+  buildProbabilityPrompt,
+  scoreArgument,
+  type OwnSideArgument,
+  type ReplyTarget,
+} from "../ai/analyst.logic.js";
+import { findDuplicate } from "../lib/duplicate.logic.js";
+import {
+  isEmptyAnalysis,
+  readAnalysis,
+  renderAnalysisForPrompt,
+  renderOwnAnalysisForAnalyst,
+  sanitizeAnalysis,
+  writeAnalysis,
+} from "../ai/analysis.logic.js";
+import { MODERATOR_ANALYST_SYSTEM_PROMPT } from "../ai/prompts/moderator-analyst.prompt.js";
+import { PROBABILITY_SYSTEM_PROMPT } from "../ai/prompts/probability.prompt.js";
+import { notifyOpposition, notifyReply } from "../notifications/notify.js";
+import { awardLogic } from "../economy/logic.js";
+import { currentSeasonStart } from "../economy/season.logic.js";
 import { checkText } from "../lib/validate.js";
-import { readAnalysis, sanitizeAnalysis, writeAnalysis } from "../ai/analysis.logic.js";
+import logger from "../lib/logger.js";
 
-async function updateDesciption(user_id: number) {
+async function updateProbability(motionId: number) {
   const { rows } = await pool.query(
     `
-            SELECT content
-            FROM arguments
-            WHERE user_id = $1
-            ORDER BY id DESC
-            LIMIT 25;
+            SELECT content, for_analysis, against_analysis, affirmative, negative
+            FROM motions
+            WHERE id = $1;
         `,
-    [user_id],
+    [motionId],
   );
-  const allPastArguments = rows;
 
-  const userPrompt = `ARGUMENTS POSTED:
-${allPastArguments.map((r: { content: string }, i: number) => `${i + 1}. "${r.content}"`).join("\n")}`;
+  // The argument that just landed — the delta this nudge reacts to.
+  const { rows: latest } = await pool.query(
+    `
+            SELECT c.content, c.side, u.name AS username
+            FROM arguments c
+            JOIN users u ON u.id = c.user_id
+            WHERE c.motion_id = $1
+            ORDER BY c.created_at DESC
+            LIMIT 1;
+        `,
+    [motionId],
+  );
+  if (latest.length === 0) return;
+
+  const userPrompt = buildProbabilityPrompt({
+    motion: rows[0].content,
+    priorAffirmative: rows[0].affirmative,
+    priorNegative: rows[0].negative,
+    forAnalysis: renderAnalysisForPrompt(readAnalysis(rows[0].for_analysis)),
+    againstAnalysis: renderAnalysisForPrompt(
+      readAnalysis(rows[0].against_analysis),
+    ),
+    latest: {
+      username: latest[0].username,
+      side: latest[0].side,
+      content: latest[0].content,
+    },
+  });
 
   const parsed = await llmJson({
-    system: DEBATER_PROFILER_SYSTEM_PROMPT,
+    system: PROBABILITY_SYSTEM_PROMPT,
     user: userPrompt,
-    temperature: 0.6,
-    maxTokens: 500,
+    maxTokens: 2000,
   });
+
+  const affirmative = Math.round(parsed.affirmative);
+  const negative = 100 - affirmative;
 
   await pool.query(
     `
-            UPDATE users
-            SET description = $2
+            UPDATE motions
+            SET affirmative = $1,
+                negative = $2
+            WHERE id = $3
+        `,
+    [affirmative, negative, motionId],
+  );
+}
+
+async function moderateAndAnalyze(
+  motionId: number,
+  side: string,
+  authorUsername: string,
+  input: string,
+  first: boolean = false,
+  replyTo: ReplyTarget | null = null,
+  ownSideArguments: OwnSideArgument[] = [],
+  newArgumentId: number | null = null,
+) {
+  const motionRes = await pool.query(
+    `
+            SELECT content, for_analysis, against_analysis
+            FROM motions
             WHERE id = $1;
         `,
-    [user_id, parsed.newDescription],
+    [motionId],
   );
+  const motionContent = motionRes.rows[0].content;
+
+  const own = readAnalysis(
+    side === "for" ? motionRes.rows[0].for_analysis : motionRes.rows[0].against_analysis,
+  );
+  const opponent = readAnalysis(
+    side === "for" ? motionRes.rows[0].against_analysis : motionRes.rows[0].for_analysis,
+  );
+
+  const userPrompt = buildAnalystPrompt({
+    motion: motionContent,
+    side: side as "for" | "against",
+    // The username, not the display name: OWN SIDE ARGUMENTS lists @handles, and
+    // the restatement rule asks the model to compare this author against them.
+    author: authorUsername,
+    // Own side carries its argument ids so a kept point keeps its link;
+    // the opponent's is context only, so its ids would just be noise.
+    ownAnalysis: renderOwnAnalysisForAnalyst(own),
+    opponentAnalysis: renderAnalysisForPrompt(opponent),
+    ownIsFirst: first,
+    argument: input,
+    replyTo,
+    ownSideArguments,
+    newArgumentId,
+  });
+
+  const parsed = await llmJson({
+    system: MODERATOR_ANALYST_SYSTEM_PROMPT,
+    user: userPrompt,
+    maxTokens: 3000,
+  });
+
+  return parsed as {
+    abused: boolean;
+    points: number;
+    newAnalysis: unknown;
+  };
 }
 
-export async function addNewArgument(req: Request, res: Response) {
-  const userId = req.user!.id;
-  const data: {
-    content: string;
-    content_keyword: string;
-    domain: string;
-    selected_domain?: string;
-  } = req.body;
-
-  const content = checkText(req.body?.content, { field: "content", max: 1000 });
-  if (!content.ok) return res.status(400).json({ error: content.reason });
-  const keyword = checkText(req.body?.content_keyword, {
-    field: "content_keyword",
-    max: 200,
-  });
-  if (!keyword.ok) return res.status(400).json({ error: keyword.reason });
-  const domainIn = checkText(req.body?.domain, { field: "domain", max: 100 });
-  if (!domainIn.ok) return res.status(400).json({ error: domainIn.reason });
-
-  const domainResult = await pool.query(
+export async function getArguments(req: Request, res: Response) {
+  const { id } = req.params;
+  const argumentsRes = await pool.query(
     `
-        SELECT id, name FROM domains
-        WHERE name = $1 OR name = $2
-        ORDER BY (name = $1) DESC
-        LIMIT 1;
+            SELECT c.id AS argument_id, u.username, u.avatar, c.side, u.logic_score,
+                   c.content, c.likes, c.points, c.created_at, u.id AS post_user_id,
+                   c.reply_to_argument_id,
+                   ru.username AS reply_to_username,
+                   rc.content  AS reply_to_content
+            FROM arguments c
+            JOIN users u ON c.user_id = u.id
+            LEFT JOIN arguments rc ON rc.id = c.reply_to_argument_id
+            LEFT JOIN users    ru ON ru.id = rc.user_id
+            WHERE c.motion_id = $1
+            ORDER BY c.created_at ASC, c.id ASC;
         `,
-    [domainIn.value, data.selected_domain ?? ""],
+    [Number(id)],
   );
-  if (domainResult.rows.length === 0) {
-    return res.status(400).json({ error: "Unknown domain." });
-  }
-  const { id: domainId, name: domainName } = domainResult.rows[0];
+  res.status(200).json({ arguments: argumentsRes.rows });
+}
 
-  const userPrompt = `Statement: ${content.value}
-Domain: ${domainName}`;
+async function postArgument(req: Request, res: Response, side: "for" | "against") {
+  const { id } = req.params;
+  const userId = req.user!.id; // authMiddleware ran; body userId is ignored
+  const { input } = req.body;
+  const motionId = Number(id);
+
+  const checkedInput = checkText(input, { field: "input", max: 2000 });
+  if (!checkedInput.ok)
+    return res.status(400).json({ error: checkedInput.reason });
+
+  const rawReplyTo = req.body.replyToArgumentId;
+  const replyToArgumentId =
+    rawReplyTo === null || rawReplyTo === undefined || rawReplyTo === ""
+      ? null
+      : Number(rawReplyTo);
 
   try {
-    const parsed = await llmJson({
-      system: OPENING_ANALYST_SYSTEM_PROMPT,
-      user: userPrompt,
-      maxTokens: 3000,
-    });
-
-    const { rows } = await pool.query(
-      `
-        INSERT INTO arguments (user_id, content_keyword, content, domain_id, for_analysis, against_analysis, closes_at)
-        VALUES ($1,$2,$3,$4,$5,$6, NOW() + INTERVAL '48 hours')
-        RETURNING id;
-        `,
-      [
-        userId,
-        keyword.value,
-        content.value,
-        domainId,
-        // Nobody has commented, so there is nobody to credit: an empty author
-        // map nulls any id the model invented for its own draft points.
-        writeAnalysis(sanitizeAnalysis(parsed.for_analysis, new Map())),
-        writeAnalysis(sanitizeAnalysis(parsed.against_analysis, new Map())),
-      ],
-    );
-
-    try {
-      await updateDesciption(userId);
-    } catch (err) {
-      console.error(err);
+    if (replyToArgumentId !== null && !Number.isInteger(replyToArgumentId)) {
+      return res.status(409).json({ reason: "bad_reply_target" });
     }
 
-    return res.status(200).json({
-      id: rows[0].id,
-      message: `Argument with id: ${rows[0].id} added successfully!`,
+    // Arena is read-only once concluded.
+    const statusRes = await pool.query(
+      `SELECT status, user_id AS author_id FROM motions WHERE id = $1`,
+      [motionId],
+    );
+    if (statusRes.rows.length === 0) {
+      return res.status(404).json({ error: "Motion not found." });
+    }
+    if (statusRes.rows[0].status !== "live") {
+      return res.status(409).json({ reason: "locked" });
+    }
+    const authorId: number = statusRes.rows[0].author_id;
+
+    // Commit-to-one-side (§4): the user's first argument locks their side.
+    const sideRes = await pool.query(
+      `SELECT side FROM arguments WHERE motion_id = $1 AND user_id = $2 LIMIT 1`,
+      [motionId, userId],
+    );
+    const lockedSide: "for" | "against" | null = sideRes.rows[0]?.side ?? null;
+
+    // §5: a reply targets a specific argument on the OPPOSING side. Validated
+    // here, server-side, before the LLM call -- cross-side-only is a rule, not
+    // a UI convention, so it cannot be bypassed by posting straight at the API.
+    let effectiveSide: "for" | "against" = side;
+    let replyTarget: ReplyTarget | null = null;
+    let replyTargetUserId: number | null = null;
+
+    if (replyToArgumentId !== null) {
+      const t = await pool.query(
+        `SELECT c.side, c.user_id, c.content, u.username
+         FROM arguments c JOIN users u ON u.id = c.user_id
+         WHERE c.id = $1 AND c.motion_id = $2`,
+        [replyToArgumentId, motionId],
+      );
+      if (t.rows.length === 0) {
+        return res.status(409).json({ reason: "bad_reply_target" });
+      }
+      const target = t.rows[0];
+      const requiredSide: "for" | "against" =
+        target.side === "for" ? "against" : "for";
+
+      // Already locked to the target's own side => this would be a same-side
+      // reply, which §5 forbids.
+      if (lockedSide !== null && lockedSide !== requiredSide) {
+        return res.status(409).json({ reason: "bad_reply_target" });
+      }
+
+      // Derive the side from the target, never from the URL: replying commits
+      // you to the side opposite the argument you are answering (§5).
+      effectiveSide = requiredSide;
+      replyTarget = { username: target.username, content: target.content };
+      replyTargetUserId = target.user_id;
+    } else if (lockedSide !== null && lockedSide !== side) {
+      return res.status(409).json({ reason: "side_locked" });
+    }
+
+    // The motion's author owns the affirmative case: they may only argue FOR
+    // their own claim, never against it (whether by a direct post or a reply
+    // that would derive AGAINST). Enforced server-side so it holds even if the
+    // UI's disabled button is bypassed.
+    if (userId === Number(authorId) && effectiveSide === "against") {
+      return res.status(409).json({ reason: "author_affirmative_only" });
+    }
+
+    // Every argument already in this debate, read once: the side counts, the
+    // user's own prior count, the repost check and the analyst's OWN SIDE
+    // ARGUMENTS block are all views of the same rows. Captured before the
+    // insert, so a user's first argument sees priorCount 0.
+    const { rows: existing } = await pool.query(
+      `SELECT c.id, c.user_id, c.side, c.content, u.username
+       FROM arguments c JOIN users u ON u.id = c.user_id
+       WHERE c.motion_id = $1
+       ORDER BY c.created_at ASC, c.id ASC`,
+      [motionId],
+    );
+
+    // §6: a verbatim repost scores nothing, whether you are repeating yourself
+    // or lifting somebody else's proven argument. Refused here — before the
+    // model is called — so the exploit costs the attacker a round trip and us
+    // no tokens. Paraphrase is the analyst's job (see the restatement rule).
+    const dupe = findDuplicate(checkedInput.value, existing.map((c) => ({
+      userId: Number(c.user_id),
+      username: String(c.username),
+      content: String(c.content),
+    })), userId);
+    if (dupe.duplicate) {
+      return res.status(409).json({
+        reason: dupe.of === "self" ? "duplicate_own" : "duplicate_other",
+        ...(dupe.of === "other" ? { username: dupe.username } : {}),
+      });
+    }
+
+    // Pre-insert side counts drive the opener exception (own side still empty)
+    // and §6's standalone-cap exemption (opposing side still empty).
+    const ownSideRows = existing.filter((c) => c.side === effectiveSide);
+    const oppSideCount = existing.length - ownSideRows.length;
+    const first = ownSideRows.length === 0;
+    const priorCount = existing.filter(
+      (c) => Number(c.user_id) === userId,
+    ).length;
+
+    // The analyst has to attribute a point to this argument, but the row is not
+    // inserted until after it runs (an abusive argument is never inserted at
+    // all). So the id is taken from the sequence up front and the INSERT uses
+    // it explicitly. A post that fails just leaves a gap in the numbering.
+    const idRes = await pool.query(
+      `SELECT nextval(pg_get_serial_sequence('arguments','id'))::int AS id,
+              (SELECT username FROM users WHERE id = $1) AS username`,
+      [userId],
+    );
+    const newArgumentId = Number(idRes.rows[0].id);
+    const authorUsername = String(idRes.rows[0].username);
+
+    const { abused, points, newAnalysis } = await moderateAndAnalyze(
+      motionId,
+      effectiveSide,
+      authorUsername,
+      checkedInput.value,
+      first,
+      replyTarget,
+      ownSideRows.map((c) => ({
+        id: Number(c.id),
+        username: String(c.username),
+        content: String(c.content),
+      })),
+      newArgumentId,
+    );
+
+    if (abused) {
+      await awardLogic(pool, userId, -4, "abuse");
+      return res.status(201).json({ abused: true });
+    }
+
+    // §6: clamp to 1-8 -> standalone cap -> halving, in that order.
+    const breakdown = scoreArgument({
+      rawPoints: points,
+      isReply: replyToArgumentId !== null,
+      opponentHasArguments: oppSideCount > 0,
+      priorCount,
+    });
+
+    // §14: the award is stored on the row so the arena can show what each
+    // argument earned without recomputing it. Insert + award + analysis commit
+    // or roll back together — a failure between them must never leave a
+    // half-persisted argument (CODEBASE_GUIDE §9 gap).
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query(
+        `INSERT INTO arguments (id, motion_id, user_id, content, side, reply_to_argument_id, points)
+         VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+        [
+          newArgumentId,
+          motionId,
+          userId,
+          checkedInput.value,
+          effectiveSide,
+          replyToArgumentId,
+          breakdown.points,
+        ],
+      );
+      await awardLogic(client, userId, breakdown.points, "argument");
+      // Attribution is resolved against this side's real arguments, including
+      // the one being inserted right now — so an id the model invented costs a
+      // point its link and nothing more. An analysis that sanitizes to empty
+      // means "no update", and the previous one stands.
+      const authorByArgumentId = new Map<number, string>(
+        ownSideRows.map((c) => [Number(c.id), String(c.username)]),
+      );
+      authorByArgumentId.set(newArgumentId, authorUsername);
+      const analysis = sanitizeAnalysis(newAnalysis, authorByArgumentId);
+      if (!isEmptyAnalysis(analysis)) {
+        await client.query(
+          `UPDATE motions SET ${effectiveSide}_analysis = $1 WHERE id = $2;`,
+          [writeAnalysis(analysis), motionId],
+        );
+      }
+      await client.query("COMMIT");
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
+    }
+
+    // §14 return triggers, both best-effort — neither blocks the response.
+    if (replyTargetUserId !== null) {
+      void notifyReply(motionId, replyTargetUserId, userId);
+    }
+    if (priorCount === 0) {
+      void notifyOpposition(motionId, effectiveSide, userId);
+    }
+
+    const { rows } = await pool.query(
+      `
+        SELECT
+            COUNT(CASE WHEN side = 'for' THEN 1 END) AS for_count,
+            COUNT(CASE WHEN side = 'against' THEN 1 END) AS against_count
+        FROM arguments
+        WHERE motion_id = $1;
+    `,
+      [motionId],
+    );
+
+    const forCount = Number(rows[0].for_count);
+    const againstCount = Number(rows[0].against_count);
+
+    if (forCount >= 1 && againstCount >= 1) {
+      // Best-effort: the argument is already committed; a rate-limited or failed
+      // probability call must not turn a successful post into a 500
+      // (CODEBASE_GUIDE §9 gap).
+      try {
+        await updateProbability(motionId);
+      } catch (err) {
+        logger.warn(
+          { motionId, err: String(err) },
+          "probability nudge failed",
+        );
+      }
+    }
+
+    // §14: the season standing the points pop-up reconciles the award against.
+    // Rank is "how many people are strictly ahead, plus one".
+    const standing = await pool.query(
+      `WITH totals AS (
+         SELECT user_id, SUM(amount)::int AS logic
+         FROM logic_events
+         WHERE created_at >= $1
+         GROUP BY user_id
+       ), mine AS (
+         SELECT COALESCE((SELECT logic FROM totals WHERE user_id = $2), 0) AS logic
+       )
+       SELECT (SELECT logic FROM mine) AS season_logic,
+              (SELECT COUNT(*) + 1 FROM totals
+                WHERE logic > (SELECT logic FROM mine))::int AS season_rank`,
+      [currentSeasonStart(), userId],
+    );
+
+    res.status(201).json({
+      points: breakdown.points,
+      judged: breakdown.judged,
+      capped: breakdown.capped,
+      halved: breakdown.halved,
+      isReply: replyToArgumentId !== null,
+      replyToUsername: replyTarget?.username ?? null,
+      seasonLogic: standing.rows[0].season_logic,
+      seasonRank: standing.rows[0].season_rank,
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to create the argument." });
+    console.log(err);
+    res.status(500).json({ error: "Error in argument posting!" });
   }
 }
 
-export async function getArgumentById(req: Request, res: Response) {
-  const { id } = req.params;
-  try {
-    const { rows } = await pool.query(
-      `
-                SELECT a.*, d.name AS domain,
-                       mvp.username AS mvp_username,
-                       author.username AS author_username,
-                       author.avatar AS author_avatar
-                FROM arguments a
-                JOIN domains d ON d.id = a.domain_id
-                JOIN users author ON author.id = a.user_id
-                LEFT JOIN users mvp ON mvp.id = a.mvp_user_id
-                WHERE a.id = $1;
-            `,
-      [id],
-    );
-    // The analyses leave here already parsed. Both the arena panel and the
-    // certificate image read this one endpoint, so parsing server-side means
-    // there is no second reader on the frontend to drift out of sync — and
-    // rows still holding the old Markdown are handled in exactly one place.
-    const row = rows[0];
-    res.status(200).json({
-      data: row && {
-        ...row,
-        for_analysis: readAnalysis(row.for_analysis),
-        against_analysis: readAnalysis(row.against_analysis),
-      },
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Internal server error!" });
-  }
+export async function postAffirmativeArgument(req: Request, res: Response) {
+  return postArgument(req, res, "for");
+}
+
+export async function postNegativeArgument(req: Request, res: Response) {
+  return postArgument(req, res, "against");
 }

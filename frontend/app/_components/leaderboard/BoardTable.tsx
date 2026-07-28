@@ -12,7 +12,7 @@ const BoardTable = ({
   rows: BoardRow[];
   metric: string;
 }) => {
-  const hasCounts = rows.some((r) => r.statementCount !== undefined);
+  const hasCounts = rows.some((r) => r.motionCount !== undefined);
 
   return (
     <div>
@@ -31,7 +31,7 @@ const BoardTable = ({
         {hasCounts && (
           <>
             <div className="hidden md:block md:col-span-2 font-label text-[10px] text-outline uppercase tracking-widest text-right">
-              Statements
+              Motions
             </div>
             <div className="hidden md:block md:col-span-2 font-label text-[10px] text-outline uppercase tracking-widest text-right">
               Arguments
@@ -73,7 +73,7 @@ const BoardTable = ({
             {hasCounts && (
               <>
                 <div className="hidden md:block md:col-span-2 text-right font-label text-lg font-medium text-on-surface-variant">
-                  {debater.statementCount}
+                  {debater.motionCount}
                 </div>
                 <div className="hidden md:block md:col-span-2 text-right font-label text-lg font-medium text-on-background">
                   {debater.argumentCount}

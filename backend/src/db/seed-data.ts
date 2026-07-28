@@ -8,7 +8,7 @@ import config from "../config/index.js";
 //   seed-stress.ts — base data + millions of generated rows for query stress tests
 //
 // insertBaseData() wipes the tables and inserts the 30 real users + 30 real
-// statements. Every account logs in with the password "secret".
+// motions. Every account logs in with the password "secret".
 // Refresh tokens are NOT seeded — they're created on login/register.
 
 export const randInt = (min: number, max: number) =>
@@ -51,16 +51,16 @@ export const USERS: SeedUser[] = [
 	["Rita Gomez", "rita_gomez", 11, "Lurked for a year. Posting era begins."],
 	["David Osei", "osei_thinks", 9, "Testing ideas in public, on purpose."],
 	["Emma Lind", "emma_lind", 5, "Reads everything. Posts when it matters."],
-	["Yuki Sato", "yuki_sato", 2, "First statement loading…"],
-	["Ravi Menon", "ravi_menon", 0, "Post some Statements to get to know about you."],
+	["Yuki Sato", "yuki_sato", 2, "First motion loading…"],
+	["Ravi Menon", "ravi_menon", 0, "Post some Motions to get to know about you."],
 ];
 
 // ============================================================
-// STATEMENTS — [author index, claim, keyword, domain, affirmative]
-// (negative = 100 - affirmative; analyses and comments are templated below)
+// MOTIONS — [author index, claim, keyword, domain, affirmative]
+// (negative = 100 - affirmative; analyses and arguments are templated below)
 // ============================================================
-type SeedStatement = [number, string, string, string, number];
-export const STATEMENTS: SeedStatement[] = [
+type SeedMotion = [number, string, string, string, number];
+export const MOTIONS: SeedMotion[] = [
 	[0, "AI should be granted legal personhood.", "legal personhood", "Technology & AI", 54],
 	[1, "Social media does more harm than good to society.", "more harm", "Society & Culture", 62],
 	[2, "Universal basic income is necessary for the future of work.", "basic income", "Economics & Business", 48],
@@ -94,7 +94,7 @@ export const STATEMENTS: SeedStatement[] = [
 ];
 
 // ============================================================
-// Templated analyses & comments — dev data, doesn't need to be unique
+// Templated analyses & arguments — dev data, doesn't need to be unique
 // ============================================================
 const FOR_POINTS = [
 	"The empirical evidence consistently supports this position",
@@ -114,7 +114,7 @@ const AGAINST_POINTS = [
 	"The burden of proof has not been met for a change this large",
 	"Real trade-offs are being hidden, not resolved",
 ];
-export const FOR_COMMENTS = [
+export const FOR_ARGUMENTS = [
 	"The against side keeps attacking a strawman version of this claim.",
 	"Once you separate the hype from the data, the case for this is solid.",
 	"Every serious objection here has already been answered upthread.",
@@ -122,7 +122,7 @@ export const FOR_COMMENTS = [
 	"Follow the incentives of whoever opposes this and the picture gets clearer.",
 	"The burden of proof was met; refusing to update is the real bias.",
 ];
-export const AGAINST_COMMENTS = [
+export const AGAINST_ARGUMENTS = [
 	"Extraordinary claims need extraordinary evidence, and this isn't it.",
 	"This confuses a trend with an inevitability.",
 	"The for side is pricing in the benefits and ignoring the costs.",
@@ -132,21 +132,21 @@ export const AGAINST_COMMENTS = [
 ];
 
 // The structured analysis shape (see ai/analysis.logic.ts). Seeded points are
-// the AI's opening draft, so they carry no commentId — nobody argued them.
+// the AI's opening draft, so they carry no argumentId — nobody argued them.
 const analysis = (lead: string, points: string[]) =>
 	JSON.stringify({
 		lead,
-		points: sample(points, 3).map((text) => ({ author: null, commentId: null, text })),
+		points: sample(points, 3).map((text) => ({ author: null, argumentId: null, text })),
 	});
 
 // ============================================================
 // Base insert — truncate everything, then seed the 30 real users
-// and 30 real statements. Returns what the callers build on:
-// the shared bcrypt hash and each statement's created_at.
+// and 30 real motions. Returns what the callers build on:
+// the shared bcrypt hash and each motion's created_at.
 // ============================================================
 export const insertBaseData = async (
 	client: PoolClient,
-): Promise<{ hashedPassword: string; statementTimes: Date[] }> => {
+): Promise<{ hashedPassword: string; motionTimes: Date[] }> => {
 	const presets = await listPresets();
 	if (presets.length === 0) {
 		throw new Error("no preset avatars found — cannot assign user avatars");
@@ -154,7 +154,7 @@ export const insertBaseData = async (
 
 	// Idempotent: re-running a seed resets the dummy data (and ids)
 	await client.query(
-		"TRUNCATE users, arguments, comments, refresh_tokens RESTART IDENTITY CASCADE",
+		"TRUNCATE users, motions, arguments, refresh_tokens RESTART IDENTITY CASCADE",
 	);
 
 	// One shared hash: bcrypt-ing thousands of passwords individually would take minutes
@@ -186,10 +186,10 @@ export const insertBaseData = async (
 	);
 	console.log(`✅ Seeded ${USERS.length} unique users`);
 
-	// Statements staggered over the last ~45 days
+	// Motions staggered over the last ~45 days
 	const now = Date.now();
 	const HOUR = 60 * 60 * 1000;
-	const statementTimes = STATEMENTS.map(
+	const motionTimes = MOTIONS.map(
 		() => new Date(now - randInt(3, 45 * 24) * HOUR),
 	);
 
@@ -198,8 +198,8 @@ export const insertBaseData = async (
 		domainRows.rows.map((r: { id: number; name: string }) => [r.name, r.id]),
 	);
 
-	const argValues: unknown[] = [];
-	const argRows = STATEMENTS.map(
+	const motionValues: unknown[] = [];
+	const motionRows = MOTIONS.map(
 		([author, content, keyword, domain, affirmative], i) => {
 			const domainId = domainIds.get(domain);
 			if (!domainId) {
@@ -207,7 +207,7 @@ export const insertBaseData = async (
 					`Unknown seed domain: ${domain} — run migrations first`,
 				);
 			}
-			argValues.push(
+			motionValues.push(
 				author + 1, // ids are 1-based after TRUNCATE ... RESTART IDENTITY
 				content,
 				keyword,
@@ -216,7 +216,7 @@ export const insertBaseData = async (
 				analysis("The claim does not survive close inspection.", AGAINST_POINTS),
 				affirmative,
 				100 - affirmative,
-				statementTimes[i],
+				motionTimes[i],
 				"live",
 			);
 			const o = i * 10;
@@ -226,13 +226,13 @@ export const insertBaseData = async (
 
 	await client.query(
 		`
-      INSERT INTO arguments (user_id, content, content_keyword, domain_id, for_analysis, against_analysis, affirmative, negative, created_at, status, closes_at)
+      INSERT INTO motions (user_id, content, content_keyword, domain_id, for_analysis, against_analysis, affirmative, negative, created_at, status, closes_at)
       VALUES
-        ${argRows};
+        ${motionRows};
       `,
-		argValues,
+		motionValues,
 	);
-	console.log(`✅ Seeded ${STATEMENTS.length} unique statements`);
+	console.log(`✅ Seeded ${MOTIONS.length} unique motions`);
 
-	return { hashedPassword, statementTimes };
+	return { hashedPassword, motionTimes };
 };

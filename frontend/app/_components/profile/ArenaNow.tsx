@@ -2,11 +2,11 @@
 import Link from "next/link";
 import type { LiveDebate } from "@/app/profile/types";
 import Button from "@/app/_components/ui/Button";
-import Countdown from "@/app/_components/argument/Countdown";
+import Countdown from "@/app/_components/motion/Countdown";
 import { useUser } from "@/app/_hooks/useUser";
 import { debateSlug } from "@/app/_utils/slugify";
 
-// Replaces ActiveStatements, which queried without a status filter and then
+// Replaces ActiveMotions, which queried without a status filter and then
 // rendered every row — concluded ones included — with a pulsing dot and
 // "Live in Arena #N".
 //
@@ -43,7 +43,7 @@ const ArenaNow = ({
               ? "Nothing live. Stake a claim."
               : "Not in the arena right now."}
           </p>
-          {isOwner && <Button href="/statement">Start a Debate</Button>}
+          {isOwner && <Button href="/motion/new">Start a Debate</Button>}
         </div>
       ) : (
         <ul className="space-y-px">
@@ -56,7 +56,7 @@ const ArenaNow = ({
                 <span className="flex items-center gap-2 shrink-0">
                   {d.isAuthor && (
                     <span className="font-label text-[10px] uppercase tracking-widest px-2 py-0.5 border border-tertiary/40 text-tertiary">
-                      Your statement
+                      Your motion
                     </span>
                   )}
                   {d.side && (

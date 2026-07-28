@@ -7,7 +7,7 @@ import Button from "@/app/_components/ui/Button";
 import Pagination from "@/app/_components/ui/Pagination";
 import Reveal from "@/app/_components/ui/Reveal";
 import { timeAgo } from "@/app/_utils/timeAgo";
-import { PaginatedStatements } from "@/app/types";
+import { PaginatedMotions } from "@/app/types";
 
 export async function generateMetadata({
   params,
@@ -36,19 +36,19 @@ const TopicPage = async ({
   const requestedPage =
     Number.isInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1;
 
-  let result: PaginatedStatements = {
-    statements: [],
+  let result: PaginatedMotions = {
+    motions: [],
     total: 0,
     page: 1,
     pageSize: 12,
   };
   try {
-    const { data } = await serverApi.get("/arena/statements", {
+    const { data } = await serverApi.get("/arena/motions", {
       params: { keyword: kw, page: requestedPage },
     });
-    if (Array.isArray(data.statements)) result = data;
+    if (Array.isArray(data.motions)) result = data;
   } catch (error) {
-    console.error("Failed to load topic statements:", error);
+    console.error("Failed to load topic motions:", error);
   }
 
   const totalPages = Math.max(Math.ceil(result.total / result.pageSize), 1);
@@ -70,7 +70,7 @@ const TopicPage = async ({
         </p>
       </div>
 
-      {result.statements.length === 0 ? (
+      {result.motions.length === 0 ? (
         <div
           data-reveal
           className="bg-surface-container-low border-l-2 border-outline-variant/30 p-12 text-center"
@@ -78,22 +78,22 @@ const TopicPage = async ({
           <p className="font-headline italic text-2xl text-on-surface mb-3">
             No debates tagged “{kw}” yet.
           </p>
-          <Button href="/statement" size="lg">
+          <Button href="/motion/new" size="lg">
             Start one
           </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6">
-          {result.statements.map((e) => (
+          {result.motions.map((e) => (
             <ArenaSecondaryCard
-              key={e.argumentid}
+              key={e.motionid}
               username={e.username}
               avatar={e.avatar}
               domain={e.domain}
               title={e.title}
               affirmativescore={e.affirmativescore}
               negativescore={e.negativescore}
-              argumentid={e.argumentid}
+              motionid={e.motionid}
               status={e.status}
               closesAt={e.closesAt}
               winner={e.winner}

@@ -48,7 +48,7 @@ function toRows(res: BoardResponse, tab: BoardTab): BoardRow[] {
     rank: Number(r.rank),
     ...(tab === "all-time"
       ? {
-          statementCount: Number(r.statementCount ?? 0),
+          motionCount: Number(r.motionCount ?? 0),
           argumentCount: Number(r.argumentCount ?? 0),
         }
       : {}),
@@ -175,7 +175,7 @@ const Leaderboard = async ({ searchParams }: { searchParams: SearchParams }) => 
               ? "The board is wide open. First point taken takes the lead."
               : "No debaters have been ranked yet. Stake the first claim."}
           </p>
-          <Button href="/statement" size="lg">
+          <Button href="/motion/new" size="lg">
             Start a Debate
           </Button>
         </div>

@@ -184,17 +184,17 @@ the grind problem through the back door. **All seasonal payoff stays status-only
 ## 5. The AI-written profile blurb
 
 §9 of the spec describes "an AI-written blurb describing how you think, inferred from the
-statements you open and the arguments you make." It is the one identity feature v1 does not
+motions you open and the arguments you make." It is the one identity feature v1 does not
 build.
 
 **Why it's deferred:** §12 fixes the AI at five personas, each with one job, and none of them
 writes profile copy. A blurb needs a sixth persona, a prompt, a regeneration trigger (on a
-comment-count threshold, or a background job), and a decision about what happens when the user
+argument-count threshold, or a background job), and a decision about what happens when the user
 disagrees with what it says about them. v1 ships an editable bio instead — one endpoint, no LLM
-cost, and it replaces the dead default text ("Post some Statements to get to know about you.")
+cost, and it replaces the dead default text ("Post some Motions to get to know about you.")
 that most profiles show today.
 
-**The shape if it's built:** generate on a threshold rather than per comment (it is expensive and
+**The shape if it's built:** generate on a threshold rather than per argument (it is expensive and
 changes slowly), keep the user's manual override winning over the generated text, and show which
 one is being displayed. A profile that silently rewrites itself is unsettling; one that offers to
 is a feature.
@@ -215,7 +215,7 @@ Depends on both the division ladder (§3) and community voting (§8).
 
 Within-debate liquidity: concentration fills *debates*, this fills *sides*.
 
-- **Scarce-side multiplier** — a comment on the trailing side (strictly fewer comments) earns
+- **Scarce-side multiplier** — an argument on the trailing side (strictly fewer arguments) earns
   **1.5×** logic. Surge-pricing the side nobody wants.
 - **Upset bonus** — winning from behind (a side whose forecast dropped to ≤40 and still won) gets
   flagged as a marquee record achievement. Anti-bandwagon, and very shareable: *"won 60–40 from a
@@ -253,7 +253,7 @@ winning side" is a rule that fits in one sentence.
 
 ## 10. Hot extension
 
-A live debate with high comment velocity in its final two hours gets one automatic extension
+A live debate with high argument velocity in its final two hours gets one automatic extension
 (+6h), so a genuine late swing isn't cut off mid-argument.
 
 **Why it's deferred:** v1's fixed 48h clock is a promise — "this closes tomorrow at 6pm" is
@@ -268,7 +268,7 @@ v1 ships in-app notifications only. The full design:
 
 - **Real-time email** for the personal, rare, actionable events (you were rebutted; your debate
   got its first opponent; your debate closes in 2h; the verdict is in).
-- **A daily or weekly digest** for the ambient habit anchor: the Debate of the Day, debates
+- **A daily or weekly digest** for the ambient habit anchor: the Motion of the Day, debates
   needing your side, your rank movement, debates you're in that concluded.
 - **An anti-annoyance budget:** a hard cap on real-time sends per user per day, overflow batched
   into the digest, per-category unsubscribe, and every link deep-linking to a live payoff.
@@ -341,5 +341,5 @@ A daily-contribution streak with status-only rewards and a freeze token, spannin
 thoughtful people — the mechanic actively rewards showing up over having something to say.
 
 **And it leaves nothing on a daily clock, which is intentional.** Debates run 48h, seasons run a
-month. The daily ritual is **content cadence, not a mechanic**: the Debate of the Day is fresh
+month. The daily ritual is **content cadence, not a mechanic**: the Motion of the Day is fresh
 every morning. The habit is "come see today's debate," not "protect a flame."

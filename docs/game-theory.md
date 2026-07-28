@@ -20,17 +20,17 @@ why a user cares.
 
 | Feature | What it is | Why a user cares |
 |---|---|---|
-| **AI-gated statements** | An AI referee reads your claim before it goes live and rejects vague or unarguable ones, suggesting a sharper rewrite | You never walk into a debate that was doomed by a bad question |
+| **AI-gated motions** | An AI referee reads your claim before it goes live and rejects vague or unarguable ones, suggesting a sharper rewrite | You never walk into a debate that was doomed by a bad question |
 | **Two-sided arena** | Every debate has exactly two camps — FOR and AGAINST — each with a live AI-written case | You always know what you're up against, and what your side's best argument currently is |
 | **48-hour clock** | Every debate ends. No perpetual threads | Your effort resolves. There's a payoff moment, and a reason to come back |
-| **Side lock** | Your first comment commits you to one side for that debate | Nobody can hedge both sides to guarantee a win. The two camps are real |
-| **Direct replies** | You reply to a specific comment on the opposing side, and that reply earns the most points | Being *right at* someone is worth more than talking past them. This is what makes it a debate |
+| **Side lock** | Your first argument commits you to one side for that debate | Nobody can hedge both sides to guarantee a win. The two camps are real |
+| **Direct replies** | You reply to a specific argument on the opposing side, and that reply earns the most points | Being *right at* someone is worth more than talking past them. This is what makes it a debate |
 | **Logic score** | An AI scores every contribution 1–8 on how well it engages the actual argument | Your reputation is earned by reasoning, not by follower count or upvotes |
 | **The verdict** | At 48h an AI judge names a winner, a margin, an MVP, and writes why | An unbiased conclusion — the thing normal internet arguments never produce |
 | **W–L–D record** | Permanent win/loss/draw record on your profile | A career. Proof you argue well, not just often |
 | **Monthly seasons** | The board tracks logic earned *this month* and resets on the 1st | A newcomer can top the board in week one. Nobody is locked out by a veteran's pile of points |
 | **Season titles** | The top 3 each month earn a permanent title and avatar frame | Something to keep, forever, that says you won a month |
-| **Main Stage + Debate of the Day** | The best live debates get concentrated on one stage | You never land on a dead debate with nobody to argue against |
+| **Main Stage + Motion of the Day** | The best live debates get concentrated on one stage | You never land on a dead debate with nobody to argue against |
 | **Verdict share card** | Concluded debates generate a share image — claim, winner, margin, MVP | Your win travels. It's the thing you paste in a group chat |
 
 ---
@@ -41,12 +41,12 @@ These words are used precisely throughout the product and the code. Fix them now
 
 | Word | Meaning |
 |---|---|
-| **Statement** | The claim being argued — one bold declarative sentence submitted by a user |
-| **Debate** (or **arena**) | The container built around one statement: its two cases, its comments, its clock, its verdict. One statement → one debate |
+| **Motion** | The claim being argued — one bold declarative sentence submitted by a user. The **thing**: what you post, what gets featured, what the verdict rules on |
+| **Debate** (or **arena**) | The **activity** on a motion: its two cases, its arguments, its clock, its verdict. One motion → one debate. You do not post a debate; you post a motion and a debate happens on it |
 | **Side** | `FOR` or `AGAINST`. There are exactly two |
-| **Case** | The AI-maintained running summary of one side's position. Rewritten as new comments land |
-| **Comment** | One user's contribution to one side. The atomic unit of arguing |
-| **Reply** | A comment that targets a specific comment on the **opposing** side |
+| **Case** | The AI-maintained running summary of one side's position. Rewritten as new arguments land |
+| **Argument** | One user's contribution to one side. The atomic unit of arguing |
+| **Reply** | An argument aimed at a specific argument on the **opposing** side |
 | **Verdict** | The AI judge's closing ruling: winner, margin, MVP, and a written explanation |
 | **Logic** | The single skill score. Earned by arguing well |
 | **Record** | Your permanent W–L–D from concluded debates |
@@ -63,12 +63,12 @@ These words are used precisely throughout the product and the code. Fix them now
      (or AUTO).                            Pick a side.
          │                                     │
          ▼                                     ▼
-  2. ARBITER (AI) judges it.           5. Your FIRST comment LOCKS your side
+  2. ARBITER (AI) judges it.           5. Your FIRST argument LOCKS your side
      Fail → the reason + a sharper        for this debate. Confirmed up front.
      rewrite to try instead.                  │
          │  (on pass)                         ▼
-         ▼                              6. Comment — standalone, or REPLY to a
-  3. OPENING ANALYST (AI) writes           specific opposing comment.
+         ▼                              6. Argument — standalone, or REPLY to a
+  3. OPENING ANALYST (AI) writes           specific opposing argument.
      the strongest FOR case and               │
      AGAINST case. The 48h clock              ▼
      starts. The arena is live.        7. ANALYST (AI) screens for abuse, scores
@@ -97,7 +97,7 @@ These words are used precisely throughout the product and the code. Fix them now
 - Every debate runs **exactly 48 hours** from the moment it goes live. No extensions, no
   early closes.
 - The countdown is visible everywhere the debate appears — in the arena and on every card.
-- At zero the arena **locks read-only**: no new comments, no new replies, no likes. It stays
+- At zero the arena **locks read-only**: no new arguments, no new replies, no likes. It stays
   permanently readable.
 - The verdict fires immediately on lock.
 
@@ -109,27 +109,27 @@ at 6pm" is something a user can plan around; a variable clock is something they 
 ## 4. Sides and the lock
 
 - Every debate has exactly two sides: **FOR** and **AGAINST**.
-- **Your first comment locks your side for that debate.** You cannot argue the other side of
+- **Your first argument locks your side for that debate.** You cannot argue the other side of
   the same debate afterwards. The lock is per-debate — you're free to take FOR in one debate
   and AGAINST in the next.
 - The lock is confirmed **before** it happens, never discovered after (see §14).
-- The statement's author is a normal participant: they can argue, and they get locked like
+- The motion's author is a normal participant: they can argue, and they get locked like
   anyone else.
 
-**Why:** without a lock, the optimal strategy is to comment on both sides and be guaranteed a
+**Why:** without a lock, the optimal strategy is to argument on both sides and be guaranteed a
 win. The lock is what makes the two camps real, and what makes a verdict mean something.
 
 ---
 
-## 5. Comments and replies
+## 5. Arguments and replies
 
 Two ways to contribute:
 
-**Standalone comment** — you make a point on your side. It goes in your side's column.
+**Standalone argument** — you make a point on your side. It goes in your side's column.
 
-**Reply** — you pick a specific comment on the **opposing** side and answer it directly. Your
+**Reply** — you pick a specific argument on the **opposing** side and answer it directly. Your
 reply still lives in **your own side's column** (side integrity is never broken), carrying a
-compact quote of what it answers. The comment you replied to shows a `↳ N replies` counter.
+compact quote of what it answers. The argument you replied to shows a `↳ N replies` counter.
 
 ```
 FOR                        AGAINST
@@ -151,11 +151,11 @@ FOR                        AGAINST
 
 **Rules:**
 - **Cross-side only.** You cannot reply to your own side. A reply is by definition a rebuttal.
-- **Chains form naturally.** A reply is itself a comment on a side, so the other camp can reply
+- **Chains form naturally.** A reply is itself an argument on a side, so the other camp can reply
   back to it. Real exchanges emerge.
-- **Many-to-one is fine.** Several people can reply to the same comment.
-- **Replying sets your side lock** if you haven't commented yet — you're committing to the side
-  opposite the comment you're answering.
+- **Many-to-one is fine.** Several people can reply to the same argument.
+- **Replying sets your side lock** if you haven't argued yet — you're committing to the side
+  opposite the argument you're answering.
 - Replies do not create a separate thread view. The two columns stay chronological; the
   quote stub and the counter carry the connection.
 
@@ -171,18 +171,18 @@ against pasted AI text (§13), and it's also what turns parallel monologues into
 
 | Action | Logic |
 |---|---|
-| **Reply** to a specific opposing comment | **1–8**, judged by the AI. A sharp, targeted rebuttal earns 7–8 |
-| **Standalone** comment | **1–8 judged, then capped at 5.** It engages nothing specific |
+| **Reply** to a specific opposing argument | **1–8**, judged by the AI. A sharp, targeted rebuttal earns 7–8 |
+| **Standalone** argument | **1–8 judged, then capped at 5.** It engages nothing specific |
 | Standalone when **the opposing side is still empty** | **1–8, uncapped.** There was nothing to reply to yet |
-| Your **4th and later** comment in one debate | **halved** (floor 1), after all other rules |
-| Someone **likes** your comment | **+2** to you |
-| Your comment is flagged as **abuse** | **−4**, and the comment is discarded |
+| Your **4th and later** argument in one debate | **halved** (floor 1), after all other rules |
+| Someone **likes** your argument | **+2** to you |
+| Your argument is flagged as **abuse** | **−4**, and the argument is discarded |
 
-**Order of operations** — score the comment 1–8 → apply the standalone cap → apply the
+**Order of operations** — score the argument 1–8 → apply the standalone cap → apply the
 halving → award. The user is shown this breakdown every time (§14).
 
 **What the AI is actually judging** — not eloquence, not length, and not whether it agrees.
-It scores how much the comment *moves the argument*: does it answer a specific point, does it
+It scores how much the argument *moves the argument*: does it answer a specific point, does it
 introduce something the case doesn't already contain, does it hold up. A well-written paragraph
 that ignores everything already said scores low on purpose.
 
@@ -190,7 +190,7 @@ that ignores everything already said scores low on purpose.
 
 ## 7. The verdict
 
-At lock, the **Verdict Judge** reads the statement, both final cases, every comment, and the
+At lock, the **Verdict Judge** reads the motion, both final cases, every argument, and the
 reply structure, then returns: `{ for%, against%, winner, mvp, closing }`.
 
 - **Margin = |for% − against%|.**
@@ -201,14 +201,14 @@ reply structure, then returns: `{ for%, against%, winner, mvp, closing }`.
 - **Closing** is a short written explanation naming the crux and why it resolved that way.
   This is the capstone the whole 48 hours is building toward, and the text on the share card.
 
-**Walkover** — if one side has **zero** comments at lock, the debate concludes "unopposed."
+**Walkover** — if one side has **zero** arguments at lock, the debate concludes "unopposed."
 **Nobody scores anything** — no logic, no W/L/D, not even the author bonus. You cannot win a
-contest nobody entered, and this closes the obvious exploit of posting a statement and
+contest nobody entered, and this closes the obvious exploit of posting a motion and
 farming an uncontested win.
 
 The risk is surfaced (§14) only in the **final 6 hours**. A debate with an empty side on its
 first morning is not at risk, it is simply young — warning then would cry wolf on nearly every
-new statement and train people to ignore the banner. The window is the point at which an empty
+new motion and train people to ignore the banner. The window is the point at which an empty
 side stops being normal and starts being the likely outcome.
 
 ---
@@ -221,7 +221,7 @@ side stops being normal and starts being the likely outcome.
 | Winning side, everyone else | **+10** | +1 W |
 | Losing side | **−5 to your season score only.** Your all-time logic never falls | +1 L |
 | Both sides, on a draw | 0 | +1 D |
-| Statement author, on a decisive or drawn conclusion | **+5** | — |
+| Motion author, on a decisive or drawn conclusion | **+5** | — |
 | Anyone, on a walkover | 0 | — |
 
 The MVP's +25 **replaces** the +10; it does not stack.
@@ -245,9 +245,9 @@ posts a standalone (judged 6, capped to 5). **In-match: +18.**
 The debate closes **FOR 58 – AGAINST 42**. Margin 16 > 5, so FOR wins, and Maya is MVP.
 
 - **Maya:** 18 + 25 = **+43 logic**, +1 W, MVP badge.
-- **Dev**, who argued AGAINST across three comments (+16): keeps **16 all-time**, but his
-  **season** total for those comments is 11 after the −5. +1 L.
-- **Sam**, who posted the statement and argued FOR (+12): 12 + 10 (win) + 5 (author) = **+27**, +1 W.
+- **Dev**, who argued AGAINST across three arguments (+16): keeps **16 all-time**, but his
+  **season** total for those arguments is 11 after the −5. +1 L.
+- **Sam**, who posted the motion and argued FOR (+12): 12 + 10 (win) + 5 (author) = **+27**, +1 W.
 
 Read the gradient: **arguing** is the base income, **winning** is worth about half a debate's
 work, and **MVP** is worth more than the arguing itself. Losing still leaves you well ahead of
@@ -276,7 +276,7 @@ A profile carries:
 
 - **Season titles and avatar frames** — permanent, stacking (§10).
 - **A short bio**, written by the user. §12 defines five AI personas and none of them writes
-  profile copy, so v1 ships an editable bio; the AI-written blurb — inferred from the statements
+  profile copy, so v1 ships an editable bio; the AI-written blurb — inferred from the motions
   you open and the arguments you make — is designed and deferred in
   [`future-features.md`](./future-features.md).
 
@@ -322,26 +322,26 @@ season board simply describes a window of time.
 ## 11. The stage — how debates get found
 
 The core problem for a young platform isn't too little content; it's attention spread so thin
-that a thousand statements each get zero opponents. The fix is **concentration**.
+that a thousand motions each get zero opponents. The fix is **concentration**.
 
-- **Debate of the Day** — one live debate, crowned once per day, on the home hero slot.
+- **Motion of the Day** — one live debate, crowned once per day, on the home hero slot.
 - **Main Stage** — roughly 4 more featured live debates below it.
 - **Everything else** stays fully browsable through Newest, the 12 domains, and search. Nothing
   is throttled or hidden — posting always works instantly and always goes live.
 
 **How the stage is picked — heat plus a pin.**
 
-**Heat** = comment velocity × side balance, computed on a short interval for every live debate.
+**Heat** = argument velocity × side balance, computed on a short interval for every live debate.
 A debate where both sides are genuinely contesting each other outranks a lopsided one with more
-raw comments — a 50/50 fight at 10 comments an hour beats a 90/10 blowout at 20. Balance is
+raw arguments — a 50/50 fight at 10 arguments an hour beats a 90/10 blowout at 20. Balance is
 weighted deliberately: the stage should showcase *contests*, not pile-ons.
 
 **The pin** — an admin (`users.role = 'admin'`) can pin any live debate onto the Main Stage or make it
-the Debate of the Day. At launch, when there is barely enough volume for heat to mean anything,
+the Motion of the Day. At launch, when there is barely enough volume for heat to mean anything,
 pinning is how the stage gets its taste; as real volume arrives, heat takes over and pinning
 becomes the exception. One mechanism that is honest on day one and still correct at scale.
 
-Featured debates carry a visible **Main Stage** label and the Debate of the Day carries its own,
+Featured debates carry a visible **Main Stage** label and the Motion of the Day carries its own,
 so nothing about placement is mysterious.
 
 ---
@@ -354,18 +354,18 @@ change another.
 
 | # | Persona | Fires when | Decides |
 |---|---|---|---|
-| 1 | **Arbiter** | A statement is submitted | Pass or fail, the reason, a sharper rewrite, the keyword, the domain |
-| 2 | **Opening Analyst** | A statement passes | The strongest opening FOR case and AGAINST case |
-| 3 | **Analyst / Moderator** | Every comment | Abuse screen → a 1–8 score → a rewrite of that side's running case, crediting the commenter |
-| 4 | **Probability Judge** | Every comment, once both sides have argued | The live win split, judged on the two cases |
+| 1 | **Arbiter** | A motion is submitted | Pass or fail, the reason, a sharper rewrite, the keyword, the domain |
+| 2 | **Opening Analyst** | A motion passes | The strongest opening FOR case and AGAINST case |
+| 3 | **Analyst / Moderator** | Every argument | Abuse screen → a 1–8 score → a rewrite of that side's running case, crediting the debater |
+| 4 | **Probability Judge** | Every argument, once both sides have argued | The live win split, judged on the two cases |
 | 5 | **Verdict Judge** | At lock | Winner, margin, MVP, and the written closing |
 
-When a comment is a **reply**, persona 3 is additionally given the exact comment being answered,
+When an argument is a **reply**, persona 3 is additionally given the exact argument being answered,
 and scores the rebuttal against it. When it's standalone, it only sees the opposing side's case
 — and the score is capped at 5. That difference in what the AI is shown is precisely what makes
 replies worth more.
 
-The probability judge scores **the two synthesised cases**, not comment counts or votes. Being
+The probability judge scores **the two synthesised cases**, not argument counts or votes. Being
 loud does not move the bar; being right does.
 
 ---
@@ -376,13 +376,13 @@ Three structural facts, not three detectors.
 
 **1. You must reply to score high.** A language model can write a polished, general essay about
 any claim. It cannot read the room, pick which live opponent is most vulnerable, and dismantle
-that specific point — because it doesn't know what's in the thread. Standalone comments cap at
+that specific point — because it doesn't know what's in the thread. Standalone arguments cap at
 5; replies reach 8. The highest-scoring move in the game is the one that is hardest to automate.
 
-**2. Diminishing returns.** Your first three comments in a debate score full; everything after
+**2. Diminishing returns.** Your first three arguments in a debate score full; everything after
 is halved. Volume never beats sharpness. Flooding a debate is a losing strategy by arithmetic.
 
-**3. The side lock.** You commit to one side, publicly, before your first comment lands. You
+**3. The side lock.** You commit to one side, publicly, before your first argument lands. You
 cannot hedge, and you cannot farm both outcomes.
 
 **What we deliberately do not do: run an AI-text detector.** They are unreliable, they are an
@@ -409,10 +409,10 @@ This is a product requirement, not polish. A rule that is not surfaced is a bug.
 
 | Rule | Surfaced where | When |
 |---|---|---|
-| **Side lock** | A confirmation step on your first comment: *"You're committing to FOR. You will not be able to argue AGAINST in this debate."* | **Before** it happens |
+| **Side lock** | A confirmation step on your first argument: *"You're committing to FOR. You will not be able to argue AGAINST in this debate."* | **Before** it happens |
 | Side lock, after | A persistent **"You're arguing FOR"** badge on the composer; the opposing side's composer visibly disabled with the reason shown | Always |
-| **Reply beats standalone** | The composer states it plainly: *"Standalone comments cap at 5 logic. Reply to an opponent to earn up to 8."* Reply buttons sit on every opposing comment | While writing |
-| **Diminishing returns** | A counter on the composer: *"Comment 2 of 3 at full value"* → then *"Half value — you've already made 3 comments here"* | While writing |
+| **Reply beats standalone** | The composer states it plainly: *"Standalone arguments cap at 5 logic. Reply to an opponent to earn up to 8."* Reply buttons sit on every opposing argument | While writing |
+| **Diminishing returns** | A counter on the composer: *"Argument 2 of 3 at full value"* → then *"Half value — you've already made 3 arguments here"* | While writing |
 | **What you just earned** | **The points pop-up** (below) | Immediately after posting |
 | **48h clock** | A live countdown in the arena and on every card | Always |
 | **The draw zone** | The probability bar renders the draw band (47.5–52.5) as a marked zone, so you can *see* when a debate is heading for a draw and that it's still winnable | Always |
@@ -421,13 +421,13 @@ This is a product requirement, not polish. A rule that is not surfaced is a bug.
 | **Walkover risk** | A banner on a live debate with an empty side, once **under 6 hours** remain: *"Under 6 hours left and nobody has argued AGAINST. If nobody does, this concludes unopposed and nobody scores."* | Final 6 hours |
 | **Season window** | A **"Season 0 · 12 days left"** strip on the leaderboard and profile | Always |
 | **Season prize** | Leaderboard header: *"The top 3 on the 1st earn a permanent title and avatar frame."* | Always |
-| **Author bonus** | On the statement composer: *"You earn +5 logic when your statement produces a real debate."* | Before posting |
+| **Author bonus** | On the motion composer: *"You earn +5 logic when your motion produces a real debate."* | Before posting |
 | **Abuse penalty** | Composer fine print, and stated in the rejection message | Before and after |
-| **Stage placement** | Visible **Main Stage** / **Debate of the Day** labels on the cards that have them | Always |
+| **Stage placement** | Visible **Main Stage** / **Motion of the Day** labels on the cards that have them | Always |
 
 ### The points pop-up
 
-The single most important piece of feedback in the product. Every time a comment is accepted,
+The single most important piece of feedback in the product. Every time an argument is accepted,
 an animated pop-up shows **what you earned and exactly why**:
 
 ```
@@ -444,7 +444,7 @@ When a modifier applies, the pop-up shows the arithmetic rather than hiding it:
    +5  logic          │     +3  logic
    ─────────────      │     ─────────────
    Judged 6           │     Judged 7
-   Capped at 5        │     Halved — 4th comment
+   Capped at 5        │     Halved — 4th argument
    (standalone)       │     in this debate
 ```
 
@@ -456,9 +456,9 @@ the behaviour the whole game is designed to produce.
 
 Three notifications, in an in-app inbox. Every one deep-links to a live debate or a payoff:
 
-1. **Someone replied to your comment.** Personal, specific, and time-sensitive — the strongest
+1. **Someone replied to your argument.** Personal, specific, and time-sensitive — the strongest
    pull in the product, and now precise because replies are explicit.
-2. **Someone joined the other side of your debate.** Your statement became a real contest.
+2. **Someone joined the other side of your debate.** Your motion became a real contest.
 3. **The verdict is in.** Won, lost, drawn, or MVP.
 
 ---
@@ -471,9 +471,9 @@ Every tunable constant in the game. If a number is in the code, it is in this ta
 |---|---|---|
 | Debate duration | **48 hours** | §3 |
 | Draw threshold — margin must **exceed** this | **5** points | §7 |
-| Comment score range | **1–8** | §6 |
-| Standalone comment cap | **5** | §6 |
-| Full-value comments per debate | **3**, then halved | §6 |
+| Argument score range | **1–8** | §6 |
+| Standalone argument cap | **5** | §6 |
+| Full-value arguments per debate | **3**, then halved | §6 |
 | Halving floor | **1** | §6 |
 | Like bonus | **+2** | §6 |
 | Abuse penalty | **−4** | §6 |
@@ -484,8 +484,8 @@ Every tunable constant in the game. If a number is in the code, it is in this ta
 | Walkover payout | **0** to everyone | §7 |
 | Season length | **1 calendar month**, UTC | §10 |
 | Season awards | **Top 3** — title + frame | §10 |
-| Main Stage size | **~4** + the Debate of the Day | §11 |
-| Debate of the Day | **1 per day** | §11 |
+| Main Stage size | **~4** + the Motion of the Day | §11 |
+| Motion of the Day | **1 per day** | §11 |
 | Tier thresholds | 0 / 50 / 100 / 150 / 200 | §9 |
 
 ---

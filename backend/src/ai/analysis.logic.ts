@@ -2,18 +2,18 @@
  * §13 — the Crux AI analysis, as data rather than a Markdown blob.
  *
  * A side's analysis is a lead sentence plus a list of points, and each point
- * that came from a real comment carries that comment's id. The id is what lets
+ * that came from a real argument carries that argument's id. The id is what lets
  * the arena link a named point to the argument it was made in; before this the
- * panel could print "@dev" but had no way to say WHICH of @dev's comments it
+ * panel could print "@dev" but had no way to say WHICH of @dev's arguments it
  * meant.
  *
  * TRUST BOUNDARY
- * The model returns `{commentId, text}` and nothing else. Authors are looked up
- * from the comment id server-side, never taken from the model — so a
+ * The model returns `{argumentId, text}` and nothing else. Authors are looked up
+ * from the argument id server-side, never taken from the model — so a
  * hallucinated id cannot invent a person, it can only cost that point its link.
  *
  * STORAGE
- * Serialised to JSON into the existing `arguments.{side}_analysis` text
+ * Serialised to JSON into the existing `motions.{side}_analysis` text
  * columns. `readAnalysis` accepts the legacy Markdown that every row written
  * before this change still holds, so no migration is needed and concluded
  * debates keep rendering exactly as they did.
@@ -27,8 +27,8 @@ export const POINT_MAX_CHARS = 240;
 export interface AnalysisPoint {
   /** Username without "@", or null for an AI opening-draft point. */
   author: string | null;
-  /** The comment this point came from; null for opening-draft points. */
-  commentId: number | null;
+  /** The argument this point came from; null for opening-draft points. */
+  argumentId: number | null;
   text: string;
 }
 
@@ -90,12 +90,12 @@ export function parseLegacyMarkdown(raw: string): Analysis {
       if (attributed) {
         points.push({
           author: (attributed[1] ?? "").trim() || null,
-          commentId: null, // the old format never recorded one
+          argumentId: null, // the old format never recorded one
           text: trimTo(stripInline(attributed[2] ?? ""), POINT_MAX_CHARS),
         });
       } else {
         const text = trimTo(stripInline(body), POINT_MAX_CHARS);
-        if (text) points.push({ author: null, commentId: null, text });
+        if (text) points.push({ author: null, argumentId: null, text });
       }
       continue;
     }
@@ -114,14 +114,14 @@ function coercePoint(raw: unknown): AnalysisPoint | null {
   const text = typeof r.text === "string" ? trimTo(r.text, POINT_MAX_CHARS) : "";
   if (text.length === 0) return null;
 
-  const id = Number(r.commentId);
-  const commentId = Number.isInteger(id) && id > 0 ? id : null;
+  const id = Number(r.argumentId);
+  const argumentId = Number.isInteger(id) && id > 0 ? id : null;
   const author =
     typeof r.author === "string" && r.author.trim().length > 0
       ? r.author.trim().replace(/^@/, "")
       : null;
 
-  return { author, commentId, text };
+  return { author, argumentId, text };
 }
 
 /**
@@ -171,13 +171,13 @@ export function writeAnalysis(a: Analysis): string {
  * The model's `newAnalysis`, made safe to store.
  *
  * Attribution is resolved here and only here: a point's author is whatever the
- * comments table says wrote that comment. An id the model invented, or one
+ * arguments table says wrote that argument. An id the model invented, or one
  * belonging to the other side, is dropped to null — the point survives
  * unattributed rather than being credited to nobody in particular.
  */
 export function sanitizeAnalysis(
   raw: unknown,
-  authorByCommentId: Map<number, string>,
+  authorByArgumentId: Map<number, string>,
 ): Analysis {
   const { lead, points } = normalise(
     typeof raw === "string" ? safeParse(raw) : raw,
@@ -193,10 +193,10 @@ export function sanitizeAnalysis(
     seen.add(key);
 
     const author =
-      p.commentId !== null ? (authorByCommentId.get(p.commentId) ?? null) : null;
+      p.argumentId !== null ? (authorByArgumentId.get(p.argumentId) ?? null) : null;
     clean.push({
       author,
-      commentId: author !== null ? p.commentId : null,
+      argumentId: author !== null ? p.argumentId : null,
       text: p.text,
     });
   }
@@ -229,11 +229,11 @@ export function renderAnalysisForPrompt(a: Analysis): string {
 }
 
 /**
- * The same document, but with each attributed point's comment id exposed.
+ * The same document, but with each attributed point's argument id exposed.
  *
  * Only the analyst sees this, and only for its OWN side: when it keeps an
  * existing point it has to re-emit that point's id, and it cannot do that from
- * a name alone — a debater may have several comments. Without the ids here,
+ * a name alone — a debater may have several arguments. Without the ids here,
  * every carried-forward point would quietly lose its link the first time the
  * analysis was rewritten.
  */
@@ -241,8 +241,8 @@ export function renderOwnAnalysisForAnalyst(a: Analysis): string {
   if (isEmptyAnalysis(a)) return "";
   const bullets = a.points
     .map((p) => {
-      if (p.author && p.commentId !== null)
-        return `- [#${p.commentId}] **@${p.author}** — ${p.text}`;
+      if (p.author && p.argumentId !== null)
+        return `- [#${p.argumentId}] **@${p.author}** — ${p.text}`;
       if (p.author) return `- **@${p.author}** — ${p.text}`;
       return `- ${p.text}`;
     })

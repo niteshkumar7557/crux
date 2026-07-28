@@ -5,17 +5,17 @@
 
 > *One claim. One arena. No neutral ground.*
 
-CRUX is an AI-powered debate platform where statements are judged before they reach the arena. The AI decides if your claim has enough tension to become a live argument — then scores every comment, updates both sides' analysis in real time, and shifts win probability as the debate evolves.
+CRUX is an AI-powered debate platform where motions are judged before they reach the arena. The AI decides if your claim has enough tension to become a live argument — then scores every argument, updates both sides' analysis in real time, and shifts win probability as the debate evolves.
 
 ---
 
 ## What Makes It Different
 
-- **AI Gatekeeping** — Every submitted statement is evaluated for controversy potential, logical viability, and debate merit. Weak claims don't survive.
-- **Live Analysis** — Both sides of every argument have a continuously updated AI analysis that evolves as users post comments.
-- **Logic Scoring** — Every comment is scored 4–8 based on novelty, reasoning quality, and argumentative strength. Scores update your global Logic Score.
-- **Abuse Detection** — Comments are screened for English and Hindi abuse before posting. Violations deduct from your Logic Score.
-- **Win Probability** — Once both sides have at least one comment, the AI calculates a live probability split based on argument quality.
+- **AI Gatekeeping** — Every submitted motion is evaluated for controversy potential, logical viability, and debate merit. Weak claims don't survive.
+- **Live Analysis** — Both sides of every argument have a continuously updated AI analysis that evolves as users post arguments.
+- **Logic Scoring** — Every argument is scored 4–8 based on novelty, reasoning quality, and argumentative strength. Scores update your global Logic Score.
+- **Abuse Detection** — Arguments are screened for English and Hindi abuse before posting. Violations deduct from your Logic Score.
+- **Win Probability** — Once both sides have at least one argument, the AI calculates a live probability split based on argument quality.
 - **Debater Profiles** — Your intellectual identity is inferred from your argument history. Not what you argued — how you think.
 
 ---
@@ -49,7 +49,7 @@ crux/
 │   │   ├── leaderboard/
 │   │   ├── profile/
 │   │   ├── rules/
-│   │   └── statement/
+│   │   └── motion/
 │   └── ...
 ├── backend/                # Express API
 │   ├── src/
@@ -112,7 +112,7 @@ nothing here and costs roughly 5-7x the output tokens — measured, it turned a
 40-token reply into 267. It also eats the budget on the tighter calls (the
 debater-description call caps at 500) until JSON mode returns a truncated body.
 
-Running cost is roughly **$0.0002 per statement published, $0.00014 per comment,
+Running cost is roughly **$0.0002 per motion published, $0.00014 per argument,
 $0.00017 per verdict** — see §6 of `docs/CODEBASE_GUIDE.md` for the full model.
 
 ---
@@ -179,13 +179,14 @@ docker compose -f docker-compose.dev.yml down -v
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/profile/:id` | Get profile data with ID |
-| `POST` | `/ai/statement` | Check eligibility of a statement |
-| `POST` | `/like` | Post like on a comment |
-| `POST` | `/negative/:id` | Post negative comment of a argument with ID |
-| `POST` | `/affirmative/:id` | Post affirmative comment of a argument with ID |
-| `GET` | `/comment/:id` | Get comments of a argument with ID |
-| `GET` | `/argument/:id` | Get argument by ID |
-| `POST` | `/argument` | Post a new argument |
+| `POST` | `/ai/motion` | Check eligibility of a motion |
+| `POST` | `/like` | Post like on an argument |
+| `POST` | `/motion` | Post a new motion |
+| `GET` | `/motion/:id` | Get a motion by ID |
+| `GET` | `/motion/:id/arguments` | Get every argument on a motion |
+| `POST` | `/motion/:id/arguments/affirmative` | Post an argument on the FOR side |
+| `POST` | `/motion/:id/arguments/negative` | Post an argument on the AGAINST side |
+| `GET` | `/arena/motions` | Paged motion feed (archive, domain, topic) |
 | `POST` | `/user/refresh` | Generate a new Access token |
 | `POST` | `/user/register` | Register a new user |
 | `POST` | `/user/login` | Login |
@@ -196,11 +197,11 @@ docker compose -f docker-compose.dev.yml down -v
 
 | Function | Model | Trigger |
 |----------|-------|---------|
-| Statement eligibility check | Gpt OSS | On statement eligiblity check |
-| Initial Crux AI analysis | Gpt OSS | On statement broadcast |
+| Motion eligibility check | Gpt OSS | On motion eligiblity check |
+| Initial Crux AI analysis | Gpt OSS | On motion broadcast |
 | User description generation | Gpt OSS | After each new argument posted |
-| Comment abuse detection | Gpt OSS | Before every comment post |
-| Comment scoring + analysis update | Gpt OSS | After every valid comment |
+| Argument abuse detection | Gpt OSS | Before every argument post |
+| Argument scoring + analysis update | Gpt OSS | After every valid argument |
 | Win probability update | Gpt OSS | After analysis updation |
 
 ---

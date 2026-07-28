@@ -13,7 +13,7 @@ const PILLARS = [
     accent: "text-primary",
     border: "border-primary/30",
     title: "Every claim gets both sides",
-    body: "Post a statement and the arena splits: the case for, the case against. No echo chambers, no piling on — structured opposition by design.",
+    body: "Post a motion and the arena splits: the case for, the case against. No echo chambers, no piling on — structured opposition by design.",
   },
   {
     icon: LuGavel,
@@ -42,7 +42,7 @@ const About = () => {
           Where logic decides.
         </h1>
         <p className="mt-4 text-on-surface-variant font-body text-lg max-w-xl">
-          Crux is a digital arena where every statement is tested by
+          Crux is a digital arena where every motion is tested by
           structured debate and AI adjudication. Stake a claim, argue both
           sides, and let logic decide.
         </p>
@@ -76,7 +76,7 @@ const About = () => {
           The arena is open. Bring an opinion.
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
-          <Button href="/statement" size="lg">
+          <Button href="/motion/new" size="lg">
             Start a Debate
           </Button>
           <Button href="/" variant="outline-neutral" size="lg">

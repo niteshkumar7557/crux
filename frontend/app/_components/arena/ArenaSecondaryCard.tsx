@@ -3,7 +3,7 @@ import { ReactNode, useRef } from "react";
 import Link from "next/link";
 import Avatar from "@/app/_components/ui/Avatar";
 import ScoreBar from "./ScoreBar";
-import Countdown from "@/app/_components/argument/Countdown";
+import Countdown from "@/app/_components/motion/Countdown";
 import { settledSide } from "./settledSides";
 
 // The compact feed card used by both the trending grid and the newest tab.
@@ -14,7 +14,7 @@ export interface ArenaCardComponentProps {
   title: string;
   affirmativescore: number;
   negativescore: number;
-  argumentid: number;
+  motionid: number;
   footerLeft: ReactNode;
   time?: string;
   status?: string;
@@ -30,7 +30,7 @@ const ArenaSecondaryCard = ({
   title,
   affirmativescore,
   negativescore,
-  argumentid,
+  motionid,
   footerLeft,
   status,
   closesAt,
@@ -52,7 +52,7 @@ const ArenaSecondaryCard = ({
     >
       <Link
         className="flex flex-col justify-between h-full"
-        href={`/argument/CRX-${argumentid}-A`}
+        href={`/motion/CRX-${motionid}-A`}
       >
         <div>
           <div className="flex justify-between">

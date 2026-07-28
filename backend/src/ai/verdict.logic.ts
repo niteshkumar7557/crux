@@ -132,7 +132,7 @@ export function resolvePayouts(input: {
 /**
  * §7 — a side was empty at lock. Nobody scores, the author included: you
  * cannot win a contest nobody entered, and paying the author here would
- * reward posting statements nobody wants to argue.
+ * reward posting motions nobody wants to argue.
  */
 export function walkoverPayout(): Payouts {
   return { results: [], logicAwards: [] };

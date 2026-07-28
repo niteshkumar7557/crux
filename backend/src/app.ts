@@ -5,8 +5,8 @@ import cookieParser from "cookie-parser";
 import config from "./config/index.js";
 import { PUBLIC_DIR } from "./lib/avatars.js";
 import userRoutes from "./routes/user.route.js";
+import motionRoutes from "./routes/motion.route.js";
 import argumentRoutes from "./routes/argument.route.js";
-import commentRoutes from "./routes/comment.route.js";
 import arenaRoutes from "./routes/arena.route.js";
 import aiRoutes from "./routes/ai.route.js";
 import likeRoutes from "./routes/like.route.js";
@@ -59,8 +59,9 @@ app.use(
 // routes
 app.get("/health", makeHealthHandler(() => pool.query("SELECT 1")));
 app.use("/user", userRoutes);
-app.use("/argument", argumentRoutes);
-app.use("/comment", commentRoutes);
+app.use("/motion", motionRoutes);
+// Arguments live under the motion they belong to: /motion/:id/arguments.
+app.use("/motion", argumentRoutes);
 app.use("/arena", arenaRoutes);
 app.use("/ai", aiRoutes);
 app.use("/like", likeRoutes);

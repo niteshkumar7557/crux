@@ -2,14 +2,14 @@
 import { useEffect, useRef, useState } from "react";
 import ArenaPrimaryCard from "./ArenaPrimaryCard";
 import ArenaSecondaryCard from "./ArenaSecondaryCard";
-import ThesisCard from "./ThesisCard";
+import InviteCard from "./InviteCard";
 import { PrimaryCardDataType, SecondaryCardsDataType } from "@/app/types";
 import api from "@/app/axios";
 import { gsap, useGSAP } from "@/app/_utils/gsap";
 import { shouldAnimate } from "@/app/_utils/animateOnce";
 
 const TrendingTab = () => {
-	// The hero is ONE debate (§11's Debate of the Day), so the API returns a
+	// The hero is ONE debate (§11's Motion of the Day), so the API returns a
 	// single object -- and an empty {} when nothing is crowned.
 	const [primaryCardData, setPrimaryCardData] =
 		useState<PrimaryCardDataType | null>(null);
@@ -28,7 +28,7 @@ const TrendingTab = () => {
 			if (!containerRef.current) return;
 
 			// Client-fetched, and re-mounted on every tab switch, so it owns its
-			// key. The tab-switch crossfade in ActiveArguments is NOT gated —
+			// key. The tab-switch crossfade in ActiveMotions is NOT gated —
 			// that one answers a click and has to fire every time.
 			if (!shouldAnimate("/#trending")) return;
 
@@ -70,7 +70,7 @@ const TrendingTab = () => {
 				]);
 				// Both endpoints answer with a bare {} when the stage is empty.
 				const primary = primaryResponse.data as PrimaryCardDataType | null;
-				setPrimaryCardData(primary?.argumentId ? primary : null);
+				setPrimaryCardData(primary?.motionId ? primary : null);
 				setSecondaryCardsData(
 					Array.isArray(secondaryResponse.data)
 						? secondaryResponse.data
@@ -98,27 +98,27 @@ const TrendingTab = () => {
 							username={primaryCardData.username}
 							avatar={primaryCardData.avatar}
 							content={primaryCardData.content}
-							count_comments={primaryCardData.count_comments}
+							count_arguments={primaryCardData.count_arguments}
 							affirmative={primaryCardData.affirmative}
 							negative={primaryCardData.negative}
-							argumentId={primaryCardData.argumentId}
+							motionId={primaryCardData.motionId}
 							status={primaryCardData.status}
 							closesAt={primaryCardData.closesAt}
-							isDotd={primaryCardData.isDotd}
+							isMotd={primaryCardData.isMotd}
 						/>
 					)}
 
 					<div className="mb-5 md:flex md:flex-wrap md:justify-between">
 						{secondaryCardsData.map((e) => (
 							<ArenaSecondaryCard
-								key={e.argumentid}
+								key={e.motionid}
 								username={e.username}
 								avatar={e.avatar}
 								domain={e.domain}
 								title={e.title}
 								affirmativescore={e.affirmativescore}
 								negativescore={e.negativescore}
-								argumentid={e.argumentid}
+								motionid={e.motionid}
 								status={e.status}
 								closesAt={e.closesAt}
 								className="md:w-[49%]"
@@ -129,10 +129,10 @@ const TrendingTab = () => {
 						))}
 					</div>
 
-					<ThesisCard />
+					<InviteCard />
 				</div>
 			) : (
-				<ThesisCard />
+				<InviteCard />
 			)}
 		</div>
 	);

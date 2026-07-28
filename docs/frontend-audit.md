@@ -2,7 +2,7 @@
 
 *Updated 2026-07-14 on branch `frontend-makeover` (HEAD `be3b0ab`). This replaces the original pre-makeover audit: all 10 items of that plan have shipped. This document describes the **final state** of the frontend so a fresh session can start improvements without re-deriving context.*
 
-*Updated 2026-07-17: the `/statement` posting flow was redesigned (see §4a).*
+*Updated 2026-07-17: the `/motion` posting flow was redesigned (see §4a).*
 
 > **Scope note (2026-07-22).** This file is the **frontend design system and working
 > rules** — tokens, motion, component conventions, and the verification workflow. It is
@@ -23,9 +23,9 @@ These came from explicit user feedback during the makeover. Do not relitigate th
 1. **The user commits. Never run `git commit`** — finish the work, verify it, and hand over a commit message (ending with the Claude co-author line).
 2. **No noise/grain/texture overlays anywhere.** Depth comes only from the surface-container ramp, accent borders, and the tokenized glows. A texture pass was tried and explicitly rejected ("old was better").
 3. **Home probability bars stay on the vivid pair** `bg-primary-container` / `bg-secondary-container` (`#00d1ff` / `#ff525d`). The argument-page hero bar uses the soft pair (`bg-primary` / `bg-secondary`). This split is intentional.
-4. **Red is stance, not decoration.** Secondary (red) always means "against/negative". The avatar hash palette deliberately excludes red for this reason (cyan/amber only); comment cards force the accent by stance.
+4. **Red is stance, not decoration.** Secondary (red) always means "against/negative". The avatar hash palette deliberately excludes red for this reason (cyan/amber only); argument cards force the accent by stance.
 5. **Token discipline:** no `neutral-*`/`zinc-*`/`gray-*`/`stone-*` or hex literals in components — only the semantic tokens in `globals.css`. Shadows only via the three glow tokens. Radius stays 0px (only pills are round).
-6. Match existing file indentation exactly when editing — `StatementForm.tsx` uses TAB indentation inside function bodies.
+6. Match existing file indentation exactly when editing — `MotionForm.tsx` uses TAB indentation inside function bodies.
 
 ## 2. Stack & architecture (current)
 
@@ -44,15 +44,15 @@ These came from explicit user feedback during the makeover. Do not relitigate th
 
 | Route | Notes |
 |---|---|
-| `/` | Arena home: `ActiveArguments` (featured + trending/newest tabs) + `ArenaSidebar` (fetches `/arena/sidebar` client-side). |
+| `/` | Arena home: `ActiveMotions` (featured + trending/newest tabs) + `ArenaSidebar` (fetches `/arena/sidebar` client-side). |
 | `/login`, `/register` | Auth pages (route group hides navbar/footer via `ConditionalLayout`); consumer labels, GSAP entrances. |
-| `/statement` | Staged claim submission (2026-07-17 redesign): compose → Arbiter verdict → broadcast on one evolving surface with a progress rail. See §4a. |
+| `/motion` | Staged claim submission (2026-07-17 redesign): compose → Arbiter verdict → broadcast on one evolving surface with a progress rail. See §4a. |
 | `/argument/[id]` | Debate arena: SplitText hero, probability bar draw + count-up, For/Against `CaseColumn`s, sticky `ArgumentInput`. |
 | `/profile/me`, `/profile/[username]` | Career dossier. Identity + standing SSR; ledger, argument pattern, live debates and concluded history in one client fetch below the fold. `/profile/me` is a client shim to the canonical handle URL; numeric segments redirect. |
 | `/leaderboard` | **Real page** ("The Elite Hierarchy"): asymmetric top-3 podium (crowned apex + silver/bronze flanks) + striped standings table, shared by two boards — season (default) and `?tab=all-time`. Podium requires ≥3 ranked users and only renders on page 1, being the head of the board. The season board has no career counts, so those columns and the podium's tier line drop out rather than render empty. Components: `_components/leaderboard/Podium.tsx`, `BoardTable.tsx`; URL + row normalisation in `app/leaderboard/board.ts`. |
 | `/rules` | Real static "Rules of Engagement" (6 numbered rules + CTA). Linked from footer and the abuse toast. |
 | `/about` | Real static "Where logic decides." (3 accent pillars + CTAs). |
-| `/domain` | Canonical **domain browser** (`?q=<slug>` or `?q=all`, `&page=<n>`; replaced the old `/archive`). Server-filtered via `GET /arena/statements`, all-12 seeded chips, `ArenaCard` grid, `ui/Pagination` footer. Slugs via `_utils/domainSlug.ts` (`"Technology & AI"` → `technology-ai`). Search domain results and the sidebar's Trending Domains link here; navbar has a Domains tab. |
+| `/domain` | Canonical **domain browser** (`?q=<slug>` or `?q=all`, `&page=<n>`; replaced the old `/archive`). Server-filtered via `GET /arena/motions`, all-12 seeded chips, `ArenaCard` grid, `ui/Pagination` footer. Slugs via `_utils/domainSlug.ts` (`"Technology & AI"` → `technology-ai`). Search domain results and the sidebar's Trending Domains link here; navbar has a Domains tab. |
 | Page states | Root `loading.tsx`, `error.tsx`, branded `not-found.tsx`; route-level `loading.tsx` for `/argument/[id]` and `/profile/[username]`. |
 
 ## 3. Design system reference
@@ -71,33 +71,33 @@ Tokens live in `frontend/app/globals.css` `@theme` (M3-style dark ramp):
 
 **`ui/` primitives:**
 - `Button.tsx` — the only CTA. Variants `solid | outline | outline-secondary | outline-neutral`, sizes `sm | md | lg | bare` (bare = caller controls padding). Renders `<Link>` when `href` is passed. Has real disabled styling.
-- `Avatar.tsx` — brand avatar. Optional `src` (the `users.avatar` path, e.g. `/avatars/presets/preset-07.svg` or `/uploads/avatars/u2-<uuid>.webp`) renders the image via `next/image` (`fill`, `unoptimized`, prefixed with `/api` so the Next rewrite proxies to the backend). Without `src`: initials (splits on space/`_`/`.`/`-`) on `surface-container-high` chip, accent auto-hashed from username (cyan/amber only) or forced via `accent="primary"|"secondary"` (comment cards pass stance). Sizes `sm md lg xl 2xl`. The picker/upload UI is `profile/AvatarEditor.tsx`, shown on your own `/profile/[username]`.
-- `Reveal.tsx` — client wrapper for server pages: batch-staggers every `[data-reveal]` descendant via `ScrollTrigger.batch` (start "top 88%", `once`, initial dim 0.25 → rise). Used by statement, profile, leaderboard, rules, about, archive.
+- `Avatar.tsx` — brand avatar. Optional `src` (the `users.avatar` path, e.g. `/avatars/presets/preset-07.svg` or `/uploads/avatars/u2-<uuid>.webp`) renders the image via `next/image` (`fill`, `unoptimized`, prefixed with `/api` so the Next rewrite proxies to the backend). Without `src`: initials (splits on space/`_`/`.`/`-`) on `surface-container-high` chip, accent auto-hashed from username (cyan/amber only) or forced via `accent="primary"|"secondary"` (argument cards pass stance). Sizes `sm md lg xl 2xl`. The picker/upload UI is `profile/AvatarEditor.tsx`, shown on your own `/profile/[username]`.
+- `Reveal.tsx` — client wrapper for server pages: batch-staggers every `[data-reveal]` descendant via `ScrollTrigger.batch` (start "top 88%", `once`, initial dim 0.25 → rise). Used by motion, profile, leaderboard, rules, about, archive.
 - `Skeleton.tsx` — loading-state building block.
 - `Pagination.tsx` — reusable pager (props: `page`, `totalPages`, `totalItems`, `itemLabel`, `hrefFor(page)`). Hairline-topped readout row + windowed zero-padded page cells (first/last/current ±1, inert `…` gaps), chip-style active state, disabled edge Prev/Next. Renders `null` at ≤1 page. Used by `/domain`; drop-in for future paginated pages.
 
 **Shared pieces:** `ArenaCard` (one base for trending/newest/archive cards; has `data-reveal` + GSAP hover lift built in), `ScoreBar` (+ `useScoreBarReveal` hook — bars draw from outer edges), `CaseColumn side="for"|"against"` (single implementation, literal class strings per side for Tailwind), `SearchBar` (debounced modal, dialog semantics, Escape/backdrop close, open-only GSAP choreography).
 
-**Utils:** `_utils/gsap.ts` (see §6), `_utils/logicScore.ts` (`convertLogicScore`: score → tier beginner…master — used by comment cards and leaderboard), `_utils/timeAgo.ts`, `_utils/getUser.ts`, `_hooks/useUser.ts`, `_hooks/useScoreBarReveal.ts`.
+**Utils:** `_utils/gsap.ts` (see §6), `_utils/logicScore.ts` (`convertLogicScore`: score → tier beginner…master — used by argument cards and leaderboard), `_utils/timeAgo.ts`, `_utils/getUser.ts`, `_hooks/useUser.ts`, `_hooks/useScoreBarReveal.ts`.
 
-## 4a. Statement posting flow (`_components/statement/`, redesigned 2026-07-17)
+## 4a. Motion posting flow (`_components/compose/`, redesigned 2026-07-17)
 
-One evolving surface driven by a state machine in `StatementForm.tsx` (container — TAB indentation inside function bodies): `compose → checking → verdict(pass|fail|unavailable) → casting → redirect`. Editing text or switching domain voids the verdict with a notice.
+One evolving surface driven by a state machine in `MotionForm.tsx` (container — TAB indentation inside function bodies): `compose → checking → verdict(pass|fail|unavailable) → casting → redirect`. Editing text or switching domain voids the verdict with a notice.
 
 | Component | Responsibility |
 |---|---|
-| `StatementForm.tsx` | State machine, API calls (30s check / 60s cast axios timeouts), draft persistence (`localStorage` `crux:statement-draft`, restore deferred via `setTimeout(0)` for StrictMode + the `react-hooks/set-state-in-effect` rule), Cmd/Ctrl+Enter, login gate, avatar fetch via `/user/me` (JWT carries no avatar) |
+| `MotionForm.tsx` | State machine, API calls (30s check / 60s cast axios timeouts), draft persistence (`localStorage` `crux:motion-draft`, restore deferred via `setTimeout(0)` for StrictMode + the `react-hooks/set-state-in-effect` rule), Cmd/Ctrl+Enter, login gate, avatar fetch via `/user/me` (JWT carries no avatar) |
 | `StageRail.tsx` | `01 COMPOSE ── 02 VERDICT ── 03 BROADCAST` progress rail (CSS transitions, derived from state) |
-| `DomainPicker.tsx` | Domain chips + **AUTO** chip (default; tertiary accent; sentinel `AUTO_DOMAIN = "auto"` in `app/statement/types.ts`); mobile = two-row horizontal scroll strip |
+| `DomainPicker.tsx` | Domain chips + **AUTO** chip (default; tertiary accent; sentinel `AUTO_DOMAIN = "auto"` in `app/motion/types.ts`); mobile = two-row horizontal scroll strip |
 | `ClaimEditor.tsx` | Textarea; exports `MIN_CHARS`/`MAX_CHARS`/`isTextInLimits`; countdown counter (tertiary ≥105, secondary at 120, "SUBSTANCE CONFIRMED" once armed); free local nudges (trailing `?`, hedge words) |
-| `VerdictPanel.tsx` | Verdict-colored panel (PASS cyan+glow / FAIL red+glow / UNAVAILABLE amber no-glow); ORIGINAL-vs-IMPROVED radio-cards (improved pre-selected, skipped when identical); `REFILED: X → Y` notice, or `FILED UNDER: Y` when AUTO; fail "Try the Arbiter's reframe"; similar-fights links (`GET /search` by keyword, capped 3, silent failure, `similarSeq` staleness guard in container) |
+| `ArbiterPanel.tsx` | Verdict-colored panel (PASS cyan+glow / FAIL red+glow / UNAVAILABLE amber no-glow); ORIGINAL-vs-IMPROVED radio-cards (improved pre-selected, skipped when identical); `REFILED: X → Y` notice, or `FILED UNDER: Y` when AUTO; fail "Try the Arbiter's reframe"; similar-fights links (`GET /search` by keyword, capped 3, silent failure, `similarSeq` staleness guard in container) |
 | `BroadcastPreview.tsx` | ArenaCard-style preview (keyword highlight with graceful fallback, real user avatar); progress-theater button (4 staged labels @2.2s); logged-out → `Log in to broadcast` link |
 
-Flow guarantees: logged-out users compose and check freely ("SPECTATOR MODE" banner); drafts survive reload and the login round-trip (`/login?next=/statement`); broadcast success clears the draft and redirects to the new `/argument/CRX-{id}-A`; failure preserves all state with retry in place; double-submit guarded (`casting` set before the `getUser()` await).
+Flow guarantees: logged-out users compose and check freely ("SPECTATOR MODE" banner); drafts survive reload and the login round-trip (`/login?next=/motion`); broadcast success clears the draft and redirects to the new `/argument/CRX-{id}-A`; failure preserves all state with retry in place; double-submit guarded (`casting` set before the `getUser()` await).
 
 ## 5. Assets & metadata
 
-- **Two generated debate images, different jobs.** `argument/[id]/opengraph-image.tsx` (1200×630) is the link preview scrapers fetch — leave it alone. `argument/[id]/certificate/route.tsx` (1200×1500 portrait, `Content-Disposition: attachment`) is the keepsake a debater downloads and posts: statement, verdict, split bar, and both sides of the Crux AI reading. Layout lives in `_components/argument/CertificateCard.tsx` so it can be rendered against a hand-built model; the Markdown → strings reduction is `certificateAnalysis.ts` (satori has no Markdown pipeline). **Fonts must be ttf/otf/woff — satori throws on woff2**; `_utils/ogFonts.ts` sniffs the `wOF2` signature, skips the file, warns, and aliases the missing face onto Space Grotesk so the image still renders.
+- **Two generated debate images, different jobs.** `argument/[id]/opengraph-image.tsx` (1200×630) is the link preview scrapers fetch — leave it alone. `argument/[id]/certificate/route.tsx` (1200×1500 portrait, `Content-Disposition: attachment`) is the keepsake a debater downloads and posts: motion, verdict, split bar, and both sides of the Crux AI reading. Layout lives in `_components/motion/CertificateCard.tsx` so it can be rendered against a hand-built model; the Markdown → strings reduction is `certificateAnalysis.ts` (satori has no Markdown pipeline). **Fonts must be ttf/otf/woff — satori throws on woff2**; `_utils/ogFonts.ts` sniffs the `wOF2` signature, skips the file, warns, and aliases the missing face onto Space Grotesk so the image still renders.
 - File-convention assets (generated, brand-styled): `app/icon.png` (favicon), `app/apple-icon.png`, `app/opengraph-image.png` (1200×630 "Cru*x*" card). `public/register-hero.png` = local duotone quote-marks hero, served via `next/image` (`fill` + `sizes` + `priority`). **Zero raw `<img>` tags and zero hotlinked assets in the app.**
 - Metadata: root title `"Crux — The Digital Debate Arena"` with `%s · Crux` template; every top-level page exports its own `metadata.title`.
 - Assets were generated by screenshotting hand-built HTML in Playwright with the real brand fonts — repeatable technique if new marks are needed.
@@ -114,18 +114,18 @@ useGSAP(() => {
 ```
 Reduced-motion users get the server-rendered end state (verified via emulation). Entrances start elements **dimmed (opacity 0.25), never hidden**, and `clearProps` on complete. One-off event tweens (like pop, hover lift) guard with `window.matchMedia(MOTION_OK).matches`.
 
-**What animates today:** home feed + sidebar stagger, tab-switch crossfade (`ActiveArguments`, skips first mount), argument hero (SplitText lines + bar draw + % count-up), case columns slide from their own sides (`data-case`, once), like-button pop, `ArenaCard` hover lift (−6px, `overwrite:"auto"`), search modal open (backdrop fade + panel scale, **never per keystroke**), auth entrance timelines (login card rise; register form/fields/panel), profile chart bars grow from baseline, `Reveal` staggers on all §4 pages. Existing `animate-pulse`/`animate-ping` dots carry `motion-reduce:animate-none`.
+**What animates today:** home feed + sidebar stagger, tab-switch crossfade (`ActiveMotions`, skips first mount), argument hero (SplitText lines + bar draw + % count-up), case columns slide from their own sides (`data-case`, once), like-button pop, `ArenaCard` hover lift (−6px, `overwrite:"auto"`), search modal open (backdrop fade + panel scale, **never per keystroke**), auth entrance timelines (login card rise; register form/fields/panel), profile chart bars grow from baseline, `Reveal` staggers on all §4 pages. Existing `animate-pulse`/`animate-ping` dots carry `motion-reduce:animate-none`.
 
-**Anti-opportunities (still in force):** no per-keystroke result animation; no motion gating form errors or the comment-post loop; no route-exit animations >200ms; no re-tweening bars on data polls; no new infinite loops.
+**Anti-opportunities (still in force):** no per-keystroke result animation; no motion gating form errors or the argument-post loop; no route-exit animations >200ms; no re-tweening bars on data polls; no new infinite loops.
 
 ## 7. Backend touchpoints added during the makeover
 
 - `GET /arena/leaderboard` and `GET /arena/leaderboard/season` (arena.controller/route) — the career and season boards. Both answer `{ rows, total, page, pageSize }` (season adds `season`, `seasonKey`, `daysLeft`), both take `?page=&pageSize=` (default 20, max 50). `config.limits.leaderboard_rows` still caps how deep the board goes — paging walks that same capped ranking, so `total` is `min(users, cap)` and a rank means the same thing on page 3 as on page 1. Read-only.
-- `GET /arena/statements` (arena.controller/route) — **the** paginated statement feed, read by `/domain`, `/archive`, `/topic/[keyword]` and the home "Newest" tab: `?domainId=&keyword=&status=&outcome=&page=&pageSize=` (`status` ∈ live|concluded, `outcome` ∈ for|against|draw|walkover, both validated against a closed list — an unknown value is ignored, never interpolated) → `{ statements, total, page, pageSize }` (newest-first; rows carry `winner`/`margin` so settled cards can label themselves; `page` clamped to range, `pageSize` default 12 max 50, junk params → defaults). Read-only. It replaced `GET /arena/active/newest`, which was the same query without paging and has been deleted.
-- **Avatar system** (avatar.controller/route + `lib/avatars.ts`): `GET /avatar/presets` (public list), `POST /avatar/upload` (auth; multer memory storage 5MB + MIME filter, magic-byte check, sharp → 256×256 webp, metadata stripped), `PUT /avatar/preset` (auth; id validated server-side), `DELETE /avatar` (auth). `backend/public` is served by `express.static`; presets are 18 committed SVGs in `public/avatars/presets`, uploads land in `public/uploads/avatars` (gitignored, `.gitkeep`); replacing/removing deletes the old *custom* file only (ENOENT tolerated), presets are shared and never deleted. Migration `0005_add_user_avatar.sql` added `users.avatar TEXT` storing the public URL path — the prefix distinguishes preset vs custom. `avatar` is returned by `/user/me`, `/profile/:id`, `/comment/:id`, `/arena/leaderboard`, `/arena/sidebar`, and the `/arena/active/*` feeds.
-- **Statement-flow backend fixes (2026-07-17):** both AI controllers' `catch` blocks now send real responses (`ai.controller.ts` → `502 {error:"arbiter_unavailable"}`; `argument.controller.ts` → `500`) — previously they sent nothing and the frontend spun forever. `POST /argument` success returns `{ id, message }` (the id drives the post-broadcast redirect). `updateDesciption` is wrapped in its own try/catch so a failed description AI call can't 500 an already-committed insert (which invited duplicate-argument retries). The arbiter prompt gained one `[domain]` rule: hint `"auto"`/empty → pick from the closed list by statement alone.
-- **Login `?next=`:** `/login?next=/statement` redirects there after login; validation rejects `//` and `/\` prefixes (open-redirect guard).
-- Everything else was frontend-only. Schema: `users(id, role, name, username, logic_score, description, email, avatar)`, `arguments(id, user_id, content, content_keyword, domain, affirmative, negative, created_at)`, `comments(id, user_id, argument_id, side, content, likes)`.
+- `GET /arena/motions` (arena.controller/route) — **the** paginated motion feed, read by `/domain`, `/archive`, `/topic/[keyword]` and the home "Newest" tab: `?domainId=&keyword=&status=&outcome=&page=&pageSize=` (`status` ∈ live|concluded, `outcome` ∈ for|against|draw|walkover, both validated against a closed list — an unknown value is ignored, never interpolated) → `{ motions, total, page, pageSize }` (newest-first; rows carry `winner`/`margin` so settled cards can label themselves; `page` clamped to range, `pageSize` default 12 max 50, junk params → defaults). Read-only. It replaced `GET /arena/active/newest`, which was the same query without paging and has been deleted.
+- **Avatar system** (avatar.controller/route + `lib/avatars.ts`): `GET /avatar/presets` (public list), `POST /avatar/upload` (auth; multer memory storage 5MB + MIME filter, magic-byte check, sharp → 256×256 webp, metadata stripped), `PUT /avatar/preset` (auth; id validated server-side), `DELETE /avatar` (auth). `backend/public` is served by `express.static`; presets are 18 committed SVGs in `public/avatars/presets`, uploads land in `public/uploads/avatars` (gitignored, `.gitkeep`); replacing/removing deletes the old *custom* file only (ENOENT tolerated), presets are shared and never deleted. Migration `0005_add_user_avatar.sql` added `users.avatar TEXT` storing the public URL path — the prefix distinguishes preset vs custom. `avatar` is returned by `/user/me`, `/profile/:id`, `/motion/:id`, `/arena/leaderboard`, `/arena/sidebar`, and the `/arena/active/*` feeds.
+- **Motion-flow backend fixes (2026-07-17):** both AI controllers' `catch` blocks now send real responses (`ai.controller.ts` → `502 {error:"arbiter_unavailable"}`; `motion.controller.ts` → `500`) — previously they sent nothing and the frontend spun forever. `POST /motion` success returns `{ id, message }` (the id drives the post-broadcast redirect). `updateDesciption` is wrapped in its own try/catch so a failed description AI call can't 500 an already-committed insert (which invited duplicate-argument retries). The arbiter prompt gained one `[domain]` rule: hint `"auto"`/empty → pick from the closed list by motion alone.
+- **Login `?next=`:** `/login?next=/motion` redirects there after login; validation rejects `//` and `/\` prefixes (open-redirect guard).
+- Everything else was frontend-only. Schema: `users(id, role, name, username, logic_score, description, email, avatar)`, `motions(id, user_id, content, content_keyword, domain, affirmative, negative, created_at)`, `arguments(id, user_id, motion_id, side, content, likes)`.
 
 ## 8. Known issues & rough edges (candidates for the improvement session)
 
@@ -139,22 +139,22 @@ Reduced-motion users get the server-rendered end state (verified via emulation).
 - Likes: optimistic UI only; unauthenticated likes mutate local state without persisting; no unlike API call.
 - Search: no keyboard result navigation (arrow keys), no focus trap in the dialog.
 - Leaderboard: no pagination beyond top 50; "Consistency"/"Wins"-style stats from the design mock have no schema backing (page shows only real columns deliberately).
-- Leaderboard/home feeds are still unpaginated — `ui/Pagination` + the `/arena/statements` response shape (`{ statements, total, page, pageSize }`) are the intended pattern when they get there.
-- Audit motion opportunity #9 (new-comment insertion tween + bar re-tween on post) and #10 (route transitions) were deliberately not built.
-- Statement flow, deferred from the 2026-07-17 final review (a11y polish batch): no `aria-live` on the typing nudges, notices, or progress-theater label; the ORIGINAL/IMPROVED radiogroup lacks roving tabIndex/arrow-key nav; `StageRail` has only a static `aria-label` (no `aria-current`).
-- `POST /argument` still trusts `user_id` from the client body (no auth middleware) — pre-existing trust model, unchanged by the redesign; server-side derivation is a separate hardening task.
+- Leaderboard/home feeds are still unpaginated — `ui/Pagination` + the `/arena/motions` response shape (`{ motions, total, page, pageSize }`) are the intended pattern when they get there.
+- Audit motion opportunity #9 (new-argument insertion tween + bar re-tween on post) and #10 (route transitions) were deliberately not built.
+- Motion flow, deferred from the 2026-07-17 final review (a11y polish batch): no `aria-live` on the typing nudges, notices, or progress-theater label; the ORIGINAL/IMPROVED radiogroup lacks roving tabIndex/arrow-key nav; `StageRail` has only a static `aria-label` (no `aria-current`).
+- `POST /motion` still trusts `user_id` from the client body (no auth middleware) — pre-existing trust model, unchanged by the redesign; server-side derivation is a separate hardening task.
 - Hedge-word nudge regexes can false-positive on legitimate phrasing ("this kind of argument") — accepted as a non-blocking heuristic.
 
 **Code quality niggles**
 - `React.SubmitEvent` used in auth handlers (non-standard type name; tsc accepts it today).
-- `ArgumentInput` posts then `router.refresh()` — no optimistic comment insertion.
+- `ArgumentInput` posts then `router.refresh()` — no optimistic argument insertion.
 - `HighStakesTab` component exists but is unreachable (tab not in `tabList`); `DebateHistory`/`HistoryItem` are dead code.
 - Seed data has near-zero logic scores, so leaderboard bars/tiers read flat ("Beginner tier", 0-width bars) — cosmetic until scoring accrues.
 
 ## 9. Verification workflow used throughout (repeat it)
 
 1. `cd frontend && npx tsc --noEmit` and `npm run lint` — both must stay at zero.
-2. Playwright MCP sweep: navigate `/`, `/login`, `/register`, `/statement`, `/argument/CRX-1-A`, `/profile/me`, `/profile/nitesh_dev`, `/profile/1`, `/profile/nope`, `/leaderboard`, `/rules`, `/about`, `/domain?q=all` collecting console errors + pageerrors — must be zero (ignore one-time `ChunkLoadError` right after a dev-server restart; re-run to confirm).
+2. Playwright MCP sweep: navigate `/`, `/login`, `/register`, `/motion`, `/argument/CRX-1-A`, `/profile/me`, `/profile/nitesh_dev`, `/profile/1`, `/profile/nope`, `/leaderboard`, `/rules`, `/about`, `/domain?q=all` collecting console errors + pageerrors — must be zero (ignore one-time `ChunkLoadError` right after a dev-server restart; re-run to confirm).
 3. Screenshot desktop (1440) and mobile (390) for visual changes; check `scrollWidth === clientWidth` at 390px.
 4. For motion work: emulate `prefers-reduced-motion: reduce` and assert no element is left dimmed/transformed; assert end states are `opacity: 1` / `transform: none`.
 5. Backend endpoint changes hot-reload via tsx watch; probe with `curl localhost:8000/...`.

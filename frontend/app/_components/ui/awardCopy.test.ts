@@ -43,7 +43,7 @@ describe("awardLedger", () => {
   });
 
   it("prices BOTH modifiers when both bit, in the order they applied", () => {
-    // scoreComment: judged 7 -> capped to 5 -> halved to 2. Naming only the
+    // scoreArgument: judged 7 -> capped to 5 -> halved to 2. Naming only the
     // last would hide the step that cost the most.
     expect(
       awardLedger(award({ points: 2, judged: 7, capped: true, halved: true })),

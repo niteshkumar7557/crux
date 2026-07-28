@@ -2,16 +2,16 @@ import pool from "./index.js";
 import {
 	insertBaseData,
 	USERS,
-	STATEMENTS,
-	FOR_COMMENTS,
-	AGAINST_COMMENTS,
+	MOTIONS,
+	FOR_ARGUMENTS,
+	AGAINST_ARGUMENTS,
 	randInt,
 	pick,
 } from "./seed-data.js";
 
 // Dev seeder — small, realistic dataset for feature development.
-// Wipes and refills users, arguments, and comments:
-//   30 real users + 30 real statements, each statement with 1–6 comments.
+// Wipes and refills users, motions, and arguments:
+//   30 real users + 30 real motions, each motion with 1–6 arguments.
 // Every account logs in with the password "secret".
 //
 // For millions of rows (query stress testing) run seed-stress.ts instead:
@@ -23,33 +23,33 @@ const seed = async () => {
 	try {
 		await client.query("BEGIN");
 
-		const { statementTimes } = await insertBaseData(client);
+		const { motionTimes } = await insertBaseData(client);
 
-		// 1–6 comments per statement: random side, text, commenter, likes,
-		// posted 1–96h after the statement (clamped to now)
+		// 1–6 arguments per motion: random side, text, debater, likes,
+		// posted 1–96h after the motion (clamped to now)
 		const now = Date.now();
 		const HOUR = 60 * 60 * 1000;
-		const commentValues: unknown[] = [];
-		const commentRows: string[] = [];
-		STATEMENTS.forEach((_, i) => {
+		const argumentValues: unknown[] = [];
+		const argumentRows: string[] = [];
+		MOTIONS.forEach((_, i) => {
 			for (let c = randInt(1, 6); c > 0; c--) {
 				const isFor = Math.random() < 0.5;
 				const postedAt = new Date(
 					Math.min(
-						statementTimes[i]!.getTime() + randInt(1, 96) * HOUR,
+						motionTimes[i]!.getTime() + randInt(1, 96) * HOUR,
 						now,
 					),
 				);
-				commentValues.push(
+				argumentValues.push(
 					randInt(1, USERS.length),
-					i + 1, // statement ids are 1-based after TRUNCATE ... RESTART IDENTITY
+					i + 1, // motion ids are 1-based after TRUNCATE ... RESTART IDENTITY
 					isFor ? "for" : "against",
-					pick(isFor ? FOR_COMMENTS : AGAINST_COMMENTS),
+					pick(isFor ? FOR_ARGUMENTS : AGAINST_ARGUMENTS),
 					randInt(0, 40),
 					postedAt,
 				);
-				const o = commentValues.length - 6;
-				commentRows.push(
+				const o = argumentValues.length - 6;
+				argumentRows.push(
 					`($${o + 1}, $${o + 2}, $${o + 3}, $${o + 4}, $${o + 5}, $${o + 6})`,
 				);
 			}
@@ -57,18 +57,18 @@ const seed = async () => {
 
 		await client.query(
 			`
-      INSERT INTO comments (user_id, argument_id, side, content, likes, created_at)
+      INSERT INTO arguments (user_id, motion_id, side, content, likes, created_at)
       VALUES
-        ${commentRows.join(",\n        ")};
+        ${argumentRows.join(",\n        ")};
       `,
-			commentValues,
+			argumentValues,
 		);
-		console.log(`✅ Seeded ${commentRows.length} comments`);
+		console.log(`✅ Seeded ${argumentRows.length} arguments`);
 
 		// §11: pin two debates onto the Main Stage so a fresh dev DB shows a
 		// populated stage immediately (the featuring poller also fills it by heat).
 		// User 1 (nitesh_dev) is already seeded with role 'admin' by seed-data.ts.
-		await client.query(`UPDATE arguments SET pinned = TRUE WHERE id IN (1, 2)`);
+		await client.query(`UPDATE motions SET pinned = TRUE WHERE id IN (1, 2)`);
 		console.log("✅ Pinned 2 Main Stage debates");
 
 		// §10: seed the logic ledger from each user's all-time score so the Season

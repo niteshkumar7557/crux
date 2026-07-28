@@ -15,43 +15,43 @@ import {
 } from "./verdict.logic.js";
 import { VERDICT_JUDGE_SYSTEM_PROMPT } from "./prompts/verdict-judge.prompt.js";
 
-const MAX_COMMENTS = config.limits.verdict_comments;
+const MAX_ARGUMENTS = config.limits.verdict_arguments;
 
 type ParticipantWithName = Participant & { username: string };
 
-export async function concludeDebate(argumentId: number): Promise<void> {
+export async function concludeDebate(motionId: number): Promise<void> {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
 
-    const argRes = await client.query(
+    const motionRes = await client.query(
       `SELECT id, user_id, content, for_analysis, against_analysis, status
-       FROM arguments WHERE id = $1 FOR UPDATE`,
-      [argumentId],
+       FROM motions WHERE id = $1 FOR UPDATE`,
+      [motionId],
     );
-    const arg = argRes.rows[0];
-    if (!arg || arg.status !== "live") {
+    const motion = motionRes.rows[0];
+    if (!motion || motion.status !== "live") {
       await client.query("ROLLBACK");
       return;
     }
-    const authorId: number = arg.user_id;
+    const authorId: number = motion.user_id;
 
-    // Top comments by likes, for the judge's prompt (token-bounded).
-    const commentsRes = await client.query(
+    // Top arguments by likes, for the judge's prompt (token-bounded).
+    const argumentsRes = await client.query(
       `SELECT u.username, c.side, c.likes, c.content
-       FROM comments c JOIN users u ON u.id = c.user_id
-       WHERE c.argument_id = $1
+       FROM arguments c JOIN users u ON u.id = c.user_id
+       WHERE c.motion_id = $1
        ORDER BY c.likes DESC, c.id ASC
        LIMIT $2`,
-      [argumentId, MAX_COMMENTS],
+      [motionId, MAX_ARGUMENTS],
     );
 
     // Distinct participants with their (locked) side + username for the MVP match.
     const partRes = await client.query(
       `SELECT DISTINCT ON (c.user_id) c.user_id, c.side, u.username
-       FROM comments c JOIN users u ON u.id = c.user_id
-       WHERE c.argument_id = $1 ORDER BY c.user_id, c.id ASC`,
-      [argumentId],
+       FROM arguments c JOIN users u ON u.id = c.user_id
+       WHERE c.motion_id = $1 ORDER BY c.user_id, c.id ASC`,
+      [motionId],
     );
     const participants: ParticipantWithName[] = partRes.rows.map((r) => ({
       userId: r.user_id,
@@ -76,22 +76,22 @@ export async function concludeDebate(argumentId: number): Promise<void> {
       verdictText = "Concluded unopposed — a contest needs two committed sides.";
       payouts = walkoverPayout();
     } else {
-      const commentBlock = commentsRes.rows
+      const argumentBlock = argumentsRes.rows
         .map((c) => `@${c.username} [${c.side}, ${c.likes} likes]: ${c.content}`)
         .join("\n");
 
       const raw = await llmJson<RawVerdict>({
         system: VERDICT_JUDGE_SYSTEM_PROMPT,
-        user: `STATEMENT: ${arg.content}
+        user: `MOTION: ${motion.content}
 
 FOR analysis:
-${renderAnalysisForPrompt(readAnalysis(arg.for_analysis))}
+${renderAnalysisForPrompt(readAnalysis(motion.for_analysis))}
 
 AGAINST analysis:
-${renderAnalysisForPrompt(readAnalysis(arg.against_analysis))}
+${renderAnalysisForPrompt(readAnalysis(motion.against_analysis))}
 
-SCORED COMMENTS:
-${commentBlock}`,
+SCORED ARGUMENTS:
+${argumentBlock}`,
         maxTokens: 2500,
       });
 
@@ -116,10 +116,10 @@ ${commentBlock}`,
     // Write debate_results rows.
     for (const r of payouts.results) {
       await client.query(
-        `INSERT INTO debate_results (argument_id, user_id, side, outcome, is_mvp)
+        `INSERT INTO debate_results (motion_id, user_id, side, outcome, is_mvp)
          VALUES ($1,$2,$3,$4,$5)
-         ON CONFLICT (argument_id, user_id) DO NOTHING`,
-        [argumentId, r.userId, r.side, r.outcome, r.isMvp],
+         ON CONFLICT (motion_id, user_id) DO NOTHING`,
+        [motionId, r.userId, r.side, r.outcome, r.isMvp],
       );
     }
     // Apply logic awards (also ledgered for the §10 seasonal window). The
@@ -135,7 +135,7 @@ ${commentBlock}`,
     }
 
     await client.query(
-      `UPDATE arguments SET
+      `UPDATE motions SET
          status = 'concluded',
          concluded_at = NOW(),
          winner = $2,
@@ -145,16 +145,16 @@ ${commentBlock}`,
          affirmative = COALESCE($6, affirmative),
          negative = COALESCE($7, negative)
        WHERE id = $1`,
-      [argumentId, winner, margin, mvpUserId, verdictText, affirmative, negative],
+      [motionId, winner, margin, mvpUserId, verdictText, affirmative, negative],
     );
 
     await client.query("COMMIT");
-    console.log(`⚖️  concluded debate ${argumentId} → ${winner}`);
+    console.log(`⚖️  concluded debate ${motionId} → ${winner}`);
 
     // §14 return trigger: tell every participant the verdict is in. Best-effort,
     // post-commit so a notification failure can't roll back the conclusion.
     void notifyVerdict(
-      argumentId,
+      motionId,
       payouts.results.map((r) => ({
         userId: r.userId,
         outcome: r.outcome,
@@ -163,7 +163,7 @@ ${commentBlock}`,
     );
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error(`❌ failed to conclude debate ${argumentId}:`, err);
+    console.error(`❌ failed to conclude debate ${motionId}:`, err);
     throw err;
   } finally {
     client.release();

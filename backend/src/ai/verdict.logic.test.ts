@@ -136,7 +136,7 @@ describe("resolvePayouts", () => {
       winner: "for",
       participants: people,
       mvpUserId: null,
-      authorId: 1, // maya wrote the statement AND argued for
+      authorId: 1, // maya wrote the motion AND argued for
     });
     const maya = p.logicAwards.filter((a) => a.userId === 1);
     // Numeric comparator: a bare .sort() is lexicographic, so [10, 5] would

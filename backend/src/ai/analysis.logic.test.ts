@@ -21,8 +21,8 @@ const authors = new Map<number, string>([
 const structured: Analysis = {
   lead: "Scaling is the real obstacle.",
   points: [
-    { author: "maya", commentId: 41, text: "Only nuclear delivers baseload." },
-    { author: null, commentId: null, text: "Grid inertia is unpriced." },
+    { author: "maya", argumentId: 41, text: "Only nuclear delivers baseload." },
+    { author: null, argumentId: null, text: "Grid inertia is unpriced." },
   ],
 };
 
@@ -46,7 +46,7 @@ describe("readAnalysis", () => {
     const many = {
       lead: "L",
       points: Array.from({ length: MAX_POINTS + 5 }, (_, i) => ({
-        commentId: null,
+        argumentId: null,
         text: `point ${i}`,
       })),
     };
@@ -58,7 +58,7 @@ describe("readAnalysis", () => {
       JSON.stringify({ lead: "L", points: [{ text: "  " }, { text: "real" }] }),
     );
     expect(a.points).toEqual([
-      { author: null, commentId: null, text: "real" },
+      { author: null, argumentId: null, text: "real" },
     ]);
   });
 });
@@ -73,12 +73,12 @@ describe("parseLegacyMarkdown", () => {
     expect(a.points).toEqual([
       {
         author: "arjun",
-        commentId: null,
+        argumentId: null,
         text: "a single plant takes over 12 years to build",
       },
       {
         author: "dev",
-        commentId: null,
+        argumentId: null,
         text: "France needed a state monopoly",
       },
     ]);
@@ -97,48 +97,48 @@ describe("parseLegacyMarkdown", () => {
   it("keeps an unattributed bullet as an unattributed point", () => {
     const a = parseLegacyMarkdown("Lead.\n- just a point");
     expect(a.points).toEqual([
-      { author: null, commentId: null, text: "just a point" },
+      { author: null, argumentId: null, text: "just a point" },
     ]);
   });
 
-  it("never invents a comment id for legacy text", () => {
+  it("never invents an argument id for legacy text", () => {
     expect(
-      parseLegacyMarkdown(legacy).points.every((p) => p.commentId === null),
+      parseLegacyMarkdown(legacy).points.every((p) => p.argumentId === null),
     ).toBe(true);
   });
 });
 
 describe("sanitizeAnalysis", () => {
-  it("resolves the author from the comment id, ignoring what the model claimed", () => {
+  it("resolves the author from the argument id, ignoring what the model claimed", () => {
     const a = sanitizeAnalysis(
       {
         lead: "L",
-        points: [{ commentId: 41, author: "impostor", text: "A point." }],
+        points: [{ argumentId: 41, author: "impostor", text: "A point." }],
       },
       authors,
     );
     expect(a.points).toEqual([
-      { author: "maya", commentId: 41, text: "A point." },
+      { author: "maya", argumentId: 41, text: "A point." },
     ]);
   });
 
-  it("strips a hallucinated comment id, keeping the point unattributed", () => {
+  it("strips a hallucinated argument id, keeping the point unattributed", () => {
     const a = sanitizeAnalysis(
-      { lead: "L", points: [{ commentId: 9999, text: "A point." }] },
+      { lead: "L", points: [{ argumentId: 9999, text: "A point." }] },
       authors,
     );
     expect(a.points).toEqual([
-      { author: null, commentId: null, text: "A point." },
+      { author: null, argumentId: null, text: "A point." },
     ]);
   });
 
   it("strips an id belonging to the other side", () => {
-    // authorByCommentId only ever holds this side's comments.
+    // authorByArgumentId only ever holds this side's arguments.
     const a = sanitizeAnalysis(
-      { lead: "L", points: [{ commentId: 77, text: "A point." }] },
+      { lead: "L", points: [{ argumentId: 77, text: "A point." }] },
       authors,
     );
-    expect(a.points[0]?.commentId).toBeNull();
+    expect(a.points[0]?.argumentId).toBeNull();
   });
 
   it("drops duplicate points the model padded the list with", () => {
@@ -146,8 +146,8 @@ describe("sanitizeAnalysis", () => {
       {
         lead: "L",
         points: [
-          { commentId: 41, text: "Same point." },
-          { commentId: 57, text: "same POINT." },
+          { argumentId: 41, text: "Same point." },
+          { argumentId: 57, text: "same POINT." },
         ],
       },
       authors,
@@ -157,7 +157,7 @@ describe("sanitizeAnalysis", () => {
 
   it("truncates a point that ran long", () => {
     const a = sanitizeAnalysis(
-      { lead: "L", points: [{ commentId: 41, text: "x".repeat(999) }] },
+      { lead: "L", points: [{ argumentId: 41, text: "x".repeat(999) }] },
       authors,
     );
     expect(a.points[0]?.text.length).toBeLessThanOrEqual(POINT_MAX_CHARS + 1);
@@ -170,7 +170,7 @@ describe("sanitizeAnalysis", () => {
     ["a number", 7],
     ["points as an object", { lead: "L", points: { nope: true } }],
     ["points of junk", { lead: "L", points: [null, 3, "x"] }],
-    ["a missing lead", { points: [{ commentId: 41, text: "A point." }] }],
+    ["a missing lead", { points: [{ argumentId: 41, text: "A point." }] }],
   ])("degrades rather than throwing on %s", (_label, raw) => {
     expect(() => sanitizeAnalysis(raw, authors)).not.toThrow();
   });
@@ -181,11 +181,11 @@ describe("sanitizeAnalysis", () => {
 
   it("keeps the good points from a partly-broken list", () => {
     const a = sanitizeAnalysis(
-      { lead: "L", points: [null, { commentId: 41, text: "Survives." }, 3] },
+      { lead: "L", points: [null, { argumentId: 41, text: "Survives." }, 3] },
       authors,
     );
     expect(a.points).toEqual([
-      { author: "maya", commentId: 41, text: "Survives." },
+      { author: "maya", argumentId: 41, text: "Survives." },
     ]);
   });
 });
@@ -197,7 +197,7 @@ describe("renderAnalysisForPrompt", () => {
     );
   });
 
-  it("hides comment ids — they are noise to the probability and verdict judges", () => {
+  it("hides argument ids — they are noise to the probability and verdict judges", () => {
     expect(renderAnalysisForPrompt(structured)).not.toContain("#41");
   });
 

@@ -2,48 +2,48 @@ import { describe, it, expect } from "vitest";
 import {
   CROSS_USER_MIN_LENGTH,
   findDuplicate,
-  normaliseComment,
-  type PriorComment,
+  normaliseArgument,
+  type PriorArgument,
 } from "./duplicate.logic.js";
 
-// A comment long enough that a cross-user repost of it is refused.
+// An argument long enough that a cross-user repost of it is refused.
 const LONG =
   "France built 56 reactors in 15 years, but only under a state monopoly with cheap public debt.";
 
-const prior = (over: Partial<PriorComment> = {}): PriorComment => ({
+const prior = (over: Partial<PriorArgument> = {}): PriorArgument => ({
   userId: 1,
   username: "arjun",
   content: LONG,
   ...over,
 });
 
-describe("normaliseComment", () => {
+describe("normaliseArgument", () => {
   it("ignores case, punctuation and spacing", () => {
-    expect(normaliseComment("The COST — is real!!")).toBe("the cost is real");
-    expect(normaliseComment("  the   cost is real  ")).toBe("the cost is real");
+    expect(normaliseArgument("The COST — is real!!")).toBe("the cost is real");
+    expect(normaliseArgument("  the   cost is real  ")).toBe("the cost is real");
   });
 
-  it("strips accents so a re-typed comment still matches", () => {
-    expect(normaliseComment("café")).toBe(normaliseComment("cafe"));
+  it("strips accents so a re-typed argument still matches", () => {
+    expect(normaliseArgument("café")).toBe(normaliseArgument("cafe"));
   });
 
   it("keeps non-Latin scripts instead of emptying them", () => {
-    expect(normaliseComment("यह तर्क गलत है।")).toBe("यह तर्क गलत है");
+    expect(normaliseArgument("यह तर्क गलत है।")).toBe("यह तर्क गलत है");
   });
 
-  it("collapses a punctuation-only comment to nothing", () => {
-    expect(normaliseComment("!!! ???")).toBe("");
+  it("collapses a punctuation-only argument to nothing", () => {
+    expect(normaliseArgument("!!! ???")).toBe("");
   });
 });
 
 describe("findDuplicate", () => {
-  it("passes a genuinely new comment", () => {
+  it("passes a genuinely new argument", () => {
     expect(findDuplicate("A brand new point", [prior()], 2)).toEqual({
       duplicate: false,
     });
   });
 
-  it("refuses your own comment posted again", () => {
+  it("refuses your own argument posted again", () => {
     const verdict = findDuplicate(LONG, [prior({ userId: 7 })], 7);
     expect(verdict).toEqual({ duplicate: true, of: "self" });
   });
@@ -56,7 +56,7 @@ describe("findDuplicate", () => {
     ).toEqual({ duplicate: true, of: "self" });
   });
 
-  it("refuses a comment copied from another debater, and names them", () => {
+  it("refuses an argument copied from another debater, and names them", () => {
     const verdict = findDuplicate(LONG, [prior({ userId: 1 })], 2);
     expect(verdict).toEqual({ duplicate: true, of: "other", username: "arjun" });
   });
@@ -72,7 +72,7 @@ describe("findDuplicate", () => {
 
   it("allows a short collision between two different people", () => {
     const short = "i agree with this";
-    expect(normaliseComment(short).length).toBeLessThan(CROSS_USER_MIN_LENGTH);
+    expect(normaliseArgument(short).length).toBeLessThan(CROSS_USER_MIN_LENGTH);
     expect(
       findDuplicate(short, [prior({ userId: 1, content: short })], 2),
     ).toEqual({ duplicate: false });
@@ -87,13 +87,13 @@ describe("findDuplicate", () => {
     expect(verdict).toEqual({ duplicate: true, of: "self" });
   });
 
-  it("does not refuse a comment that merely contains an earlier one", () => {
+  it("does not refuse an argument that merely contains an earlier one", () => {
     expect(
       findDuplicate(`${LONG} And the storage cost is unpriced.`, [prior()], 2),
     ).toEqual({ duplicate: false });
   });
 
-  it("never matches on a comment that normalises to nothing", () => {
+  it("never matches on an argument that normalises to nothing", () => {
     expect(findDuplicate("???", [prior({ content: "!!!" })], 2)).toEqual({
       duplicate: false,
     });

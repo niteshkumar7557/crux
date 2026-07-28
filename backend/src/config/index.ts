@@ -80,7 +80,7 @@ const config = {
     conclusion_tick_ms: num("CONCLUSION_TICK_MS", 60_000),
     /** Max debates concluded per conclusion tick. */
     conclusion_batch: num("CONCLUSION_BATCH", 20),
-    /** How often heat, the Main Stage and the DotD are recomputed. */
+    /** How often heat, the Main Stage and the MotD are recomputed. */
     featuring_tick_ms: num("FEATURING_TICK_MS", 5 * 60_000),
     /** How often to check whether a season has closed. */
     season_rollover_tick_ms: num("SEASON_ROLLOVER_TICK_MS", 60 * 60_000),
@@ -88,8 +88,8 @@ const config = {
 
   // ── Limits ────────────────────────────────────────────────────────────────
   limits: {
-    /** Comments handed to the Verdict Judge. Caps prompt size and cost. */
-    verdict_comments: num("VERDICT_MAX_COMMENTS", 40),
+    /** Arguments handed to the Verdict Judge. Caps prompt size and cost. */
+    verdict_arguments: num("VERDICT_MAX_ARGUMENTS", 40),
     /** Rows returned by the leaderboard endpoints. */
     leaderboard_rows: num("LEADERBOARD_ROWS", 50),
     /** URLs in the generated sitemap. */

@@ -20,12 +20,12 @@ function parseId(raw: string | string[] | undefined): number | null {
 export async function togglePin(req: Request, res: Response) {
   const id = parseId(req.params.id);
   if (id === null) {
-    return res.status(400).json({ error: "invalid argument id" });
+    return res.status(400).json({ error: "invalid motion id" });
   }
 
   try {
     const { rows } = await pool.query(
-      `UPDATE arguments SET pinned = NOT pinned
+      `UPDATE motions SET pinned = NOT pinned
        WHERE id = $1 AND status = 'live'
        RETURNING pinned`,
       [id],
@@ -35,7 +35,7 @@ export async function togglePin(req: Request, res: Response) {
       // Nothing updated: either it does not exist or it is already concluded.
       // Those are different mistakes, so they get different answers.
       const { rows: found } = await pool.query(
-        `SELECT status FROM arguments WHERE id = $1`,
+        `SELECT status FROM motions WHERE id = $1`,
         [id],
       );
       if (found.length === 0) {
@@ -52,21 +52,21 @@ export async function togglePin(req: Request, res: Response) {
 }
 
 /**
- * POST /admin/dotd/:id — hand-crown the Debate of the Day.
+ * POST /admin/motd/:id — hand-crown the Motion of the Day.
  *
  * Feature the new hero in the same transaction that crowns it. The home hero
- * query asks for `featured = TRUE AND is_dotd = TRUE`, so clearing the old
+ * query asks for `featured = TRUE AND is_motd = TRUE`, so clearing the old
  * crown without featuring the new one would blank the home page until the next
  * featuring tick — up to five minutes of empty hero for an admin action.
  *
  * The poller then leaves this alone: its guard is "has a live debate been
- * crowned inside the current UTC day", and `dotd_at = NOW()` satisfies it. The
+ * crowned inside the current UTC day", and `motd_at = NOW()` satisfies it. The
  * admin's pick holds until tomorrow.
  */
-export async function setDotd(req: Request, res: Response) {
+export async function setMotd(req: Request, res: Response) {
   const id = parseId(req.params.id);
   if (id === null) {
-    return res.status(400).json({ error: "invalid argument id" });
+    return res.status(400).json({ error: "invalid motion id" });
   }
 
   const client = await pool.connect();
@@ -74,9 +74,9 @@ export async function setDotd(req: Request, res: Response) {
     await client.query("BEGIN");
 
     // Check first, clear second. Clearing before we know the target is
-    // eligible would drop the reigning DotD and crown nothing in its place.
+    // eligible would drop the reigning MotD and crown nothing in its place.
     const { rows } = await client.query(
-      `SELECT status FROM arguments WHERE id = $1 FOR UPDATE`,
+      `SELECT status FROM motions WHERE id = $1 FOR UPDATE`,
       [id],
     );
     if (rows.length === 0) {
@@ -89,13 +89,13 @@ export async function setDotd(req: Request, res: Response) {
     }
 
     await client.query(
-      `UPDATE arguments SET is_dotd = FALSE WHERE is_dotd = TRUE AND id <> $1`,
+      `UPDATE motions SET is_motd = FALSE WHERE is_motd = TRUE AND id <> $1`,
       [id],
     );
     await client.query(
-      `UPDATE arguments
-       SET is_dotd = TRUE,
-           dotd_at = NOW(),
+      `UPDATE motions
+       SET is_motd = TRUE,
+           motd_at = NOW(),
            featured = TRUE,
            featured_at = COALESCE(featured_at, NOW())
        WHERE id = $1`,
@@ -103,10 +103,10 @@ export async function setDotd(req: Request, res: Response) {
     );
 
     await client.query("COMMIT");
-    res.status(200).json({ isDotd: true });
+    res.status(200).json({ isMotd: true });
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error("❌ setDotd failed:", err);
+    console.error("❌ setMotd failed:", err);
     res.status(500).json({ error: "Internal DB Error!" });
   } finally {
     client.release();

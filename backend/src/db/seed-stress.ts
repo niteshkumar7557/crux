@@ -2,26 +2,26 @@ import pool from "./index.js";
 import {
 	insertBaseData,
 	USERS,
-	FOR_COMMENTS,
-	AGAINST_COMMENTS,
+	FOR_ARGUMENTS,
+	AGAINST_ARGUMENTS,
 } from "./seed-data.js";
 
 // Stress seeder — base data plus millions of generated rows for testing
-// database queries under load. Wipes and refills users, arguments, comments.
+// database queries under load. Wipes and refills users, motions, arguments.
 //
-// Phase 1 (unique):  30 real users + 30 real statements (seed-data.ts).
-// Phase 2 (stress):  10,000 duplicate users and 1,000,000 duplicate statements
+// Phase 1 (unique):  30 real users + 30 real motions (seed-data.ts).
+// Phase 2 (stress):  10,000 duplicate users and 1,000,000 duplicate motions
 //                    via generate_series. Each duplicate clones base row
 //                    ((i - 1) % 30) + 1 and gets a random 8-char hex keyword
 //                    (e.g. "a1b2c3d4") attached:
 //                      username: a1b2c3d4_vector_shif          (hex + 11 chars, fits VARCHAR(20))
 //                      email:    a1b2c3d4_vector_shift@example.com
 //                      content:  a1b2c3d4 AI should be granted legal personhood.
-//                    Then EVERY statement gets 0–12 comments (count, side, text,
-//                    commenter, likes, timestamp all random) — ~6M comments total.
+//                    Then EVERY motion gets 0–12 arguments (count, side, text,
+//                    debater, likes, timestamp all random) — ~6M arguments total.
 //
-// Scale via env vars (defaults below), e.g. for a 10M-statement run:
-//   SEED_STATEMENTS=10000000 npm run db:seed:stress
+// Scale via env vars (defaults below), e.g. for a 10M-motion run:
+//   SEED_MOTIONS=10000000 npm run db:seed:stress
 // Inserts run in batches of SEED_BATCH rows so big runs log progress as they go.
 //
 // For a small, realistic dataset (feature development) run seed-dev.ts instead:
@@ -38,14 +38,14 @@ const intEnv = (name: string, fallback: number): number => {
 };
 
 const DUP_USERS = intEnv("SEED_USERS", 10_000);
-const DUP_STATEMENTS = intEnv("SEED_STATEMENTS", 1_000_000);
-const MAX_COMMENTS_PER_STATEMENT = intEnv("SEED_MAX_COMMENTS", 12); // 0..N, uniform → ~N/2 avg
+const DUP_MOTIONS = intEnv("SEED_MOTIONS", 1_000_000);
+const MAX_ARGUMENTS_PER_MOTION = intEnv("SEED_MAX_ARGUMENTS", 12); // 0..N, uniform → ~N/2 avg
 const BATCH_SIZE = Math.max(1, intEnv("SEED_BATCH", 1_000_000));
 
 // ============================================================
 // Phase 2 — stress SQL (pure Postgres, generate_series loops)
 // ============================================================
-const U = USERS.length; // 30 base rows for both users and arguments
+const U = USERS.length; // 30 base rows for both users and motions
 
 // Duplicate users: clone base user ((i - 1) % 30) + 1 with a random hex keyword.
 // username is VARCHAR(20), so hex (8) + "_" + first 11 chars of the base username.
@@ -68,11 +68,11 @@ const STRESS_USERS_SQL = `
 	ON CONFLICT DO NOTHING;
 `;
 
-// Duplicate statements: hex keyword prepended to content, random author from the
+// Duplicate motions: hex keyword prepended to content, random author from the
 // full user pool, re-randomized vote split (15–85) and created_at (last 45 days).
-const STRESS_STATEMENTS_SQL = `
+const STRESS_MOTIONS_SQL = `
 	WITH uids AS (SELECT array_agg(id) AS ids, count(*)::int AS n FROM users)
-	INSERT INTO arguments (user_id, content, content_keyword, domain_id, for_analysis, against_analysis, affirmative, negative, created_at)
+	INSERT INTO motions (user_id, content, content_keyword, domain_id, for_analysis, against_analysis, affirmative, negative, created_at)
 	SELECT
 		u.ids[floor(random() * u.n)::int + 1],
 		k.hex || ' ' || b.content,
@@ -84,7 +84,7 @@ const STRESS_STATEMENTS_SQL = `
 		100 - k.aff,
 		now() - random() * interval '45 days'
 	FROM generate_series($1::int, $2::int) AS gs(i)
-	JOIN arguments b ON b.id = (gs.i - 1) % ${U} + 1
+	JOIN motions b ON b.id = (gs.i - 1) % ${U} + 1
 	CROSS JOIN uids u
 	-- gs.i correlates the subquery: without it the planner caches one value for all rows
 	CROSS JOIN LATERAL (
@@ -94,27 +94,27 @@ const STRESS_STATEMENTS_SQL = `
 	) k;
 `;
 
-// Comments: EVERY statement gets a random number of comments (0–12), each with a
+// Arguments: EVERY motion gets a random number of arguments (0–12), each with a
 // random side, random text from the matching pool ($1 for / $2 against), random
-// commenter, random likes, posted 1–96h after the statement.
-const STRESS_COMMENTS_SQL = `
+// debater, random likes, posted 1–96h after the motion.
+const STRESS_ARGUMENTS_SQL = `
 	WITH uids AS (SELECT array_agg(id) AS ids, count(*)::int AS n FROM users)
-	INSERT INTO comments (user_id, argument_id, side, content, likes, created_at)
+	INSERT INTO arguments (user_id, motion_id, side, content, likes, created_at)
 	SELECT
 		u.ids[floor(random() * u.n)::int + 1],
 		a.id,
 		CASE WHEN r.is_for THEN 'for' ELSE 'against' END,
 		r.hex || ' ' || CASE WHEN r.is_for
-			THEN ($1::text[])[floor(random() * ${FOR_COMMENTS.length})::int + 1]
-			ELSE ($2::text[])[floor(random() * ${AGAINST_COMMENTS.length})::int + 1]
+			THEN ($1::text[])[floor(random() * ${FOR_ARGUMENTS.length})::int + 1]
+			ELSE ($2::text[])[floor(random() * ${AGAINST_ARGUMENTS.length})::int + 1]
 		END,
 		floor(random() * 41)::int,
 		least(a.created_at + (1 + floor(random() * 96)) * interval '1 hour', now())
-	FROM arguments a
+	FROM motions a
 	CROSS JOIN uids u
-	-- a.id correlates generate_series so the comment count is re-rolled per statement
+	-- a.id correlates generate_series so the argument count is re-rolled per motion
 	CROSS JOIN LATERAL generate_series(
-		1, (a.id * 0 + floor(random() * ${MAX_COMMENTS_PER_STATEMENT + 1}))::int
+		1, (a.id * 0 + floor(random() * ${MAX_ARGUMENTS_PER_MOTION + 1}))::int
 	) AS g(j)
 	-- g.j correlates the subquery: without it the planner caches one value for all rows
 	CROSS JOIN LATERAL (
@@ -132,7 +132,7 @@ const seed = async () => {
 		await client.query("BEGIN");
 
 		// ============================================================
-		// Phase 1 — 30 unique users + 30 unique statements
+		// Phase 1 — 30 unique users + 30 unique motions
 		// ============================================================
 		const { hashedPassword } = await insertBaseData(client);
 
@@ -149,30 +149,30 @@ const seed = async () => {
 		);
 
 		t = Date.now();
-		let argCount = 0;
-		for (let lo = 1; lo <= DUP_STATEMENTS; lo += BATCH_SIZE) {
-			const hi = Math.min(lo + BATCH_SIZE - 1, DUP_STATEMENTS);
-			const batch = await client.query(STRESS_STATEMENTS_SQL, [lo, hi]);
-			argCount += batch.rowCount ?? 0;
+		let motionCount = 0;
+		for (let lo = 1; lo <= DUP_MOTIONS; lo += BATCH_SIZE) {
+			const hi = Math.min(lo + BATCH_SIZE - 1, DUP_MOTIONS);
+			const batch = await client.query(STRESS_MOTIONS_SQL, [lo, hi]);
+			motionCount += batch.rowCount ?? 0;
 			console.log(
-				`⚡ Stress: duplicate statements ${argCount.toLocaleString()}/${DUP_STATEMENTS.toLocaleString()} (${Date.now() - t}ms)`,
+				`⚡ Stress: duplicate motions ${motionCount.toLocaleString()}/${DUP_MOTIONS.toLocaleString()} (${Date.now() - t}ms)`,
 			);
 		}
 
 		t = Date.now();
-		let commentCount = 0;
-		const totalStatements = U + DUP_STATEMENTS;
-		for (let lo = 1; lo <= totalStatements; lo += BATCH_SIZE) {
-			const hi = Math.min(lo + BATCH_SIZE - 1, totalStatements);
-			const batch = await client.query(STRESS_COMMENTS_SQL, [
-				FOR_COMMENTS,
-				AGAINST_COMMENTS,
+		let argumentCount = 0;
+		const totalMotions = U + DUP_MOTIONS;
+		for (let lo = 1; lo <= totalMotions; lo += BATCH_SIZE) {
+			const hi = Math.min(lo + BATCH_SIZE - 1, totalMotions);
+			const batch = await client.query(STRESS_ARGUMENTS_SQL, [
+				FOR_ARGUMENTS,
+				AGAINST_ARGUMENTS,
 				lo,
 				hi,
 			]);
-			commentCount += batch.rowCount ?? 0;
+			argumentCount += batch.rowCount ?? 0;
 			console.log(
-				`⚡ Stress: randomized comments ${commentCount.toLocaleString()} (statements ${Math.min(hi, totalStatements).toLocaleString()}/${totalStatements.toLocaleString()} covered, ${Date.now() - t}ms)`,
+				`⚡ Stress: randomized arguments ${argumentCount.toLocaleString()} (motions ${Math.min(hi, totalMotions).toLocaleString()}/${totalMotions.toLocaleString()} covered, ${Date.now() - t}ms)`,
 			);
 		}
 
