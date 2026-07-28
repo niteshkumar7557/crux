@@ -3,29 +3,36 @@ import { LuCpu } from "react-icons/lu";
 import type { Analysis } from "@/app/argument/types";
 import { focusComment } from "@/app/_utils/focusComment";
 
-// The Crux AI analysis for one side. Rendered from structured points rather
-// than a Markdown blob, which is what makes each attributed point a link: the
-// backend records the comment id a point came from, so "@dev" can jump to the
-// exact argument it credits instead of just naming a person.
+// The Crux AI analysis for one side — the original panel, unchanged to look at.
 //
-// Two kinds of point live here. The AI's opening draft has no author and no id
-// — nobody had argued yet — and renders as a plain line. A point a real debater
-// landed carries both, and renders as a control.
+// The class strings below are the ones the old react-markdown panel used, and
+// the DOM here is the shape they were written for: a lead <p>, an <h3>, then a
+// <ul> of <li>s whose leading name is styled like a <strong>. Rendering that
+// shape directly rather than serialising the analysis back into Markdown and
+// parsing it again keeps the look identical, keeps the debater's name a real
+// control instead of bold text, and avoids handing model-authored prose to a
+// Markdown parser that would treat a stray asterisk or bracket as formatting.
+//
+// The one thing the old panel could not do: a point knows which comment it came
+// from (backend `ai/analysis.logic.ts` records the id), so the name jumps to
+// that exact argument. A point with no comment behind it — the AI's opening
+// draft, written before anyone argued — has no name and nothing to press.
+
+const NAME =
+  "text-on-surface not-italic font-bold font-label text-xs tracking-wide transition-colors";
 
 const SIDES = {
   for: {
     accentText: "text-primary",
     panel: "border-primary/30 shadow-glow-primary",
-    rail: "border-primary/40",
-    railHover: "hover:border-primary",
-    nameHover: "group-hover/point:text-primary",
+    nameHover: "hover:text-primary",
+    body: "min-h-30 max-w-none [&>p]:font-headline [&>p]:text-sm [&>p]:text-on-surface-variant [&>p]:italic [&>p]:leading-relaxed [&>p]:mb-4 [&>h3]:font-label [&>h3]:text-[9px] [&>h3]:uppercase [&>h3]:tracking-[0.2em] [&>h3]:text-primary [&>h3]:font-bold [&>h3]:mt-6 [&>h3]:mb-3 [&>h3]:border-b [&>h3]:border-primary/20 [&>h3]:pb-1 [&>ul]:pl-0 [&>ul]:mt-2 [&>ul]:space-y-3 [&>ul]:list-none [&>ul>li]:font-headline [&>ul>li]:text-sm [&>ul>li]:text-on-surface-variant [&>ul>li]:italic [&>ul>li]:leading-snug [&>ul>li]:border-l-2 [&>ul>li]:border-primary/40 [&>ul>li]:pl-3 [&>ul>li>strong]:text-on-surface [&>ul>li>strong]:not-italic [&>ul>li>strong]:font-bold [&>ul>li>strong]:font-label [&>ul>li>strong]:text-xs [&>ul>li>strong]:tracking-wide",
   },
   against: {
     accentText: "text-secondary",
     panel: "border-secondary/30 shadow-glow-secondary",
-    rail: "border-secondary/40",
-    railHover: "hover:border-secondary",
-    nameHover: "group-hover/point:text-secondary",
+    nameHover: "hover:text-secondary",
+    body: "min-h-30 max-w-none [&>p]:font-headline [&>p]:text-sm [&>p]:text-on-surface-variant [&>p]:italic [&>p]:leading-relaxed [&>p]:mb-4 [&>h3]:font-label [&>h3]:text-[9px] [&>h3]:uppercase [&>h3]:tracking-[0.2em] [&>h3]:text-secondary [&>h3]:font-bold [&>h3]:mt-6 [&>h3]:mb-3 [&>h3]:border-b [&>h3]:border-secondary/20 [&>h3]:pb-1 [&>ul]:pl-0 [&>ul]:mt-2 [&>ul]:space-y-3 [&>ul]:list-none [&>ul>li]:font-headline [&>ul>li]:text-sm [&>ul>li]:text-on-surface-variant [&>ul>li]:italic [&>ul>li]:leading-snug [&>ul>li]:border-l-2 [&>ul>li]:border-secondary/40 [&>ul>li]:pl-3 [&>ul>li>strong]:text-on-surface [&>ul>li>strong]:not-italic [&>ul>li>strong]:font-bold [&>ul>li>strong]:font-label [&>ul>li>strong]:text-xs [&>ul>li>strong]:tracking-wide",
   },
 } as const;
 
@@ -37,8 +44,8 @@ const AnalysisPanel = ({
   analysis: Analysis;
 }) => {
   const s = SIDES[side];
-  const hasContent =
-    analysis && (analysis.lead?.length > 0 || analysis.points?.length > 0);
+  const lead = analysis?.lead ?? "";
+  const points = analysis?.points ?? [];
 
   return (
     <div
@@ -52,70 +59,41 @@ const AnalysisPanel = ({
           Crux AI Analysis
         </span>
       </div>
-
-      {!hasContent ? (
-        <p className="min-h-30 font-headline text-sm italic text-outline leading-relaxed">
-          No analysis yet.
-        </p>
-      ) : (
-        <div className="min-h-30">
-          {analysis.lead && (
-            <p className="font-headline text-sm text-on-surface-variant italic leading-relaxed mb-4">
-              {analysis.lead}
-            </p>
-          )}
-          {analysis.points.length > 0 && (
-            <>
-              <h3
-                className={`font-label text-[9px] uppercase tracking-[0.2em] ${s.accentText} font-bold mt-6 mb-3 border-b ${side === "for" ? "border-primary/20" : "border-secondary/20"} pb-1`}
-              >
-                Key Arguments
-              </h3>
-              <ul className="mt-2 space-y-3">
-                {analysis.points.map((p, i) => {
-                  const body = (
+      <div className={s.body}>
+        {lead && <p>{lead}</p>}
+        {points.length > 0 && (
+          <>
+            <h3>Key Arguments</h3>
+            <ul>
+              {points.map((p, i) => (
+                <li key={`${i}-${p.text}`}>
+                  {p.author && p.commentId !== null ? (
                     <>
-                      {p.author && (
-                        <span
-                          className={`font-label text-xs font-bold tracking-wide text-on-surface not-italic ${s.nameHover} transition-colors`}
-                        >
-                          @{p.author}
-                          <span className="text-outline mx-1.5">—</span>
-                        </span>
-                      )}
-                      <span className="font-headline text-sm text-on-surface-variant italic leading-snug">
-                        {p.text}
-                      </span>
-                    </>
-                  );
-
-                  // Unlinkable points still belong on the panel; they just
-                  // aren't controls, so they never look clickable.
-                  return p.commentId === null ? (
-                    <li
-                      key={`${i}-${p.text}`}
-                      className={`border-l-2 ${s.rail} pl-3`}
-                    >
-                      {body}
-                    </li>
-                  ) : (
-                    <li key={`${i}-${p.text}`}>
                       <button
                         type="button"
-                        onClick={() => focusComment(p.commentId!)}
-                        aria-label={`Go to @${p.author}'s comment`}
-                        className={`group/point block w-full text-left border-l-2 ${s.rail} ${s.railHover} pl-3 transition-colors`}
+                        onClick={() => focusComment(p.commentId as number)}
+                        aria-label={`Read @${p.author}'s comment`}
+                        className={`${NAME} ${s.nameHover}`}
                       >
-                        {body}
+                        @{p.author}
                       </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </>
-          )}
-        </div>
-      )}
+                      {" — "}
+                    </>
+                  ) : (
+                    p.author && (
+                      <>
+                        <strong>@{p.author}</strong>
+                        {" — "}
+                      </>
+                    )
+                  )}
+                  {p.text}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
     </div>
   );
 };

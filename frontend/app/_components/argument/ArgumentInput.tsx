@@ -41,6 +41,10 @@ const ArgumentInput = ({
   const [notice, setNotice] = useState<Notice | null>(null);
   const [award, setAward] = useState<Award | null>(null);
   const [pending, setPending] = useState<Pending | null>(null);
+  // Which side is in flight, or null. The post is not fast — it waits on the
+  // moderator/analyst call — so without this the composer looks inert for
+  // several seconds and people press the button again.
+  const [posting, setPosting] = useState<string | null>(null);
   const { target, setTarget } = useReplyTarget();
 
   const router = useRouter();
@@ -101,7 +105,7 @@ const ArgumentInput = ({
     side: "for" | "against",
     replyToCommentId: number | null,
   ) {
-    if (input.length === 0) return;
+    if (input.length === 0 || posting) return;
     if (lockedSide === null) {
       setPending({ urlSide, side, replyToCommentId });
       return;
@@ -114,6 +118,7 @@ const ArgumentInput = ({
   // side and the body the target id, and the server re-derives + validates it.
   async function submit(urlSide: string, replyToCommentId: number | null) {
     if (input.length === 0) return;
+    setPosting(urlSide);
     try {
       const { data } = await api.post(`/comment/${urlSide}/${argumentId}`, {
         input,
@@ -182,6 +187,8 @@ const ArgumentInput = ({
           body: "Something went wrong. Try again.",
         });
       }
+    } finally {
+      setPosting(null);
     }
   }
 
@@ -226,11 +233,12 @@ const ArgumentInput = ({
       <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center gap-3 md:gap-6">
         <div className="flex-1 w-full relative">
           <AutoGrowTextarea
-            className="w-full bg-surface-container border border-outline-variant/50 focus:border-primary focus:outline-none px-4 py-3 md:px-6 md:py-4 font-body text-on-surface placeholder:text-outline transition-all block"
+            className="w-full bg-surface-container border border-outline-variant/50 focus:border-primary focus:outline-none px-4 py-3 md:px-6 md:py-4 font-body text-on-surface placeholder:text-outline transition-all block disabled:opacity-60"
             placeholder={target ? "Write your reply..." : "Join the Argument..."}
             aria-label={target ? "Write your reply" : "Join the argument"}
             maxHeight={160}
             value={input}
+            disabled={posting !== null}
             onChange={(e) => setInput(e.currentTarget.value)}
           />
         </div>
@@ -242,6 +250,7 @@ const ArgumentInput = ({
               variant={target.side === "for" ? "outline-secondary" : "outline"}
               size="bare"
               className="flex-1 md:flex-none px-2 py-3 md:px-8 md:py-4 text-[10px] md:text-xs"
+              disabled={posting !== null}
               onClick={() =>
                 requestPost(
                   target.side === "for" ? "negative" : "affirmative",
@@ -250,7 +259,7 @@ const ArgumentInput = ({
                 )
               }
             >
-              Post Reply
+              {posting ? "Posting…" : "Post Reply"}
             </Button>
           ) : (
             <>
@@ -258,7 +267,7 @@ const ArgumentInput = ({
                 variant="outline"
                 size="bare"
                 className="flex-1 md:flex-none px-2 py-3 md:px-8 md:py-4 text-[10px] md:text-xs"
-                disabled={lockedSide === "against"}
+                disabled={lockedSide === "against" || posting !== null}
                 title={
                   lockedSide === "against"
                     ? "You've committed to AGAINST in this debate."
@@ -266,13 +275,13 @@ const ArgumentInput = ({
                 }
                 onClick={() => requestPost("affirmative", "for", null)}
               >
-                Support Affirmative
+                {posting === "affirmative" ? "Posting…" : "Support Affirmative"}
               </Button>
               <Button
                 variant="outline-secondary"
                 size="bare"
                 className="flex-1 md:flex-none px-2 py-3 md:px-8 md:py-4 text-[10px] md:text-xs"
-                disabled={lockedSide === "for"}
+                disabled={lockedSide === "for" || posting !== null}
                 title={
                   isAuthor
                     ? "You posted this statement — you can only argue FOR it."
@@ -282,7 +291,7 @@ const ArgumentInput = ({
                 }
                 onClick={() => requestPost("negative", "against", null)}
               >
-                Support Negative
+                {posting === "negative" ? "Posting…" : "Support Negative"}
               </Button>
             </>
           )}

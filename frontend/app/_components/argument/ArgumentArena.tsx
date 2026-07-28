@@ -156,6 +156,13 @@ const ArgumentArena = ({
       againstCaseComments.push(arenaComment);
     }
   });
+  // Newest first: a debate you come back to should open on what has just been
+  // argued, not on the opener you already read. Only the display order flips —
+  // the reply counts and thread anchors above are built from the chronological
+  // array, where "the first reply seen wins" still means the earliest one.
+  forCaseComments.reverse();
+  againstCaseComments.reverse();
+
   const argumentArenaData = {
     forArgumentsCount: forCaseComments.length,
     againstArgumentsCount: againstCaseComments.length,

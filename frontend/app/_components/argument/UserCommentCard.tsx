@@ -152,7 +152,7 @@ const UserArgumentCard = ({
           {isOwnComment ? (
             <span
               title="You can't like your own argument"
-              className="font-label text-[10px] uppercase text-outline flex items-center gap-2"
+              className="font-label text-[10px] uppercase text-outline flex items-center gap-2 cursor-not-allowed"
             >
               <LuThumbsUp className="text-sm" /> {likeCount}
             </span>
