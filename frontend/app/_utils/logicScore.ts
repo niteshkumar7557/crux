@@ -8,10 +8,10 @@
 
 export const TIER_LADDER = [
   { at: 0, tier: "beginner" },
-  { at: 50, tier: "intermediate" },
-  { at: 100, tier: "skilled" },
-  { at: 150, tier: "expert" },
-  { at: 200, tier: "master" },
+  { at: 100, tier: "intermediate" },
+  { at: 200, tier: "skilled" },
+  { at: 300, tier: "expert" },
+  { at: 400, tier: "master" },
 ] as const;
 
 export interface TierProgress {

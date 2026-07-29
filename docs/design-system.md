@@ -163,6 +163,14 @@ herald, laurel wreath, bust, medals ×3, amphitheater (full-bleed), doors
 
   Everything else in the product is still flat paper and hairlines — the cast
   means "this is above the page", so it is worth nothing once it is everywhere.
+
+  **The one black exception: `shadow-podium`.** The leaderboard champion is a
+  card standing in front of two cards it is touching, and the ink-tinted cast
+  is too shallow to separate them — so that single card gets a longer, truly
+  black throw (`--cast-podium`, .32 light / .62 dark, `-deep` on hover). It
+  still obeys rules 2 and 3: theme-aware, and on `bg-raised`. Nothing else in
+  the product may use it; if a second consumer appears, the rule was wrong and
+  this note should be revisited rather than copied.
 - Buttons: pill, Space Grotesk uppercase; solid = ink-on-paper inverted;
   outline = hairline + `ink-wash` hover; hover lifts `-2px`.
 - **`backdrop-filter` traps `position: fixed` children.** A blurred or

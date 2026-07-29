@@ -6,6 +6,7 @@ import api from "@/app/axios";
 import { SearchResults } from "@/app/types";
 import { slugifyDomain } from "@/app/_utils/domainSlug";
 import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
+import Portal from "@/app/_components/ui/Portal";
 
 const EMPTY_RESULTS: SearchResults = { motions: [], domains: [], users: [] };
 
@@ -14,10 +15,14 @@ export default function SearchBar() {
   const [searchInput, setSearchInput] = useState("");
   const [results, setResults] = useState<SearchResults>(EMPTY_RESULTS);
   const [isLoading, setIsLoading] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
 
   // Modal open choreography only — results re-render every debounce tick and
   // must never animate per keystroke.
+  //
+  // Scoped to the overlay, not to the search box: the overlay is portalled to
+  // <body>, so it is no longer a DOM descendant of this component and a scope
+  // rooted here would select nothing.
   useGSAP(
     () => {
       if (!isOpen) return;
@@ -44,7 +49,7 @@ export default function SearchBar() {
           );
       });
     },
-    { dependencies: [isOpen], scope: rootRef },
+    { dependencies: [isOpen], scope: overlayRef },
   );
 
   // State resets live in the handlers (not effects) so renders never cascade.
@@ -103,10 +108,7 @@ export default function SearchBar() {
     results.users.length > 0;
 
   return (
-    <div
-      ref={rootRef}
-      className="relative flex-1 min-w-0 max-w-3xl flex justify-end md:justify-start"
-    >
+    <div className="relative flex-1 min-w-0 max-w-3xl flex justify-end md:justify-start">
       <button
         onClick={() => setIsOpen(true)}
         aria-label="Search"
@@ -125,128 +127,142 @@ export default function SearchBar() {
       </button>
 
       {isOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-start justify-center pt-24 sm:pt-32"
-          onKeyDown={(e) => e.key === "Escape" && close()}
-        >
+        // Portalled to <body>: the navbar this search box lives in is
+        // `backdrop-blur-md`, which makes it the containing block AND the
+        // backdrop root for any fixed child. Left in place, `fixed inset-0`
+        // resolved to the nav's own 1440×66 strip and the scrim's blur had
+        // nothing but the nav to sample — so the page behind was neither
+        // dimmed nor blurred. See ui/Portal.
+        <Portal>
           <div
-            data-search-backdrop
-            className="fixed inset-0 bg-scrim backdrop-blur-sm"
-            onClick={close}
-          />
-
-          <div
-            data-search-panel
-            role="dialog"
-            aria-modal="true"
-            aria-label="Search"
-            className="relative w-full max-w-2xl bg-paper/20 border border-ink-faint rounded-xl overflow-hidden flex flex-col mx-4 sm:mx-0"
+            ref={overlayRef}
+            className="fixed inset-0 z-50 flex items-start justify-center pt-24 sm:pt-32"
+            onKeyDown={(e) => e.key === "Escape" && close()}
           >
-            <div className="flex items-center px-4 py-4 bg-band border-b border-transparent focus-within:border-ink/50 transition-colors">
-              <LuSearch className="text-ink-soft text-2xl mr-2" />
-              <input
-                className="flex-1 bg-transparent border-none focus:outline-none text-lg text-ink placeholder:text-ink-soft"
-                placeholder="Search motions, domains, or users..."
-                aria-label="Search motions, domains, or users"
-                value={searchInput}
-                onChange={(e) => handleInputChange(e.target.value)}
-                autoFocus
-              />
-              <button
-                onClick={close}
-                aria-label="Close search"
-                className="p-1 text-ink-soft hover:text-ink hover:bg-raised"
-              >
-                <LuX className="text-xl" />
-              </button>
-            </div>
+            <div
+              data-search-backdrop
+              className="fixed inset-0 bg-scrim backdrop-blur-md"
+              onClick={close}
+            />
 
-            <div className="max-h-[60vh] overflow-y-auto">
-              {!hasQuery && (
-                <div className="px-6 py-12 text-center text-ink-soft text-sm">
-                  Start typing to search the arena...
-                </div>
-              )}
+            <div
+              data-search-panel
+              role="dialog"
+              aria-modal="true"
+              aria-label="Search"
+              className="relative w-full max-w-2xl bg-raised border border-ink-faint shadow-cast overflow-hidden flex flex-col mx-4 sm:mx-0"
+            >
+              <div className="flex items-center px-4 py-4 bg-band border-b border-transparent focus-within:border-ink transition-colors">
+                <LuSearch className="text-ink-soft text-2xl mr-2" />
+                <input
+                  // The field ships its own focus affordance — the rule under
+                  // the row lights up — so it opts out of the app-wide ring,
+                  // which drew a boxed outline around the field inside a dialog
+                  // that is already the only thing on screen.
+                  data-focus-ring="self"
+                  className="flex-1 bg-transparent border-none outline-none text-lg text-ink placeholder:text-ink-soft"
+                  placeholder="Search motions, domains, or users..."
+                  aria-label="Search motions, domains, or users"
+                  value={searchInput}
+                  onChange={(e) => handleInputChange(e.target.value)}
+                  autoFocus
+                />
+                <button
+                  onClick={close}
+                  aria-label="Close search"
+                  className="p-1 text-ink-soft hover:text-ink hover:bg-raised"
+                >
+                  <LuX className="text-xl" />
+                </button>
+              </div>
 
-              {hasQuery && isLoading && (
-                <div className="px-6 py-12 text-center text-ink-soft text-sm">
-                  Searching...
-                </div>
-              )}
+              <div className="max-h-[60vh] overflow-y-auto">
+                {!hasQuery && (
+                  <div className="px-6 py-12 text-center text-ink-soft text-base">
+                    Start typing to search the arena...
+                  </div>
+                )}
 
-              {hasQuery && !isLoading && hasResults && (
-                <div className="py-2">
-                  {results.motions.length > 0 && (
-                    <div>
-                      <div className="px-4 py-2 text-xs font-semibold text-ink-soft uppercase tracking-wider">
-                        Motions
+                {hasQuery && isLoading && (
+                  <div className="px-6 py-12 text-center text-ink-soft text-base">
+                    Searching...
+                  </div>
+                )}
+
+                {hasQuery && !isLoading && hasResults && (
+                  <div className="py-2">
+                    {results.motions.length > 0 && (
+                      <div>
+                        <div className="bg-band px-4 py-2 text-xs font-semibold text-ink-soft uppercase tracking-wider">
+                          Motions
+                        </div>
+                        {results.motions.map((result) => (
+                          <Link
+                            key={`motion-${result.id}`}
+                            href={`/motion/CRX-${result.id}-A`}
+                            onClick={close}
+                            className="w-full text-left px-4 py-3 flex items-center justify-between gap-3 text-base text-ink hover:bg-ink-wash border-l-2 border-transparent"
+                          >
+                            <span className="truncate">{result.content}</span>
+                            <span className="shrink-0 text-sm text-ink-soft uppercase tracking-wider">
+                              {result.domain}
+                            </span>
+                          </Link>
+                        ))}
                       </div>
-                      {results.motions.map((result) => (
-                        <Link
-                          key={`motion-${result.id}`}
-                          href={`/motion/CRX-${result.id}-A`}
-                          onClick={close}
-                          className="w-full text-left px-4 py-3 flex items-center justify-between gap-3 text-sm text-ink-soft hover:bg-raised hover:text-ink border-l-2 border-transparent"
-                        >
-                          <span className="truncate">{result.content}</span>
-                          <span className="shrink-0 text-xs text-ink-soft uppercase tracking-wider">
-                            {result.domain}
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
+                    )}
 
-                  {results.domains.length > 0 && (
-                    <div>
-                      <div className="px-4 py-2 text-xs font-semibold text-ink-soft uppercase tracking-wider">
-                        Domains
+                    {results.domains.length > 0 && (
+                      <div>
+                        <div className="bg-band px-4 py-2 text-xs font-semibold text-ink-soft uppercase tracking-wider">
+                          Domains
+                        </div>
+                        {results.domains.map((result) => (
+                          <Link
+                            key={`domain-${result.domain}`}
+                            href={`/domain?q=${slugifyDomain(result.domain)}`}
+                            onClick={close}
+                            className="w-full text-left px-4 py-3 flex items-center justify-between gap-3 text-base text-ink hover:bg-ink-wash border-l-2 border-transparent"
+                          >
+                            <span className="truncate">{result.domain}</span>
+                            <span className="shrink-0 text-sm text-ink-soft">
+                              {result.motionCount} motions
+                            </span>
+                          </Link>
+                        ))}
                       </div>
-                      {results.domains.map((result) => (
-                        <Link
-                          key={`domain-${result.domain}`}
-                          href={`/domain?q=${slugifyDomain(result.domain)}`}
-                          onClick={close}
-                          className="w-full text-left px-4 py-3 flex items-center justify-between gap-3 text-sm text-ink-soft hover:bg-raised hover:text-ink border-l-2 border-transparent"
-                        >
-                          <span className="truncate">{result.domain}</span>
-                          <span className="shrink-0 text-xs text-ink-soft">
-                            {result.motionCount} motions
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
+                    )}
 
-                  {results.users.length > 0 && (
-                    <div>
-                      <div className="px-4 py-2 text-xs font-semibold text-ink-soft uppercase tracking-wider">
-                        Users
+                    {results.users.length > 0 && (
+                      <div>
+                        <div className="bg-band px-4 py-2 text-xs font-semibold text-ink-soft uppercase tracking-wider">
+                          Users
+                        </div>
+                        {results.users.map((result) => (
+                          <Link
+                            key={`user-${result.id}`}
+                            href={`/profile/${result.username}`}
+                            onClick={close}
+                            className="w-full text-left px-4 py-3 flex items-center space-x-3 text-base text-ink hover:bg-ink-wash border-l-2 border-transparent"
+                          >
+                            <span className="truncate">@{result.username}</span>
+                          </Link>
+                        ))}
                       </div>
-                      {results.users.map((result) => (
-                        <Link
-                          key={`user-${result.id}`}
-                          href={`/profile/${result.username}`}
-                          onClick={close}
-                          className="w-full text-left px-4 py-3 flex items-center space-x-3 text-sm text-ink-soft hover:bg-raised hover:text-ink border-l-2 border-transparent"
-                        >
-                          <span className="truncate">@{result.username}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+                  </div>
+                )}
 
-              {hasQuery && !isLoading && !hasResults && (
-                <div className="px-6 py-12 text-center text-ink-soft text-sm">
-                  No results found for &ldquo;
-                  <span className="text-ink">{searchInput}</span>&rdquo;
-                </div>
-              )}
+                {hasQuery && !isLoading && !hasResults && (
+                  <div className="px-6 py-12 text-center text-ink-soft text-base">
+                    No results found for &ldquo;
+                    <span className="text-ink">{searchInput}</span>&rdquo;
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        </Portal>
       )}
     </div>
   );

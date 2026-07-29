@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { LuBell } from "react-icons/lu";
+import { LuBell, LuX } from "react-icons/lu";
 import api from "../axios";
 
 type Notif = {
@@ -13,6 +13,19 @@ type Notif = {
   is_read: boolean;
   created_at: string;
 };
+
+// §14's four notification types, each given a colour from the existing palette
+// rather than a new one: gold is the system's "earned" accent, so the two
+// outcomes that are awarded to you wear it, and the two that are someone
+// else's move wear that person's camp colour. Left rule + label only — the
+// rows stay flat paper (design-system.md §2).
+const TYPE_TONE: Record<string, { rule: string; label: string }> = {
+  verdict: { rule: "border-l-laurel", label: "text-laurel" },
+  season: { rule: "border-l-metal-gold", label: "text-metal-gold" },
+  reply: { rule: "border-l-side-for", label: "text-side-for" },
+  opposition: { rule: "border-l-side-against", label: "text-side-against" },
+};
+const UNKNOWN_TONE = { rule: "border-l-ink-faint", label: "text-ink-soft" };
 
 const NotificationBell = () => {
   const [items, setItems] = useState<Notif[]>([]);
@@ -39,8 +52,15 @@ const NotificationBell = () => {
     const onDoc = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
     document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
   }, []);
 
   const toggle = async () => {
@@ -50,6 +70,18 @@ const NotificationBell = () => {
       await api.post("/notifications/read").catch(() => {});
       setUnread(0);
       setItems((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    }
+  };
+
+  // Local state is only emptied once the server confirms — a failed clear that
+  // blanked the list would refill itself on the next 30s poll and read as a bug.
+  const clearAll = async () => {
+    try {
+      await api.delete("/notifications");
+      setItems([]);
+      setUnread(0);
+    } catch {
+      /* leave the inbox as-is; the next poll is the source of truth */
     }
   };
 
@@ -72,26 +104,49 @@ const NotificationBell = () => {
         )}
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto bg-paper border border-ink-faint z-50">
-          <div className="px-3 py-2 border-b border-ink-faint font-label text-[10px] uppercase tracking-[0.2em] text-ink-soft">
-            Notifications
+        <div className="absolute right-0 mt-2 w-96 max-w-[calc(100vw-2rem)] max-h-96 overflow-y-auto bg-raised border border-ink-faint shadow-cast z-50">
+          <div className="sticky top-0 flex items-center gap-3 bg-band px-3 py-2.5 border-b border-ink-faint">
+            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-ink-soft">
+              Notifications
+            </span>
+            <span className="grow" />
+            {items.length > 0 && (
+              <button
+                type="button"
+                onClick={clearAll}
+                className="font-label text-[11px] uppercase tracking-[0.15em] text-ink-soft hover:text-ink transition-colors cursor-pointer"
+              >
+                Clear
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Close notifications"
+              className="flex items-center text-ink-soft hover:text-ink transition-colors cursor-pointer"
+            >
+              <LuX size={16} />
+            </button>
           </div>
           {items.length === 0 ? (
-            <p className="p-6 font-label text-[10px] uppercase tracking-[0.2em] text-ink-soft text-center">
+            <p className="p-8 font-label text-[11px] uppercase tracking-[0.2em] text-ink-soft text-center">
               Nothing yet
             </p>
           ) : (
             items.map((n) => {
+              const tone = TYPE_TONE[n.type] ?? UNKNOWN_TONE;
               const body = (
                 <div
-                  className={`p-3 border-b border-ink-faint hover:bg-band transition-colors ${
-                    n.is_read ? "opacity-60" : ""
+                  className={`border-l-2 ${tone.rule} border-b border-b-ink-faint px-3 py-3 transition-colors ${
+                    n.is_read ? "opacity-60 hover:bg-ink-wash" : "bg-ink-wash"
                   }`}
                 >
-                  <p className="font-body text-xs text-ink leading-snug">
+                  <p className="font-body text-sm text-ink leading-snug">
                     {n.message}
                   </p>
-                  <span className="font-label text-[9px] uppercase tracking-[0.15em] text-ink-soft">
+                  <span
+                    className={`font-label text-[10px] uppercase tracking-[0.15em] ${tone.label}`}
+                  >
                     {n.type}
                   </span>
                 </div>

@@ -3,7 +3,7 @@ import { convertLogicScore, tierProgress, TIER_LADDER } from "./logicScore";
 
 describe("TIER_LADDER", () => {
   it("is §15's ladder, unchanged", () => {
-    expect(TIER_LADDER.map((t) => t.at)).toEqual([0, 50, 100, 150, 200]);
+    expect(TIER_LADDER.map((t) => t.at)).toEqual([0, 100, 200, 300, 400]);
     expect(TIER_LADDER.map((t) => t.tier)).toEqual([
       "beginner",
       "intermediate",
@@ -25,34 +25,34 @@ describe("tierProgress", () => {
     const p = tierProgress(0);
     expect(p.tier).toBe("beginner");
     expect(p.floor).toBe(0);
-    expect(p.nextAt).toBe(50);
+    expect(p.nextAt).toBe(100);
     expect(p.nextTier).toBe("intermediate");
-    expect(p.toNext).toBe(50);
+    expect(p.toNext).toBe(100);
     expect(p.pct).toBe(0);
   });
 
-  it("holds Beginner at 49 and flips at 50", () => {
-    expect(tierProgress(49).tier).toBe("beginner");
-    expect(tierProgress(49).toNext).toBe(1);
-    expect(tierProgress(50).tier).toBe("intermediate");
-    expect(tierProgress(50).pct).toBe(0);
+  it("holds Beginner at 99 and flips at 100", () => {
+    expect(tierProgress(99).tier).toBe("beginner");
+    expect(tierProgress(99).toNext).toBe(1);
+    expect(tierProgress(100).tier).toBe("intermediate");
+    expect(tierProgress(100).pct).toBe(0);
   });
 
   it("reports position within a band", () => {
-    const p = tierProgress(125);
+    const p = tierProgress(250);
     expect(p.tier).toBe("skilled");
     expect(p.nextTier).toBe("expert");
-    expect(p.toNext).toBe(25);
+    expect(p.toNext).toBe(50);
     expect(p.pct).toBe(0.5);
   });
 
-  it("holds Expert at 199", () => {
-    expect(tierProgress(199).tier).toBe("expert");
-    expect(tierProgress(199).toNext).toBe(1);
+  it("holds Expert at 399", () => {
+    expect(tierProgress(399).tier).toBe("expert");
+    expect(tierProgress(399).toNext).toBe(1);
   });
 
   it("tops out at Master with no next tier", () => {
-    const p = tierProgress(200);
+    const p = tierProgress(400);
     expect(p.tier).toBe("master");
     expect(p.index).toBe(4);
     expect(p.nextAt).toBeNull();
@@ -75,7 +75,7 @@ describe("tierProgress", () => {
 describe("convertLogicScore", () => {
   it("returns the reputation tier alone", () => {
     expect(convertLogicScore(0)).toEqual({ reputation: "beginner" });
-    expect(convertLogicScore(75)).toEqual({ reputation: "intermediate" });
-    expect(convertLogicScore(200)).toEqual({ reputation: "master" });
+    expect(convertLogicScore(150)).toEqual({ reputation: "intermediate" });
+    expect(convertLogicScore(400)).toEqual({ reputation: "master" });
   });
 });

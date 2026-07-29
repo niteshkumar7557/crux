@@ -50,6 +50,13 @@
   /* …and an ink-tinted one for overlays, which belong to no camp. */
   --cast-neutral: rgba(36, 65, 52, 0.24);
   --cast-neutral-soft: rgba(36, 65, 52, 0.12);
+  /* The one true-black drop in the product: the leaderboard champion, which is
+     asked to sit visibly *above* the other two cards rather than merely on a
+     lighter paper. Black on purpose — the ink-tinted cast is too shallow to
+     separate a card from two neighbours it is touching. Kept to that single
+     card (see the note in design-system.md §5). */
+  --cast-podium: rgba(0, 0, 0, 0.32);
+  --cast-podium-soft: rgba(0, 0, 0, 0.16);
 }
 [data-theme="dark"] {
   --paper: #0f1a15; /* the archive at night */
@@ -79,6 +86,9 @@
   --cast-against-soft: rgba(48, 18, 10, 0.45);
   --cast-neutral: rgba(4, 10, 7, 0.66);
   --cast-neutral-soft: rgba(4, 10, 7, 0.4);
+  /* Black on green-black needs more of itself to register at all. */
+  --cast-podium: rgba(0, 0, 0, 0.62);
+  --cast-podium-soft: rgba(0, 0, 0, 0.42);
 }
 
 /* `--paper-raised` exists because `--paper-plate` deliberately stays cream in
@@ -125,6 +135,12 @@
     0 3px 8px -5px var(--cast-neutral-soft);
   --shadow-cast-deep: 0 16px 30px -14px var(--cast-neutral),
     0 5px 11px -6px var(--cast-neutral-soft);
+  /* The champion's lift — a longer, blacker throw than the cast, because it has
+     to read as a card standing in front of two others. One consumer only. */
+  --shadow-podium: 0 26px 50px -20px var(--cast-podium),
+    0 10px 20px -12px var(--cast-podium-soft);
+  --shadow-podium-deep: 0 38px 66px -22px var(--cast-podium),
+    0 14px 26px -14px var(--cast-podium-soft);
 
   /* ---- type ----
      Three faces, no more (design-system.md §3). To swap the display face,
@@ -142,8 +158,12 @@
   --radius-full: 9999px;
 }
 
-/* Keyboard focus — visible everywhere unless a component ships its own. */
-:focus-visible {
+/* Keyboard focus — visible everywhere unless a component ships its own, which
+   says so with `data-focus-ring="self"`.
+   The opt-out has to be an attribute: this rule is unlayered, so it outranks
+   anything in Tailwind's `utilities` layer no matter how specific — a
+   `focus:outline-none` on the element does nothing against it. */
+:focus-visible:not([data-focus-ring="self"]) {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
 }

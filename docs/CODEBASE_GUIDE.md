@@ -327,7 +327,7 @@ missing the copy is how the product ends up lying to its users.
 | **Season awards** | top 3 | `jobs/seasonRollover.logic.ts` `TITLES` / `FRAMES` | `seasonRollover.logic.test.ts`; `_components/profile/SeasonTitles.tsx` (`FRAME_BADGE`/`FRAME_RING` maps must gain a key per new frame); the leaderboard prize line |
 | **Main Stage size** | ~4 | `jobs/featuring.logic.ts` `MAIN_STAGE_SIZE` | `featuring.logic.test.ts`. Note `getSecondaryCardsData` in `arena.controller.ts` has its own `LIMIT 6` — raise it or the extra cards never render |
 | **Motion of the Day** | 1/day | `jobs/featuring.ts` `rotateMotd()` (the UTC-day guard) | nothing else; `getPrimaryCardData` assumes exactly one |
-| **Tier thresholds** | 0/50/100/150/200 | `controllers/profile.controller.ts` `convertLogicScore()` | **`frontend/app/_utils/logicScore.ts` is a full duplicate of the same ladder** — change both or the profile and the cards disagree |
+| **Tier thresholds** | 0/100/200/300/400 | `controllers/profile.controller.ts` `convertLogicScore()` | **`frontend/app/_utils/logicScore.ts` is a full duplicate of the same ladder** — change both or the profile and the cards disagree |
 | **Username rule** | `^[a-z0-9_]{3,20}$` | `lib/username.logic.ts` | `username.logic.test.ts`; **`frontend/app/_utils/username.ts` is a full duplicate**; the register form's hint copy |
 
 ### The five values that exist in two places

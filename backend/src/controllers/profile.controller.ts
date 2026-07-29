@@ -12,19 +12,19 @@ import { fillLedgerWeeks } from "../lib/ledger.logic.js";
 function convertLogicScore(score: number) {
   // §9 tier ladder. Duplicated in frontend/app/_utils/logicScore.ts — see
   // docs/CODEBASE_GUIDE.md §6a.
-  // Beginner     0-49
-  // Intermediate 50-99
-  // Skilled      100-149
-  // Expert       150-199
-  // Master       200+
+  // Beginner     0-99
+  // Intermediate 100-199
+  // Skilled      200-299
+  // Expert       300-399
+  // Master       400+
   let reputation = "beginner";
-  if (score >= 200) {
+  if (score >= 400) {
     reputation = "master";
-  } else if (score >= 150) {
+  } else if (score >= 300) {
     reputation = "expert";
-  } else if (score >= 100) {
+  } else if (score >= 200) {
     reputation = "skilled";
-  } else if (score >= 50) {
+  } else if (score >= 100) {
     reputation = "intermediate";
   }
 

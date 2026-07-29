@@ -32,7 +32,7 @@ const CareerStrip = ({ standing }: { standing: ProfileStanding }) => (
         {standing.logic.toLocaleString("en-US")}
       </span>
     </Cell>
-    <Cell label="Record">
+    <Cell label="Record (Win–Loss–Draw)">
       <span className="text-ink">{standing.record.wins}</span>
       <span className="text-ink-soft">
         –{standing.record.losses}–{standing.record.draws}

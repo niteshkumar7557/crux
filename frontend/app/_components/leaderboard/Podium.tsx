@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LuCrown, LuMedal, LuStar } from "react-icons/lu";
+import { MdWorkspacePremium } from "react-icons/md";
 import Avatar from "@/app/_components/ui/Avatar";
 import { convertLogicScore } from "@/app/_utils/logicScore";
 import type { BoardRow } from "@/app/leaderboard/board";
@@ -14,11 +15,16 @@ import type { BoardRow } from "@/app/leaderboard/board";
 //
 // The champion card and the two flanking cards were also near-identical blocks
 // of markup maintained twice. One card, three configs.
+// Each place also carries its own accent edge. The champion is capped with a
+// gold rule and a star seal struck over it; the flanks are ruled down the
+// outside, so the three cards lean toward the middle instead of reading as one
+// bar of three. The edge is a positioned span rather than a `border-*` override
+// so it cannot lose a cascade fight with the card's hairline.
 const PLACES = {
   1: {
     metal: "text-metal-gold",
     metalBg: "bg-metal-gold",
-    metalBorder: "border-metal-gold",
+    edge: "inset-x-0 top-0 h-[3px]",
     Icon: LuCrown,
     span: "md:col-span-6",
     order: "order-1 md:order-2",
@@ -30,9 +36,9 @@ const PLACES = {
   2: {
     metal: "text-metal-silver",
     metalBg: "bg-metal-silver",
-    metalBorder: "border-metal-silver",
+    edge: "inset-y-0 left-0 w-[3px]",
     Icon: LuMedal,
-    span: "md:col-span-3",
+    span: "md:col-span-4",
     order: "order-2 md:order-1",
     height: "md:h-[380px]",
     avatar: "xl" as const,
@@ -42,9 +48,9 @@ const PLACES = {
   3: {
     metal: "text-metal-bronze",
     metalBg: "bg-metal-bronze",
-    metalBorder: "border-metal-bronze",
+    edge: "inset-y-0 right-0 w-[3px]",
     Icon: LuStar,
-    span: "md:col-span-3",
+    span: "md:col-span-4",
     order: "order-3",
     height: "md:h-[380px]",
     avatar: "xl" as const,
@@ -80,8 +86,30 @@ const PodiumCard = ({
       className={`${p.span} ${p.order}`}
     >
       <div
-        className={`relative flex h-full ${p.height} flex-col justify-end border border-ink-faint border-t-2 ${p.metalBorder} bg-band p-8 transition-colors hover:bg-raised ${champion ? "md:p-10" : ""}`}
+        className={`relative flex h-full ${p.height} flex-col justify-end border border-ink-faint p-8 transition duration-300 ${
+          champion
+            ? // The one card that stands off the page: raised paper over a black
+              // drop, deepening and lifting under the cursor. This is the single
+              // sanctioned exception to §5's "the cast is never black" — the
+              // ink-tinted cast cannot separate a card from two neighbours it is
+              // touching. It still obeys the rest of the rule: `bg-raised`, so
+              // the shadow reads as lift rather than a hole in the page.
+              "bg-raised shadow-podium hover:shadow-podium-deep md:p-10"
+            : "bg-band hover:bg-raised"
+        }`}
       >
+        <span aria-hidden className={`absolute ${p.edge} ${p.metalBg}`} />
+
+        {/* The champion's medal, hung over the top edge: the medallion clears
+            the card, the ribbon hangs down over it. The one ornament on the
+            board, so it marks first place and nothing else. */}
+        {champion && (
+          <MdWorkspacePremium
+            aria-hidden
+            className={`absolute left-1/2 top-0 -translate-x-1/2 translate-y-[-73%] text-5xl ${p.metal}`}
+          />
+        )}
+
         <span
           aria-hidden
           className={`absolute right-6 top-5 display-type ${p.numeral} ${p.metal} opacity-15`}
@@ -174,7 +202,9 @@ const Podium = ({
   const topScore = top[0]?.score ?? 0;
 
   return (
-    <div className="mb-16 grid grid-cols-1 items-end gap-6 md:grid-cols-12 md:gap-0">
+    // Fourteen columns, not twelve: the flanks needed room to breathe (4/6/4
+    // rather than 3/6/3) without the champion giving up its share of the row.
+    <div className="mb-16 grid grid-cols-1 items-end gap-6 pt-8 md:grid-cols-14 md:gap-0">
       {([2, 1, 3] as const).map((place) => {
         const debater = top[place - 1];
         if (!debater) return null;

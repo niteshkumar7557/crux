@@ -7,6 +7,7 @@ import Pagination from "@/app/_components/ui/Pagination";
 import Reveal from "@/app/_components/ui/Reveal";
 import BoardTable from "@/app/_components/leaderboard/BoardTable";
 import Podium from "@/app/_components/leaderboard/Podium";
+import SeasonCountdown from "@/app/_components/leaderboard/SeasonCountdown";
 import {
   BOARD_TABS,
   BoardRow,
@@ -29,6 +30,7 @@ interface BoardResponse {
   pageSize: number;
   season?: number;
   daysLeft?: number;
+  endsAt?: string;
 }
 
 const EMPTY: BoardResponse = { rows: [], total: 0, page: 1, pageSize: 20 };
@@ -66,7 +68,7 @@ const Leaderboard = async ({ searchParams }: { searchParams: SearchParams }) => 
   // the season endpoint is read on both tabs — it is the only source of the
   // season number and the days left.
   let board: BoardResponse = EMPTY;
-  let season = { season: 0, daysLeft: 0 };
+  let season = { season: 0, endsAt: "" };
   try {
     const [boardRes, seasonMeta] = await Promise.all([
       serverApi.get(
@@ -83,7 +85,10 @@ const Leaderboard = async ({ searchParams }: { searchParams: SearchParams }) => 
     const meta = seasonMeta?.data ?? boardRes.data;
     season = {
       season: Number(meta?.season ?? 0),
-      daysLeft: Number(meta?.daysLeft ?? 0),
+      // The season boundary is the backend's to state (§10). Without it the
+      // clock simply does not render — a countdown the client invented for
+      // itself would be a second, competing answer.
+      endsAt: String(meta?.endsAt ?? ""),
     };
   } catch (error) {
     console.error("Failed to load leaderboard data:", error);
@@ -121,27 +126,37 @@ const Leaderboard = async ({ searchParams }: { searchParams: SearchParams }) => 
               : "Career standings. Every point of logic ever earned, since the beginning."}
           </p>
         </div>
-        <div className="flex flex-col md:items-end">
-          <span className="font-label text-[10px] text-ink-soft uppercase tracking-widest mb-1">
-            Ranked Debaters
-          </span>
-          <span className="font-label text-4xl text-ink font-bold tracking-tighter">
-            {String(board.total).padStart(2, "0")}
-          </span>
-        </div>
+        {season.endsAt && (
+          <SeasonCountdown endsAt={season.endsAt} season={season.season} />
+        )}
       </header>
 
-      <div data-reveal className="flex flex-wrap gap-2 mb-4">
-        {BOARD_TABS.map((t) => (
-          <Link
-            key={t.slug}
-            href={leaderboardHref(t.slug)}
-            aria-current={t.slug === tab ? "page" : undefined}
-            className={chipClass(t.slug === tab)}
-          >
-            {t.label}
-          </Link>
-        ))}
+      {/* The board's own controls: which board on the left, how deep it goes on
+          the right, on one line. */}
+      <div
+        data-reveal
+        className="mb-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-3"
+      >
+        <div className="flex flex-wrap gap-2">
+          {BOARD_TABS.map((t) => (
+            <Link
+              key={t.slug}
+              href={leaderboardHref(t.slug)}
+              aria-current={t.slug === tab ? "page" : undefined}
+              className={chipClass(t.slug === tab)}
+            >
+              {t.label}
+            </Link>
+          ))}
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="font-label text-xl font-bold leading-none tabular-nums tracking-tighter text-ink">
+            {String(board.total).padStart(2, "0")}
+          </span>
+          <span className="font-label text-[10px] uppercase tracking-widest text-ink-soft">
+            Ranked Debaters
+          </span>
+        </div>
       </div>
 
       {/* §14: the season window and its prize are stated unconditionally — an
@@ -152,8 +167,7 @@ const Leaderboard = async ({ searchParams }: { searchParams: SearchParams }) => 
         className="mb-12 font-body text-sm text-ink-soft border-l-2 border-ink-faint pl-4"
       >
         <span className="font-label text-[10px] uppercase tracking-widest text-ink-soft block mb-1">
-          Season {season.season} · {season.daysLeft}{" "}
-          {season.daysLeft === 1 ? "day" : "days"} left
+          Season {season.season} · closes at month end, UTC
         </span>
         The top 3 on the 1st earn a permanent title and avatar frame. The season
         board counts only logic earned this month; the all-time board never

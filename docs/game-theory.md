@@ -268,11 +268,11 @@ A profile carries:
 
 | Logic | Tier | Grade |
 |---|---|---|
-| 0–49 | Beginner | B |
-| 50–99 | Intermediate | B+ |
-| 100–149 | Skilled | A |
-| 150–199 | Expert | A+ |
-| 200+ | Master | M |
+| 0–99 | Beginner | B |
+| 100–199 | Intermediate | B+ |
+| 200–299 | Skilled | A |
+| 300–399 | Expert | A+ |
+| 400+ | Master | M |
 
 - **Season titles and avatar frames** — permanent, stacking (§10).
 - **A short bio**, written by the user. §12 defines five AI personas and none of them writes
@@ -486,7 +486,7 @@ Every tunable constant in the game. If a number is in the code, it is in this ta
 | Season awards | **Top 3** — title + frame | §10 |
 | Main Stage size | **~4** + the Motion of the Day | §11 |
 | Motion of the Day | **1 per day** | §11 |
-| Tier thresholds | 0 / 50 / 100 / 150 / 200 | §9 |
+| Tier thresholds | 0 / 100 / 200 / 300 / 400 | §9 |
 
 ---
 

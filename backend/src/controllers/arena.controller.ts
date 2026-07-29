@@ -3,6 +3,7 @@ import pool from "../db/index.js";
 import config from "../config/index.js";
 import {
   currentSeasonStart,
+  currentSeasonEnd,
   seasonNumber,
   seasonKey,
   daysLeftInSeason,
@@ -223,10 +224,14 @@ export async function getSeasonLeaderboard(req: Request, res: Response) {
   let { page } = leaderboardPaging(req);
   // §14's season strip reads these unconditionally, so they are assembled
   // before anything can fail and reused on the error path.
+  // `endsAt` is the exact instant the month closes, so the board can run a live
+  // countdown without re-deriving the season rule on the client — the calendar
+  // month lives here (§10) and nowhere else.
   const meta = {
     season: seasonNumber(),
     seasonKey: seasonKey(),
     daysLeft: daysLeftInSeason(),
+    endsAt: currentSeasonEnd().toISOString(),
   };
   try {
     const start = currentSeasonStart();

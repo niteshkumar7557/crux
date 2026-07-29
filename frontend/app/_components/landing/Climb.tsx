@@ -12,11 +12,11 @@ gsap.registerPlugin(useGSAP, ScrollTrigger);
 // alongside are gone from the product (frontend/app/_utils/logicScore.ts), and
 // the landing may not advertise something the arena will not show you.
 const tiers = [
-  { range: "0-49", name: "Beginner" },
-  { range: "50-99", name: "Intermediate" },
-  { range: "100-149", name: "Skilled" },
-  { range: "150-199", name: "Expert" },
-  { range: "200+", name: "Master" },
+  { range: "0-99", name: "Beginner" },
+  { range: "100-199", name: "Intermediate" },
+  { range: "200-299", name: "Skilled" },
+  { range: "300-399", name: "Expert" },
+  { range: "400+", name: "Master" },
 ];
 
 const prizes = [
