@@ -110,7 +110,12 @@ export const Serif = ({ children }: { children: ReactNode }) => (
 
 /** Specimen plate: engraving on its own sheet of cream paper. The sheet stays
  *  cream in dark mode — the archive at night. `arch` tops portrait plates
- *  with the arena-door arch. */
+ *  with the arena-door arch.
+ *
+ *  The caption sits *below* the sheet rather than on it. A flat cream strip
+ *  with no engraving on it is the brightest thing on a dark page, and it read
+ *  as a glare rather than a label; on the page's own paper it stays a label in
+ *  both modes. */
 export const Plate = ({
   src,
   alt,
@@ -131,23 +136,24 @@ export const Plate = ({
   className?: string;
   imgClassName?: string;
 } & HTMLAttributes<HTMLElement>) => (
-  <figure
-    {...rest}
-    className={`overflow-hidden border border-[#24413440] bg-plate ${
-      arch ? "plate-arch" : ""
-    } ${className}`}
-  >
-    <Image
-      src={src}
-      alt={alt}
-      width={1024}
-      height={1024}
-      priority={priority}
-      sizes={sizes}
-      className={`engraving h-auto w-full ${imgClassName}`}
-    />
+  <figure {...rest} className={className}>
+    <div
+      className={`overflow-hidden border border-[#24413440] bg-plate ${
+        arch ? "plate-arch" : ""
+      }`}
+    >
+      <Image
+        src={src}
+        alt={alt}
+        width={1024}
+        height={1024}
+        priority={priority}
+        sizes={sizes}
+        className={`engraving h-auto w-full ${imgClassName}`}
+      />
+    </div>
     {caption && (
-      <figcaption className="border-t border-[#24413426] px-4 py-2.5 text-center font-label text-[0.62rem] uppercase tracking-[0.28em] text-plate-ink/70">
+      <figcaption className="mt-3.5 text-center font-label text-[0.62rem] uppercase tracking-[0.28em] text-ink-soft">
         {caption}
       </figcaption>
     )}

@@ -96,9 +96,13 @@ const StoryOpen = () => {
         </p>
       </div>
 
+      {/* The plate is set shorter than the engraving and the image is anchored
+          to its foot, which trims the dead sky above the ribbon without
+          touching the file. The extra scale is headroom for the parallax —
+          the drift is ±40px and must never expose an edge. */}
       <div
         data-reveal
-        className="relative mt-16 overflow-hidden border border-[#24413440] bg-plate"
+        className="relative mt-16 aspect-[2048/979] overflow-hidden border border-[#24413440] bg-plate"
       >
         <Image
           data-quarrel
@@ -107,7 +111,7 @@ const StoryOpen = () => {
           width={2048}
           height={1152}
           sizes="(min-width: 1024px) 72rem, 100vw"
-          className="engraving w-full scale-110"
+          className="engraving h-full w-full scale-[1.16] object-cover object-bottom"
         />
       </div>
 

@@ -70,26 +70,29 @@ const Rule = ({ children }: { children: ReactNode }) => (
 
 /* ------------------------------------------------------------- exhibits */
 
+// Exhibits are documents, not engravings, so they sit on `raised` — the same
+// cream as a plate in light, but a dark surface at night. `plate` is reserved
+// for sheets that actually carry an engraving.
 const MotionExhibit = () => (
   <div data-reveal className="flex flex-col gap-4">
-    <div className="border border-ink-faint bg-plate p-5">
-      <p className="font-label text-[0.62rem] uppercase tracking-[0.26em] text-plate-ink/60">
+    <div className="border border-ink-faint bg-raised p-5">
+      <p className="font-label text-[0.62rem] uppercase tracking-[0.26em] text-ink-soft">
         Submitted motion
       </p>
-      <p className="mt-2 font-headline text-lg italic leading-snug text-plate-ink line-through decoration-[#9c4a34] decoration-2">
+      <p className="mt-2 font-headline text-lg italic leading-snug text-ink line-through decoration-side-against decoration-2">
         “Social media is bad.”
       </p>
-      <p className="mt-3 flex items-start gap-2 font-body text-sm leading-relaxed text-plate-ink/80">
+      <p className="mt-3 flex items-start gap-2 font-body text-sm leading-relaxed text-ink-soft">
         <PiProhibit className="mt-0.5 shrink-0 text-side-against" />
         Too vague to argue — bad for whom, at what? The Arbiter suggests a
         sharper claim:
       </p>
     </div>
-    <div className="border border-ink-faint bg-plate p-5">
-      <p className="font-label text-[0.62rem] uppercase tracking-[0.26em] text-plate-ink/60">
+    <div className="border border-ink-faint bg-raised p-5">
+      <p className="font-label text-[0.62rem] uppercase tracking-[0.26em] text-ink-soft">
         Rewritten &amp; approved
       </p>
-      <p className="mt-2 font-headline text-lg italic leading-snug text-plate-ink">
+      <p className="mt-2 font-headline text-lg italic leading-snug text-ink">
         “Social platforms should verify every account belongs to a human.”
       </p>
       <p className="mt-3 flex items-center gap-2 font-label text-[0.68rem] uppercase tracking-[0.2em] text-side-for">
@@ -121,16 +124,16 @@ const CampsExhibit = () => (
         </p>
       </div>
     </div>
-    <div className="border border-ink-faint bg-plate p-5">
-      <p className="flex items-center gap-2 font-label text-[0.66rem] uppercase tracking-[0.22em] text-plate-ink/70">
+    <div className="border border-ink-faint bg-raised p-5">
+      <p className="flex items-center gap-2 font-label text-[0.66rem] uppercase tracking-[0.22em] text-ink-soft">
         <PiLockSimple size={15} /> Before your first argument
       </p>
-      <p className="mt-2 font-body text-sm leading-relaxed text-plate-ink">
+      <p className="mt-2 font-body text-sm leading-relaxed text-ink">
         “You&rsquo;re committing to <strong>FOR</strong>. You will not be able
         to argue AGAINST in this debate, and a loss costs 5 points from your
         season score — never your record.”
       </p>
-      <p className="mt-3 inline-flex items-center gap-2 border border-plate-ink/30 px-3 py-1.5 font-label text-[0.64rem] uppercase tracking-[0.2em] text-plate-ink">
+      <p className="mt-3 inline-flex items-center gap-2 border border-ink-faint px-3 py-1.5 font-label text-[0.64rem] uppercase tracking-[0.2em] text-ink">
         <PiCheckCircle size={15} /> I understand — lock me in
       </p>
     </div>
@@ -177,14 +180,14 @@ const DuelExhibit = () => (
     {scoreCards.map((c) => (
       <div
         key={c.lines[1]}
-        className="flex items-center gap-5 border border-ink-faint bg-plate px-5 py-4"
+        className="flex items-center gap-5 border border-ink-faint bg-raised px-5 py-4"
       >
         <span className={`display-type w-16 text-4xl ${c.accent}`}>{c.score}</span>
         <div>
-          <p className="font-label text-[0.62rem] uppercase tracking-[0.24em] text-plate-ink/60">
+          <p className="font-label text-[0.62rem] uppercase tracking-[0.24em] text-ink-soft">
             {c.lines[0]}
           </p>
-          <p className="font-body text-sm text-plate-ink">{c.lines[1]}</p>
+          <p className="font-body text-sm text-ink">{c.lines[1]}</p>
         </div>
       </div>
     ))}
@@ -249,15 +252,19 @@ const Articles = () => {
         gsap.set("[data-locked]", { autoAlpha: 1 });
         return;
       }
-      // Scroll drains the clock: 48:00:00 → 00:00:00 across the section, then
-      // the arena stamps itself shut.
+      // Scroll drains the clock: 48:00:00 → 00:00:00, then the arena stamps
+      // itself shut. The trigger is the clock itself, not the zone around it —
+      // hanging it off the zone started the countdown while the numbers were
+      // still below the fold, so the reader arrived to a clock already half
+      // spent. It now starts as the clock crosses 85% down the viewport and
+      // burns through in a short stretch of scroll, all of it in view.
       const state = { t: 48 * 3600 };
       gsap
         .timeline({
           scrollTrigger: {
-            trigger: "[data-clock-zone]",
-            start: "top 70%",
-            end: "bottom 55%",
+            trigger: "[data-clock]",
+            start: "top 85%",
+            end: "+=420",
             scrub: 0.5,
           },
         })
@@ -329,16 +336,17 @@ const Articles = () => {
             throttled, nothing waits in a queue.
           </Rule>
         </Body>
-        <div className="flex flex-col gap-6">
-          <MotionExhibit />
-          <Plate
-            data-reveal
-            src="/landing/motion-quill-seal.jpeg"
-            alt="Engraving of a quill, inkwell, and a sealed scroll"
-            caption="Plate I · The claim, sealed"
-            className="hidden max-w-sm self-center lg:block"
-          />
-        </div>
+        <MotionExhibit />
+        {/* Spans the whole article and centres on the page, below both
+            columns — a specimen plate under the exhibit, not a third thing
+            stacked in the right-hand column. */}
+        <Plate
+          data-reveal
+          src="/landing/motion-quill-seal.jpeg"
+          alt="Engraving of a quill, inkwell, and a sealed scroll"
+          caption="Plate I · The claim, sealed"
+          className="mx-auto hidden w-full max-w-sm lg:col-span-2 lg:block"
+        />
       </Article>
 
       <Article numeral="II" kicker="Article two" title={<>Two camps, <Serif>one choice</Serif></>}>
@@ -381,13 +389,22 @@ const Articles = () => {
             scores.
           </Rule>
         </Body>
-        <div data-clock-zone className="flex flex-col items-center gap-8">
+        {/* Pulled up out of the grid so the plate starts level with the
+            article's numeral rather than with the copy — the column runs
+            taller than the paragraphs, and hanging it from the same top line
+            left it dangling well below them. 11.5rem is the header block plus
+            the grid's own top margin. No arch on this one: the hourglass fills
+            its plate corner to corner, and the arch was cutting the cap and
+            the finials off the top of it. */}
+        <div
+          data-clock-zone
+          className="flex flex-col items-center gap-8 lg:-mt-[11.5rem]"
+        >
           <Plate
             data-reveal
             src="/landing/clock-hourglass.jpeg"
             alt="Engraving of an ornate hourglass, sand mid-fall"
             caption="Plate III · Forty-eight hours"
-            arch
             className="max-w-xs"
           />
           <ClockExhibit />

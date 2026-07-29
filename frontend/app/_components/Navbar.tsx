@@ -1,10 +1,9 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import { LuCircleUserRound } from "react-icons/lu";
-import api from "../axios";
 import { useUser } from "../_hooks/useUser";
+import { useAvatar } from "../_hooks/useAvatar";
 import Avatar from "./ui/Avatar";
 import SearchBar from "./SearchBar";
 import Button from "./ui/Button";
@@ -25,36 +24,17 @@ const navLinks = [
 const Navbar = () => {
   const pathname = usePathname();
   const user = useUser();
-  // the JWT doesn't carry the avatar, so fetch it once we know who's here
-  const [avatar, setAvatar] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!user) return;
-    let active = true;
-    api
-      .get("/user/me")
-      .then(({ data }) => {
-        if (active) setAvatar(data.user?.avatar ?? null);
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, [user]);
-
-  // AvatarEditor announces changes so the navbar updates without a reload
-  useEffect(() => {
-    const onUpdate = (e: Event) =>
-      setAvatar((e as CustomEvent<string | null>).detail);
-    window.addEventListener("crux:avatar-updated", onUpdate);
-    return () => window.removeEventListener("crux:avatar-updated", onUpdate);
-  }, []);
+  const avatar = useAvatar(user);
 
   return (
     <nav className="sticky top-0 z-50 border-b border-ink-faint bg-paper/85 backdrop-blur-md">
       <div className="flex items-center justify-between gap-2 px-4 py-3 md:gap-6 md:px-6">
         <div className="flex items-center shrink-0">
-          <Link className="text-ink" href={"/arena"} aria-label="Crux — home">
+          <Link
+            className="flex items-center text-ink"
+            href={"/arena"}
+            aria-label="Crux — home"
+          >
             <Logo size={26} wordClassName="text-2xl" />
           </Link>
           <div className="hidden items-center justify-center gap-8 px-10 md:flex">

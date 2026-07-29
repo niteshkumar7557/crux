@@ -8,12 +8,15 @@ import { Eyebrow, initReveals, Plate, prefersReduced, Section, SectionHead, Seri
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
+// The §9 tier ladder — names only. The letter grades that used to ride
+// alongside are gone from the product (frontend/app/_utils/logicScore.ts), and
+// the landing may not advertise something the arena will not show you.
 const tiers = [
-  { range: "0–49", name: "Beginner", grade: "B" },
-  { range: "50–99", name: "Intermediate", grade: "B+" },
-  { range: "100–149", name: "Skilled", grade: "A" },
-  { range: "150–199", name: "Expert", grade: "A+" },
-  { range: "200+", name: "Master", grade: "M" },
+  { range: "0-49", name: "Beginner" },
+  { range: "50-99", name: "Intermediate" },
+  { range: "100-149", name: "Skilled" },
+  { range: "150-199", name: "Expert" },
+  { range: "200+", name: "Master" },
 ];
 
 const prizes = [
@@ -80,23 +83,22 @@ const Climb = () => {
                 record of who you are.
               </p>
             </div>
-            <ul data-reveal className="mt-8 divide-y divide-ink-faint border-y border-ink-faint">
+            {/* `w-fit`: with the grades gone the rules ran the full column
+                width past two short words. They now stop at the longest tier
+                name, which is what they are measuring. */}
+            <ul
+              data-reveal
+              className="mt-8 w-fit divide-y divide-ink-faint border-y border-ink-faint"
+            >
               {tiers.map((t) => (
                 <li
-                  key={t.grade}
-                  className="flex items-center justify-between py-2.5 font-body text-sm"
+                  key={t.name}
+                  className="flex items-baseline gap-6 py-2.5 px-3 font-body text-sm"
                 >
-                  <span className="w-20 font-label text-[0.7rem] tracking-[0.14em] text-ink-soft">
+                  <span className="w-20 shrink-0 font-label text-[0.7rem] tracking-[0.14em] text-ink-soft">
                     {t.range}
                   </span>
-                  <span className="grow font-medium text-ink">{t.name}</span>
-                  <span
-                    className={`display-type text-xl ${
-                      t.grade === "M" ? "text-laurel" : "text-ink-soft"
-                    }`}
-                  >
-                    {t.grade}
-                  </span>
+                  <span className="font-medium text-ink">{t.name}</span>
                 </li>
               ))}
             </ul>
@@ -159,7 +161,10 @@ const Climb = () => {
 
       {/* ------------------------------------------------ the stage */}
       <section id="stage" data-hall-zone className="relative overflow-hidden bg-plate">
-        <div className="relative">
+        {/* The chamber is scaled up so the parallax has room to drift, so it
+            has to be clipped to a band of its own — left unclipped it spilled
+            over the copy below and the eyebrow landed on the benches. */}
+        <div className="relative aspect-[2048/878] overflow-hidden">
           <Image
             data-hall
             src="/landing/amphitheater-hall.jpeg"
@@ -167,10 +172,10 @@ const Climb = () => {
             width={2048}
             height={878}
             sizes="100vw"
-            className="engraving w-full scale-125"
+            className="engraving h-full w-full scale-125 object-cover"
           />
         </div>
-        <div className="mx-auto max-w-3xl px-6 pt-4 pb-20 text-center md:pb-28">
+        <div className="mx-auto max-w-3xl px-6 pt-20 pb-20 text-center md:pt-28 md:pb-28">
           <Eyebrow className="justify-center">Where debates get found</Eyebrow>
           <h2
             data-reveal

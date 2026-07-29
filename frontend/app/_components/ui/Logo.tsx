@@ -78,7 +78,14 @@ export const LogoSolid = ({
 );
 
 /** Mark + wordmark. The wordmark stays Newsreader italic — it is already one of
- *  the system's three faces and reads well; only the mark is new. */
+ *  the system's three faces and reads well; only the mark is new.
+ *
+ *  The nudge on the wordmark is what makes the two read as one lockup.
+ *  `items-center` centres the two *boxes*, but "Crux" has no descender, so its
+ *  ink sits high in its line box while the arch's ink is centred in its own —
+ *  aligned boxes left the mark's feet hanging below the baseline. Newsreader's
+ *  ascent and descent sum to exactly 1em, so the correction is a constant
+ *  0.103em of the wordmark's own size and holds at every scale. */
 const Logo = ({
   size = 28,
   wordClassName = "text-2xl",
@@ -92,7 +99,7 @@ const Logo = ({
   <span className={`inline-flex items-center gap-2 ${className}`}>
     <LogoMark size={size} />
     <span
-      className={`font-headline italic tracking-tighter leading-none ${wordClassName}`}
+      className={`translate-y-[0.103em] font-headline italic tracking-tighter leading-none ${wordClassName}`}
     >
       Crux
     </span>

@@ -164,7 +164,7 @@ const Closing = () => {
           </div>
           <h2
             data-reveal
-            className="display-type mt-4 text-[clamp(2.6rem,7vw,5.6rem)] text-ink"
+            className="display-type mt-16 text-[clamp(2.6rem,7vw,5.6rem)] text-ink md:mt-20"
           >
             The doors are open.
             <br />

@@ -69,7 +69,7 @@ const Hero = () => {
             fill
             priority
             sizes="(min-width: 1024px) 22vw, 0vw"
-            className="engraving object-cover object-[0%_50%]"
+            className="engraving object-cover object-[60%_50%]"
           />
         </div>
 
