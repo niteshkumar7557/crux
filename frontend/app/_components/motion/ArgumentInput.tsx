@@ -11,12 +11,37 @@ import { useEffect, useState, type ReactNode } from "react";
 import { LuTriangleAlert, LuX } from "react-icons/lu";
 import Button from "@/app/_components/ui/Button";
 import AutoGrowTextarea from "@/app/_components/ui/AutoGrowTextarea";
+import Portal from "@/app/_components/ui/Portal";
 import { useReplyTarget } from "./ReplyContext";
+import { DEBATE_GUTTER } from "./debateLayout";
 import PointsPopup from "../ui/PointsPopup";
 import SideLockConfirm from "./SideLockConfirm";
 import type { Award } from "../ui/awardCopy";
 
 type Notice = { title: string; body: ReactNode };
+
+/** A button label that does not resize when the post goes out.
+ *
+ *  Swapping the text for "Posting…" shortened the button mid-flight, which
+ *  shoved the button beside it sideways under the user's cursor. The real label
+ *  stays in the flow holding the width open, just made invisible, and "Posting…"
+ *  is centred over it. */
+const PostLabel = ({
+  busy,
+  children,
+}: {
+  busy: boolean;
+  children: ReactNode;
+}) => (
+  <span className="relative inline-block">
+    <span className={busy ? "invisible" : undefined}>{children}</span>
+    {busy && (
+      <span className="absolute inset-0 flex items-center justify-center">
+        Posting…
+      </span>
+    )}
+  </span>
+);
 
 /** A post held back until the user confirms the side lock (§14). */
 type Pending = {
@@ -60,8 +85,10 @@ const ArgumentInput = ({
   // Concluded arenas are read-only — shown to everyone, logged in or not.
   if (status === "concluded") {
     return (
-      <div className="sticky bottom-0 bg-paper/80 backdrop-blur-xl border-t border-ink-faint py-4 px-4 md:py-5 md:px-6 z-40 text-center">
-        <span className="font-label text-[10px] uppercase tracking-[0.2em] text-ink-soft">
+      <div
+        className={`sticky bottom-0 bg-paper/80 backdrop-blur-xl border-t border-ink-faint py-4 md:py-5 ${DEBATE_GUTTER} z-40 text-center`}
+      >
+        <span className="font-label text-[11px] uppercase tracking-[0.2em] text-ink-soft">
           This debate has concluded — the verdict is in.
         </span>
       </div>
@@ -193,10 +220,12 @@ const ArgumentInput = ({
   }
 
   return (
-    <div className="sticky bottom-0 bg-paper/80 backdrop-blur-xl border-t border-ink-faint py-4 px-4 md:py-6 md:px-6 z-40">
+    <div
+      className={`sticky bottom-0 bg-paper/80 backdrop-blur-xl border-t border-ink-faint py-4 md:py-6 ${DEBATE_GUTTER} z-40`}
+    >
       {target && (
         <div className="max-w-screen-2xl mx-auto mb-3 flex items-center gap-3 border-l-2 border-side-for/50 bg-band/60 py-2 px-3">
-          <span className="grow min-w-0 truncate font-label text-[10px] uppercase tracking-[0.15em] text-ink-soft">
+          <span className="grow min-w-0 truncate font-label text-xs uppercase tracking-[0.12em] text-ink-soft">
             Replying to @{target.username} — &ldquo;
             {target.content.length > 48
               ? `${target.content.slice(0, 48)}…`
@@ -214,19 +243,23 @@ const ArgumentInput = ({
       )}
       {/* §14: the side lock is the one rule that has already bound by the time
           you are typing, so it stays stated at the composer. */}
+      {/* The stamp stays a tracked label, but the sentence explaining the lock
+          is prose and was being set at label size — 10px of body copy nobody
+          could read, stating the one rule on this page that cannot be undone.
+          It is now `text-sm`, the size the rest of the product reads at. */}
       {lockedSide && (
-        <div className="max-w-screen-2xl mx-auto mb-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+        <div className="max-w-screen-2xl mx-auto mb-2.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <span
-            className={`font-label text-[10px] uppercase tracking-[0.15em] ${
+            className={`font-label text-[11px] uppercase tracking-[0.18em] ${
               lockedSide === "for" ? "text-side-for" : "text-side-against"
             }`}
           >
-            You&rsquo;re arguing {lockedSide === "for" ? "FOR" : "AGAINST"}{" "}
-            <span className="text-ink-soft normal-case tracking-normal font-body ml-2">
-              {isAuthor
-                ? "— you posted this motion, so you can only argue FOR it."
-                : `— you can't argue ${lockedSide === "for" ? "AGAINST" : "FOR"} in this debate.`}
-            </span>
+            You&rsquo;re arguing {lockedSide === "for" ? "FOR" : "AGAINST"}
+          </span>
+          <span className="font-body text-sm leading-relaxed text-ink-soft">
+            {isAuthor
+              ? "— you posted this motion, so you can only argue FOR it."
+              : `— you can't argue ${lockedSide === "for" ? "AGAINST" : "FOR"} in this debate.`}
           </span>
         </div>
       )}
@@ -259,7 +292,7 @@ const ArgumentInput = ({
                 )
               }
             >
-              {posting ? "Posting…" : "Post Reply"}
+              <PostLabel busy={posting !== null}>Post Reply</PostLabel>
             </Button>
           ) : (
             <>
@@ -275,7 +308,9 @@ const ArgumentInput = ({
                 }
                 onClick={() => requestPost("affirmative", "for", null)}
               >
-                {posting === "affirmative" ? "Posting…" : "Support Affirmative"}
+                <PostLabel busy={posting === "affirmative"}>
+                  Support Affirmative
+                </PostLabel>
               </Button>
               <Button
                 variant="outline-secondary"
@@ -291,7 +326,9 @@ const ArgumentInput = ({
                 }
                 onClick={() => requestPost("negative", "against", null)}
               >
-                {posting === "negative" ? "Posting…" : "Support Negative"}
+                <PostLabel busy={posting === "negative"}>
+                  Support Negative
+                </PostLabel>
               </Button>
             </>
           )}
@@ -312,26 +349,32 @@ const ArgumentInput = ({
       {award && (
         <PointsPopup award={award} onDismiss={() => setAward(null)} />
       )}
+      {/* Portalled for the same reason as the two above: this bar is
+          `backdrop-blur-xl`, which makes it the containing block for its
+          `fixed` children. See ui/Portal. */}
       {notice && (
-        <div className="fixed bottom-32 right-6 z-60 max-w-sm bg-paper border-l-4 border-side-against p-4 flex items-start gap-4">
-          <div className="shrink-0 mt-1">
-            <LuTriangleAlert className="text-side-against font-bold text-xl" />
+        <Portal>
+          <div className="fixed bottom-32 right-6 z-60 max-w-sm bg-raised border-l-4 border-side-against shadow-cast-deep p-4 flex items-start gap-4">
+            <div className="shrink-0 mt-1">
+              <LuTriangleAlert className="text-side-against font-bold text-xl" />
+            </div>
+            <div className="grow">
+              <h4 className="font-label text-[11px] uppercase tracking-[0.2em] text-side-against mb-1.5 font-bold">
+                {notice.title}
+              </h4>
+              <p className="font-body text-sm leading-relaxed text-ink-soft">
+                {notice.body}
+              </p>
+            </div>
+            <button
+              className="shrink-0 text-ink-soft hover:text-ink cursor-pointer"
+              aria-label="Dismiss"
+              onClick={() => setNotice(null)}
+            >
+              <LuX className="text-sm" />
+            </button>
           </div>
-          <div className="grow">
-            <h4 className="font-label text-[10px] uppercase tracking-[0.2em] text-side-against mb-1 font-bold">
-              {notice.title}
-            </h4>
-            <p className="font-body text-xs leading-relaxed text-ink-soft">
-              {notice.body}
-            </p>
-          </div>
-          <button
-            className="shrink-0 text-ink-soft hover:text-ink cursor-pointer"
-            onClick={() => setNotice(null)}
-          >
-            <LuX className="text-sm" />
-          </button>
-        </div>
+        </Portal>
       )}
     </div>
   );

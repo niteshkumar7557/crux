@@ -16,7 +16,7 @@ const TrendingDomainCard = ({
     <li>
       <Link
         href={`/domain?q=${slugifyDomain(topic)}`}
-        className="group block py-3 transition-colors hover:bg-ink-wash"
+        className="group block py-3 px-2 transition-colors hover:bg-ink-wash"
       >
         <div className="flex items-baseline justify-between gap-3">
           <span className="font-headline text-base capitalize text-ink">

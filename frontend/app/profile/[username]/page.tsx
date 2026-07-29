@@ -67,7 +67,7 @@ const ProfilePage = async ({
   if (!shell) notFound();
 
   return (
-    <Reveal className="max-w-7xl mx-auto px-6 py-12">
+    <Reveal className="w-full max-w-7xl mx-auto px-6 py-12">
       <div data-reveal>
         <ProfileHeader
           identity={shell.identity}

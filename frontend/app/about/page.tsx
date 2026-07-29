@@ -33,7 +33,7 @@ const PILLARS = [
 
 const About = () => {
   return (
-    <Reveal className="max-w-4xl mx-auto px-6 md:px-8 py-12">
+    <Reveal className="w-full max-w-4xl mx-auto px-6 md:px-8 py-12">
       <div data-reveal className="mb-14">
         <p className="flex items-center gap-3 font-label text-[0.62rem] uppercase tracking-[0.3em] text-ink-soft">
           <span aria-hidden className="h-px w-8 bg-ink-faint" />

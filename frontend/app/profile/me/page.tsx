@@ -31,7 +31,7 @@ const ProfileMe = () => {
   }, [router]);
 
   return (
-    <main id="main-content" className="max-w-7xl mx-auto px-6 py-12">
+    <main id="main-content" className="w-full max-w-7xl mx-auto px-6 py-12">
       <span className="sr-only">Opening your profile…</span>
       <div className="flex items-end gap-5 md:gap-8">
         <Skeleton className="w-32 h-32 shrink-0" />

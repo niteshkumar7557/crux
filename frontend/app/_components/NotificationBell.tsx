@@ -59,7 +59,10 @@ const NotificationBell = () => {
         type="button"
         onClick={toggle}
         aria-label="Notifications"
-        className="relative cursor-pointer text-ink-soft hover:text-ink transition-colors"
+        // `flex`, not the default inline-block: an inline <svg> sits on a text
+        // baseline, and the descender space under it left the bell riding ~4px
+        // high of everything else in the nav row.
+        className="relative flex cursor-pointer items-center text-ink-soft hover:text-ink transition-colors"
       >
         <LuBell size={22} />
         {unread > 0 && (

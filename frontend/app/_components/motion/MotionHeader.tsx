@@ -121,6 +121,12 @@ const MotionHeader = ({
             )}
           </div>
         </div>
+        {/* The claim is set in Newsreader, not the display face. Anton was
+            tried here and rejected: a motion is a sentence someone is on the
+            hook for, and setting it in condensed uppercase poster type turned
+            an argument into a headline shouting at the reader. The serif reads
+            as something written and signed, which is what a motion is. The
+            keyword lifts in laurel italic. */}
         <h1
           ref={headlineRef}
           className="font-headline text-[clamp(2.2rem,5.2vw,4.2rem)] leading-[1.12] max-w-5xl break-words text-ink"

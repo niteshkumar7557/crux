@@ -17,7 +17,9 @@ const SidebarSection = ({
   children: ReactNode;
   className?: string;
 }) => (
-  <section className={className}>
+  // `px-4` so the module's contents — and the row hover wash under them — stand
+  // off the column's edge rule instead of running into it.
+  <section className={`px-4 ${className}`}>
     <div className="flex items-baseline justify-between gap-4 border-b border-ink-faint pb-3">
       <h2 className="flex items-center gap-2 font-label text-[0.62rem] uppercase tracking-[0.3em] text-ink-soft">
         <span aria-hidden className="h-px w-8 bg-ink-faint" />

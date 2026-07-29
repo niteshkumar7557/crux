@@ -36,6 +36,20 @@
   /* modal scrim. Not `ink` at low alpha: ink inverts between themes, and a
      cream scrim over a dark page lifts the backdrop instead of dimming it. */
   --scrim: rgba(20, 35, 28, 0.45);
+  /* cast — the system's one depth effect (design-system.md §5). A debate has
+     two camps, and the shadow says which one you are standing over: the FOR
+     panel and its cards cast forest, the AGAINST side casts terracotta. Never
+     black — a neutral shadow on warm paper is a grey haze, and on this page it
+     also throws away the one thing the surface already knows about itself.
+     Low alpha and a short throw on purpose: the cast means "this sits above
+     the page", not "this is floating in space". */
+  --cast-for: rgba(47, 107, 79, 0.32);
+  --cast-for-soft: rgba(47, 107, 79, 0.16);
+  --cast-against: rgba(156, 74, 52, 0.32);
+  --cast-against-soft: rgba(156, 74, 52, 0.16);
+  /* …and an ink-tinted one for overlays, which belong to no camp. */
+  --cast-neutral: rgba(36, 65, 52, 0.24);
+  --cast-neutral-soft: rgba(36, 65, 52, 0.12);
 }
 [data-theme="dark"] {
   --paper: #0f1a15; /* the archive at night */
@@ -55,6 +69,16 @@
   --metal-silver: #c9d1d4;
   --metal-bronze: #d09a6a;
   --scrim: rgba(4, 9, 7, 0.7);
+  /* The camp colours lighten at night (`--for` goes from #2f6b4f to #63a882),
+     and a light shadow on green-black glows instead of shading. Dark mode
+     casts the same two hues taken down below the page tone — the camp is still
+     legible in the shadow, but the light keeps coming from the same place. */
+  --cast-for: rgba(10, 38, 25, 0.72);
+  --cast-for-soft: rgba(10, 38, 25, 0.45);
+  --cast-against: rgba(48, 18, 10, 0.72);
+  --cast-against-soft: rgba(48, 18, 10, 0.45);
+  --cast-neutral: rgba(4, 10, 7, 0.66);
+  --cast-neutral-soft: rgba(4, 10, 7, 0.4);
 }
 
 /* `--paper-raised` exists because `--paper-plate` deliberately stays cream in
@@ -83,6 +107,24 @@
   --color-metal-silver: var(--metal-silver);
   --color-metal-bronze: var(--metal-bronze);
   --color-scrim: var(--scrim);
+
+  /* ---- depth ----
+     `shadow-cast-for` / `-against` for anything that belongs to a camp, plus a
+     `-deep` step for the hover state; `shadow-cast` is the neutral one, for
+     overlays. See the note on `--cast-for` above — everything not on this short
+     list is still flat paper and hairlines. */
+  --shadow-cast-for: 0 10px 22px -12px var(--cast-for),
+    0 3px 8px -5px var(--cast-for-soft);
+  --shadow-cast-for-deep: 0 16px 30px -14px var(--cast-for),
+    0 5px 11px -6px var(--cast-for-soft);
+  --shadow-cast-against: 0 10px 22px -12px var(--cast-against),
+    0 3px 8px -5px var(--cast-against-soft);
+  --shadow-cast-against-deep: 0 16px 30px -14px var(--cast-against),
+    0 5px 11px -6px var(--cast-against-soft);
+  --shadow-cast: 0 10px 22px -12px var(--cast-neutral),
+    0 3px 8px -5px var(--cast-neutral-soft);
+  --shadow-cast-deep: 0 16px 30px -14px var(--cast-neutral),
+    0 5px 11px -6px var(--cast-neutral-soft);
 
   /* ---- type ----
      Three faces, no more (design-system.md §3). To swap the display face,

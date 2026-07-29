@@ -12,14 +12,13 @@ import AnalysisPanel from "./AnalysisPanel";
 const SIDES = {
   for: {
     title: "The Case For",
-    wrapper: "lg:pr-12 py-8",
+    wrapper: "lg:pr-7 py-8",
     stamp: "bg-side-for text-paper",
     countClass: "text-side-for",
   },
   against: {
     title: "The Case Against",
-    wrapper:
-      "lg:pl-12 py-8 border-t lg:border-t-0 lg:border-l border-ink-faint",
+    wrapper: "lg:pl-7 py-8 border-t lg:border-t-0 lg:border-l border-ink-faint",
     stamp: "bg-side-against text-paper",
     countClass: "text-side-against",
   },
@@ -59,7 +58,7 @@ const CaseColumn = ({
         </span>
       </div>
       <AnalysisPanel side={side} analysis={aiAnalysis} />
-      <div className="flex flex-col gap-10">
+      <div className="flex flex-col gap-3">
         {sideArguments.map((e) => (
           <UserArgumentCard key={e.argument_id} {...e} />
         ))}

@@ -47,8 +47,8 @@ Semantic CSS variables in `frontend/app/globals.css`, flipped by
 
 **Three paper tones carry elevation in the product: `paper → band → raised`.**
 `plate` is not one of them — it stays cream in dark mode by design, which is
-right for an engraving and punishing for a feed of text. There are no shadows
-anywhere in the system; elevation is paper tone and hairlines.
+right for an engraving and punishing for a feed of text. Elevation is paper
+tone and hairlines — see §5 for the one narrow exception (`shadow-cast`).
 
 **`--ink-faint` is already 16% alpha.** Never write `border-ink-faint/30` — that
 renders at 5% and the hairline vanishes. Use the token bare.
@@ -60,7 +60,14 @@ Rules:
 - **No pure black, no pure white, no gradients, no texture/noise overlays.**
 - Laurel gold is reserved for *earned* things: numerals, prizes, MVP, tiers.
 - FOR is always green-family, AGAINST always terracotta — never red/green
-  stoplight pairs; the draw band is always visible on split bars.
+  stoplight pairs.
+- **The draw band is marked on the debate page's probability bar only**
+  (`MotionProbability`), not on the arena feed's `ScoreBar`. It is a rule about
+  how a debate *ends*, so it belongs where a debate is read and acted on, and
+  where the bar is tall enough to carry a marking. Repeated across a dozen feed
+  cards it just ruled the page. `DRAW_MARGIN` still lives in
+  `_utils/drawBand.ts` — one number, so the bar and the verdict cannot
+  disagree.
 - Theme is stored in `localStorage("crux-theme")` and stamped on `<html>`
   before paint by a script in `app/layout.tsx` (default: system preference).
 
@@ -85,6 +92,24 @@ Rules:
   serif lede `1.125–1.25rem/1.55`; labels `0.62–0.72rem`.
 - Mixed headline pattern: `EVERY ARGUMENT` (Anton) + `deserves` (Newsreader
   italic, lowercase, ink-soft) + `A VERDICT` (Anton).
+- **The motion on a debate page is the one h1 that is not Anton.** It is
+  Newsreader roman with the keyword lifted in laurel italic. Anton was tried
+  there and rejected by the owner: a motion is a sentence someone is on the
+  hook for, and condensed uppercase poster type turns an argument into a
+  headline shouting at the reader. Section titles announce; a motion is
+  written and signed. Don't "fix" it back to the display face.
+- **A debate column is set in Space Grotesk, not the serif** — the Crux AI
+  panel and the arguments alike. It is the one place the label face carries
+  running prose rather than eyebrows, and it earns it: the column is a
+  screenful of short statements, which scan better in the label face than in
+  the italic serif that used to hold them. Arguments carry **no quotation
+  marks** — the avatar, the handle and the card already say whose words they
+  are — and sit at `text-ink`, the darkest text in the column, so the debating
+  outranks the analysis reading it.
+- Because both voices now share a face, **the surface is what separates the
+  machine from the debaters**: the AI panel is `bg-raised` + side-tinted cast +
+  a ruled header, an argument is a flat `bg-band` card with a person attached.
+  Strip that shell and the panel needs another way to say it is not a person.
 
 ## 4. Imagery — the specimen plates
 
@@ -113,10 +138,39 @@ herald, laurel wreath, bust, medals ×3, amphitheater (full-bleed), doors
 
 - Corners: **square** everywhere except two shapes — **pills** (buttons,
   `rounded-full`) and **arches** (plates, the footer seal).
-- Borders are hairlines (`--ink-faint`); no shadows, no glows, flat surfaces
-  only. Elevation is expressed by paper tone (`paper` → `band` → `plate`).
+- Borders are hairlines (`--ink-faint`); no glows. Elevation is expressed by
+  paper tone (`paper` → `band` → `plate`).
+- **The cast — the one depth effect, and it is never black.** A surface that
+  belongs to a camp casts that camp's colour: `shadow-cast-for` is forest,
+  `shadow-cast-against` is terracotta, each with a `-deep` step for hover.
+  `shadow-cast` is the ink-tinted neutral, for overlays that belong to no camp.
+  Tokens are `--cast-for` / `--cast-against` / `--cast-neutral` (+ `-soft`) in
+  `globals.css`. Where it is used:
+  - the **Crux AI panel** on a debate — resting, `shadow-cast-{side}`;
+  - an **argument card under the cursor** — `hover:shadow-cast-{side}-deep`;
+  - the **side-lock dialog** — the side being committed to;
+  - the **points slip and the composer's error notice** — neutral.
+
+  Three rules keep it working:
+  1. **Shallow and low-alpha.** ~10–16px of throw at ≤0.32 alpha in light. The
+     cast means "this sits above the page", not "this floats in space" — a
+     heavy one reads as a bruise under the panel and was rejected once already.
+  2. **Dark mode casts the same hues taken down below the page tone**
+     (`rgba(10,38,25,.72)` for FOR), because `--for` *lightens* at night and a
+     light shadow on green-black glows instead of shading.
+  3. **Anything carrying a cast sits on `bg-raised`,** not `bg-paper`: a shadow
+     under a surface no lighter than the page reads as a hole punched in it.
+
+  Everything else in the product is still flat paper and hairlines — the cast
+  means "this is above the page", so it is worth nothing once it is everywhere.
 - Buttons: pill, Space Grotesk uppercase; solid = ink-on-paper inverted;
   outline = hairline + `ink-wash` hover; hover lifts `-2px`.
+- **`backdrop-filter` traps `position: fixed` children.** A blurred or
+  transformed ancestor becomes their containing block, so a `fixed inset-0`
+  modal inside the debate composer (`backdrop-blur-xl`) fills the composer
+  rather than the viewport. Overlays go through `ui/Portal`, which renders them
+  at `<body>`; the same applies to any `filter`, `transform`, `perspective` or
+  `will-change` ancestor.
 
 ## 6. Motion (GSAP)
 

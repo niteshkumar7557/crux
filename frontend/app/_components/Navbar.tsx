@@ -47,10 +47,17 @@ const Navbar = () => {
                   aria-current={active ? "page" : undefined}
                   // The active mark is an ink underline rather than a color
                   // swap: in a two-ink palette, color cannot carry state.
-                  className={`border-b pb-1 font-label text-[0.7rem] uppercase tracking-[0.22em] transition-colors ${
+                  //
+                  // The rule is an `after` pseudo-element rather than
+                  // `border-b pb-1`. A border and its padding are part of the
+                  // link's box, so `items-center` on the row was centring
+                  // *text + underline gap* and pushing the words ~3px above
+                  // every other item in the bar. Absolute, the rule hangs
+                  // below without ever entering the box the row aligns.
+                  className={`relative font-label text-[0.7rem] uppercase tracking-[0.22em] transition-colors after:absolute after:inset-x-0 after:-bottom-1.5 after:h-px after:content-[''] ${
                     active
-                      ? "border-ink text-ink"
-                      : "border-transparent text-ink-soft hover:text-ink"
+                      ? "text-ink after:bg-ink"
+                      : "text-ink-soft hover:text-ink after:bg-transparent"
                   }`}
                 >
                   {link.label}

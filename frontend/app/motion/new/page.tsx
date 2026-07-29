@@ -17,7 +17,7 @@ const page = async () => {
 
   return (
     <div className="min-h-screen pt-22 pb-20 px-4">
-      <Reveal className="max-w-3xl mx-auto">
+      <Reveal className="w-full max-w-3xl mx-auto">
         <div data-reveal>
           <ComposeHeader />
         </div>

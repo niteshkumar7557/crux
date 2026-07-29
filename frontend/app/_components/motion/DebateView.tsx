@@ -6,6 +6,7 @@ import serverApi from "@/app/axios.server";
 import { isAxiosError } from "axios";
 import { notFound } from "next/navigation";
 import { debateSlug } from "@/app/_utils/slugify";
+import { DEBATE_SHELL } from "./debateLayout";
 import type { Analysis } from "@/app/motion/types";
 import {
   atWalkoverRisk,
@@ -128,9 +129,9 @@ const DebateView = async ({ id }: { id: number }) => {
       {/* §5: one provider over the arena and the composer, so a Reply button in
           a column can arm the composer at the bottom without prop-drilling. */}
       <ReplyProvider>
-        {/* `grow` so the arena absorbs the page's spare height and the sticky
-            composer below it sits on the fold even when nobody has argued yet. */}
-        <section className="grow w-full max-w-screen-2xl mx-auto px-6 pt-12 pb-16">
+        {/* Geometry shared with the composer and the route skeleton — see
+            debateLayout.ts for why it lives there and not inline. */}
+        <section className={DEBATE_SHELL}>
           <MotionHeader
             motionHeaderData={motionHeaderData}
             matchState={matchState}

@@ -15,7 +15,7 @@ const TopDebatersCard = ({
     <li>
       <Link
         href={`/profile/${username}`}
-        className="flex items-center gap-4 py-3 transition-colors hover:bg-ink-wash"
+        className="flex items-center gap-4 py-3 px-2 transition-colors hover:bg-ink-wash"
       >
         <span
           className={`w-5 shrink-0 font-label text-xs tabular-nums ${

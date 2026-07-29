@@ -83,11 +83,7 @@ const ArenaSecondaryCard = ({
         </div>
 
         <div>
-          <ScoreBar
-            affirmative={affirmativescore}
-            negative={negativescore}
-            status={status}
-          />
+          <ScoreBar affirmative={affirmativescore} negative={negativescore} />
           <div className="flex items-center justify-between gap-3 font-label text-[0.6rem] uppercase tracking-[0.2em] text-ink-soft">
             <span>{footerLeft}</span>
             {affirmativescore > negativescore ? (

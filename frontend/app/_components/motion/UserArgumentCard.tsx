@@ -1,11 +1,7 @@
 "use client";
 import { UserArgumentCardProps } from "@/app/motion/types";
-import api from "@/app/axios";
-import Link from "next/link";
-import { useRef, useState } from "react";
-import { LuThumbsUp } from "react-icons/lu";
 import Avatar from "@/app/_components/ui/Avatar";
-import { gsap, MOTION_OK } from "@/app/_utils/gsap";
+import LikeButton from "@/app/_components/ui/LikeButton";
 import { focusArgument } from "@/app/_utils/focusArgument";
 import { useReplyTarget } from "./ReplyContext";
 
@@ -25,24 +21,10 @@ const UserArgumentCard = ({
   firstReplyId,
   viewerLockedSide,
 }: UserArgumentCardProps) => {
-  const [likeCount, setLikeCount] = useState(likes);
-  const [liked, setLiked] = useState(initiallyLiked);
-  const [busy, setBusy] = useState(false);
-  const likeRef = useRef<HTMLButtonElement>(null);
   const { setTarget } = useReplyTarget();
 
-  // The viewer's like state loads a beat after mount (client-only JWT). Adopt it
-  // when it arrives by comparing against the last value we synced — the React
-  // "adjust state while rendering" pattern, so no effect and no extra render.
-  // A toggle already in flight wins, so a mid-load tap is never clobbered.
-  const [syncedInit, setSyncedInit] = useState(initiallyLiked);
-  if (initiallyLiked !== syncedInit) {
-    setSyncedInit(initiallyLiked);
-    if (!busy) setLiked(initiallyLiked);
-  }
-
   // Every footer control is the same tiny label that warms to the column's
-  // accent on hover; only the like button adds a filled state on top.
+  // accent on hover. LikeButton builds the same thing from `side`.
   const actionClass = `font-label text-[10px] uppercase text-ink-soft cursor-pointer transition-colors ${
     side === "for" ? "hover:text-side-for" : "hover:text-side-against"
   }`;
@@ -50,7 +32,13 @@ const UserArgumentCard = ({
   // A like pays the author +2 logic (§6), so your own argument offers no button
   // — the count stays visible, it just isn't a control. The server refuses a
   // self-like too; this only keeps the UI from offering what it would reject.
-  const isOwnArgument = user_id !== undefined && user_id === post_user_id;
+  // A logged-out viewer gets the count and a route to log in.
+  const likeMode =
+    user_id === undefined
+      ? ({ kind: "anonymous" } as const)
+      : user_id === post_user_id
+        ? ({ kind: "own" } as const)
+        : ({ kind: "interactive" } as const);
 
   // Cross-side only (§5): you can reply to an opposing argument, never your own
   // side. A viewer with no side yet may reply to anyone — it locks them to the
@@ -59,48 +47,19 @@ const UserArgumentCard = ({
     user_id !== undefined &&
     (viewerLockedSide === null || viewerLockedSide !== side);
 
-  async function handleClick() {
-    if (busy) return;
-    const next = !liked;
-    // Optimistic: flip the button and count now, reconcile with the server, and
-    // roll back both if the call fails so the UI never lies about the count.
-    setLiked(next);
-    setLikeCount((e) => e + (next ? 1 : -1));
-    if (next && likeRef.current && window.matchMedia(MOTION_OK).matches) {
-      gsap.fromTo(
-        likeRef.current,
-        { scale: 1 },
-        {
-          scale: 1.25,
-          duration: 0.12,
-          yoyo: true,
-          repeat: 1,
-          ease: "power2.out",
-          overwrite: "auto",
-        },
-      );
-    }
-    setBusy(true);
-    try {
-      // Only rendered for a signed-in viewer, so the axios token interceptor
-      // always has a token to attach.
-      if (next) {
-        await api.post("/like", { argument_id });
-      } else {
-        await api.delete("/like", { data: { argument_id } });
-      }
-    } catch {
-      setLiked(!next);
-      setLikeCount((e) => e + (next ? -1 : 1));
-    } finally {
-      setBusy(false);
-    }
-  }
-
   return (
     <div id={`argument-${argument_id}`} data-side={side}>
+      {/* Hovering lifts the card off the page — the accent border alone was a
+          1px answer to a whole-card gesture. The cast carries the card's own
+          camp colour, so the lift reads as this side's, not as generic depth.
+          `duration-300` because a shadow arriving instantly reads as a flicker
+          rather than as a lift. */}
       <div
-        className={`group mb-2 relative bg-band p-6 border-l ${side === "for" ? "border-side-for/20 hover:border-side-for/60" : "border-side-against/20 hover:border-side-against/60"}  transition-all`}
+        className={`group mb-2 relative bg-band p-6 border-l transition-all duration-300 ${
+          side === "for"
+            ? "border-side-for/20 hover:border-side-for/60 hover:shadow-cast-for-deep"
+            : "border-side-against/20 hover:border-side-against/60 hover:shadow-cast-against-deep"
+        }`}
       >
         <div className="flex items-start mb-4">
           <div className="flex items-center gap-3">
@@ -133,7 +92,10 @@ const UserArgumentCard = ({
             <p className="font-label text-[9px] uppercase tracking-[0.15em] text-ink-soft mb-1">
               replying to @{replyTo.username}
             </p>
-            <p className="font-body text-xs italic text-ink-soft/70 truncate">
+            {/* Follows the argument face, since it *is* an argument. It keeps
+                its quote marks, though: unlike the card's own words, these are
+                genuinely someone else's, lifted into your card. */}
+            <p className="font-label text-[0.72rem] leading-relaxed text-ink-soft/80 truncate">
               &ldquo;
               {replyTo.content.length > 80
                 ? `${replyTo.content.slice(0, 80)}…`
@@ -142,40 +104,25 @@ const UserArgumentCard = ({
             </p>
           </button>
         )}
-        <p className="font-body text-base leading-relaxed text-ink-soft mb-6 italic">
-          &ldquo;{argument}&rdquo;
+        {/* Set in the label face, like the Crux AI panel above it, and with no
+            quotation marks. The card already says whose words these are — the
+            avatar, the handle and the surface do it — so the quotes were
+            punctuation spent on something already established, and they made
+            every argument read as though it were being cited by someone else
+            rather than said. `text-ink` rather than `ink-soft`: sharing a face
+            with the analysis, the arguments need the hierarchy back somewhere,
+            and the darkest text in the column should be the debating. */}
+        <p className="font-label text-[0.9rem] leading-[1.75] text-ink mb-6">
+          {argument}
         </p>
         <div className="flex gap-4 items-center">
-          {/* A like is a logic award to the author (§6), so it needs an account.
-              Logged-out viewers still see the count — they just get sent to log
-              in instead of a like that would silently go nowhere. */}
-          {isOwnArgument ? (
-            <span
-              title="You can't like your own argument"
-              className="font-label text-[10px] uppercase text-ink-soft flex items-center gap-2 cursor-not-allowed"
-            >
-              <LuThumbsUp className="text-sm" /> {likeCount}
-            </span>
-          ) : user_id === undefined ? (
-            <Link
-              href="/login"
-              title="Log in to like this argument"
-              className={`${actionClass} flex items-center gap-2`}
-            >
-              <LuThumbsUp className="text-sm" /> {likeCount}
-            </Link>
-          ) : (
-            <button
-              ref={likeRef}
-              onClick={handleClick}
-              className={`${actionClass} flex items-center gap-2 ${liked && side === "for" ? "text-side-for" : ""} ${liked && side === "against" ? "text-side-against" : ""}`}
-            >
-              <LuThumbsUp
-                className={`text-sm ${liked ? `fill-current ${side === "for" ? "text-side-for" : "text-side-against"}` : ""}`}
-              />{" "}
-              {likeCount}
-            </button>
-          )}
+          <LikeButton
+            argumentId={argument_id}
+            side={side}
+            likes={likes}
+            initiallyLiked={initiallyLiked}
+            mode={likeMode}
+          />
           {canReply && (
             <button
               onClick={() =>
