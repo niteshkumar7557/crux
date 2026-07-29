@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { LuLink, LuCheck, LuDownload } from "react-icons/lu";
 
 const ACTION =
-  "flex items-center gap-2 font-label text-[10px] uppercase tracking-[0.2em] text-outline hover:text-on-surface transition-colors cursor-pointer";
+  "flex items-center gap-2 font-label text-[10px] uppercase tracking-[0.2em] text-ink-soft hover:text-ink transition-colors cursor-pointer";
 
 /** How long the button stays on "Copied!" before returning to "Link". */
 const COPIED_MS = 2000;
@@ -74,7 +74,7 @@ const ShareVerdict = ({
       >
         {copied ? (
           <>
-            <LuCheck className="text-tertiary" /> Copied!
+            <LuCheck className="text-laurel" /> Copied!
           </>
         ) : (
           <>

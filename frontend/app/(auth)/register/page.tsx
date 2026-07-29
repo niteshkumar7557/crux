@@ -76,7 +76,7 @@ const Register = () => {
       const response = await api.post("/user/register", info);
       localStorage.setItem("access_token", response.data.accessToken);
       setTimeout(() => {
-        router.push("/");
+        router.push("/arena");
       }, 1000);
     } catch (err) {
       if (isAxiosError(err) && err.response?.status === 429) {
@@ -101,34 +101,33 @@ const Register = () => {
         className="relative min-h-screen grow flex items-center justify-center pt-14 pb-12 px-6"
       >
         {/* <!-- Background Technical Layer --> */}
-        <div className="absolute inset-0 technical-grid -z-5"></div>
-        <div className="absolute inset-0 bg-radial-at-c from-primary/5 via-transparent to-transparent -z-5"></div>
 
-        <div className="w-full max-w-5xl grid md:grid-cols-12 gap-0 border border-outline-variant/15 shadow-2xl shadow-primary/5 bg-surface-container-lowest overflow-hidden">
+        <div className="w-full max-w-5xl grid md:grid-cols-12 gap-0 border border-ink-faint bg-paper overflow-hidden">
           <div
             data-auth-form
             className="md:col-span-7 p-10 md:p-16 flex flex-col justify-center"
           >
             <div className="mb-12">
-              <span className="font-label text-[10px] tracking-[0.3em] text-primary uppercase mb-4 block">
-                CREATE YOUR ACCOUNT
-              </span>
-              <h1 className="font-headline text-5xl md:text-6xl text-on-surface italic leading-none">
+              <p className="flex items-center gap-3 font-label text-[0.62rem] uppercase tracking-[0.3em] text-ink-soft">
+                <span aria-hidden className="h-px w-8 bg-ink-faint" />
+                Create your account
+              </p>
+              <h1 className="mt-5 display-type text-[clamp(2.2rem,4.6vw,3.4rem)] text-ink">
                 Join the Intellectual Fray
               </h1>
             </div>
             <form className="space-y-8" onSubmit={handleSubmit}>
               <div data-auth-field className="space-y-2">
                 <label
-                  className="block font-label text-[10px] uppercase tracking-widest text-outline"
+                  className="block font-label text-[10px] uppercase tracking-widest text-ink-soft"
                   htmlFor="name"
                 >
                   Full name
                 </label>
                 <div className="relative group">
-                  <LuUser className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
+                  <LuUser className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft group-focus-within:text-ink transition-colors text-lg" />
                   <input
-                    className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-outline transition-all font-body text-sm"
+                    className="w-full border border-ink-faint bg-paper py-3 pl-11 pr-4 font-body text-sm text-ink transition-colors placeholder:text-ink-soft focus:border-ink focus:outline-none"
                     id="name"
                     placeholder="Your name"
                     required={true}
@@ -141,15 +140,15 @@ const Register = () => {
               </div>
               <div data-auth-field className="space-y-2">
                 <label
-                  className="block font-label text-[10px] uppercase tracking-widest text-outline"
+                  className="block font-label text-[10px] uppercase tracking-widest text-ink-soft"
                   htmlFor="username"
                 >
                   Username
                 </label>
                 <div className="relative group">
-                  <LuGem className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
+                  <LuGem className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft group-focus-within:text-ink transition-colors text-lg" />
                   <input
-                    className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-outline transition-all font-body text-sm"
+                    className="w-full border border-ink-faint bg-paper py-3 pl-11 pr-4 font-body text-sm text-ink transition-colors placeholder:text-ink-soft focus:border-ink focus:outline-none"
                     id="username"
                     placeholder="pick_a_username"
                     required={true}
@@ -176,7 +175,7 @@ const Register = () => {
                 <p
                   id="username-hint"
                   className={`font-label text-[10px] uppercase tracking-widest ${
-                    userNameError ? "text-secondary" : "text-outline"
+                    userNameError ? "text-side-against" : "text-ink-soft"
                   }`}
                 >
                   {userNameError || "Lowercase letters, numbers and underscores. This becomes your profile URL."}
@@ -184,15 +183,15 @@ const Register = () => {
               </div>
               <div data-auth-field className="space-y-2">
                 <label
-                  className="block font-label text-[10px] uppercase tracking-widest text-outline"
+                  className="block font-label text-[10px] uppercase tracking-widest text-ink-soft"
                   htmlFor="email"
                 >
                   Email
                 </label>
                 <div className="relative group">
-                  <LuMail className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
+                  <LuMail className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft group-focus-within:text-ink transition-colors text-lg" />
                   <input
-                    className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-outline transition-all font-body text-sm"
+                    className="w-full border border-ink-faint bg-paper py-3 pl-11 pr-4 font-body text-sm text-ink transition-colors placeholder:text-ink-soft focus:border-ink focus:outline-none"
                     id="email"
                     placeholder="you@example.com"
                     required={true}
@@ -206,16 +205,16 @@ const Register = () => {
               <div data-auth-field className="space-y-2">
                 <div className="flex justify-between items-end">
                   <label
-                    className="block font-label text-[10px] uppercase tracking-widest text-outline"
+                    className="block font-label text-[10px] uppercase tracking-widest text-ink-soft"
                     htmlFor="password"
                   >
                     Password
                   </label>
                 </div>
                 <div className="relative group">
-                  <LuLockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
+                  <LuLockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft group-focus-within:text-ink transition-colors text-lg" />
                   <input
-                    className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-outline transition-all font-body text-sm"
+                    className="w-full border border-ink-faint bg-paper py-3 pl-11 pr-4 font-body text-sm text-ink transition-colors placeholder:text-ink-soft focus:border-ink focus:outline-none"
                     id="password"
                     placeholder="••••••••••••"
                     required={true}
@@ -225,7 +224,7 @@ const Register = () => {
                     onChange={(e) => setPassword(e.currentTarget.value)}
                   />
                 </div>
-                <p className="font-label text-[10px] uppercase tracking-widest text-secondary cursor-default">
+                <p className="font-label text-[10px] uppercase tracking-widest text-side-against cursor-default">
                   {error}
                 </p>
               </div>
@@ -237,13 +236,13 @@ const Register = () => {
                 </Button>
               </div>
             </form>
-            <p className="mt-8 text-outline text-xs font-body">
+            <p className="mt-8 text-ink-soft text-xs font-body">
               By entering the arena, you agree to the{" "}
-              <a className="text-primary hover:underline" href="#">
+              <a className="text-ink hover:underline" href="#">
                 ARENA RULES
               </a>{" "}
               and{" "}
-              <a className="text-primary hover:underline" href="#">
+              <a className="text-ink hover:underline" href="#">
                 TERMS
               </a>
               .
@@ -251,7 +250,7 @@ const Register = () => {
           </div>
           <div
             data-auth-panel
-            className="md:col-span-5 bg-surface-container border-l border-outline-variant/15 flex flex-col"
+            className="md:col-span-5 bg-band border-l border-ink-faint flex flex-col"
           >
             <div className="relative h-48 md:h-64 overflow-hidden">
               <Image
@@ -262,44 +261,43 @@ const Register = () => {
                 priority
                 sizes="(min-width: 768px) 40vw, 100vw"
               />
-              <div className="absolute inset-0 bg-linear-to-t from-surface-container to-transparent"></div>
               <div className="absolute bottom-6 left-10">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-primary animate-pulse motion-reduce:animate-none"></div>
-                  <span className="font-label text-[10px] tracking-widest text-primary font-bold">
+                  <div className="w-2 h-2 bg-ink animate-pulse motion-reduce:animate-none"></div>
+                  <span className="font-label text-[10px] tracking-widest text-ink font-bold">
                     STATUS: RECRUITMENT OPEN
                   </span>
                 </div>
               </div>
             </div>
             <div className="p-10 grow">
-              <h2 className="font-headline text-2xl text-on-surface italic mb-6">
+              <h2 className="font-headline text-2xl text-ink italic mb-6">
                 Crux Reputation
               </h2>
               <div className="space-y-8">
                 <div className="flex gap-4">
-                  <div className="shrink-0 w-10 h-10 bg-surface-container-high flex items-center justify-center">
-                    <LuShieldCheck className="text-primary" />
+                  <div className="shrink-0 w-10 h-10 bg-raised flex items-center justify-center">
+                    <LuShieldCheck className="text-ink" />
                   </div>
                   <div>
-                    <h3 className="font-label text-xs tracking-widest text-primary uppercase mb-1">
+                    <h3 className="font-label text-xs tracking-widest text-ink uppercase mb-1">
                       EVIDENCE-BASED SCORING
                     </h3>
-                    <p className="text-on-surface-variant text-sm leading-relaxed">
+                    <p className="text-ink-soft text-sm leading-relaxed">
                       Your standing is determined by the rigor of your sources
                       and the logical consistency of your arguments.
                     </p>
                   </div>
                 </div>
                 <div className="flex gap-4">
-                  <div className="shrink-0 w-10 h-10 bg-surface-container-high flex items-center justify-center">
-                    <LuScale className="text-secondary" />
+                  <div className="shrink-0 w-10 h-10 bg-raised flex items-center justify-center">
+                    <LuScale className="text-side-against" />
                   </div>
                   <div>
-                    <h3 className="font-label text-xs tracking-widest text-secondary uppercase mb-1">
+                    <h3 className="font-label text-xs tracking-widest text-side-against uppercase mb-1">
                       CIVILITY MULTIPLIER
                     </h3>
-                    <p className="text-on-surface-variant text-sm leading-relaxed">
+                    <p className="text-ink-soft text-sm leading-relaxed">
                       Passive aggression or logical fallacies deplete your
                       weight. Steel-manning opponents increases your Crux Rank.
                     </p>

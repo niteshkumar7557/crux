@@ -1,58 +1,36 @@
 import Link from "next/link";
-import { LuShare2, LuTerminal } from "react-icons/lu";
+import Logo from "./ui/Logo";
+
+// The two icon buttons that used to sit on the right ("Developer terminal",
+// "Share Crux") carried no handler — they were decoration shaped like controls.
+// A footer of tracked labels says the same thing honestly.
+const links = [
+  { label: "Leaderboard", href: "/leaderboard" },
+  { label: "Rules of Engagement", href: "/rules" },
+  { label: "About", href: "/about" },
+];
 
 const Footer = () => {
   return (
-    <footer className="bg-surface-container-lowest border-t border-outline-variant/10">
-      <div className="flex flex-col md:flex-row justify-between items-center px-10 py-12 w-full gap-8 max-w-screen-2xl mx-auto">
-        <div className="flex flex-col gap-4">
-          <span className="text-lg font-headline text-on-surface italic">
-            Crux
-          </span>
-          <span className="font-label uppercase tracking-widest text-xs text-outline">
-            © 2026 Crux Digital Arena. All Rights Reserved.
+    <footer className="border-t border-ink-faint bg-paper">
+      <div className="mx-auto flex w-full max-w-screen-2xl flex-col items-center justify-between gap-8 px-10 py-12 md:flex-row">
+        <div className="flex flex-col items-center gap-3 md:items-start">
+          <Logo size={22} wordClassName="text-lg" className="text-ink" />
+          <span className="font-label text-[0.65rem] uppercase tracking-[0.22em] text-ink-soft">
+            © 2026 Crux Digital Arena. All rights reserved.
           </span>
         </div>
-        <div className="flex gap-8">
-          <Link
-            className="font-label uppercase tracking-widest text-xs text-outline hover:text-primary transition-colors"
-            href={"/leaderboard"}
-          >
-            Leaderboard
-          </Link>
-          <Link
-            className="font-label uppercase tracking-tight text-xs text-outline hover:text-primary transition-colors"
-            href={"/rules"}
-          >
-            Rules of Engagement
-          </Link>
-          <Link
-            className="font-label uppercase tracking-widest text-xs text-outline hover:text-primary transition-colors"
-            href={"/about"}
-          >
-            About
-          </Link>
-        </div>
-        <div className="flex gap-4">
-          <button
-            type="button"
-            aria-label="Developer terminal"
-            className="w-8 h-8 flex items-center justify-center bg-surface-container-high border border-outline-variant/30 text-outline hover:text-primary transition-colors cursor-pointer"
-          >
-            <span className="text-sm">
-              <LuTerminal />
-            </span>
-          </button>
-          <button
-            type="button"
-            aria-label="Share Crux"
-            className="w-8 h-8 flex items-center justify-center bg-surface-container-high border border-outline-variant/30 text-outline hover:text-primary transition-colors cursor-pointer"
-          >
-            <span className="text-sm">
-              <LuShare2 />
-            </span>
-          </button>
-        </div>
+        <nav className="flex flex-wrap justify-center gap-x-8 gap-y-3">
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="font-label text-[0.65rem] uppercase tracking-[0.22em] text-ink-soft transition-colors hover:text-ink"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
       </div>
     </footer>
   );

@@ -110,16 +110,16 @@ export default function SearchBar() {
       <button
         onClick={() => setIsOpen(true)}
         aria-label="Search"
-        className="md:hidden p-2 text-outline hover:text-primary-container transition-colors cursor-pointer"
+        className="md:hidden p-2 text-ink-soft hover:text-ink transition-colors cursor-pointer"
       >
         <LuSearch className="text-2xl" />
       </button>
       <button
         onClick={() => setIsOpen(true)}
-        className="relative z-10 hidden md:flex items-center bg-surface-container-low border border-outline-variant transition-colors w-full hover:border-outline cursor-pointer px-4 py-2.5 gap-3"
+        className="relative z-10 hidden md:flex items-center bg-band border border-ink-faint transition-colors w-full hover:border-ink-faint cursor-pointer px-4 py-2.5 gap-3"
       >
-        <LuSearch className="text-xl text-outline" />
-        <span className="text-sm font-body text-outline w-full text-left">
+        <LuSearch className="text-xl text-ink-soft" />
+        <span className="text-sm font-body text-ink-soft w-full text-left">
           Search motions...
         </span>
       </button>
@@ -131,7 +131,7 @@ export default function SearchBar() {
         >
           <div
             data-search-backdrop
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-scrim backdrop-blur-sm"
             onClick={close}
           />
 
@@ -140,12 +140,12 @@ export default function SearchBar() {
             role="dialog"
             aria-modal="true"
             aria-label="Search"
-            className="relative w-full max-w-2xl bg-surface-container-lowest/20 border border-outline-variant rounded-xl shadow-2xl overflow-hidden flex flex-col mx-4 sm:mx-0"
+            className="relative w-full max-w-2xl bg-paper/20 border border-ink-faint rounded-xl overflow-hidden flex flex-col mx-4 sm:mx-0"
           >
-            <div className="flex items-center px-4 py-4 bg-surface-container-low border-b border-transparent focus-within:border-primary/50 transition-colors">
-              <LuSearch className="text-outline text-2xl mr-2" />
+            <div className="flex items-center px-4 py-4 bg-band border-b border-transparent focus-within:border-ink/50 transition-colors">
+              <LuSearch className="text-ink-soft text-2xl mr-2" />
               <input
-                className="flex-1 bg-transparent border-none focus:outline-none text-lg text-on-surface placeholder:text-outline"
+                className="flex-1 bg-transparent border-none focus:outline-none text-lg text-ink placeholder:text-ink-soft"
                 placeholder="Search motions, domains, or users..."
                 aria-label="Search motions, domains, or users"
                 value={searchInput}
@@ -155,7 +155,7 @@ export default function SearchBar() {
               <button
                 onClick={close}
                 aria-label="Close search"
-                className="p-1 text-outline hover:text-on-surface hover:bg-surface-container-high"
+                className="p-1 text-ink-soft hover:text-ink hover:bg-raised"
               >
                 <LuX className="text-xl" />
               </button>
@@ -163,13 +163,13 @@ export default function SearchBar() {
 
             <div className="max-h-[60vh] overflow-y-auto">
               {!hasQuery && (
-                <div className="px-6 py-12 text-center text-outline text-sm">
+                <div className="px-6 py-12 text-center text-ink-soft text-sm">
                   Start typing to search the arena...
                 </div>
               )}
 
               {hasQuery && isLoading && (
-                <div className="px-6 py-12 text-center text-outline text-sm">
+                <div className="px-6 py-12 text-center text-ink-soft text-sm">
                   Searching...
                 </div>
               )}
@@ -178,7 +178,7 @@ export default function SearchBar() {
                 <div className="py-2">
                   {results.motions.length > 0 && (
                     <div>
-                      <div className="px-4 py-2 text-xs font-semibold text-outline uppercase tracking-wider">
+                      <div className="px-4 py-2 text-xs font-semibold text-ink-soft uppercase tracking-wider">
                         Motions
                       </div>
                       {results.motions.map((result) => (
@@ -186,10 +186,10 @@ export default function SearchBar() {
                           key={`motion-${result.id}`}
                           href={`/motion/CRX-${result.id}-A`}
                           onClick={close}
-                          className="w-full text-left px-4 py-3 flex items-center justify-between gap-3 text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface border-l-2 border-transparent"
+                          className="w-full text-left px-4 py-3 flex items-center justify-between gap-3 text-sm text-ink-soft hover:bg-raised hover:text-ink border-l-2 border-transparent"
                         >
                           <span className="truncate">{result.content}</span>
-                          <span className="shrink-0 text-xs text-outline uppercase tracking-wider">
+                          <span className="shrink-0 text-xs text-ink-soft uppercase tracking-wider">
                             {result.domain}
                           </span>
                         </Link>
@@ -199,7 +199,7 @@ export default function SearchBar() {
 
                   {results.domains.length > 0 && (
                     <div>
-                      <div className="px-4 py-2 text-xs font-semibold text-outline uppercase tracking-wider">
+                      <div className="px-4 py-2 text-xs font-semibold text-ink-soft uppercase tracking-wider">
                         Domains
                       </div>
                       {results.domains.map((result) => (
@@ -207,10 +207,10 @@ export default function SearchBar() {
                           key={`domain-${result.domain}`}
                           href={`/domain?q=${slugifyDomain(result.domain)}`}
                           onClick={close}
-                          className="w-full text-left px-4 py-3 flex items-center justify-between gap-3 text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface border-l-2 border-transparent"
+                          className="w-full text-left px-4 py-3 flex items-center justify-between gap-3 text-sm text-ink-soft hover:bg-raised hover:text-ink border-l-2 border-transparent"
                         >
                           <span className="truncate">{result.domain}</span>
-                          <span className="shrink-0 text-xs text-outline">
+                          <span className="shrink-0 text-xs text-ink-soft">
                             {result.motionCount} motions
                           </span>
                         </Link>
@@ -220,7 +220,7 @@ export default function SearchBar() {
 
                   {results.users.length > 0 && (
                     <div>
-                      <div className="px-4 py-2 text-xs font-semibold text-outline uppercase tracking-wider">
+                      <div className="px-4 py-2 text-xs font-semibold text-ink-soft uppercase tracking-wider">
                         Users
                       </div>
                       {results.users.map((result) => (
@@ -228,7 +228,7 @@ export default function SearchBar() {
                           key={`user-${result.id}`}
                           href={`/profile/${result.username}`}
                           onClick={close}
-                          className="w-full text-left px-4 py-3 flex items-center space-x-3 text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface border-l-2 border-transparent"
+                          className="w-full text-left px-4 py-3 flex items-center space-x-3 text-sm text-ink-soft hover:bg-raised hover:text-ink border-l-2 border-transparent"
                         >
                           <span className="truncate">@{result.username}</span>
                         </Link>
@@ -239,9 +239,9 @@ export default function SearchBar() {
               )}
 
               {hasQuery && !isLoading && !hasResults && (
-                <div className="px-6 py-12 text-center text-outline text-sm">
+                <div className="px-6 py-12 text-center text-ink-soft text-sm">
                   No results found for &ldquo;
-                  <span className="text-on-surface">{searchInput}</span>&rdquo;
+                  <span className="text-ink">{searchInput}</span>&rdquo;
                 </div>
               )}
             </div>

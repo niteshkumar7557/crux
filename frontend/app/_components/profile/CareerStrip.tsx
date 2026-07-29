@@ -12,8 +12,8 @@ const Cell = ({
   label: string;
   children: React.ReactNode;
 }) => (
-  <div className="bg-surface-container-low p-6">
-    <span className="font-label text-[10px] text-outline uppercase tracking-widest block mb-2">
+  <div className="bg-band p-6">
+    <span className="font-label text-[10px] text-ink-soft uppercase tracking-widest block mb-2">
       {label}
     </span>
     <span className="font-label text-4xl font-bold tracking-tight">
@@ -25,24 +25,24 @@ const Cell = ({
 const CareerStrip = ({ standing }: { standing: ProfileStanding }) => (
   <section
     aria-label="Career totals"
-    className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-outline-variant/20 mb-12"
+    className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-ink-faint mb-12"
   >
     <Cell label="Logic">
-      <span className="text-primary">
+      <span className="text-laurel">
         {standing.logic.toLocaleString("en-US")}
       </span>
     </Cell>
     <Cell label="Record">
-      <span className="text-primary">{standing.record.wins}</span>
-      <span className="text-on-surface-variant">
+      <span className="text-ink">{standing.record.wins}</span>
+      <span className="text-ink-soft">
         –{standing.record.losses}–{standing.record.draws}
       </span>
     </Cell>
     <Cell label="MVP">
-      <span className="text-tertiary">×{standing.mvpCount}</span>
+      <span className="text-laurel">×{standing.mvpCount}</span>
     </Cell>
     <Cell label="Global Rank">
-      <span className="text-on-background">#{standing.globalRank}</span>
+      <span className="text-ink">#{standing.globalRank}</span>
     </Cell>
   </section>
 );

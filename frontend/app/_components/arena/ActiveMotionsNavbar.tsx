@@ -8,40 +8,52 @@ interface ActiveNavbarProps {
   hrefFor: (tab: string) => string;
 }
 
+// The feed's masthead. Same eyebrow-over-display-headline as the landing's
+// section heads, so the arena reads as the next page of the same document.
 const ActiveMotionsNavbar = ({
   tabList,
   active,
   hrefFor,
 }: ActiveNavbarProps) => {
   return (
-    <div>
-      <span className="font-label text-primary uppercase tracking-[0.2em] text-xs mb-2 block">
-        live feed
-      </span>
-      <div className="mb-8 flex flex-col gap-3 md:flex-row md:justify-between md:items-baseline">
-        <div className="flex gap-5">
-          <h2 className="font-headline text-5xl font-medium italic">
+    <header className="mb-10">
+      <p className="flex items-center gap-3 font-label text-[0.62rem] uppercase tracking-[0.3em] text-ink-soft">
+        <span aria-hidden className="h-px w-8 bg-ink-faint" />
+        Live feed
+      </p>
+      <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h1 className="display-type text-[clamp(2.4rem,5vw,3.6rem)] text-ink">
             Active Motions
-          </h2>
-          <div className="font-label text-[10px] text-tertiary uppercase tracking-[0.25em] mt-6 mb-1">
-						Main Stage — Featured Live Matches
-					</div>
+          </h1>
+          <p className="mt-3 font-label text-[0.6rem] uppercase tracking-[0.28em] text-ink-soft">
+            Main stage — featured live matches
+          </p>
         </div>
-        <div className="flex gap-5 font-label text-[10px] uppercase tracking-widest">
-          {tabList.map((e) => (
-            <Link
-              key={e}
-              href={hrefFor(e)}
-              scroll={false}
-              aria-current={e === active ? "page" : undefined}
-              className={`${e === active ? "text-primary border-b uppercase border-primary pb-1 cursor-pointer" : "text-outline border-b border-transparent pb-1 hover:text-on-surface uppercase transition-colors cursor-pointer"}`}
-            >
-              {e}
-            </Link>
-          ))}
-        </div>
+        <nav className="flex gap-6 font-label text-[0.62rem] uppercase tracking-[0.24em]">
+          {tabList.map((tab) => {
+            const isActive = tab === active;
+            return (
+              <Link
+                key={tab}
+                href={hrefFor(tab)}
+                scroll={false}
+                aria-current={isActive ? "page" : undefined}
+                // Same rule as the navbar: state is an ink underline, not a
+                // colour swap, because colour is spoken for by the two camps.
+                className={`border-b pb-1 transition-colors ${
+                  isActive
+                    ? "border-ink text-ink"
+                    : "border-transparent text-ink-soft hover:text-ink"
+                }`}
+              >
+                {tab}
+              </Link>
+            );
+          })}
+        </nav>
       </div>
-    </div>
+    </header>
   );
 };
 

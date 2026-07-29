@@ -58,14 +58,15 @@ const TopicPage = async ({
       key={`${kw}-${result.page}`}
       className="max-w-6xl mx-auto px-6 md:px-8 py-12"
     >
-      <div data-reveal className="mb-12 border-l-4 border-tertiary pl-6">
-        <span className="font-label text-tertiary text-xs uppercase tracking-[0.3em] mb-2 block">
+      <div data-reveal className="mb-14">
+        <p className="flex items-center gap-3 font-label text-[0.62rem] uppercase tracking-[0.3em] text-ink-soft">
+          <span aria-hidden className="h-px w-8 bg-ink-faint" />
           TOPIC
-        </span>
-        <h1 className="font-headline italic text-5xl md:text-6xl text-on-background tracking-tight">
+        </p>
+        <h1 className="mt-5 display-type text-[clamp(2.4rem,6vw,4.2rem)] text-ink">
           {kw}
         </h1>
-        <p className="mt-4 text-on-surface-variant font-body text-lg max-w-xl">
+        <p className="mt-4 text-ink-soft font-body text-lg max-w-xl">
           {result.total} debate{result.total === 1 ? "" : "s"} on this topic.
         </p>
       </div>
@@ -73,9 +74,9 @@ const TopicPage = async ({
       {result.motions.length === 0 ? (
         <div
           data-reveal
-          className="bg-surface-container-low border-l-2 border-outline-variant/30 p-12 text-center"
+          className="border border-ink-faint bg-band p-12 text-center"
         >
-          <p className="font-headline italic text-2xl text-on-surface mb-3">
+          <p className="font-headline italic text-2xl text-ink mb-3">
             No debates tagged “{kw}” yet.
           </p>
           <Button href="/motion/new" size="lg">
@@ -100,7 +101,7 @@ const TopicPage = async ({
               time={timeAgo(e.time)}
               footerLeft={
                 <>
-                  <LuMessageSquare className="inline text-primary" />{" "}
+                  <LuMessageSquare className="inline text-ink" />{" "}
                   {e.argumentNum} Arguments
                 </>
               }

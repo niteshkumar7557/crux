@@ -4,13 +4,7 @@ import { usePathname } from "next/navigation";
 import { MotionHeaderProps } from "@/app/motion/types";
 import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
 import { shouldAnimate } from "@/app/_utils/animateOnce";
-
-// §15: the margin must EXCEED this for a side to win.
-const DRAW_MARGIN = 5;
-// The share of the bar where that holds: |for - against| <= 5 with the two
-// summing to 100 means for is within 2.5 points of even.
-const DRAW_BAND_START = 50 - DRAW_MARGIN / 2;
-const DRAW_BAND_END = 50 + DRAW_MARGIN / 2;
+import { drawBandStyle } from "@/app/_utils/drawBand";
 
 const MotionProbability = ({
   motionHeaderData,
@@ -60,48 +54,43 @@ const MotionProbability = ({
 
   return (
     <div ref={rootRef} className="mb-12">
-      <div className="w-full h-12 bg-surface-container-low relative flex items-center border border-outline-variant/20 overflow-hidden">
+      <div className="w-full h-12 bg-band relative flex items-center border border-ink-faint overflow-hidden">
         <div
           data-bar
-          className="h-full bg-primary flex items-center justify-start px-6 relative overflow-hidden"
+          className="h-full bg-side-for flex items-center justify-start px-6 relative overflow-hidden"
           style={{ width: `${affirmativeProbability}%` }}
         >
-          <span className="font-label text-sm text-on-primary font-bold relative z-10 whitespace-nowrap">
+          <span className="font-label text-sm text-paper font-bold relative z-10 whitespace-nowrap">
             AFFIRMATIVE {status === "concluded" && "FINAL "}
             <span data-count>{affirmativeProbability}</span>%
           </span>
-          <div className="absolute inset-0 bg-linear-to-r from-white/10 to-transparent"></div>
         </div>
         {/* §14 the draw band — you can see a debate heading for a draw, and
             that it is still winnable, without being told after the fact. */}
         {showDrawBand && (
           <div
-            className="absolute top-0 bottom-0 z-10 pointer-events-none border-x border-dashed border-white/50 bg-white/5 flex items-center justify-center"
-            style={{
-              left: `${DRAW_BAND_START}%`,
-              width: `${DRAW_BAND_END - DRAW_BAND_START}%`,
-            }}
+            className="absolute top-0 bottom-0 z-10 pointer-events-none border-x border-dashed border-paper/60 bg-paper/10 flex items-center justify-center"
+            style={drawBandStyle}
           >
-            <span className="font-label text-[8px] tracking-[0.15em] text-white/70 hidden sm:block">
+            <span className="font-label text-[8px] tracking-[0.15em] text-paper/80 hidden sm:block">
               DRAW
             </span>
           </div>
         )}
         <div
           data-divider
-          className="absolute top-0 bottom-0 w-0.5 bg-white z-20 shadow-glow-marker"
+          className="absolute top-0 bottom-0 w-0.5 bg-paper z-20"
           style={{ left: `${affirmativeProbability}%` }}
         ></div>
         <div
           data-bar
-          className="h-full bg-secondary flex items-center justify-end px-6 ml-auto relative overflow-hidden"
+          className="h-full bg-side-against flex items-center justify-end px-6 ml-auto relative overflow-hidden"
           style={{ width: `${negativeProbability}%` }}
         >
-          <span className="font-label text-sm text-on-secondary font-bold relative z-10 whitespace-nowrap">
+          <span className="font-label text-sm text-paper font-bold relative z-10 whitespace-nowrap">
             NEGATIVE {status === "concluded" && "FINAL "}
             <span data-count>{negativeProbability}</span>%
           </span>
-          <div className="absolute inset-0 bg-linear-to-l from-white/10 to-transparent"></div>
         </div>
       </div>
     </div>

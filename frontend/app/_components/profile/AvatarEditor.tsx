@@ -89,22 +89,27 @@ const AvatarEditor = ({
 
   return (
     <div className="relative shrink-0">
-      <Avatar username={username} src={avatar} size="2xl" />
+      <Avatar
+        username={username}
+        src={avatar}
+        size="2xl"
+        className="plate-arch"
+      />
       {isOwner && (
         <button
           onClick={() => setOpen(!open)}
           aria-label={open ? "Close avatar editor" : "Edit avatar"}
           aria-expanded={open}
           title={open ? "Close" : "Edit avatar"}
-          className="absolute -bottom-2 -right-2 bg-primary text-on-primary p-1.5 cursor-pointer hover:bg-primary-container transition-colors"
+          className="absolute -bottom-2 -right-2 bg-ink text-paper p-1.5 cursor-pointer transition-opacity hover:opacity-85"
         >
           {open ? <LuX className="text-sm" /> : <LuPencil className="text-sm" />}
         </button>
       )}
 
       {isOwner && open && (
-        <div className="absolute left-0 top-full mt-4 z-20 w-[21rem] bg-surface-container-lowest border border-primary/30 shadow-glow-primary p-5">
-          <span className="font-label text-[10px] uppercase tracking-[0.2em] text-outline block mb-4">
+        <div className="absolute left-0 top-full mt-4 z-20 w-[21rem] bg-paper border border-ink-faint p-5">
+          <span className="font-label text-[10px] uppercase tracking-[0.2em] text-ink-soft block mb-4">
             Pick a Preset
           </span>
           <div className="grid grid-cols-6 gap-2">
@@ -117,8 +122,8 @@ const AvatarEditor = ({
                 aria-pressed={avatar === preset.url}
                 className={`relative aspect-square overflow-hidden border cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
                   avatar === preset.url
-                    ? "border-primary"
-                    : "border-outline-variant/30 hover:border-primary/60"
+                    ? "border-ink"
+                    : "border-ink-faint hover:border-ink/60"
                 }`}
               >
                 <Image
@@ -153,11 +158,11 @@ const AvatarEditor = ({
               </Button>
             )}
           </div>
-          <p className="font-label text-[10px] uppercase tracking-widest text-outline mt-3">
+          <p className="font-label text-[10px] uppercase tracking-widest text-ink-soft mt-3">
             JPEG, PNG or WebP · 5MB max
           </p>
           {error && (
-            <p className="font-label text-[10px] uppercase tracking-widest text-secondary mt-3">
+            <p className="font-label text-[10px] uppercase tracking-widest text-side-against mt-3">
               {error}
             </p>
           )}

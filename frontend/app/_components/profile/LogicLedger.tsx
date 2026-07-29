@@ -37,24 +37,24 @@ const LogicLedger = ({
   const showsSeasonStart = ledger.some((w) => w.weekStart === seasonWeek);
 
   return (
-    <div className="bg-surface-container p-8 h-full">
+    <div className="bg-band p-8 h-full">
       <div className="flex justify-between items-start mb-10">
         <div>
           <h2 className="font-headline text-3xl font-bold mb-1 italic">
             Logic Ledger
           </h2>
-          <span className="font-label text-[10px] text-outline uppercase tracking-widest">
+          <span className="font-label text-[10px] text-ink-soft uppercase tracking-widest">
             Last {ledger.length} weeks
           </span>
         </div>
-        <span className="font-label text-2xl font-bold text-primary shrink-0">
+        <span className="font-label text-2xl font-bold text-laurel shrink-0">
           {total >= 0 ? "+" : ""}
           {total}
         </span>
       </div>
 
       {empty ? (
-        <p className="font-body text-sm text-outline italic py-16">
+        <p className="font-body text-sm text-ink-soft italic py-16">
           No logic earned yet. Your first argument starts the line.
         </p>
       ) : (
@@ -63,7 +63,7 @@ const LogicLedger = ({
             <div
               key={w.weekStart}
               className={`flex-1 flex flex-col justify-center min-w-0 ${
-                w.weekStart === seasonWeek ? "border-l border-tertiary/60" : ""
+                w.weekStart === seasonWeek ? "border-l border-laurel/60" : ""
               }`}
               title={`${w.amount >= 0 ? "+" : ""}${w.amount} logic · week of ${w.weekStart}`}
             >
@@ -71,17 +71,17 @@ const LogicLedger = ({
                 {w.amount > 0 && (
                   <div
                     data-ledger-bar
-                    className="w-full bg-primary"
+                    className="w-full bg-laurel"
                     style={{ height: `${(w.amount / peak) * 100}%` }}
                   />
                 )}
               </div>
-              <div className="h-px bg-outline-variant/40 my-1" />
+              <div className="h-px bg-ink-faint my-1" />
               <div className="flex-1 flex items-start">
                 {w.amount < 0 && (
                   <div
                     data-ledger-bar
-                    className="w-full bg-outline"
+                    className="w-full bg-ink-faint"
                     style={{ height: `${(Math.abs(w.amount) / peak) * 100}%` }}
                   />
                 )}
@@ -93,15 +93,15 @@ const LogicLedger = ({
 
       {!empty && (
         <div className="flex justify-between items-baseline gap-4 mt-3">
-          <span className="font-label text-[10px] text-outline">
+          <span className="font-label text-[10px] text-ink-soft">
             {label(ledger[0].weekStart)}
           </span>
           {showsSeasonStart && (
-            <span className="font-label text-[10px] uppercase tracking-widest text-tertiary">
+            <span className="font-label text-[10px] uppercase tracking-widest text-laurel">
               │ Season {seasonNumber} began
             </span>
           )}
-          <span className="font-label text-[10px] text-outline">
+          <span className="font-label text-[10px] text-ink-soft">
             {label(ledger[ledger.length - 1].weekStart)}
           </span>
         </div>

@@ -2,16 +2,25 @@ import type { MatchState } from "@/app/motion/types";
 
 // satori (inside next/og) cannot read CSS custom properties, so the
 // globals.css design tokens are mirrored here as hex. Keep in sync with
-// globals.css. Each key names its --color-* token.
+// globals.css — each key names the variable it copies.
+//
+// These are the LIGHT values on purpose. A verdict card is something a person
+// posts and keeps, and "Certificate of Verdict" should look like a document:
+// forest ink printed on cream. The dark theme is the room you read the app in,
+// not the paper you carry out of it.
+//
+// Keys are named for what they mean rather than what colour they are — the
+// previous set was `cyan`/`red`/`amber`, which stopped being true the moment
+// the palette changed.
 export const TOKENS = {
-  bg: "#131314", // --color-background / surface
-  cyan: "#a4e6ff", // --color-primary  (affirmative / for)
-  red: "#ffb3b2", // --color-secondary (negative / against)
-  amber: "#ffd690", // --color-tertiary (draw / MVP)
-  outline: "#859399", // --color-outline (walkover / muted / meta)
-  onSurface: "#e5e2e3", // --color-on-surface
-  onSurfaceVariant: "#bbc9cf", // --color-on-surface-variant
-  track: "#1c1b1c", // --color-surface-container-low (split-bar track)
+  paper: "#f3edda", // --paper
+  forSide: "#2f6b4f", // --for      (affirmative)
+  againstSide: "#9c4a34", // --against  (negative)
+  laurel: "#8f6e1f", // --laurel   (MVP)
+  draw: "#857a55", // --draw
+  muted: "#52685b", // --ink-soft (walkover / meta / rules)
+  ink: "#244134", // --ink
+  track: "#e2dac2", // the split-bar track, a shade under the paper
 } as const;
 
 export const CLAIM_MAX = 90;
@@ -51,10 +60,10 @@ const LABELS: Record<
   "for" | "against" | "draw" | "walkover",
   { label: string; accent: string }
 > = {
-  for: { label: "AFFIRMATIVE WINS", accent: TOKENS.cyan },
-  against: { label: "NEGATIVE WINS", accent: TOKENS.red },
-  draw: { label: "DRAW", accent: TOKENS.amber },
-  walkover: { label: "UNOPPOSED", accent: TOKENS.outline },
+  for: { label: "AFFIRMATIVE WINS", accent: TOKENS.forSide },
+  against: { label: "NEGATIVE WINS", accent: TOKENS.againstSide },
+  draw: { label: "DRAW", accent: TOKENS.draw },
+  walkover: { label: "UNOPPOSED", accent: TOKENS.muted },
 };
 
 export function buildVerdictCard(
@@ -68,7 +77,7 @@ export function buildVerdictCard(
     return {
       mode: "live",
       label: "LIVE",
-      accent: TOKENS.outline,
+      accent: TOKENS.muted,
       score: null,
       split,
       mvpUsername: null,

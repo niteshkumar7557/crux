@@ -1,6 +1,7 @@
 // Compact settled-verdict labels for feed cards, mirroring VerdictBanner's
-// RULINGS. Literal class strings so Tailwind's scanner keeps them; red only
-// ever means "against".
+// RULINGS. Literal class strings so Tailwind's scanner keeps them; terracotta
+// only ever means "against", and the draw wears the same neutral as the band
+// on the split bars.
 export type Side = "for" | "against" | "draw" | "walkover";
 
 // `cls` is the bare text colour; `chip` is the bordered badge a feed card wears
@@ -11,23 +12,24 @@ export const SETTLED_SIDES: Record<
 > = {
   for: {
     label: "Affirmative",
-    cls: "text-primary",
-    chip: "text-primary border-primary/30",
+    cls: "text-side-for",
+    chip: "text-side-for border-side-for/40",
   },
   against: {
     label: "Negative",
-    cls: "text-secondary",
-    chip: "text-secondary border-secondary/30",
+    cls: "text-side-against",
+    chip: "text-side-against border-side-against/40",
   },
   draw: {
     label: "Draw",
-    cls: "text-tertiary",
-    chip: "text-tertiary border-tertiary/30",
+    cls: "text-side-draw",
+    chip: "text-side-draw border-side-draw/40",
   },
+  // Nobody argued, so nobody scored — it reads as an absence, not a result.
   walkover: {
     label: "Unopposed",
-    cls: "text-outline",
-    chip: "text-outline border-outline/30",
+    cls: "text-ink-soft",
+    chip: "text-ink-soft border-ink-faint",
   },
 };
 

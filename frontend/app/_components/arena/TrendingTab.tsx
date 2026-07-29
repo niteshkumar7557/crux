@@ -89,7 +89,9 @@ const TrendingTab = () => {
 	return (
 		<div ref={containerRef}>
 			{loading ? (
-				<div>Loading...</div>
+				<p className="py-16 text-center font-label text-[0.62rem] uppercase tracking-[0.3em] text-ink-soft">
+					Calling the room to order…
+				</p>
 			) : primaryCardData || secondaryCardsData.length > 0 ? (
 				<div>
 					{primaryCardData && (

@@ -1,78 +1,110 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-@theme {
-  /* Colors */
-  --color-primary-fixed: #b7eaff;
-  --color-primary-container: #00d1ff;
-  --color-outline-variant: #3c494e;
-  --color-surface-tint: #4cd6ff;
-  --color-on-primary-fixed-variant: #004e60;
-  --color-error-container: #93000a;
-  --color-on-secondary-fixed-variant: #92001f;
-  --color-on-surface-variant: #bbc9cf;
-  --color-surface-variant: #353436;
-  --color-surface-container-high: #2a2a2b;
-  --color-secondary-fixed-dim: #ffb3b2;
-  --color-tertiary-fixed: #ffdea8;
-  --color-surface-bright: #3a393a;
-  --color-on-tertiary: #412d00;
-  --color-secondary-container: #ff525d;
-  --color-surface-container-lowest: #0e0e0f;
-  --color-background: #131314;
-  --color-on-secondary: #680013;
-  --color-on-error: #690005;
-  --color-on-secondary-container: #5b000f;
-  --color-surface-container-low: #1c1b1c;
-  --color-on-primary-container: #00566a;
-  --color-surface-container: #201f20;
-  --color-inverse-primary: #00677f;
-  --color-on-primary: #003543;
-  --color-tertiary: #ffd690;
-  --color-primary: #a4e6ff;
-  --color-error: #ffb4ab;
-  --color-surface: #131314;
-  --color-on-primary-fixed: #001f28;
-  --color-surface-container-highest: #353436;
-  --color-tertiary-fixed-dim: #ffba20;
-  --color-inverse-surface: #e5e2e3;
-  --color-secondary-fixed: #ffdad9;
-  --color-on-tertiary-fixed-variant: #5e4200;
-  --color-on-background: #e5e2e3;
-  --color-on-secondary-fixed: #410008;
-  --color-tertiary-container: #f9b400;
-  --color-on-surface: #e5e2e3;
-  --color-on-tertiary-container: #684900;
-  --color-on-tertiary-fixed: #271900;
-  --color-inverse-on-surface: #313031;
-  --color-primary-fixed-dim: #4cd6ff;
-  --color-outline: #859399;
-  --color-on-error-container: #ffdad6;
-  --color-secondary: #ffb3b2;
-  --color-surface-dim: #131314;
+/* This app switches themes with `data-theme` on <html>, not the `dark` class or
+   a media query, so Tailwind's built-in dark variant would never fire. Rebound
+   here once so `dark:` works everywhere as expected. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-  /* Fonts */
+/* ---------------------------------------------------------------------------
+   CRUX DESIGN SYSTEM — "debate-hall editorial"
+   Semantic variables first (so light/dark can swap them), then mapped into
+   Tailwind's @theme below. See docs/design-system.md.
+   -------------------------------------------------------------------------- */
+:root {
+  /* paper — the room */
+  --paper: #f3edda; /* page background, soft warm cream */
+  --paper-plate: #faf6e8; /* specimen plates the engravings sit on */
+  --paper-raised: #faf6e8; /* raised app surfaces — see note below */
+  --paper-band: #ece4cb; /* alternate full-width bands */
+  /* ink — the writing */
+  --ink: #244134; /* deep forest, primary text */
+  --ink-soft: #52685b; /* secondary text */
+  --ink-faint: rgba(36, 65, 52, 0.16); /* hairlines and rules */
+  --ink-wash: rgba(36, 65, 52, 0.06); /* whisper-level fills */
+  /* accents */
+  --laurel: #8f6e1f; /* gold — prizes, MVP, titles */
+  --laurel-bright: #c9a227;
+  --for: #2f6b4f; /* the FOR camp */
+  --against: #9c4a34; /* the AGAINST camp */
+  --draw: #857a55; /* the draw band */
+  --plate-ink: #244134; /* captions on plates (constant across modes) */
+  /* the three metals — podium places and season titles */
+  --metal-gold: #8f6e1f;
+  --metal-silver: #6b7478;
+  --metal-bronze: #8c5a2f;
+  /* modal scrim. Not `ink` at low alpha: ink inverts between themes, and a
+     cream scrim over a dark page lifts the backdrop instead of dimming it. */
+  --scrim: rgba(20, 35, 28, 0.45);
+}
+[data-theme="dark"] {
+  --paper: #0f1a15; /* the archive at night */
+  --paper-plate: #efe7d0; /* plates stay cream — engravings need paper */
+  --paper-raised: #1b2c24; /* …but app surfaces stay dark, see note */
+  --paper-band: #14231c;
+  --ink: #ece5d0;
+  --ink-soft: #a3b2a4;
+  --ink-faint: rgba(236, 229, 208, 0.16);
+  --ink-wash: rgba(236, 229, 208, 0.05);
+  --laurel: #d4ac3a;
+  --laurel-bright: #d4ac3a;
+  --for: #63a882;
+  --against: #c97757;
+  --draw: #a2966c;
+  --metal-gold: #d4ac3a;
+  --metal-silver: #c9d1d4;
+  --metal-bronze: #d09a6a;
+  --scrim: rgba(4, 9, 7, 0.7);
+}
+
+/* `--paper-raised` exists because `--paper-plate` deliberately stays cream in
+   dark mode — that is the landing's whole "archive at night" concept. A feed of
+   cream cards on green-black would be punishing to read, so the product uses
+   three flat paper tones (paper → band → raised) and leaves plates to the
+   landing. Elevation is paper tone; there are no shadows in this system. */
+
+@theme {
+  /* ---- the palette ---- */
+  --color-paper: var(--paper);
+  --color-plate: var(--paper-plate);
+  --color-raised: var(--paper-raised);
+  --color-band: var(--paper-band);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-ink-wash: var(--ink-wash);
+  --color-laurel: var(--laurel);
+  --color-laurel-bright: var(--laurel-bright);
+  --color-side-for: var(--for);
+  --color-side-against: var(--against);
+  --color-side-draw: var(--draw);
+  --color-plate-ink: var(--plate-ink);
+  --color-metal-gold: var(--metal-gold);
+  --color-metal-silver: var(--metal-silver);
+  --color-metal-bronze: var(--metal-bronze);
+  --color-scrim: var(--scrim);
+
+  /* ---- type ----
+     Three faces, no more (design-system.md §3). To swap the display face,
+     change the Anton import in app/layout.tsx and keep the variable name. */
+  --font-display: var(--font-anton), var(--font-space-grotesk), sans-serif;
   --font-headline: var(--font-newsreader), serif;
-  --font-body: var(--font-manrope), sans-serif;
+  --font-body: var(--font-newsreader), serif;
   --font-label: var(--font-space-grotesk), monospace;
 
-  /* Radius */
+  /* ---- shape ----
+     Square everywhere except pills and arches (design-system.md §5). */
   --radius: 0px;
   --radius-lg: 0px;
   --radius-xl: 0px;
   --radius-full: 9999px;
-
-  /* Glow shadows — the only three glows in the system */
-  --shadow-glow-primary: 0 0 16px rgba(0, 209, 255, 0.12);
-  --shadow-glow-secondary: 0 0 16px rgba(255, 82, 93, 0.12);
-  --shadow-glow-marker: 0 0 15px rgba(255, 255, 255, 0.8);
 }
 
-/* Keyboard focus — visible everywhere unless a component ships its own replacement */
-/* :focus-visible {
-  outline: 2px solid var(--color-primary-container);
+/* Keyboard focus — visible everywhere unless a component ships its own. */
+:focus-visible {
+  outline: 2px solid var(--ink);
   outline-offset: 2px;
-} */
+}
 
 /* Tailwind v4's preflight resets buttons to `cursor: default`, which is why
    controls that never got an explicit `cursor-pointer` class read as dead. Every
@@ -88,15 +120,42 @@ button:disabled {
   cursor: not-allowed;
 }
 
-.perspective-grid {
-  background-image:
-    linear-gradient(to right, rgba(164, 230, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(164, 230, 255, 0.05) 1px, transparent 1px);
-  background-size: 40px 40px;
+/* ---------------------------------------------------------------------------
+   Utilities
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
-.technical-grid {
-  background-image:
-    linear-gradient(to right, rgba(164, 230, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(164, 230, 255, 0.05) 1px, transparent 1px);
-  background-size: 40px 40px;
+
+/* Engravings melt into whatever paper they sit on; the generated JPEGs all
+   carry slightly different cream backgrounds, and multiply erases them.
+   Landing only — the product carries no engravings. */
+.engraving {
+  mix-blend-mode: multiply;
+}
+
+/* The arch of the arena doors. A shape, not an image, so the product uses it
+   too (profile portraits) even though it ships no engravings. */
+.plate-arch {
+  border-radius: calc(infinity * 1px) calc(infinity * 1px) 0 0;
+}
+
+/* Big display setting — Anton needs tight leading and a whisper of tracking. */
+.display-type {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  line-height: 0.94;
+  letter-spacing: 0.015em;
+}
+
+/* Landing reveal targets start invisible; gsap flips them in on scroll. Scoped
+   to .landing because [data-reveal] is app-wide vocabulary (see ui/Reveal) — a
+   looser selector blanks the arena. The page ships a <noscript> override so
+   the page stays fully readable without JS. */
+.landing [data-reveal],
+.landing [data-hero] {
+  opacity: 0;
 }

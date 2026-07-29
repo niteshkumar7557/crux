@@ -59,36 +59,36 @@ const NotificationBell = () => {
         type="button"
         onClick={toggle}
         aria-label="Notifications"
-        className="relative cursor-pointer text-outline hover:text-primary-container transition-colors"
+        className="relative cursor-pointer text-ink-soft hover:text-ink transition-colors"
       >
         <LuBell size={22} />
         {unread > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 bg-primary text-surface-container-lowest text-[9px] font-bold leading-none px-1 py-0.5 min-w-[16px] text-center">
+          <span className="absolute -top-1.5 -right-1.5 bg-ink text-paper text-[9px] font-bold leading-none px-1 py-0.5 min-w-[16px] text-center">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto bg-surface-container-lowest border border-outline-variant/30 z-50">
-          <div className="px-3 py-2 border-b border-outline-variant/20 font-label text-[10px] uppercase tracking-[0.2em] text-outline">
+        <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto bg-paper border border-ink-faint z-50">
+          <div className="px-3 py-2 border-b border-ink-faint font-label text-[10px] uppercase tracking-[0.2em] text-ink-soft">
             Notifications
           </div>
           {items.length === 0 ? (
-            <p className="p-6 font-label text-[10px] uppercase tracking-[0.2em] text-outline text-center">
+            <p className="p-6 font-label text-[10px] uppercase tracking-[0.2em] text-ink-soft text-center">
               Nothing yet
             </p>
           ) : (
             items.map((n) => {
               const body = (
                 <div
-                  className={`p-3 border-b border-outline-variant/15 hover:bg-surface-container transition-colors ${
+                  className={`p-3 border-b border-ink-faint hover:bg-band transition-colors ${
                     n.is_read ? "opacity-60" : ""
                   }`}
                 >
-                  <p className="font-body text-xs text-on-surface leading-snug">
+                  <p className="font-body text-xs text-ink leading-snug">
                     {n.message}
                   </p>
-                  <span className="font-label text-[9px] uppercase tracking-[0.15em] text-outline">
+                  <span className="font-label text-[9px] uppercase tracking-[0.15em] text-ink-soft">
                     {n.type}
                   </span>
                 </div>

@@ -67,7 +67,7 @@ const ArenaSidebar = () => {
   );
 
   return (
-    <div ref={sidebarRef} className="py-10 md:w-[30%]">
+    <div ref={sidebarRef} className="pt-1">
       <TrendingDomains data={trendingDomainsData} />
       <TopDebaters data={topDebatersData} />
       <SystemHealth data={systemHealthData} />

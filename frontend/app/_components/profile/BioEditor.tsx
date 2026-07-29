@@ -46,12 +46,12 @@ const BioEditor = ({ bio, onDone }: { bio: string; onDone: () => void }) => {
         value={value}
         onChange={(e) => setValue(e.currentTarget.value)}
         placeholder="Post some Motions to get to know about you."
-        className="w-full bg-surface-container-highest border-none text-on-surface p-4 focus:ring-1 focus:ring-primary placeholder:text-outline font-body text-base"
+        className="w-full bg-raised border-none text-ink p-4 focus:ring-1 focus:ring-ink placeholder:text-ink-soft font-body text-base"
       />
       <div className="flex items-center justify-between gap-4 mt-3">
         <span
           className={`font-label text-[10px] uppercase tracking-widest ${
-            over ? "text-secondary" : "text-outline"
+            over ? "text-side-against" : "text-ink-soft"
           }`}
         >
           {value.length} / {BIO_MAX}
@@ -71,7 +71,7 @@ const BioEditor = ({ bio, onDone }: { bio: string; onDone: () => void }) => {
         </div>
       </div>
       {error && (
-        <p className="font-label text-[10px] uppercase tracking-widest text-secondary mt-2">
+        <p className="font-label text-[10px] uppercase tracking-widest text-side-against mt-2">
           {error}
         </p>
       )}

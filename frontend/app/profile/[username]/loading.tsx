@@ -9,7 +9,7 @@ const Loading = () => (
         <Skeleton className="h-16 w-2/3" />
       </div>
     </div>
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-outline-variant/20 mb-12">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-ink-faint mb-12">
       {[0, 1, 2, 3].map((i) => (
         <Skeleton key={i} className="h-28" />
       ))}

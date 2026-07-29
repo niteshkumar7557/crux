@@ -33,32 +33,32 @@ const SideLockConfirm = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 bg-scrim backdrop-blur-sm"
         onClick={onCancel}
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="side-lock-title"
-        className="relative w-full max-w-md bg-surface-container-lowest border border-outline-variant shadow-2xl p-8"
+        className="relative w-full max-w-md bg-paper border border-ink-faint p-8"
       >
-        <span className="font-label text-[10px] uppercase tracking-[0.2em] text-outline">
+        <span className="font-label text-[10px] uppercase tracking-[0.2em] text-ink-soft">
           Side lock
         </span>
         <h2
           id="side-lock-title"
-          className="font-headline text-3xl font-bold tracking-tight text-on-background mt-2"
+          className="font-headline text-3xl font-bold tracking-tight text-ink mt-2"
         >
           You&rsquo;re committing to{" "}
-          <span className={side === "for" ? "text-primary" : "text-secondary"}>
+          <span className={side === "for" ? "text-side-for" : "text-side-against"}>
             {label}
           </span>
           .
         </h2>
-        <p className="font-body text-on-surface-variant mt-4 leading-relaxed">
+        <p className="font-body text-ink-soft mt-4 leading-relaxed">
           You will not be able to argue {opposing} in this debate.
         </p>
-        <p className="font-body text-sm text-outline mt-3 leading-relaxed">
+        <p className="font-body text-sm text-ink-soft mt-3 leading-relaxed">
           A loss costs 5 points from your season score — never from your
           all-time logic.
         </p>

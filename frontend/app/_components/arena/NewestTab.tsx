@@ -58,7 +58,7 @@ const NewestTab = ({ page }: { page: number }) => {
           time={timeAgo(e.time)}
           footerLeft={
             <>
-              <LuMessageSquare className="inline text-primary" />{" "}
+              <LuMessageSquare className="inline text-ink-soft" />{" "}
               {e.argumentNum} Arguments
             </>
           }

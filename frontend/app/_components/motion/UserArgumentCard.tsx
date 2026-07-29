@@ -43,8 +43,8 @@ const UserArgumentCard = ({
 
   // Every footer control is the same tiny label that warms to the column's
   // accent on hover; only the like button adds a filled state on top.
-  const actionClass = `font-label text-[10px] uppercase text-outline cursor-pointer transition-colors ${
-    side === "for" ? "hover:text-primary" : "hover:text-secondary"
+  const actionClass = `font-label text-[10px] uppercase text-ink-soft cursor-pointer transition-colors ${
+    side === "for" ? "hover:text-side-for" : "hover:text-side-against"
   }`;
 
   // A like pays the author +2 logic (§6), so your own argument offers no button
@@ -100,7 +100,7 @@ const UserArgumentCard = ({
   return (
     <div id={`argument-${argument_id}`} data-side={side}>
       <div
-        className={`group mb-2 relative bg-surface-container-low p-6 border-l ${side === "for" ? "border-primary/20 hover:border-primary/60" : "border-secondary/20 hover:border-secondary/60"}  transition-all`}
+        className={`group mb-2 relative bg-band p-6 border-l ${side === "for" ? "border-side-for/20 hover:border-side-for/60" : "border-side-against/20 hover:border-side-against/60"}  transition-all`}
       >
         <div className="flex items-start mb-4">
           <div className="flex items-center gap-3">
@@ -111,10 +111,10 @@ const UserArgumentCard = ({
               accent={side === "for" ? "primary" : "secondary"}
             />
             <div>
-              <p className="font-label text-[10px] uppercase text-on-surface">
+              <p className="font-label text-[10px] uppercase text-ink">
                 Reputation: {reputation}
               </p>
-              <p className="font-label text-[10px] uppercase text-outline">
+              <p className="font-label text-[10px] uppercase text-ink-soft">
                 @{username}
               </p>
             </div>
@@ -128,12 +128,12 @@ const UserArgumentCard = ({
             type="button"
             onClick={() => focusArgument(replyTo.argumentId)}
             aria-label={`Go to the argument by @${replyTo.username} this answers`}
-            className={`block w-full text-left cursor-pointer mb-4 border-l-2 pl-3 py-2 bg-surface-container-lowest/60 hover:bg-surface-container-lowest transition-colors ${side === "for" ? "border-secondary/40 hover:border-secondary" : "border-primary/40 hover:border-primary"}`}
+            className={`block w-full text-left cursor-pointer mb-4 border-l-2 pl-3 py-2 bg-paper/60 hover:bg-paper transition-colors ${side === "for" ? "border-side-against/40 hover:border-side-against" : "border-side-for/40 hover:border-side-for"}`}
           >
-            <p className="font-label text-[9px] uppercase tracking-[0.15em] text-outline mb-1">
+            <p className="font-label text-[9px] uppercase tracking-[0.15em] text-ink-soft mb-1">
               replying to @{replyTo.username}
             </p>
-            <p className="font-body text-xs italic text-on-surface-variant/70 truncate">
+            <p className="font-body text-xs italic text-ink-soft/70 truncate">
               &ldquo;
               {replyTo.content.length > 80
                 ? `${replyTo.content.slice(0, 80)}…`
@@ -142,7 +142,7 @@ const UserArgumentCard = ({
             </p>
           </button>
         )}
-        <p className="font-body text-base leading-relaxed text-on-surface-variant mb-6 italic">
+        <p className="font-body text-base leading-relaxed text-ink-soft mb-6 italic">
           &ldquo;{argument}&rdquo;
         </p>
         <div className="flex gap-4 items-center">
@@ -152,7 +152,7 @@ const UserArgumentCard = ({
           {isOwnArgument ? (
             <span
               title="You can't like your own argument"
-              className="font-label text-[10px] uppercase text-outline flex items-center gap-2 cursor-not-allowed"
+              className="font-label text-[10px] uppercase text-ink-soft flex items-center gap-2 cursor-not-allowed"
             >
               <LuThumbsUp className="text-sm" /> {likeCount}
             </span>
@@ -168,10 +168,10 @@ const UserArgumentCard = ({
             <button
               ref={likeRef}
               onClick={handleClick}
-              className={`${actionClass} flex items-center gap-2 ${liked && side === "for" ? "text-primary" : ""} ${liked && side === "against" ? "text-secondary" : ""}`}
+              className={`${actionClass} flex items-center gap-2 ${liked && side === "for" ? "text-side-for" : ""} ${liked && side === "against" ? "text-side-against" : ""}`}
             >
               <LuThumbsUp
-                className={`text-sm ${liked ? `fill-current ${side === "for" ? "text-primary" : "text-secondary"}` : ""}`}
+                className={`text-sm ${liked ? `fill-current ${side === "for" ? "text-side-for" : "text-side-against"}` : ""}`}
               />{" "}
               {likeCount}
             </button>

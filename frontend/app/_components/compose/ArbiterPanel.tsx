@@ -12,33 +12,38 @@ import {
   VerdictStatus,
 } from "@/app/motion/new/types";
 
+// Admitted is green and rejected terracotta. Those are the camp colours
+// elsewhere, but nothing in the composer has a side yet — no motion exists to
+// take one on — so here they can carry their plain meaning of yes and no.
+//
+// "Unreachable" is neither: it is the arbiter failing to answer, so it stays
+// muted rather than taking laurel, which marks things that were earned.
+//
+// The `chipGlow` slot went with the glow shadows the palette dropped.
 const ACCENT: Record<
   VerdictStatus,
-  { headline: string; text: string; chipBorder: string; chipGlow: string; dot: string; barBorder: string }
+  { headline: string; text: string; chipBorder: string; dot: string; barBorder: string }
 > = {
   pass: {
     headline: "Claim admitted",
-    text: "text-primary",
-    chipBorder: "border-primary/30",
-    chipGlow: "shadow-glow-primary",
-    dot: "bg-primary",
-    barBorder: "border-primary/50",
+    text: "text-side-for",
+    chipBorder: "border-side-for/40",
+    dot: "bg-side-for",
+    barBorder: "border-side-for/50",
   },
   fail: {
     headline: "Claim rejected",
-    text: "text-secondary",
-    chipBorder: "border-secondary/30",
-    chipGlow: "shadow-glow-secondary",
-    dot: "bg-secondary",
-    barBorder: "border-secondary/50",
+    text: "text-side-against",
+    chipBorder: "border-side-against/40",
+    dot: "bg-side-against",
+    barBorder: "border-side-against/50",
   },
   unavailable: {
     headline: "Arbiter unreachable",
-    text: "text-tertiary",
-    chipBorder: "border-tertiary/30",
-    chipGlow: "",
-    dot: "bg-tertiary",
-    barBorder: "border-tertiary/50",
+    text: "text-ink-soft",
+    chipBorder: "border-ink-faint",
+    dot: "bg-ink-soft",
+    barBorder: "border-ink-faint",
   },
 };
 
@@ -92,18 +97,18 @@ const ArbiterPanel = ({
         onClick={() => onChooseVersion(version)}
         className={`text-left p-5 border cursor-pointer transition-colors ${
           active
-            ? "border-primary bg-primary/5"
-            : "border-outline-variant bg-surface-container hover:border-primary/50"
+            ? "border-ink bg-ink/5"
+            : "border-ink-faint bg-band hover:border-ink/50"
         }`}
       >
         <span
           className={`font-label text-[10px] uppercase tracking-widest block mb-3 ${
-            active ? "text-primary" : "text-outline"
+            active ? "text-ink" : "text-ink-soft"
           }`}
         >
           {label}
         </span>
-        <span className="font-headline italic text-lg text-on-surface leading-snug">
+        <span className="font-headline italic text-lg text-ink leading-snug">
           &ldquo;{content}&rdquo;
         </span>
       </button>
@@ -113,13 +118,13 @@ const ArbiterPanel = ({
   return (
     <div
       ref={rootRef}
-      className="bg-surface-container-high border mt-6 border-outline-variant/50 p-6 relative overflow-hidden"
+      className="bg-raised border mt-6 border-ink-faint p-6 relative overflow-hidden"
     >
       <div className="relative z-10 flex flex-col gap-4">
-        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 border-b border-outline-variant/30 pb-4">
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 border-b border-ink-faint pb-4">
           <h3 className={`font-headline italic text-2xl ${accent.text}`}>{accent.headline}</h3>
           <div
-            className={`flex items-center gap-3 bg-surface-container px-4 py-2 border ${accent.chipBorder} ${accent.chipGlow}`}
+            className={`flex items-center gap-3 bg-band px-4 py-2 border ${accent.chipBorder}`}
           >
             <span className="relative flex h-2 w-2">
               <span
@@ -134,21 +139,21 @@ const ArbiterPanel = ({
         </div>
 
         {autoFiled && (
-          <p className="font-label text-[10px] uppercase tracking-widest text-tertiary">
+          <p className="font-label text-[10px] uppercase tracking-widest text-laurel">
             FILED UNDER: {verdict.domain}
           </p>
         )}
 
         {refiled && (
-          <p className="font-label text-[10px] uppercase tracking-widest text-tertiary">
+          <p className="font-label text-[10px] uppercase tracking-widest text-laurel">
             REFILED: {selectedDomain} &rarr; {verdict.domain}
           </p>
         )}
 
-        <div className={`bg-surface-container-lowest p-5 border-l ${accent.barBorder}`}>
+        <div className={`bg-paper p-5 border-l ${accent.barBorder}`}>
           <div className="flex items-start gap-4">
             <LuCpu className={`${accent.text} text-lg mt-0.5 shrink-0`} />
-            <p className="font-label text-xs text-on-surface-variant leading-relaxed">
+            <p className="font-label text-xs text-ink-soft leading-relaxed">
               {verdict.feedback}
             </p>
           </div>
@@ -156,7 +161,7 @@ const ArbiterPanel = ({
 
         {verdict.status === "pass" && hasRewrite && (
           <div className="space-y-3">
-            <p className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">
+            <p className="font-label text-[10px] uppercase tracking-widest text-ink-soft">
               CHOOSE YOUR WEAPON — THE CLAIM THAT ENTERS THE ARENA
             </p>
             <div role="radiogroup" className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -172,27 +177,27 @@ const ArbiterPanel = ({
               Try the Arbiter&apos;s reframe
               <LuRefreshCw className="text-sm" />
             </Button>
-            <span className="font-headline italic text-sm text-on-surface-variant">
+            <span className="font-headline italic text-sm text-ink-soft">
               &ldquo;{verdict.improved}&rdquo;
             </span>
           </div>
         )}
 
         {verdict.status === "pass" && similar.length > 0 && (
-          <div className="space-y-2 pt-2 border-t border-outline-variant/30">
-            <p className="font-label text-[10px] uppercase tracking-widest text-tertiary">
+          <div className="space-y-2 pt-2 border-t border-ink-faint">
+            <p className="font-label text-[10px] uppercase tracking-widest text-laurel">
               THIS FIGHT MAY ALREADY EXIST — JOIN IT INSTEAD
             </p>
             {similar.map((s) => (
               <Link
                 key={s.id}
                 href={`/motion/CRX-${s.id}-A`}
-                className="flex items-center justify-between gap-4 px-4 py-3 bg-surface-container border border-outline-variant/50 hover:border-primary transition-colors group"
+                className="flex items-center justify-between gap-4 px-4 py-3 bg-band border border-ink-faint hover:border-ink transition-colors group"
               >
-                <span className="font-headline italic text-sm text-on-surface truncate">
+                <span className="font-headline italic text-sm text-ink truncate">
                   &ldquo;{s.content}&rdquo;
                 </span>
-                <span className="font-label text-[10px] uppercase tracking-widest text-outline group-hover:text-primary whitespace-nowrap transition-colors">
+                <span className="font-label text-[10px] uppercase tracking-widest text-ink-soft group-hover:text-ink whitespace-nowrap transition-colors">
                   {s.domain} &rarr;
                 </span>
               </Link>

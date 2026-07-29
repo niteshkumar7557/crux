@@ -265,16 +265,16 @@ const MotionForm = ({ domains }: { domains: DomainClassification }) => {
 		: text;
 
 	return (
-		<div className="bg-surface-container-low p-8 relative overflow-hidden">
+		<div className="bg-band p-8 relative overflow-hidden">
 			<StageRail stage={stage} />
 			{authUser === null && (
-				<div className="mb-8 flex items-center justify-between gap-4 border border-tertiary/30 bg-tertiary/5 px-4 py-3">
-					<span className="font-label text-[10px] uppercase tracking-widest text-tertiary">
+				<div className="mb-8 flex items-center justify-between gap-4 border border-laurel/30 bg-laurel/5 px-4 py-3">
+					<span className="font-label text-[10px] uppercase tracking-widest text-laurel">
 						SPECTATOR MODE — LOG IN TO BROADCAST
 					</span>
 					<Link
 						href="/login?next=/motion/new"
-						className="font-label text-[10px] uppercase tracking-widest text-primary hover:underline whitespace-nowrap"
+						className="font-label text-[10px] uppercase tracking-widest text-ink hover:underline whitespace-nowrap"
 					>
 						LOG IN
 					</Link>
@@ -293,31 +293,31 @@ const MotionForm = ({ domains }: { domains: DomainClassification }) => {
 				/>
 				<ClaimEditor text={text} onChange={handleTextChange} locked={busy} />
 				{composeNotice && (
-					<p className="font-label text-[10px] uppercase tracking-widest text-tertiary">
+					<p className="font-label text-[10px] uppercase tracking-widest text-laurel">
 						{composeNotice}
 					</p>
 				)}
 				{/* §14: the author bonus, and the condition attached to it, stated
 				    before posting rather than discovered at the verdict. */}
-				<p className="font-body text-[11px] text-outline leading-relaxed">
+				<p className="font-body text-[11px] text-ink-soft leading-relaxed">
 					You earn +5 logic when your motion produces a real debate —
 					both sides must argue. If one side is still empty at the deadline it
 					concludes unopposed and nobody scores, you included.{" "}
 					<Link
 						href="/rules"
-						className="text-primary underline underline-offset-2 hover:text-white"
+						className="text-ink underline underline-offset-2 hover:text-ink"
 					>
 						Read the rules
 					</Link>
 					.
 				</p>
-				<div className="pt-6 border-t border-outline-variant/30 flex flex-col md:flex-row gap-6 items-center justify-between">
-					<div className="flex items-center gap-4 text-on-surface-variant">
+				<div className="pt-6 border-t border-ink-faint flex flex-col md:flex-row gap-6 items-center justify-between">
+					<div className="flex items-center gap-4 text-ink-soft">
 						<div className="flex">
-							<div className="w-8 h-8 bg-surface-container-high border border-outline-variant flex items-center justify-center">
+							<div className="w-8 h-8 bg-raised border border-ink-faint flex items-center justify-center">
 								<LuGavel className="text-xs" />
 							</div>
-							<div className="w-8 h-8 bg-surface-container-high border border-outline-variant flex items-center justify-center">
+							<div className="w-8 h-8 bg-raised border border-ink-faint flex items-center justify-center">
 								<LuChartColumn className="text-xs" />
 							</div>
 						</div>
@@ -335,7 +335,7 @@ const MotionForm = ({ domains }: { domains: DomainClassification }) => {
 						>
 							{checking ? "Analyzing…" : "Check eligibility"}
 							{checking ? (
-								<span className="border-t-2 border-on-primary h-4 w-4 rounded-full animate-spin motion-reduce:animate-none"></span>
+								<span className="border-t-2 border-paper h-4 w-4 rounded-full animate-spin motion-reduce:animate-none"></span>
 							) : (
 								<LuBot className="text-lg" />
 							)}

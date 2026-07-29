@@ -47,7 +47,7 @@ describe("buildCertificate", () => {
   it("carries the ruling through from the card model", () => {
     const m = buildCertificate(concluded, "Should X be Y?", source)!;
     expect(m.card.label).toBe("AFFIRMATIVE WINS");
-    expect(m.card.accent).toBe(TOKENS.cyan);
+    expect(m.card.accent).toBe(TOKENS.forSide);
     expect(m.card.score).toBe("63–37 · margin 26");
     expect(m.reference).toBe("CRX-12-A");
     expect(m.concludedOn).toBe("22 JUL 2026");

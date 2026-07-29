@@ -13,8 +13,8 @@ import { debateSlug } from "@/app/_utils/slugify";
 // Red here IS correct: §4's side lock is stance, and working rule 4 reserves
 // `secondary` for AGAINST.
 const SIDE_BADGE = {
-  for: "text-primary border-primary/40",
-  against: "text-secondary border-secondary/40",
+  for: "text-side-for border-side-for/40",
+  against: "text-side-against border-side-against/40",
 } as const;
 
 const ArenaNow = ({
@@ -29,16 +29,16 @@ const ArenaNow = ({
 
   return (
     <section className="mt-6">
-      <div className="flex items-baseline gap-3 mb-6 border-b border-outline-variant/30 pb-3">
+      <div className="flex items-baseline gap-3 mb-6 border-b border-ink-faint pb-3">
         <h2 className="font-headline text-3xl font-bold italic">In The Arena</h2>
-        <span className="font-label text-[10px] uppercase tracking-widest text-outline">
+        <span className="font-label text-[10px] uppercase tracking-widest text-ink-soft">
           Live right now
         </span>
       </div>
 
       {live.length === 0 ? (
-        <div className="bg-surface-container-low border-l-2 border-outline-variant/30 p-8">
-          <p className="font-body text-sm text-outline italic mb-6">
+        <div className="bg-band border-l-2 border-ink-faint p-8">
+          <p className="font-body text-sm text-ink-soft italic mb-6">
             {isOwner
               ? "Nothing live. Stake a claim."
               : "Not in the arena right now."}
@@ -51,11 +51,11 @@ const ArenaNow = ({
             <li key={d.id}>
               <Link
                 href={`/debate/${debateSlug(d.claim, d.id)}`}
-                className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 bg-surface-container-lowest hover:bg-surface-container-low transition-colors border-l-2 border-transparent hover:border-primary p-5"
+                className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 bg-paper hover:bg-band transition-colors border-l-2 border-transparent hover:border-ink p-5"
               >
                 <span className="flex items-center gap-2 shrink-0">
                   {d.isAuthor && (
-                    <span className="font-label text-[10px] uppercase tracking-widest px-2 py-0.5 border border-tertiary/40 text-tertiary">
+                    <span className="font-label text-[10px] uppercase tracking-widest px-2 py-0.5 border border-laurel/40 text-laurel">
                       Your motion
                     </span>
                   )}
@@ -67,7 +67,7 @@ const ArenaNow = ({
                     </span>
                   )}
                 </span>
-                <span className="font-body text-on-surface grow min-w-0 line-clamp-2">
+                <span className="font-body text-ink grow min-w-0 line-clamp-2">
                   {d.claim}
                 </span>
                 <span className="shrink-0">

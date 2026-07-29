@@ -4,19 +4,24 @@ import AnalysisPanel from "./AnalysisPanel";
 
 // Both sides share one layout; only the accent token and column padding
 // differ. Full literal class strings per side so Tailwind can see them.
+//
+// Each column is headed by a stamp — the side's name filled in its own camp
+// colour, the way a clerk marks which pile a document belongs to. It replaces
+// an accent rail on the column edge: at column height a 4px rail is a wall,
+// and the two of them boxed the arguments in.
 const SIDES = {
   for: {
     title: "The Case For",
-    wrapper: "bg-background lg:pr-12 py-8",
-    header: "border-primary",
-    accentText: "text-primary",
+    wrapper: "lg:pr-12 py-8",
+    stamp: "bg-side-for text-paper",
+    countClass: "text-side-for",
   },
   against: {
     title: "The Case Against",
     wrapper:
-      "bg-background lg:pl-12 py-8 border-t lg:border-t-0 lg:border-l border-outline-variant/20",
-    header: "border-secondary",
-    accentText: "text-secondary",
+      "lg:pl-12 py-8 border-t lg:border-t-0 lg:border-l border-ink-faint",
+    stamp: "bg-side-against text-paper",
+    countClass: "text-side-against",
   },
 } as const;
 
@@ -41,16 +46,16 @@ const CaseColumn = ({
 
   return (
     <div data-case={side} className={s.wrapper}>
-      <div
-        className={`flex items-center justify-between mb-10 border-l-4 ${s.header} pl-4`}
-      >
+      <div className="mb-10 flex flex-wrap items-center justify-between gap-3 border-b border-ink-faint pb-4">
         <h2
-          className={`font-label uppercase tracking-[0.3em] text-xl font-bold ${s.accentText}`}
+          className={`px-3 py-1.5 font-label text-[0.68rem] font-medium uppercase tracking-[0.28em] ${s.stamp}`}
         >
           {s.title}
         </h2>
-        <span className="font-label text-xs text-outline italic">
-          {count} Arguments
+        <span
+          className={`font-label text-[0.62rem] uppercase tracking-[0.22em] tabular-nums ${s.countClass}`}
+        >
+          {count} {count === 1 ? "Argument" : "Arguments"}
         </span>
       </div>
       <AnalysisPanel side={side} analysis={aiAnalysis} />

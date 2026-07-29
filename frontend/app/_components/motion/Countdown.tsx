@@ -23,7 +23,7 @@ const Countdown = ({ closesAt }: { closesAt: string }) => {
   if (left <= 0) return null;
 
   return (
-    <span className="font-label text-[10px] uppercase tracking-[0.2em] text-tertiary px-2 py-0.5 border border-tertiary/30">
+    <span className="font-label text-[10px] uppercase tracking-[0.2em] text-laurel px-2 py-0.5 border border-laurel/30">
       Closes in {fmt(left)}
     </span>
   );

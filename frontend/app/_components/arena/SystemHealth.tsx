@@ -1,33 +1,31 @@
 import { SystemHealthData } from "@/app/types";
+import SidebarSection from "./SidebarSection";
 
+// Two arena-wide numbers. Set as a tracked label over a numeral — the same
+// figure/label pairing the certificate, the points slip and the profile
+// standing row all use, so a number means the same thing wherever it appears.
 const SystemHealth = ({ data }: { data: SystemHealthData }) => {
   return (
-    <div className="bg-surface-container-highest mt-10 p-6 border-t-4 border-primary">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-2 h-2 rounded-full bg-primary animate-pulse motion-reduce:animate-none"></div>
-        <span className="font-label text-[10px] uppercase tracking-widest text-primary">
-          System Health: normal
-        </span>
-      </div>
-      <div className="grid grid-cols-2 gap-4">
+    <SidebarSection title="Arena Status" className="mt-12">
+      <dl className="grid grid-cols-2 gap-6 pt-5">
         <div>
-          <div className="text-[10px] font-label text-outline uppercase mb-1">
-            Total Logic Staked
-          </div>
-          <div className="font-label text-lg text-on-surface">
+          <dt className="font-label text-[0.58rem] uppercase tracking-[0.2em] text-ink-soft">
+            Total logic staked
+          </dt>
+          <dd className="mt-1 display-type text-2xl tabular-nums text-ink">
             {data.logicStacked} CX
-          </div>
+          </dd>
         </div>
         <div>
-          <div className="text-[10px] font-label text-outline uppercase mb-1">
-            Active Arenas
-          </div>
-          <div className="font-label text-lg text-on-surface">
+          <dt className="font-label text-[0.58rem] uppercase tracking-[0.2em] text-ink-soft">
+            Active arenas
+          </dt>
+          <dd className="mt-1 display-type text-2xl tabular-nums text-ink">
             {data.activeArenas}
-          </div>
+          </dd>
         </div>
-      </div>
-    </div>
+      </dl>
+    </SidebarSection>
   );
 };
 

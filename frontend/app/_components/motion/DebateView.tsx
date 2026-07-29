@@ -125,7 +125,6 @@ const DebateView = async ({ id }: { id: number }) => {
           ),
         }}
       />
-      <div className="absolute inset-0 perspective-grid -z-10 pointer-events-none"></div>
       {/* §5: one provider over the arena and the composer, so a Reply button in
           a column can arm the composer at the bottom without prop-drilling. */}
       <ReplyProvider>
@@ -141,16 +140,16 @@ const DebateView = async ({ id }: { id: number }) => {
             isMotd={Boolean(row.is_motd)}
           />
           {walkoverRisk && (
-            <div className="mb-8 border-l-4 border-tertiary bg-surface-container-low p-5">
-              <span className="font-label text-[10px] uppercase tracking-[0.2em] text-tertiary block mb-2">
+            <div className="mb-8 border border-side-against/40 bg-band p-5">
+              <span className="font-label text-[0.62rem] uppercase tracking-[0.28em] text-side-against block mb-2">
                 Walkover risk
               </span>
-              <p className="font-body text-sm text-on-surface-variant leading-relaxed">
+              <p className="font-body text-sm text-ink-soft leading-relaxed">
                 {`Under ${WALKOVER_WARNING_HOURS} hours left and `}
                 {emptySide
                   ? `nobody has argued ${emptySide}. If nobody does, this debate concludes unopposed and `
                   : "nobody has argued this debate at all. If either side is still empty at the deadline, it concludes unopposed and "}
-                <span className="text-on-surface font-bold">nobody scores</span>
+                <span className="text-ink font-bold">nobody scores</span>
                 {" — including the author."}
               </p>
             </div>

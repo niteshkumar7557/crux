@@ -22,7 +22,7 @@ const LogoutButton = ({ profileId }: { profileId: number }) => {
   return (
     <button
       onClick={handleLogout}
-      className="flex items-center gap-2 border border-outline-variant/40 px-3 py-1.5 font-label text-[10px] uppercase tracking-widest text-outline hover:text-secondary hover:border-secondary/60 transition-colors cursor-pointer"
+      className="flex items-center gap-2 border border-ink-faint px-3 py-1.5 font-label text-[10px] uppercase tracking-widest text-ink-soft hover:text-side-against hover:border-side-against/60 transition-colors cursor-pointer"
     >
       <LuLogOut aria-hidden="true" /> Log Out
     </button>

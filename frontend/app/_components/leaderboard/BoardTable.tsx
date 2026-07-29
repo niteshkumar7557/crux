@@ -16,24 +16,24 @@ const BoardTable = ({
 
   return (
     <div>
-      <div className="grid grid-cols-12 px-8 py-4 bg-surface-container-lowest border-b border-outline-variant/30">
-        <div className="col-span-2 md:col-span-1 font-label text-[10px] text-outline uppercase tracking-widest">
+      <div className="grid grid-cols-12 px-8 py-4 bg-paper border-b border-ink-faint">
+        <div className="col-span-2 md:col-span-1 font-label text-[10px] text-ink-soft uppercase tracking-widest">
           Rank
         </div>
-        <div className="col-span-6 md:col-span-5 font-label text-[10px] text-outline uppercase tracking-widest">
+        <div className="col-span-6 md:col-span-5 font-label text-[10px] text-ink-soft uppercase tracking-widest">
           Debater
         </div>
         <div
-          className={`col-span-4 ${hasCounts ? "md:col-span-2" : "md:col-span-6"} font-label text-[10px] text-outline uppercase tracking-widest text-right`}
+          className={`col-span-4 ${hasCounts ? "md:col-span-2" : "md:col-span-6"} font-label text-[10px] text-ink-soft uppercase tracking-widest text-right`}
         >
           {metric}
         </div>
         {hasCounts && (
           <>
-            <div className="hidden md:block md:col-span-2 font-label text-[10px] text-outline uppercase tracking-widest text-right">
+            <div className="hidden md:block md:col-span-2 font-label text-[10px] text-ink-soft uppercase tracking-widest text-right">
               Motions
             </div>
-            <div className="hidden md:block md:col-span-2 font-label text-[10px] text-outline uppercase tracking-widest text-right">
+            <div className="hidden md:block md:col-span-2 font-label text-[10px] text-ink-soft uppercase tracking-widest text-right">
               Arguments
             </div>
           </>
@@ -45,9 +45,9 @@ const BoardTable = ({
             key={debater.id}
             href={`/profile/${debater.username}`}
             data-reveal
-            className={`grid grid-cols-12 px-8 py-6 ${i % 2 === 0 ? "bg-surface" : "bg-surface-container-lowest"} hover:bg-surface-container-low transition-colors items-center group border-l-2 border-transparent hover:border-primary`}
+            className={`grid grid-cols-12 px-8 py-6 ${i % 2 === 0 ? "bg-band" : "bg-paper"} hover:bg-raised transition-colors items-center group border-l-2 border-transparent hover:border-ink`}
           >
-            <div className="col-span-2 md:col-span-1 font-label text-xl font-bold text-outline group-hover:text-primary transition-colors">
+            <div className="col-span-2 md:col-span-1 font-label text-xl font-bold text-ink-soft group-hover:text-ink transition-colors">
               {String(debater.rank).padStart(2, "0")}
             </div>
             <div className="col-span-6 md:col-span-5 flex items-center gap-4 min-w-0">
@@ -57,25 +57,25 @@ const BoardTable = ({
                 size="lg"
               />
               <span className="min-w-0">
-                <span className="block font-headline text-xl italic text-on-background truncate">
+                <span className="block font-headline text-xl italic text-ink truncate">
                   {debater.name}
                 </span>
-                <span className="block font-label text-[10px] uppercase tracking-widest text-outline truncate">
+                <span className="block font-label text-[10px] uppercase tracking-widest text-ink-soft truncate">
                   @{debater.username}
                 </span>
               </span>
             </div>
             <div
-              className={`col-span-4 ${hasCounts ? "md:col-span-2" : "md:col-span-6"} text-right font-label text-lg font-medium text-on-background`}
+              className={`col-span-4 ${hasCounts ? "md:col-span-2" : "md:col-span-6"} text-right font-label text-lg font-medium text-ink`}
             >
               {debater.score.toLocaleString("en-US")}
             </div>
             {hasCounts && (
               <>
-                <div className="hidden md:block md:col-span-2 text-right font-label text-lg font-medium text-on-surface-variant">
+                <div className="hidden md:block md:col-span-2 text-right font-label text-lg font-medium text-ink-soft">
                   {debater.motionCount}
                 </div>
-                <div className="hidden md:block md:col-span-2 text-right font-label text-lg font-medium text-on-background">
+                <div className="hidden md:block md:col-span-2 text-right font-label text-lg font-medium text-ink">
                   {debater.argumentCount}
                 </div>
               </>

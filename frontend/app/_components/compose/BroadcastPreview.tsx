@@ -23,7 +23,7 @@ function highlightKeyword(content: string, keyword: string) {
   return (
     <>
       {content.slice(0, idx)}
-      <span className="text-primary">{content.slice(idx, idx + keyword.length)}</span>
+      <span className="text-ink">{content.slice(idx, idx + keyword.length)}</span>
       {content.slice(idx + keyword.length)}
     </>
   );
@@ -86,32 +86,32 @@ const BroadcastPreview = ({
 
   return (
     <div ref={rootRef} className="mt-6 space-y-4">
-      <p className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">
+      <p className="font-label text-[10px] uppercase tracking-widest text-ink-soft">
         THIS IS HOW IT ENTERS THE ARENA
       </p>
-      <div className="bg-surface-container-low p-6 border-l-2 border-primary">
+      <div className="bg-band p-6 border-l-2 border-ink">
         <div className="flex items-center gap-2 mb-4">
           <Avatar username={username ?? "?"} src={avatar} size="sm" />
-          <span className="font-body text-[10px] font-bold text-outline uppercase tracking-wider">
+          <span className="font-body text-[10px] font-bold text-ink-soft uppercase tracking-wider">
             {username ?? "you"}
           </span>
-          <span className="font-label uppercase text-[10px] text-on-surface-variant bg-outline/10 px-1.5 py-1 ml-auto">
+          <span className="font-label uppercase text-[10px] text-ink-soft bg-ink-wash px-1.5 py-1 ml-auto">
             now
           </span>
         </div>
-        <span className="font-label text-[10px] text-tertiary uppercase tracking-widest mb-3 block">
+        <span className="font-label text-[10px] text-laurel uppercase tracking-widest mb-3 block">
           {domain}
         </span>
         <h3 className="font-headline text-xl mb-4">
           &ldquo;{highlightKeyword(content, keyword)}&rdquo;
         </h3>
-        <p className="font-label text-[10px] text-outline uppercase tracking-widest">
+        <p className="font-label text-[10px] text-ink-soft uppercase tracking-widest">
           AWAITING FIRST ARGUMENTS
         </p>
       </div>
       <div className="flex flex-col md:flex-row md:items-center md:justify-end gap-3">
         {notice && (
-          <p className="font-label text-[10px] uppercase tracking-widest text-tertiary md:mr-auto">
+          <p className="font-label text-[10px] uppercase tracking-widest text-laurel md:mr-auto">
             {notice}
           </p>
         )}
@@ -132,7 +132,7 @@ const BroadcastPreview = ({
           >
             {casting ? CAST_STAGES[castIdx] : "Broadcast Motion"}
             {casting ? (
-              <span className="border-t-2 border-on-primary h-4 w-4 rounded-full animate-spin motion-reduce:animate-none"></span>
+              <span className="border-t-2 border-paper h-4 w-4 rounded-full animate-spin motion-reduce:animate-none"></span>
             ) : (
               <LuRadioTower className="text-lg" />
             )}

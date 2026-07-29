@@ -60,8 +60,8 @@ const ArgumentInput = ({
   // Concluded arenas are read-only — shown to everyone, logged in or not.
   if (status === "concluded") {
     return (
-      <div className="sticky bottom-0 bg-surface-container-lowest/80 backdrop-blur-xl border-t border-outline-variant/20 py-4 px-4 md:py-5 md:px-6 z-40 text-center">
-        <span className="font-label text-[10px] uppercase tracking-[0.2em] text-outline">
+      <div className="sticky bottom-0 bg-paper/80 backdrop-blur-xl border-t border-ink-faint py-4 px-4 md:py-5 md:px-6 z-40 text-center">
+        <span className="font-label text-[10px] uppercase tracking-[0.2em] text-ink-soft">
           This debate has concluded — the verdict is in.
         </span>
       </div>
@@ -87,7 +87,7 @@ const ArgumentInput = ({
       <>
         Your argument crossed the line of civil debate. Review the{" "}
         <Link
-          className="text-secondary underline underline-offset-2 hover:text-white"
+          className="text-side-against underline underline-offset-2 hover:text-ink"
           href={"/rules"}
         >
           Arena Rules
@@ -193,10 +193,10 @@ const ArgumentInput = ({
   }
 
   return (
-    <div className="sticky bottom-0 bg-surface-container-lowest/80 backdrop-blur-xl border-t border-outline-variant/20 py-4 px-4 md:py-6 md:px-6 z-40">
+    <div className="sticky bottom-0 bg-paper/80 backdrop-blur-xl border-t border-ink-faint py-4 px-4 md:py-6 md:px-6 z-40">
       {target && (
-        <div className="max-w-screen-2xl mx-auto mb-3 flex items-center gap-3 border-l-2 border-primary/50 bg-surface-container/60 py-2 px-3">
-          <span className="grow min-w-0 truncate font-label text-[10px] uppercase tracking-[0.15em] text-on-surface-variant">
+        <div className="max-w-screen-2xl mx-auto mb-3 flex items-center gap-3 border-l-2 border-side-for/50 bg-band/60 py-2 px-3">
+          <span className="grow min-w-0 truncate font-label text-[10px] uppercase tracking-[0.15em] text-ink-soft">
             Replying to @{target.username} — &ldquo;
             {target.content.length > 48
               ? `${target.content.slice(0, 48)}…`
@@ -204,7 +204,7 @@ const ArgumentInput = ({
             &rdquo;
           </span>
           <button
-            className="shrink-0 text-outline hover:text-white cursor-pointer"
+            className="shrink-0 text-ink-soft hover:text-ink cursor-pointer"
             aria-label="Cancel reply"
             onClick={() => setTarget(null)}
           >
@@ -218,11 +218,11 @@ const ArgumentInput = ({
         <div className="max-w-screen-2xl mx-auto mb-2 flex flex-wrap items-center gap-x-4 gap-y-1">
           <span
             className={`font-label text-[10px] uppercase tracking-[0.15em] ${
-              lockedSide === "for" ? "text-primary" : "text-secondary"
+              lockedSide === "for" ? "text-side-for" : "text-side-against"
             }`}
           >
             You&rsquo;re arguing {lockedSide === "for" ? "FOR" : "AGAINST"}{" "}
-            <span className="text-outline normal-case tracking-normal font-body ml-2">
+            <span className="text-ink-soft normal-case tracking-normal font-body ml-2">
               {isAuthor
                 ? "— you posted this motion, so you can only argue FOR it."
                 : `— you can't argue ${lockedSide === "for" ? "AGAINST" : "FOR"} in this debate.`}
@@ -233,7 +233,7 @@ const ArgumentInput = ({
       <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center gap-3 md:gap-6">
         <div className="flex-1 w-full relative">
           <AutoGrowTextarea
-            className="w-full bg-surface-container border border-outline-variant/50 focus:border-primary focus:outline-none px-4 py-3 md:px-6 md:py-4 font-body text-on-surface placeholder:text-outline transition-all block disabled:opacity-60"
+            className="w-full bg-band border border-ink-faint focus:border-side-for focus:outline-none px-4 py-3 md:px-6 md:py-4 font-body text-ink placeholder:text-ink-soft transition-all block disabled:opacity-60"
             placeholder={target ? "Write your reply..." : "Join the Argument..."}
             aria-label={target ? "Write your reply" : "Join the argument"}
             maxHeight={160}
@@ -313,20 +313,20 @@ const ArgumentInput = ({
         <PointsPopup award={award} onDismiss={() => setAward(null)} />
       )}
       {notice && (
-        <div className="fixed bottom-32 right-6 z-60 max-w-sm bg-surface-container-lowest border-l-4 border-secondary p-4 shadow-glow-secondary flex items-start gap-4">
+        <div className="fixed bottom-32 right-6 z-60 max-w-sm bg-paper border-l-4 border-side-against p-4 flex items-start gap-4">
           <div className="shrink-0 mt-1">
-            <LuTriangleAlert className="text-secondary font-bold text-xl" />
+            <LuTriangleAlert className="text-side-against font-bold text-xl" />
           </div>
           <div className="grow">
-            <h4 className="font-label text-[10px] uppercase tracking-[0.2em] text-secondary mb-1 font-bold">
+            <h4 className="font-label text-[10px] uppercase tracking-[0.2em] text-side-against mb-1 font-bold">
               {notice.title}
             </h4>
-            <p className="font-body text-xs leading-relaxed text-on-surface-variant">
+            <p className="font-body text-xs leading-relaxed text-ink-soft">
               {notice.body}
             </p>
           </div>
           <button
-            className="shrink-0 text-outline hover:text-white cursor-pointer"
+            className="shrink-0 text-ink-soft hover:text-ink cursor-pointer"
             onClick={() => setNotice(null)}
           >
             <LuX className="text-sm" />

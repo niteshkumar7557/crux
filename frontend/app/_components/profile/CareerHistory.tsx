@@ -7,12 +7,12 @@ import { debateSlug } from "@/app/_utils/slugify";
 // The concluded debates behind the W-L-D. debate_results existed from the
 // start and the profile never read it, so the record had nothing under it.
 //
-// Outcome colours stay off `secondary`: red means AGAINST (working rule 4),
-// not "you lost".
+// Outcome colours stay off the camp tokens: terracotta means AGAINST, not
+// "you lost". A win is an earned thing, so it takes laurel (design-system §2).
 const OUTCOME = {
-  win: "text-primary",
-  loss: "text-on-surface-variant",
-  draw: "text-outline",
+  win: "text-laurel",
+  loss: "text-ink-soft",
+  draw: "text-ink-soft",
 } as const;
 
 const when = (iso: string) =>
@@ -20,15 +20,15 @@ const when = (iso: string) =>
 
 const CareerHistory = ({ history }: { history: HistoryRow[] }) => (
   <section className="mt-12">
-    <div className="flex items-baseline gap-3 mb-6 border-b border-outline-variant/30 pb-3">
+    <div className="flex items-baseline gap-3 mb-6 border-b border-ink-faint pb-3">
       <h2 className="font-headline text-3xl font-bold italic">Career</h2>
-      <span className="font-label text-[10px] uppercase tracking-widest text-outline">
+      <span className="font-label text-[10px] uppercase tracking-widest text-ink-soft">
         Concluded debates
       </span>
     </div>
 
     {history.length === 0 ? (
-      <p className="font-body text-sm text-outline italic py-8">
+      <p className="font-body text-sm text-ink-soft italic py-8">
         No concluded debates yet.
       </p>
     ) : (
@@ -38,8 +38,8 @@ const CareerHistory = ({ history }: { history: HistoryRow[] }) => (
             key={r.motionId}
             href={`/debate/${debateSlug(r.claim, r.motionId)}`}
             className={`grid grid-cols-12 items-center gap-3 px-5 py-5 ${
-              i % 2 === 0 ? "bg-surface" : "bg-surface-container-lowest"
-            } hover:bg-surface-container-low transition-colors border-l-2 border-transparent hover:border-primary`}
+              i % 2 === 0 ? "bg-band" : "bg-paper"
+            } hover:bg-band transition-colors border-l-2 border-transparent hover:border-ink`}
           >
             <span
               className={`col-span-4 md:col-span-2 font-label text-sm font-bold uppercase tracking-widest ${OUTCOME[r.outcome]}`}
@@ -48,19 +48,19 @@ const CareerHistory = ({ history }: { history: HistoryRow[] }) => (
             </span>
             <span className="col-span-8 md:col-span-2 flex items-center gap-2">
               {r.isMvp && (
-                <span className="flex items-center gap-1 font-label text-[10px] uppercase tracking-widest px-2 py-0.5 border border-tertiary/40 text-tertiary">
+                <span className="flex items-center gap-1 font-label text-[10px] uppercase tracking-widest px-2 py-0.5 border border-laurel/40 text-laurel">
                   <LuStar aria-hidden="true" /> MVP
                 </span>
               )}
             </span>
-            <span className="col-span-12 md:col-span-5 font-body text-sm text-on-surface min-w-0 line-clamp-2">
+            <span className="col-span-12 md:col-span-5 font-body text-sm text-ink min-w-0 line-clamp-2">
               {r.claim}
             </span>
-            <span className="col-span-6 md:col-span-2 font-label text-[10px] uppercase tracking-widest text-outline">
+            <span className="col-span-6 md:col-span-2 font-label text-[10px] uppercase tracking-widest text-ink-soft">
               {r.side}
               {r.margin !== null && ` · ${r.margin} pt`}
             </span>
-            <span className="col-span-6 md:col-span-1 font-label text-[10px] uppercase tracking-widest text-outline md:text-right">
+            <span className="col-span-6 md:col-span-1 font-label text-[10px] uppercase tracking-widest text-ink-soft md:text-right">
               {when(r.concludedAt)}
             </span>
           </Link>

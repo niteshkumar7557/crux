@@ -2,6 +2,8 @@ import { TopDebatersCardProps } from "@/app/types";
 import Link from "next/link";
 import Avatar from "@/app/_components/ui/Avatar";
 
+// Rank numerals are laurel only at the top of the board — gold is for things
+// that were earned, and fourth place is not one of them (design-system.md §2).
 const TopDebatersCard = ({
   rank,
   name,
@@ -10,23 +12,29 @@ const TopDebatersCard = ({
   logicScore,
 }: TopDebatersCardProps) => {
   return (
-    <Link
-      href={`/profile/${username}`}
-      className="flex cursor-pointer items-center gap-4 p-3 bg-surface-container-low hover:bg-surface-container-high transition-colors"
-    >
-      <span
-        className={`font-label ${rank !== 1 ? "text-outline" : "text-primary-container"} text-xs w-4`}
+    <li>
+      <Link
+        href={`/profile/${username}`}
+        className="flex items-center gap-4 py-3 transition-colors hover:bg-ink-wash"
       >
-        {rank < 10 ? `0${rank}` : rank}
-      </span>
-      <Avatar username={username} src={avatar} size="lg" />
-      <div>
-        <div className="text-sm font-bold">{name}</div>
-        <div className="text-[10px] font-label text-outline uppercase tracking-widest">
-          {logicScore} logic score
+        <span
+          className={`w-5 shrink-0 font-label text-xs tabular-nums ${
+            rank === 1 ? "text-laurel" : "text-ink-soft"
+          }`}
+        >
+          {rank < 10 ? `0${rank}` : rank}
+        </span>
+        <Avatar username={username} src={avatar} size="lg" />
+        <div className="min-w-0">
+          <div className="truncate font-headline text-base text-ink">
+            {name}
+          </div>
+          <div className="font-label text-[0.58rem] uppercase tracking-[0.2em] text-ink-soft">
+            {logicScore} Logic score
+          </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+    </li>
   );
 };
 

@@ -41,15 +41,15 @@ const ClaimEditor = ({ text, onChange, locked }: ClaimEditorProps) => {
   const remaining = MIN_CHARS - text.length;
   const counterTone =
     text.length >= MAX_CHARS
-      ? "text-secondary"
+      ? "text-side-against"
       : text.length >= WARN_CHARS
-        ? "text-tertiary"
-        : "text-outline";
+        ? "text-laurel"
+        : "text-ink-soft";
 
   return (
     <div className="space-y-3">
       <label
-        className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant flex items-center gap-2"
+        className="font-label text-[10px] uppercase tracking-widest text-ink-soft flex items-center gap-2"
         htmlFor="claim"
       >
         <LuPenLine className="text-sm" />
@@ -58,7 +58,7 @@ const ClaimEditor = ({ text, onChange, locked }: ClaimEditorProps) => {
       <AutoGrowTextarea
         id="claim"
         maxHeight={400}
-        className={`w-full focus:outline-none bg-surface-container-highest border-0 focus:ring-1 focus:ring-primary min-h-60 p-6 font-headline text-2xl italic placeholder:text-outline text-on-surface transition-opacity ${
+        className={`w-full focus:outline-none bg-raised border-0 focus:ring-1 focus:ring-ink min-h-60 p-6 font-headline text-2xl italic placeholder:text-ink-soft text-ink transition-opacity ${
           locked ? "opacity-60" : ""
         }`}
         placeholder="Make a claim worth fighting over..."
@@ -68,7 +68,7 @@ const ClaimEditor = ({ text, onChange, locked }: ClaimEditorProps) => {
         aria-busy={locked}
         onChange={(e) => onChange(e.target.value)}
       />
-      <div className="flex justify-between items-center gap-4 text-[10px] font-label text-outline uppercase tracking-tighter">
+      <div className="flex justify-between items-center gap-4 text-[10px] font-label text-ink-soft uppercase tracking-tighter">
         <span>
           {remaining > 0
             ? `${remaining} MORE CHARACTER${remaining === 1 ? "" : "S"} TO SUMMON THE ARBITER`
@@ -83,7 +83,7 @@ const ClaimEditor = ({ text, onChange, locked }: ClaimEditorProps) => {
           {nudges.map((nudge) => (
             <p
               key={nudge}
-              className="flex items-center gap-2 font-label text-[10px] uppercase tracking-widest text-tertiary"
+              className="flex items-center gap-2 font-label text-[10px] uppercase tracking-widest text-laurel"
             >
               <LuTriangleAlert className="text-xs shrink-0" />
               {nudge}

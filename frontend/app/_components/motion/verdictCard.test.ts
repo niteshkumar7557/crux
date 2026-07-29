@@ -30,7 +30,7 @@ describe("buildVerdictCard", () => {
     const m = buildVerdictCard(base, "Should X be Y?");
     expect(m.mode).toBe("for");
     expect(m.label).toBe("AFFIRMATIVE WINS");
-    expect(m.accent).toBe(TOKENS.cyan);
+    expect(m.accent).toBe(TOKENS.forSide);
     expect(m.score).toBe("63–37 · margin 26");
     expect(m.split).toEqual({ for: 63, against: 37 });
     expect(m.mvpUsername).toBe("ada");
@@ -42,17 +42,19 @@ describe("buildVerdictCard", () => {
   it("against-win: red accent, NEGATIVE label", () => {
     const m = buildVerdictCard({ ...base, winner: "against" }, "c");
     expect(m.label).toBe("NEGATIVE WINS");
-    expect(m.accent).toBe(TOKENS.red);
+    expect(m.accent).toBe(TOKENS.againstSide);
   });
 
-  it("draw: amber accent, still shows score/split/mvp", () => {
+  // Laurel marks things that were won; a draw was not won, so it takes the
+  // neutral draw tone instead (design-system.md §2). It used to be amber.
+  it("draw: draw accent, still shows score/split/mvp", () => {
     const m = buildVerdictCard(
       { ...base, winner: "draw", margin: 4, affirmative: 52, negative: 48 },
       "c",
     );
     expect(m.mode).toBe("draw");
     expect(m.label).toBe("DRAW");
-    expect(m.accent).toBe(TOKENS.amber);
+    expect(m.accent).toBe(TOKENS.draw);
     expect(m.split).toEqual({ for: 52, against: 48 });
     expect(m.mvpUsername).toBe("ada");
   });
@@ -64,7 +66,7 @@ describe("buildVerdictCard", () => {
     );
     expect(m.mode).toBe("walkover");
     expect(m.label).toBe("UNOPPOSED");
-    expect(m.accent).toBe(TOKENS.outline);
+    expect(m.accent).toBe(TOKENS.muted);
     expect(m.score).toBeNull();
     expect(m.split).toBeNull();
     expect(m.mvpUsername).toBeNull();
@@ -82,7 +84,7 @@ describe("buildVerdictCard", () => {
       "Should X be Y?",
     );
     expect(m.mode).toBe("live");
-    expect(m.accent).toBe(TOKENS.outline);
+    expect(m.accent).toBe(TOKENS.muted);
     expect(m.heroLine).toBe("Should X be Y?");
     expect(m.score).toBeNull();
     expect(m.mvpUsername).toBeNull();

@@ -12,9 +12,13 @@ const tabList = ["trending", "newest"];
 // link can say which tab it belongs to and a refresh lands where you were.
 // Tab links are soft navigations, so this component stays mounted and the
 // crossfade below still reads as a tab switch rather than a page load.
+//
+// Anchored to /arena, not /: the feed used to be the site root, and when the
+// story landing took that route these links kept pointing at it — so switching
+// tabs or paging left the arena entirely.
 export function feedHref(tab: string, page = 1): string {
-  if (tab !== "newest") return "/";
-  return page > 1 ? `/?tab=newest&page=${page}` : "/?tab=newest";
+  if (tab !== "newest") return "/arena";
+  return page > 1 ? `/arena?tab=newest&page=${page}` : "/arena?tab=newest";
 }
 
 const ActiveMotions = () => {

@@ -79,22 +79,22 @@ const MotionHeader = ({
           className="w-full flex flex-wrap items-center gap-x-3 gap-y-2"
         >
           {matchState.status === "concluded" ? (
-            <span className="font-label text-[10px] uppercase tracking-[0.2em] text-outline px-2 py-0.5 border border-outline/30">
+            <span className="font-label text-[10px] uppercase tracking-[0.2em] text-ink-soft px-2 py-0.5 border border-ink-faint">
               Concluded
             </span>
           ) : (
-            <span className="font-label text-[10px] uppercase tracking-[0.2em] text-primary px-2 py-0.5 border border-primary/30">
+            <span className="font-label text-[10px] uppercase tracking-[0.2em] text-ink px-2 py-0.5 border border-ink">
               Live Arena
             </span>
           )}
-          <span className="font-label text-[10px] uppercase tracking-[0.2em] text-outline">
+          <span className="font-label text-[10px] uppercase tracking-[0.2em] text-ink-soft">
             ID: {motionHeaderData.motionId}
           </span>
           {/* Whose claim this is. Every argument names its debater; the motion
               itself did not, so the one person on the hook for it was anonymous. */}
           <Link
             href={`/profile/${motionHeaderData.authorUsername}`}
-            className="flex items-center gap-2 text-outline hover:text-primary transition-colors"
+            className="flex items-center gap-2 text-ink-soft hover:text-ink transition-colors"
           >
             <Avatar
               username={motionHeaderData.authorUsername}
@@ -123,11 +123,11 @@ const MotionHeader = ({
         </div>
         <h1
           ref={headlineRef}
-          className="font-headline text-5xl md:text-7xl font-bold max-w-5xl tracking-tight break-words"
+          className="font-headline text-[clamp(2.2rem,5.2vw,4.2rem)] leading-[1.12] max-w-5xl break-words text-ink"
         >
           {before}
           {highlight && (
-            <span className="text-primary italic">{highlight}</span>
+            <span className="italic text-laurel">{highlight}</span>
           )}
           {after}
         </h1>

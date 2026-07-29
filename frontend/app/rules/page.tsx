@@ -43,35 +43,36 @@ const RULES = [
 const Rules = () => {
   return (
     <Reveal className="max-w-4xl mx-auto px-6 md:px-8 py-12">
-      <div data-reveal className="mb-12 border-l-4 border-secondary pl-6">
-        <span className="font-label text-secondary text-xs uppercase tracking-[0.3em] mb-2 block">
-          ARENA RULES
-        </span>
-        <h1 className="font-headline italic text-5xl md:text-6xl text-on-background tracking-tight">
+      <div data-reveal className="mb-14">
+        <p className="flex items-center gap-3 font-label text-[0.62rem] uppercase tracking-[0.3em] text-ink-soft">
+          <span aria-hidden className="h-px w-8 bg-ink-faint" />
+          Arena rules
+        </p>
+        <h1 className="mt-5 display-type text-[clamp(2.4rem,6vw,4.2rem)] text-ink">
           Rules of Engagement
         </h1>
-        <p className="mt-4 text-on-surface-variant font-body text-lg max-w-xl">
+        <p className="mt-4 text-ink-soft font-body text-lg max-w-xl">
           Seven rules, with their real numbers. Nothing here is discovered by
           being penalised by it — you go in knowing exactly what every move is
           worth.
         </p>
       </div>
 
-      <ol className="space-y-4">
+      <ol>
         {RULES.map((rule, i) => (
           <li
             key={rule.title}
             data-reveal
-            className="bg-surface-container-low border-l-2 border-outline-variant/30 hover:border-primary transition-colors p-6 md:p-8 flex gap-6"
+            className="flex gap-6 border-t border-ink-faint py-8 transition-colors hover:bg-ink-wash"
           >
-            <span className="font-label text-2xl font-bold text-primary/60 shrink-0">
+            <span className="shrink-0 display-type text-2xl text-laurel tabular-nums">
               {String(i + 1).padStart(2, "0")}
             </span>
             <div>
-              <h2 className="font-headline italic text-xl md:text-2xl text-on-surface mb-2">
+              <h2 className="mb-2 font-headline text-xl text-ink md:text-2xl">
                 {rule.title}
               </h2>
-              <p className="font-body text-sm text-on-surface-variant leading-relaxed">
+              <p className="font-body text-sm text-ink-soft leading-relaxed">
                 {rule.body}
               </p>
             </div>
@@ -81,7 +82,7 @@ const Rules = () => {
 
       <p
         data-reveal
-        className="mt-6 border-l-2 border-outline-variant/20 pl-6 font-body text-sm text-on-surface-variant/80 leading-relaxed"
+        className="border-t border-ink-faint pt-8 font-body text-sm leading-relaxed text-ink-soft"
       >
         One house rule beyond the seven: posting is rate-limited — a handful of
         motions or arguments per minute per account. It keeps the arena
@@ -91,9 +92,9 @@ const Rules = () => {
 
       <div
         data-reveal
-        className="mt-12 bg-surface-container border border-outline-variant/10 p-10 text-center"
+        className="mt-14 border border-ink-faint bg-band p-12 text-center"
       >
-        <p className="font-headline italic text-2xl text-on-surface mb-6">
+        <p className="mb-7 font-headline text-2xl italic text-ink">
           Agreed? Then say something worth fighting over.
         </p>
         <Button href="/motion/new" size="lg">

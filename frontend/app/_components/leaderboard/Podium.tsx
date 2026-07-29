@@ -4,105 +4,156 @@ import Avatar from "@/app/_components/ui/Avatar";
 import { convertLogicScore } from "@/app/_utils/logicScore";
 import type { BoardRow } from "@/app/leaderboard/board";
 
-// The two flanking podium cards mirror each other: silver leans secondary
-// (red), bronze leans tertiary (amber).
-const SIDE_CARD = {
+// The three places, keyed to the three metals.
+//
+// This used to colour second place with `secondary` and third with `tertiary`
+// — which in the new palette are the AGAINST camp and laurel, so the podium
+// read as "the negative side came second" and "third place won a prize". The
+// metals are their own tokens now (globals.css), shared with the season titles
+// on profiles so a rank means the same colour everywhere it appears.
+//
+// The champion card and the two flanking cards were also near-identical blocks
+// of markup maintained twice. One card, three configs.
+const PLACES = {
+  1: {
+    metal: "text-metal-gold",
+    metalBg: "bg-metal-gold",
+    metalBorder: "border-metal-gold",
+    Icon: LuCrown,
+    span: "md:col-span-6",
+    order: "order-1 md:order-2",
+    height: "md:h-[460px]",
+    avatar: "2xl" as const,
+    name: "text-[clamp(1.8rem,3vw,2.6rem)]",
+    numeral: "text-8xl",
+  },
   2: {
-    border: "border-l-4 border-secondary/30",
-    accent: "text-secondary",
-    bar: "bg-secondary",
-    badge: "bg-secondary text-on-secondary",
-    watermark: "top-6 right-6",
+    metal: "text-metal-silver",
+    metalBg: "bg-metal-silver",
+    metalBorder: "border-metal-silver",
     Icon: LuMedal,
+    span: "md:col-span-3",
     order: "order-2 md:order-1",
+    height: "md:h-[380px]",
+    avatar: "xl" as const,
+    name: "text-2xl",
+    numeral: "text-6xl",
   },
   3: {
-    border: "border-r-4 border-tertiary/30",
-    accent: "text-tertiary",
-    bar: "bg-tertiary",
-    badge: "bg-tertiary text-on-tertiary",
-    watermark: "top-6 left-6",
+    metal: "text-metal-bronze",
+    metalBg: "bg-metal-bronze",
+    metalBorder: "border-metal-bronze",
     Icon: LuStar,
+    span: "md:col-span-3",
     order: "order-3",
+    height: "md:h-[380px]",
+    avatar: "xl" as const,
+    name: "text-2xl",
+    numeral: "text-6xl",
   },
 } as const;
 
-const PodiumSideCard = ({
+const PodiumCard = ({
   debater,
   place,
   topScore,
   metric,
+  showTier,
 }: {
   debater: BoardRow;
-  place: 2 | 3;
+  place: 1 | 2 | 3;
   topScore: number;
   metric: string;
+  showTier: boolean;
 }) => {
-  const style = SIDE_CARD[place];
+  const p = PLACES[place];
   const share = topScore > 0 ? (debater.score / topScore) * 100 : 0;
   // The season board carries no career counts, so the stat feet only appear
   // on a board that actually has them to show.
   const hasCounts = debater.motionCount !== undefined;
+  const champion = place === 1;
+
   return (
     <Link
       href={`/profile/${debater.username}`}
       data-reveal
-      className={`md:col-span-3 ${style.order}`}
+      className={`${p.span} ${p.order}`}
     >
       <div
-        className={`bg-surface-container-low p-8 ${style.border} relative h-[380px] flex flex-col justify-end hover:bg-surface-container transition-colors`}
+        className={`relative flex h-full ${p.height} flex-col justify-end border border-ink-faint border-t-2 ${p.metalBorder} bg-band p-8 transition-colors hover:bg-raised ${champion ? "md:p-10" : ""}`}
       >
-        <div
-          className={`absolute ${style.watermark} font-label text-6xl opacity-10 font-bold italic`}
+        <span
+          aria-hidden
+          className={`absolute right-6 top-5 display-type ${p.numeral} ${p.metal} opacity-15`}
         >
           {String(place).padStart(2, "0")}
+        </span>
+
+        <div
+          className={`relative mb-7 ${champion ? "mx-auto" : ""} w-fit`}
+        >
+          <Avatar
+            username={debater.username}
+            src={debater.avatar}
+            size={p.avatar}
+            className="plate-arch"
+          />
+          <span
+            className={`absolute -bottom-2 -right-2 ${p.metalBg} p-1 text-paper`}
+          >
+            <p.Icon className="text-sm" aria-hidden="true" />
+          </span>
         </div>
-        <div className="relative w-20 h-20 mb-6">
-          <Avatar username={debater.username} src={debater.avatar} size="xl" />
-          <div className={`absolute -bottom-2 -right-2 ${style.badge} p-1`}>
-            <style.Icon className="text-sm" />
-          </div>
+
+        <div className={champion ? "text-center" : ""}>
+          <h2 className={`font-headline ${p.name} leading-tight text-ink`}>
+            {debater.name}
+          </h2>
+          <p
+            className={`mt-2 font-label text-[0.6rem] uppercase tracking-[0.24em] ${p.metal}`}
+          >
+            {showTier
+              ? `${convertLogicScore(debater.score).reputation} tier`
+              : `${debater.score.toLocaleString("en-US")} logic this season`}
+          </p>
         </div>
-        <h3 className="font-headline text-2xl italic mb-1 text-on-background">
-          {debater.name}
-        </h3>
-        <div className="flex flex-col gap-1 mb-6">
-          <div className="flex justify-between items-baseline">
-            <span
-              className={`font-label text-[10px] uppercase ${style.accent} tracking-widest`}
-            >
+
+        <div className="mt-6">
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="font-label text-[0.58rem] uppercase tracking-[0.22em] text-ink-soft">
               {metric}
             </span>
-            <span className="font-label text-xs font-bold text-on-background">
+            <span className="font-label text-xs tabular-nums text-ink">
               {debater.score.toLocaleString("en-US")}
             </span>
           </div>
-          <div className="w-full h-1 bg-surface-container-highest">
+          <div className="mt-2 h-1 w-full bg-ink-wash">
             <div
-              className={`h-full ${style.bar}`}
+              className={`h-full ${p.metalBg}`}
               style={{ width: `${share}%` }}
-            ></div>
+            />
           </div>
         </div>
+
         {hasCounts && (
-          <div className="flex justify-between items-end">
+          <dl className="mt-6 flex justify-between gap-4 border-t border-ink-faint pt-5">
             <div>
-              <span className="block font-label text-[10px] text-outline uppercase">
+              <dt className="font-label text-[0.58rem] uppercase tracking-[0.2em] text-ink-soft">
                 Motions
-              </span>
-              <span className="font-label text-2xl font-bold text-on-background">
+              </dt>
+              <dd className="display-type text-2xl tabular-nums text-ink">
                 {debater.motionCount}
-              </span>
+              </dd>
             </div>
             <div className="text-right">
-              <span className="block font-label text-[10px] text-outline uppercase">
+              <dt className="font-label text-[0.58rem] uppercase tracking-[0.2em] text-ink-soft">
                 Arguments
-              </span>
-              <span className="font-label text-xl font-bold text-on-background">
+              </dt>
+              <dd className="display-type text-2xl tabular-nums text-ink">
                 {debater.argumentCount}
-              </span>
+              </dd>
             </div>
-          </div>
+          </dl>
         )}
       </div>
     </Link>
@@ -121,90 +172,23 @@ const Podium = ({
   showTier: boolean;
 }) => {
   const topScore = top[0]?.score ?? 0;
-  const champion = top[0];
-  const hasCounts = champion.motionCount !== undefined;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-0 mb-16 items-end">
-      <PodiumSideCard
-        debater={top[1]}
-        place={2}
-        topScore={topScore}
-        metric={metric}
-      />
-
-      <Link
-        href={`/profile/${champion.username}`}
-        data-reveal
-        className="md:col-span-6 order-1 md:order-2 z-10"
-      >
-        <div className="bg-surface-container-high p-12 border-t-4 border-primary shadow-2xl relative h-[460px] flex flex-col justify-end hover:bg-surface-container-highest transition-colors">
-          <div className="absolute -top-12 left-1/2 -translate-x-1/2 text-primary">
-            <LuCrown className="text-6xl" aria-hidden="true" />
-          </div>
-          <div className="absolute top-8 left-8 font-label text-8xl opacity-10 font-bold italic text-primary">
-            01
-          </div>
-          <div className="relative w-32 h-32 mx-auto mb-8">
-            <div className="absolute inset-0 bg-primary/20 scale-110"></div>
-            <Avatar
-              username={champion.username}
-              src={champion.avatar}
-              size="2xl"
-              className="relative z-10"
-            />
-          </div>
-          <div className="text-center">
-            <h2 className="font-headline text-4xl italic mb-2 text-on-background">
-              {champion.name}
-            </h2>
-            <span className="font-label text-xs uppercase text-primary tracking-[0.3em] block">
-              {showTier
-                ? `${convertLogicScore(champion.score).reputation} tier`
-                : `${champion.score.toLocaleString("en-US")} logic this season`}
-            </span>
-            <div
-              className={`grid ${hasCounts ? "grid-cols-3" : "grid-cols-1"} gap-4 text-center mt-8 border-t border-outline-variant/30 pt-8`}
-            >
-              <div>
-                <span className="block font-label text-[10px] text-outline uppercase mb-1">
-                  {metric}
-                </span>
-                <span className="font-label text-3xl font-bold text-primary">
-                  {champion.score.toLocaleString("en-US")}
-                </span>
-              </div>
-              {hasCounts && (
-                <>
-                  <div>
-                    <span className="block font-label text-[10px] text-outline uppercase mb-1">
-                      Motions
-                    </span>
-                    <span className="font-label text-3xl font-bold text-on-background">
-                      {champion.motionCount}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="block font-label text-[10px] text-outline uppercase mb-1">
-                      Arguments
-                    </span>
-                    <span className="font-label text-3xl font-bold text-on-background">
-                      {champion.argumentCount}
-                    </span>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </Link>
-
-      <PodiumSideCard
-        debater={top[2]}
-        place={3}
-        topScore={topScore}
-        metric={metric}
-      />
+    <div className="mb-16 grid grid-cols-1 items-end gap-6 md:grid-cols-12 md:gap-0">
+      {([2, 1, 3] as const).map((place) => {
+        const debater = top[place - 1];
+        if (!debater) return null;
+        return (
+          <PodiumCard
+            key={place}
+            debater={debater}
+            place={place}
+            topScore={topScore}
+            metric={metric}
+            showTier={showTier}
+          />
+        );
+      })}
     </div>
   );
 };

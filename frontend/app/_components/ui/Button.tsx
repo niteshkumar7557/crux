@@ -1,26 +1,45 @@
 import Link from "next/link";
 import { ButtonHTMLAttributes, ReactNode } from "react";
 
-type Variant = "solid" | "outline" | "outline-secondary" | "outline-neutral";
+// Pills are one of the system's two non-square shapes (design-system.md §5);
+// the other is the arch. Everything else in the app has square corners, which
+// is what makes a pill read as "this is a control" without needing a fill.
+//
+// Hover lifts rather than scales. The old `active:scale-95` was borrowed from
+// the material era and fights the flat-paper surfaces — nothing here has the
+// depth to justify being pressed into the page.
+
+type Variant =
+  | "solid"
+  | "outline"
+  | "for"
+  | "against"
+  // Kept so the two camp-flavoured call sites keep working while pass 2 walks
+  // the pages; `outline-secondary` always meant AGAINST, `outline-neutral`
+  // always meant "quiet outline".
+  | "outline-secondary"
+  | "outline-neutral";
+
 type Size = "sm" | "md" | "lg" | "bare";
 
 const BASE =
-  "inline-flex items-center justify-center gap-2 font-label uppercase tracking-widest font-bold whitespace-nowrap cursor-pointer transition-all duration-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100";
+  "inline-flex items-center justify-center gap-2 rounded-full font-label uppercase tracking-[0.22em] font-medium whitespace-nowrap cursor-pointer transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0";
 
 const VARIANTS: Record<Variant, string> = {
-  solid: "bg-primary text-on-primary hover:bg-primary-container",
-  outline: "border border-primary text-primary hover:bg-primary/10",
+  solid: "bg-ink text-paper hover:opacity-90",
+  outline: "border border-ink-faint text-ink hover:bg-ink-wash",
+  for: "border border-side-for/50 text-side-for hover:bg-side-for/10",
+  against: "border border-side-against/50 text-side-against hover:bg-side-against/10",
   "outline-secondary":
-    "border border-secondary text-secondary hover:bg-secondary/10",
-  "outline-neutral":
-    "border border-outline text-on-surface hover:bg-on-surface hover:text-background",
+    "border border-side-against/50 text-side-against hover:bg-side-against/10",
+  "outline-neutral": "border border-ink-faint text-ink-soft hover:bg-ink-wash",
 };
 
 // One padding/type scale for every CTA; "bare" leaves sizing to the caller
 // (e.g. responsive paddings).
 const SIZES: Record<Size, string> = {
-  sm: "px-4 py-2 text-xs",
-  md: "px-6 py-3 text-xs",
+  sm: "px-5 py-2.5 text-[0.65rem]",
+  md: "px-7 py-3 text-xs",
   lg: "px-10 py-4 text-sm",
   bare: "",
 };

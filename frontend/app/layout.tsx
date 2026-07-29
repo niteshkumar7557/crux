@@ -1,17 +1,24 @@
 import type { Metadata } from "next";
-import { Manrope, Newsreader, Space_Grotesk } from "next/font/google";
+import { Anton, Newsreader, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import ConditionalLayout from "./_components/ConditionalLayout";
 
+// Three faces, no more (design-system.md §3): Anton displays, Newsreader reads,
+// Space Grotesk labels. To try a different display face, swap this import
+// (e.g. Oswald, League_Gothic, Archivo_Black) and keep the variable name —
+// globals.css routes --font-display through --font-anton.
+const anton = Anton({
+  variable: "--font-anton",
+  subsets: ["latin"],
+  weight: "400",
+});
+
+// Body and headline both. Manrope used to carry body copy; the design system
+// sets the product in the same serif as the landing, so it retired.
 const newsreader = Newsreader({
   variable: "--font-newsreader",
   subsets: ["latin"],
   style: ["normal", "italic"],
-});
-
-const manrope = Manrope({
-  variable: "--font-manrope",
-  subsets: ["latin"],
 });
 
 const spaceGrotesk = Space_Grotesk({
@@ -39,11 +46,24 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${newsreader.variable} ${manrope.variable} ${spaceGrotesk.variable} h-full antialiased`}
+      className={`${anton.variable} ${newsreader.variable} ${spaceGrotesk.variable} h-full antialiased`}
+      // globals.css opts into smooth scrolling; this tells Next the anchor
+      // behaviour is deliberate so it stops warning on route transitions.
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
     >
+      <head>
+        {/* Theme lands on <html> before first paint so no page flashes the
+            wrong mode. Every surface reads it now, not just the landing. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem("crux-theme");if(t!=="light"&&t!=="dark")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=t}catch(e){}`,
+          }}
+        />
+      </head>
       {/* Column so the footer can be pushed to the viewport bottom on a short
           page (a new debate with no arguments) instead of floating mid-screen. */}
-      <body className="min-h-full flex flex-col bg-background font-body text-on-background">
+      <body className="min-h-full flex flex-col bg-paper font-body text-ink">
         <ConditionalLayout>{children}</ConditionalLayout>
       </body>
     </html>

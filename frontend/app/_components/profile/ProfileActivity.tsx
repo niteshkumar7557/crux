@@ -69,7 +69,7 @@ const ProfileActivity = ({
 
   if (failed) {
     return (
-      <p className="font-label text-[10px] uppercase tracking-widest text-outline py-12">
+      <p className="font-label text-[10px] uppercase tracking-widest text-ink-soft py-12">
         Couldn&apos;t load this profile&apos;s activity. Refresh to try again.
       </p>
     );

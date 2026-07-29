@@ -25,10 +25,10 @@ const ProfileHeader = ({
     <section className="mb-12">
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-6">
         <div className="flex items-center gap-3">
-          <span className="bg-primary-container text-on-primary-container px-3 py-0.5 font-label text-[10px] font-bold tracking-[0.2em] uppercase">
+          <span className="bg-ink text-paper px-3 py-0.5 font-label text-[10px] font-bold tracking-[0.2em] uppercase">
             {standing.tier}
           </span>
-          <span className="font-label text-[10px] tracking-widest uppercase text-outline">
+          <span className="font-label text-[10px] tracking-widest uppercase text-ink-soft">
             @{identity.username}
           </span>
         </div>
@@ -43,14 +43,18 @@ const ProfileHeader = ({
             avatar={identity.avatar}
           />
         </div>
-        <h1 className="font-headline text-5xl md:text-8xl font-bold tracking-tighter text-on-background leading-none break-words min-w-0">
+        {/* The one place the product borrows the landing's arch: a person is
+            the only thing here that gets a portrait, and the arch is the
+            system's signature shape (design-system.md §5). No engraving — the
+            product carries none — just the geometry. */}
+        <h1 className="display-type min-w-0 break-words text-[clamp(2.6rem,7vw,5.5rem)] text-ink">
           {identity.name}
         </h1>
       </div>
 
       <SeasonTitles titles={titles} />
 
-      <p className="font-body text-on-surface-variant mt-6 max-w-xl text-lg leading-relaxed">
+      <p className="font-body text-ink-soft mt-6 max-w-xl text-lg leading-relaxed">
         {identity.bio}
       </p>
     </section>

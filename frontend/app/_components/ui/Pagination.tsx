@@ -28,9 +28,9 @@ function pageWindow(page: number, totalPages: number): (number | null)[] {
 const CELL =
   "min-w-9 h-9 px-2 inline-flex items-center justify-center font-label text-xs uppercase tracking-widest";
 const IDLE =
-  "border border-outline-variant bg-surface-container text-on-surface-variant hover:border-primary hover:text-primary transition-colors";
-const ACTIVE = "border border-primary text-primary bg-primary/5";
-const DISABLED = "border border-outline-variant/40 text-outline-variant";
+  "border border-ink-faint text-ink-soft hover:border-ink hover:text-ink transition-colors";
+const ACTIVE = "border border-ink bg-ink-wash text-ink";
+const DISABLED = "border border-ink-faint text-ink-soft/40";
 
 const Pagination = ({
   page,
@@ -42,8 +42,8 @@ const Pagination = ({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="mt-12 border-t border-outline-variant/50 pt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <p className="font-label text-[10px] uppercase tracking-widest text-outline">
+    <div className="mt-12 border-t border-ink-faint pt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <p className="font-label text-[10px] uppercase tracking-widest text-ink-soft">
         Page {pad(page)} / {pad(totalPages)} · {totalItems} {itemLabel}
       </p>
       <nav aria-label="Pagination" className="flex items-center gap-2">
@@ -60,7 +60,7 @@ const Pagination = ({
         )}
         {pageWindow(page, totalPages).map((p, i) =>
           p === null ? (
-            <span key={`gap-${i}`} className={`${CELL} text-outline-variant`}>
+            <span key={`gap-${i}`} className={`${CELL} text-ink-faint`}>
               …
             </span>
           ) : p === page ? (

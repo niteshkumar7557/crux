@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/app/axios";
 import Button from "@/app/_components/ui/Button";
+import { LogoMark } from "@/app/_components/ui/Logo";
 import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
 
 const Login = () => {
@@ -54,7 +55,7 @@ const Login = () => {
       localStorage.setItem("access_token", response.data.accessToken);
       const next = new URLSearchParams(window.location.search).get("next");
       const dest =
-        next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\") ? next : "/";
+        next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\") ? next : "/arena";
       setTimeout(() => {
         router.push(dest);
       }, 1000);
@@ -74,42 +75,42 @@ const Login = () => {
     }
   }
 
+  // `overflow-hidden` used to clip a radial glow that no longer exists, and with
+  // a centred column it silently clipped the masthead instead once the mark made
+  // the content taller than a short viewport. Padding plus normal overflow lets
+  // the page scroll rather than lose its top.
   return (
     <main
       ref={rootRef}
-      className="bg-background text-on-surface font-body selection:bg-primary/30 min-h-screen flex flex-col items-center justify-center relative overflow-hidden"
+      className="bg-paper text-ink font-body selection:bg-ink/30 min-h-screen flex flex-col items-center justify-center relative py-16"
     >
-      {/* <!-- Background Technical Layer --> */}
-      <div className="absolute inset-0 technical-grid z-0"></div>
-      <div className="absolute inset-0 bg-radial-at-c from-primary/5 via-transparent to-transparent z-0"></div>
 
       {/* <!-- Login Container --> */}
       <div className="relative z-10 w-full max-w-md px-6">
-        {/* <!-- Brand Header (Simplified for Login) --> */}
-        <div data-auth-brand className="text-center mb-12">
-          <h1
-            className="text-4xl font-headline italic tracking-tighter text-primary"
-          >
-            CRUX
+        {/* The mark carries the masthead here, stacked over the wordmark —
+            this is the one screen with room for it and no navigation to
+            compete with. */}
+        <div data-auth-brand className="mb-12 flex flex-col items-center gap-3">
+          <LogoMark size={54} className="text-ink" />
+          <h1 className="font-headline text-4xl italic tracking-tighter leading-none text-ink">
+            Crux
           </h1>
-          <div className="mt-2 inline-block">
-            <span className="font-label text-[10px] uppercase tracking-[0.3em] text-outline">
-              Digital Intellectual Arena
-            </span>
-          </div>
+          <span className="font-label text-[0.6rem] uppercase tracking-[0.3em] text-ink-soft">
+            Digital Intellectual Arena
+          </span>
         </div>
         {/* <!-- Login Card --> */}
         <div
           data-auth-card
-          className="bg-surface-container-low border-l-2 border-primary p-8 md:p-10 shadow-2xl relative"
+          className="relative border border-ink-faint bg-band p-8 md:p-10"
         >
           <header className="mb-8">
             <h2
-              className="text-3xl font-headline italic text-on-surface leading-tight"
+              className="display-type text-[clamp(1.7rem,3.4vw,2.4rem)] text-ink"
             >
               Login to the Arena
             </h2>
-            <p className="text-on-surface-variant text-sm mt-2">
+            <p className="text-ink-soft text-sm mt-2">
               Welcome back. Log in to rejoin the debate.
             </p>
           </header>
@@ -117,15 +118,15 @@ const Login = () => {
             {/* <!-- Email Field --> */}
             <div className="space-y-2">
               <label
-                className="block font-label text-[10px] uppercase tracking-widest text-outline"
+                className="block font-label text-[10px] uppercase tracking-widest text-ink-soft"
                 htmlFor="email"
               >
                 Email
               </label>
               <div className="relative group">
-                <LuMail className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
+                <LuMail className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft group-focus-within:text-ink transition-colors text-lg" />
                 <input
-                  className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-outline transition-all font-body text-sm"
+                  className="w-full border border-ink-faint bg-paper py-3 pl-11 pr-4 font-body text-sm text-ink transition-colors placeholder:text-ink-soft focus:border-ink focus:outline-none"
                   id="email"
                   placeholder="you@example.com"
                   required={true}
@@ -140,16 +141,16 @@ const Login = () => {
             <div className="space-y-2">
               <div className="flex justify-between items-end">
                 <label
-                  className="block font-label text-[10px] uppercase tracking-widest text-outline"
+                  className="block font-label text-[10px] uppercase tracking-widest text-ink-soft"
                   htmlFor="password"
                 >
                   Password
                 </label>
               </div>
               <div className="relative group">
-                <LuLockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-lg" />
+                <LuLockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft group-focus-within:text-ink transition-colors text-lg" />
                 <input
-                  className="w-full bg-surface-container-highest border-none text-on-surface py-3 pl-11 pr-4 focus:ring-1 focus:ring-primary placeholder:text-outline transition-all font-body text-sm"
+                  className="w-full border border-ink-faint bg-paper py-3 pl-11 pr-4 font-body text-sm text-ink transition-colors placeholder:text-ink-soft focus:border-ink focus:outline-none"
                   id="password"
                   placeholder="••••••••••••"
                   required={true}
@@ -160,11 +161,11 @@ const Login = () => {
                 />
               </div>
               <div className="flex justify-between">
-                <p className="font-label text-[10px] uppercase tracking-widest text-secondary cursor-default">
+                <p className="font-label text-[10px] uppercase tracking-widest text-side-against cursor-default">
                   {error}
                 </p>
                 <a
-                  className="font-label text-[10px] uppercase tracking-widest text-primary hover:underline decoration-primary transition-all"
+                  className="font-label text-[10px] uppercase tracking-widest text-ink hover:underline transition-all"
                   href="#"
                 >
                   Forgot Password?
@@ -180,11 +181,11 @@ const Login = () => {
             </div>
           </form>
           {/* <!-- Secondary Actions --> */}
-          <div className="mt-8 pt-8 border-t border-outline-variant/10 text-center">
-            <p className="font-body text-sm text-on-surface-variant">
+          <div className="mt-8 pt-8 border-t border-ink-faint text-center">
+            <p className="font-body text-sm text-ink-soft">
               New to Crux?
               <Link
-                className="font-label text-[10px] uppercase tracking-widest text-primary hover:underline decoration-primary ml-2 transition-all"
+                className="font-label text-[10px] uppercase tracking-widest text-ink hover:underline ml-2 transition-all"
                 href={"/register"}
               >
                 Create an account
@@ -192,34 +193,32 @@ const Login = () => {
             </p>
           </div>
         </div>
-        {/* <!-- Visual Decorative Element --> */}
-        <div data-auth-deco className="mt-6 flex justify-between items-center px-2">
-          <div className="flex gap-1">
-            <div className="w-1.5 h-1.5 bg-primary/40"></div>
-            <div className="w-1.5 h-1.5 bg-primary/20"></div>
-            <div className="w-1.5 h-1.5 bg-primary/10"></div>
-          </div>
-          <div className="h-px grow mx-4 bg-linear-to-r from-primary/20 via-primary/5 to-transparent"></div>
-          <span className="font-label text-[9px] text-outline uppercase tracking-widest">
-            System_Ready
+        {/* A rule under the card, the way the landing closes a section. The
+            "System_Ready" telemetry strip that used to sit here belonged to the
+            old machine-room look and says nothing to someone logging in. */}
+        <div data-auth-deco className="mt-8 flex items-center gap-4 px-2">
+          <span aria-hidden className="h-px grow bg-ink-faint" />
+          <span className="font-label text-[0.58rem] uppercase tracking-[0.3em] text-ink-soft">
+            Est. 2026
           </span>
+          <span aria-hidden className="h-px grow bg-ink-faint" />
         </div>
       </div>
 
       {/* <!-- Global Footer (Suppressed for transactional focus per mandate, but keeping branding) --> */}
-      <div className="absolute bottom-0 w-full p-8 flex flex-col md:flex-row justify-between items-center gap-4 border-t border-outline-variant/5">
-        <span className="font-label text-[10px] uppercase tracking-[0.2em] text-outline">
+      <div className="absolute bottom-0 w-full p-8 flex flex-col md:flex-row justify-between items-center gap-4 border-t border-ink-faint">
+        <span className="font-label text-[10px] uppercase tracking-[0.2em] text-ink-soft">
           © 2026 CRUX DIGITAL ARENA. ALL RIGHTS RESERVED.
         </span>
         <div className="flex gap-8">
           <a
-            className="font-label text-[10px] uppercase tracking-widest text-outline hover:text-primary transition-colors"
+            className="font-label text-[10px] uppercase tracking-widest text-ink-soft hover:text-ink transition-colors"
             href="#"
           >
             TERMS
           </a>
           <a
-            className="font-label text-[10px] uppercase tracking-widest text-outline hover:text-primary transition-colors"
+            className="font-label text-[10px] uppercase tracking-widest text-ink-soft hover:text-ink transition-colors"
             href="#"
           >
             CONTACT

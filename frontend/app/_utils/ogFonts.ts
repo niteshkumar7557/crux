@@ -14,7 +14,14 @@ const FONT_DIR = join(process.cwd(), "app", "_fonts");
 
 export const MONO = "Grotesk";
 export const SERIF = "Newsreader";
-export const BODY = "Manrope";
+// The design system names three faces and Manrope is not one of them any more
+// (design-system.md §3). Its natural replacement for body copy is Newsreader,
+// but only the italic cut is on disk here and prose set entirely in italic is
+// a worse card than prose set in the label face. So generated images set body
+// copy in Space Grotesk — which the card is already mostly set in — and BODY
+// stays a separate name so a Newsreader-Regular file can claim it later
+// without touching a single call site.
+export const BODY = MONO;
 
 /** woff2 files start with the ASCII tag `wOF2`. */
 function isWoff2(data: Buffer): boolean {
@@ -45,14 +52,6 @@ const FAMILIES: Family[] = [
   },
   { name: MONO, weight: 400, style: "normal", files: ["SpaceGrotesk-Regular.woff"] },
   { name: MONO, weight: 700, style: "normal", files: ["SpaceGrotesk-Bold.woff"] },
-  {
-    name: BODY,
-    weight: 400,
-    style: "normal",
-    // The site's body face. woff2 is listed last so that if it is the only
-    // container present the skip gets reported instead of silently degrading.
-    files: ["Manrope-Regular.ttf", "Manrope-Regular.woff", "Manrope-Regular.woff2"],
-  },
 ];
 
 async function loadFamily(family: Family): Promise<OgFont | null> {
@@ -80,16 +79,11 @@ async function loadFamily(family: Family): Promise<OgFont | null> {
 }
 
 export async function loadOgFonts(): Promise<OgFont[]> {
-  const fonts = (await Promise.all(FAMILIES.map(loadFamily))).filter(
+  // BODY currently resolves to MONO, so the Grotesk family below already
+  // satisfies it. The alias step that used to graft Grotesk onto a missing
+  // Manrope went with Manrope itself; if BODY is ever pointed at its own file,
+  // that fallback should come back with it.
+  return (await Promise.all(FAMILIES.map(loadFamily))).filter(
     (f): f is OgFont => f !== null,
   );
-
-  // Body copy asks for Manrope by name; if no usable file existed, satori would
-  // fall through to its own default rather than the brand mono. Alias the name
-  // onto Grotesk so the image still reads as Crux.
-  if (!fonts.some((f) => f.name === BODY)) {
-    const grotesk = fonts.find((f) => f.name === MONO && f.weight === 400);
-    if (grotesk) fonts.push({ ...grotesk, name: BODY });
-  }
-  return fonts;
 }

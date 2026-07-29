@@ -1,5 +1,5 @@
 "use client";
-import { ReactNode, useRef } from "react";
+import { ReactNode } from "react";
 import Link from "next/link";
 import Avatar from "@/app/_components/ui/Avatar";
 import ScoreBar from "./ScoreBar";
@@ -37,7 +37,6 @@ const ArenaSecondaryCard = ({
   winner,
   className = "",
 }: ArenaCardComponentProps) => {
-  const cardRef = useRef<HTMLDivElement>(null);
   // A settled card must not read like a live one. Where a live card counts
   // down, a concluded card names its ruling — otherwise the archive is a wall
   // of debates that all look like they are still running.
@@ -45,62 +44,63 @@ const ArenaSecondaryCard = ({
   const ruling = concluded ? settledSide(winner) : null;
 
   return (
-    <div
-      ref={cardRef}
+    <article
       data-reveal
-      className={`bg-surface-container-low cursor-pointer mt-5 p-6 border-l-2 transition-all border-outline-variant/30 hover:border-primary ${className}`}
+      className={`mt-5 border border-ink-faint transition-colors hover:bg-band ${className}`}
     >
       <Link
-        className="flex flex-col justify-between h-full"
+        className="flex h-full flex-col justify-between p-6"
         href={`/motion/CRX-${motionid}-A`}
       >
         <div>
-          <div className="flex justify-between">
-            <div className="flex items-center gap-2 mb-4">
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2">
               <Avatar username={username} src={avatar} size="sm" />
-              <span className="font-body text-[10px] font-bold text-outline uppercase tracking-wider">
+              <span className="font-label text-[0.6rem] uppercase tracking-[0.2em] text-ink-soft">
                 {username}
               </span>
             </div>
             {ruling ? (
               <span
-                className={`self-start font-label text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border ${ruling.chip}`}
+                className={`shrink-0 border px-2 py-0.5 font-label text-[0.6rem] uppercase tracking-[0.2em] ${ruling.chip}`}
               >
                 {ruling.label}
               </span>
             ) : (
               closesAt && (
-                <span className="self-start">
+                <span className="shrink-0">
                   <Countdown closesAt={closesAt} />
                 </span>
               )
             )}
           </div>
-          <span className="font-label text-[10px] text-tertiary uppercase tracking-widest mb-3 block">
+          <span className="mb-3 block font-label text-[0.6rem] uppercase tracking-[0.28em] text-ink-soft">
             {domain}
           </span>
-          <h3 className="font-headline text-xl mb-4">&ldquo;{title}&rdquo;</h3>
+          <h3 className="mb-5 font-headline text-xl leading-snug text-ink">
+            &ldquo;{title}&rdquo;
+          </h3>
         </div>
 
         <div>
-          <ScoreBar affirmative={affirmativescore} negative={negativescore} />
-          <div className="flex justify-between items-center font-label text-[10px] text-outline uppercase tracking-widest">
+          <ScoreBar
+            affirmative={affirmativescore}
+            negative={negativescore}
+            status={status}
+          />
+          <div className="flex items-center justify-between gap-3 font-label text-[0.6rem] uppercase tracking-[0.2em] text-ink-soft">
             <span>{footerLeft}</span>
-            <span className="flex items-center gap-3">
-              {affirmativescore > negativescore ? (
-                <span className="text-primary-container">
-                  {affirmativescore}% Favor
-                </span>
-              ) : (
-                <span className="text-secondary-container">
-                  {negativescore}% Against
-                </span>
-              )}
-            </span>
+            {affirmativescore > negativescore ? (
+              <span className="text-side-for">{affirmativescore}% Favor</span>
+            ) : (
+              <span className="text-side-against">
+                {negativescore}% Against
+              </span>
+            )}
           </div>
         </div>
       </Link>
-    </div>
+    </article>
   );
 };
 

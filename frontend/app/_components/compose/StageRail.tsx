@@ -1,9 +1,11 @@
 import { Stage } from "@/app/motion/new/types";
 
-const STAGES: { id: Stage; label: string }[] = [
-  { id: "compose", label: "01 Compose" },
-  { id: "arbiter", label: "02 Arbiter" },
-  { id: "broadcast", label: "03 Broadcast" },
+// Roman numerals, the same way the landing numbers its Order of Proceedings —
+// posting a motion is the first proceeding, so it counts itself the same way.
+const STAGES: { id: Stage; numeral: string; label: string }[] = [
+  { id: "compose", numeral: "I", label: "Compose" },
+  { id: "arbiter", numeral: "II", label: "Arbiter" },
+  { id: "broadcast", numeral: "III", label: "Broadcast" },
 ];
 
 // Slim progress rail across the top of the form card. Purely derived from
@@ -18,21 +20,23 @@ const StageRail = ({ stage }: { stage: Stage }) => {
         return (
           <div key={s.id} className="flex items-center gap-3 grow last:grow-0">
             <span
-              className={`flex items-center gap-2 font-label text-[10px] uppercase tracking-widest whitespace-nowrap transition-colors ${
-                reached ? "text-primary" : "text-outline"
+              className={`flex items-center gap-2 font-label text-[0.62rem] uppercase tracking-[0.24em] whitespace-nowrap transition-colors ${
+                reached ? "text-ink" : "text-ink-soft"
               }`}
             >
               <span
-                className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                  reached ? "bg-primary" : "bg-outline-variant"
+                className={`font-headline text-sm not-italic tabular-nums transition-colors ${
+                  reached ? "text-ink" : "text-ink-faint"
                 }`}
-              ></span>
+              >
+                {s.numeral}
+              </span>
               {s.label}
             </span>
             {i < STAGES.length - 1 && (
               <span
                 className={`h-px grow transition-colors ${
-                  i < activeIdx ? "bg-primary/50" : "bg-outline-variant/50"
+                  i < activeIdx ? "bg-ink/50" : "bg-ink-faint"
                 }`}
               ></span>
             )}

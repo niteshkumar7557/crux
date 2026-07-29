@@ -19,7 +19,7 @@ const OwnerRail = ({ profileId, bio }: { profileId: number; bio: string }) => {
         <button
           onClick={() => setEditing((v) => !v)}
           aria-expanded={editing}
-          className="flex items-center gap-2 border border-outline-variant/40 px-3 py-1.5 font-label text-[10px] uppercase tracking-widest text-outline hover:text-primary hover:border-primary/60 transition-colors cursor-pointer"
+          className="flex items-center gap-2 border border-ink-faint px-3 py-1.5 font-label text-[10px] uppercase tracking-widest text-ink-soft hover:text-ink hover:border-ink/60 transition-colors cursor-pointer"
         >
           <LuPencil aria-hidden="true" /> Edit Bio
         </button>

@@ -13,68 +13,22 @@ import { BODY, MONO, SERIF } from "@/app/_utils/ogFonts";
 // stays 1200×630 for scrapers; this one is for a person to keep and post.
 export const CERT_SIZE = { width: 1200, height: 1500 };
 
-// globals.css `.perspective-grid` — a 40px cyan lattice at 5%. satori will not
-// tile a repeating gradient, so the lattice is drawn as hairlines.
-const GRID_STEP = 40;
-const GRID_LINE = "rgba(164, 230, 255, 0.05)";
+// The cyan lattice that used to sit behind this is gone with the rest of the
+// old palette — design-system.md §5 is flat surfaces, and the rule frame below
+// is what makes the card read as a document anyway.
 const PAD = 64;
 
 const SIDES = {
-  for: { label: "The Case For", accent: TOKENS.cyan },
-  against: { label: "The Case Against", accent: TOKENS.red },
+  for: { label: "The Case For", accent: TOKENS.forSide },
+  against: { label: "The Case Against", accent: TOKENS.againstSide },
 } as const;
-
-/** The site's faint technical lattice, as explicit hairlines. */
-function Grid() {
-  const columns = Math.ceil(CERT_SIZE.width / GRID_STEP);
-  const rows = Math.ceil(CERT_SIZE.height / GRID_STEP);
-  return (
-    <div
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        width: CERT_SIZE.width,
-        height: CERT_SIZE.height,
-        display: "flex",
-      }}
-    >
-      {Array.from({ length: columns }, (_, i) => (
-        <div
-          key={`c${i}`}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: i * GRID_STEP,
-            width: 1,
-            height: CERT_SIZE.height,
-            backgroundColor: GRID_LINE,
-          }}
-        />
-      ))}
-      {Array.from({ length: rows }, (_, i) => (
-        <div
-          key={`r${i}`}
-          style={{
-            position: "absolute",
-            left: 0,
-            top: i * GRID_STEP,
-            width: CERT_SIZE.width,
-            height: 1,
-            backgroundColor: GRID_LINE,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
 
 const Rule = ({ margin = 0 }: { margin?: number }) => (
   <div
     style={{
       height: 1,
       width: "100%",
-      backgroundColor: `${TOKENS.outline}33`,
+      backgroundColor: `${TOKENS.muted}33`,
       marginTop: margin,
       marginBottom: margin,
     }}
@@ -84,7 +38,7 @@ const Rule = ({ margin = 0 }: { margin?: number }) => (
 /** The site's section vocabulary: uppercase, widely tracked, in the mono. */
 const SectionLabel = ({
   children,
-  color = TOKENS.outline,
+  color = TOKENS.muted,
 }: {
   children: string;
   color?: string;
@@ -139,7 +93,7 @@ const AnalysisColumn = ({
             fontStyle: "italic",
             fontSize: 27,
             lineHeight: 1.38,
-            color: TOKENS.onSurfaceVariant,
+            color: TOKENS.muted,
           }}
         >
           {analysis.lead}
@@ -155,7 +109,7 @@ const AnalysisColumn = ({
                 fontFamily: BODY,
                 fontSize: 21,
                 lineHeight: 1.45,
-                color: TOKENS.onSurface,
+                color: TOKENS.ink,
               }}
             >
               {point}
@@ -177,12 +131,11 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
         height: "100%",
         display: "flex",
         position: "relative",
-        backgroundColor: TOKENS.bg,
+        backgroundColor: TOKENS.paper,
         padding: 28,
         fontFamily: MONO,
       }}
     >
-      <Grid />
       {/* The rule frame — what makes it read as a document rather than a
           share image at the same dimensions. */}
       <div
@@ -190,7 +143,7 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          border: `1px solid ${TOKENS.outline}55`,
+          border: `1px solid ${TOKENS.muted}55`,
           padding: PAD,
         }}
       >
@@ -201,7 +154,7 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
             alignItems: "center",
             fontSize: 20,
             letterSpacing: 5,
-            color: TOKENS.outline,
+            color: TOKENS.muted,
           }}
         >
           <div>CRUX · CERTIFICATE OF VERDICT</div>
@@ -218,7 +171,7 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
               fontStyle: "italic",
               fontSize: 56,
               lineHeight: 1.28,
-              color: TOKENS.onSurface,
+              color: TOKENS.ink,
             }}
           >
             {`“${model.claim}”`}
@@ -251,7 +204,7 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
               {card.label}
             </div>
             {card.score && (
-              <div style={{ fontSize: 26, color: TOKENS.onSurfaceVariant }}>
+              <div style={{ fontSize: 26, color: TOKENS.muted }}>
                 {card.score}
               </div>
             )}
@@ -268,12 +221,12 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
               }}
             >
               <div
-                style={{ flex: card.split.for, backgroundColor: TOKENS.cyan }}
+                style={{ flex: card.split.for, backgroundColor: TOKENS.forSide }}
               />
               <div
                 style={{
                   flex: card.split.against,
-                  backgroundColor: TOKENS.red,
+                  backgroundColor: TOKENS.againstSide,
                 }}
               />
             </div>
@@ -286,7 +239,7 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
                 fontStyle: "italic",
                 fontSize: 32,
                 lineHeight: 1.45,
-                color: TOKENS.onSurfaceVariant,
+                color: TOKENS.muted,
                 marginTop: 30,
               }}
             >
@@ -321,11 +274,11 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
             marginTop: 22,
             fontSize: 19,
             letterSpacing: 2,
-            color: TOKENS.outline,
+            color: TOKENS.muted,
           }}
         >
           <div
-            style={{ color: card.mvpUsername ? TOKENS.amber : TOKENS.outline }}
+            style={{ color: card.mvpUsername ? TOKENS.laurel : TOKENS.muted }}
           >
             {model.footer}
           </div>

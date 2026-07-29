@@ -9,19 +9,19 @@ const TierLadder = ({ logic }: { logic: number }) => {
   return (
     <section aria-label="Tier progress" className="mb-12">
       <div className="flex items-baseline justify-between gap-4 mb-4">
-        <span className="font-label text-[10px] uppercase tracking-[0.25em] text-outline">
+        <span className="font-label text-[10px] uppercase tracking-[0.25em] text-ink-soft">
           Tier
         </span>
-        <span className="font-label text-[10px] uppercase tracking-widest text-primary">
+        <span className="font-label text-[10px] uppercase tracking-widest text-laurel">
           {p.nextTier
             ? `${p.toNext} logic to ${p.nextTier}`
             : `Top tier — ${logic.toLocaleString("en-US")} logic`}
         </span>
       </div>
 
-      <div className="relative h-px bg-surface-container-highest mb-4">
+      <div className="relative h-px bg-raised mb-4">
         <div
-          className="absolute inset-y-0 left-0 bg-primary"
+          className="absolute inset-y-0 left-0 bg-laurel"
           style={{
             width: `${((p.index + (p.nextTier ? p.pct : 0)) / (TIER_LADDER.length - 1)) * 100}%`,
           }}
@@ -33,17 +33,17 @@ const TierLadder = ({ logic }: { logic: number }) => {
           <li key={t.tier} className="flex flex-col items-start gap-2">
             <span
               className={`w-2 h-2 rounded-full ${
-                i <= p.index ? "bg-primary" : "bg-surface-container-highest"
+                i <= p.index ? "bg-laurel" : "bg-raised"
               }`}
             />
             <span
               className={`font-label text-[10px] uppercase tracking-widest ${
-                i === p.index ? "text-primary" : "text-outline"
+                i === p.index ? "text-laurel" : "text-ink-soft"
               }`}
             >
               {t.tier}
             </span>
-            <span className="font-label text-[10px] text-outline">{t.at}</span>
+            <span className="font-label text-[10px] text-ink-soft">{t.at}</span>
           </li>
         ))}
       </ol>

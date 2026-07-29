@@ -86,8 +86,8 @@ const PinControl = ({
         }
         className={`${CHIP} ${pending} ${
           stage.pinned
-            ? "text-tertiary border-tertiary/40 hover:border-tertiary"
-            : "text-outline border-outline/30 hover:text-tertiary hover:border-tertiary/40"
+            ? "text-laurel border-laurel/40 hover:border-laurel"
+            : "text-ink-soft border-ink-faint hover:text-laurel hover:border-laurel/40"
         }`}
       >
         {stage.pinned ? "Pinned" : "Pin"}
@@ -105,8 +105,8 @@ const PinControl = ({
         }
         className={`${CHIP} ${pending} ${
           stage.isMotd
-            ? "text-tertiary border-tertiary/40"
-            : "text-outline border-outline/30 hover:text-tertiary hover:border-tertiary/40"
+            ? "text-laurel border-laurel/40"
+            : "text-ink-soft border-ink-faint hover:text-laurel hover:border-laurel/40"
         }`}
       >
         {stage.isMotd ? "Motion of the Day" : "Make MotD"}

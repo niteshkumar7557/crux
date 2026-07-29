@@ -11,7 +11,7 @@ interface DomainPickerProps {
 const DomainPicker = ({ domains, selected, onSelect, disabled }: DomainPickerProps) => {
   return (
     <div className="space-y-3">
-      <p className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
+      <p className="font-label text-[10px] uppercase tracking-widest text-ink-soft flex items-center gap-2">
         <LuListFilter className="text-sm" />
         SELECT YOUR BATTLEGROUND
       </p>
@@ -19,9 +19,9 @@ const DomainPicker = ({ domains, selected, onSelect, disabled }: DomainPickerPro
         <button
           className={`${
             selected === AUTO_DOMAIN
-              ? "border-tertiary text-tertiary bg-tertiary/5"
-              : "border-outline-variant bg-surface-container"
-          } cursor-pointer border px-4 py-2 font-label text-xs uppercase whitespace-nowrap hover:border-tertiary hover:text-tertiary transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2`}
+              ? "border-laurel bg-laurel/10 text-laurel"
+              : "border-ink-faint bg-band"
+          } flex cursor-pointer items-center gap-2 rounded-full border px-4 py-2 font-label text-[0.65rem] uppercase tracking-[0.16em] whitespace-nowrap transition-colors hover:border-laurel hover:text-laurel disabled:cursor-not-allowed disabled:opacity-40`}
           type="button"
           disabled={disabled}
           onClick={() => onSelect(AUTO_DOMAIN)}
@@ -34,9 +34,9 @@ const DomainPicker = ({ domains, selected, onSelect, disabled }: DomainPickerPro
             key={domainName}
             className={`${
               selected === domainName
-                ? "border-primary text-primary bg-primary/5"
-                : "border-outline-variant bg-surface-container"
-            } cursor-pointer border px-4 py-2 font-label text-xs uppercase whitespace-nowrap hover:border-primary hover:text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed`}
+                ? "border-ink bg-ink-wash text-ink"
+                : "border-ink-faint bg-band"
+            } cursor-pointer rounded-full border px-4 py-2 font-label text-[0.65rem] uppercase tracking-[0.16em] whitespace-nowrap transition-colors hover:border-ink hover:text-ink disabled:cursor-not-allowed disabled:opacity-40`}
             type="button"
             disabled={disabled}
             onClick={() => onSelect(domainName)}

@@ -173,7 +173,7 @@ const MotionArena = ({
   return (
     <div
       ref={arenaRef}
-      className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-outline-variant/20 overflow-x-clip"
+      className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-ink-faint overflow-x-clip"
     >
       <CaseColumn
         side="for"

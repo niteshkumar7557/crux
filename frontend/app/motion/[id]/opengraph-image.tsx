@@ -53,7 +53,7 @@ export default async function Image({
     display: "flex",
     flexDirection: "column" as const,
     justifyContent: "space-between" as const,
-    backgroundColor: TOKENS.bg,
+    backgroundColor: TOKENS.paper,
     padding: "64px",
     fontFamily: MONO,
   };
@@ -64,13 +64,13 @@ export default async function Image({
         <div
           style={{ ...frame, justifyContent: "center", alignItems: "center" }}
         >
-          <div style={{ fontSize: 40, letterSpacing: 6, color: TOKENS.outline }}>
+          <div style={{ fontSize: 40, letterSpacing: 6, color: TOKENS.muted }}>
             CRUX
           </div>
           <div
             style={{
               fontSize: 28,
-              color: TOKENS.onSurfaceVariant,
+              color: TOKENS.muted,
               marginTop: 12,
             }}
           >
@@ -94,7 +94,7 @@ export default async function Image({
             justifyContent: "space-between",
             fontSize: 22,
             letterSpacing: 4,
-            color: TOKENS.outline,
+            color: TOKENS.muted,
           }}
         >
           <div>CRUX · VERDICT</div>
@@ -109,7 +109,7 @@ export default async function Image({
                 fontFamily: SERIF,
                 fontStyle: "italic",
                 fontSize: 30,
-                color: TOKENS.onSurfaceVariant,
+                color: TOKENS.muted,
               }}
             >
               {model.claim}
@@ -127,7 +127,7 @@ export default async function Image({
             >
               {model.label}
             </div>
-            <div style={{ fontSize: 26, color: TOKENS.onSurfaceVariant }}>
+            <div style={{ fontSize: 26, color: TOKENS.muted }}>
               {model.liveNote ?? model.score ?? ""}
             </div>
           </div>
@@ -138,7 +138,7 @@ export default async function Image({
               fontStyle: "italic",
               fontSize: 40,
               lineHeight: 1.3,
-              color: TOKENS.onSurface,
+              color: TOKENS.ink,
             }}
           >
             {showQuotes ? `“${model.heroLine}”` : model.heroLine}
@@ -156,10 +156,10 @@ export default async function Image({
             }}
           >
             <div
-              style={{ flex: model.split.for, backgroundColor: TOKENS.cyan }}
+              style={{ flex: model.split.for, backgroundColor: TOKENS.forSide }}
             />
             <div
-              style={{ flex: model.split.against, backgroundColor: TOKENS.red }}
+              style={{ flex: model.split.against, backgroundColor: TOKENS.againstSide }}
             />
           </div>
         )}
@@ -171,11 +171,11 @@ export default async function Image({
             justifyContent: "space-between",
             fontSize: 22,
             letterSpacing: 2,
-            color: TOKENS.outline,
+            color: TOKENS.muted,
           }}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <div style={{ color: model.mvpUsername ? TOKENS.amber : TOKENS.bg }}>
+            <div style={{ color: model.mvpUsername ? TOKENS.laurel : TOKENS.paper }}>
               {model.mvpUsername ? `MVP  @${model.mvpUsername}` : ""}
             </div>
           </div>

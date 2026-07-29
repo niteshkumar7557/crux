@@ -6,16 +6,16 @@ import type { SeasonTitle } from "@/app/profile/types";
 // Frame colours are spelled out because Tailwind cannot see a class name that
 // is assembled at runtime; a lookup keeps all three variants in the built CSS.
 const FRAME_BADGE: Record<string, string> = {
-  gold: "text-[#ffd690] border-[#ffd690]/40",
-  silver: "text-[#c9d1d4] border-[#c9d1d4]/40",
-  bronze: "text-[#d09a6a] border-[#d09a6a]/40",
+  gold: "text-metal-gold border-metal-gold/40",
+  silver: "text-metal-silver border-metal-silver/40",
+  bronze: "text-metal-bronze border-metal-bronze/40",
 };
 
 /** The avatar frame that goes with each rank (§10). */
 export const FRAME_RING: Record<string, string> = {
-  gold: "border-[#ffd690]",
-  silver: "border-[#c9d1d4]",
-  bronze: "border-[#d09a6a]",
+  gold: "border-metal-gold",
+  silver: "border-metal-silver",
+  bronze: "border-metal-bronze",
 };
 
 /** The best rank this profile has ever placed — it styles the avatar frame. */
@@ -36,7 +36,7 @@ const SeasonTitles = ({ titles }: { titles: SeasonTitle[] }) => {
           key={`${t.seasonKey}-${t.rank}`}
           title={`Season ${t.seasonNumber} — finished #${t.rank}`}
           className={`font-label text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border ${
-            FRAME_BADGE[t.frame] ?? "text-outline border-outline/30"
+            FRAME_BADGE[t.frame] ?? "text-ink-soft border-ink-faint"
           }`}
         >
           {t.title}

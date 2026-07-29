@@ -8,7 +8,8 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 // search engines can crawl the whole indexable surface.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticUrls: MetadataRoute.Sitemap = [
-    { url: `${SITE}/`, changeFrequency: "hourly", priority: 1 },
+    { url: `${SITE}/`, changeFrequency: "weekly", priority: 1 },
+    { url: `${SITE}/arena`, changeFrequency: "hourly", priority: 0.9 },
     { url: `${SITE}/domain?q=all`, changeFrequency: "daily", priority: 0.8 },
     // The settled record — a stable, link-worthy index of finished debates.
     { url: `${SITE}/archive`, changeFrequency: "daily", priority: 0.6 },
