@@ -104,7 +104,7 @@ export default function SearchBar() {
     results.users.length > 0;
 
   return (
-    <div className="relative flex-1 min-w-0 max-w-3xl flex justify-end md:justify-start">
+    <div className="relative ml-2 flex shrink-0 items-center md:ml-0">
       <button
         onClick={() => setIsOpen(true)}
         aria-label="Search"
@@ -114,12 +114,11 @@ export default function SearchBar() {
       </button>
       <button
         onClick={() => setIsOpen(true)}
-        className="relative z-10 hidden md:flex items-center bg-band border border-ink-faint transition-colors w-full hover:border-ink-faint cursor-pointer px-4 py-2.5 gap-3"
+        aria-label="Search motions, domains and users"
+        className="relative z-10 hidden cursor-pointer items-center gap-2 rounded-full border border-ink-faint bg-band px-10 py-2.25 font-label text-[0.62rem] uppercase tracking-[0.18em] text-ink-soft transition-colors hover:bg-ink-wash hover:text-ink md:flex"
       >
-        <LuSearch className="text-xl text-ink-soft" />
-        <span className="text-sm font-body text-ink-soft w-full text-left">
-          Search motions...
-        </span>
+        <LuSearch className="text-sm" />
+        Search
       </button>
 
       {isOpen && (

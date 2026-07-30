@@ -6,7 +6,7 @@
 //
 // The one rule deliberately NOT surfaced here is the minimum length (§9). Naming
 // it would teach a user to pad to it; leaving it silent means a throwaway post
-// gets the same "think more" as a padded one. Do not add a character counter or
+// gets the same refusal as a padded one. Do not add a character counter or
 // a length-aware disabled state.
 // Spec: game-theory.md §19
 
@@ -15,21 +15,40 @@ import { jwtPayload } from "@/app/_types/jwt";
 import { ArgumentSide } from "@/app/motion/types";
 import api from "@/app/axios";
 import { isAxiosError } from "axios";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import { LuTriangleAlert, LuX } from "react-icons/lu";
+import { LuX } from "react-icons/lu";
 import Button from "@/app/_components/ui/Button";
 import AutoGrowTextarea from "@/app/_components/ui/AutoGrowTextarea";
-import Portal from "@/app/_components/ui/Portal";
 import { useReplyTarget } from "./ReplyContext";
 import { DEBATE_GUTTER } from "./debateLayout";
 import PointsPopup from "../ui/PointsPopup";
 import SideLockConfirm from "./SideLockConfirm";
+import RefusalNotice, { type Notice } from "./RefusalNotice";
+import { stageAt } from "./postingStages";
 import type { Award } from "../ui/awardCopy";
 
-type Notice = { title: string; body: ReactNode };
+const TICK_MS = 400;
+const BUSY_LABEL = "Posting your argument";
 
+// Mounted only while a post is in flight, so its clock starts at zero every time
+// without an effect resetting it.
+const PostingStage = () => {
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    const startedAt = Date.now();
+    const id = setInterval(() => setElapsed(Date.now() - startedAt), TICK_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  return <>{stageAt(elapsed)}</>;
+};
+
+// The real label stays in the flow, invisible, so the button cannot change width
+// mid-post; the stage is laid over it. It is aria-hidden — the button carries
+// aria-busy and a fixed label instead, or six substitutions become six
+// announcements.
 const PostLabel = ({
   busy,
   children,
@@ -40,8 +59,11 @@ const PostLabel = ({
   <span className="relative inline-block">
     <span className={busy ? "invisible" : undefined}>{children}</span>
     {busy && (
-      <span className="absolute inset-0 flex items-center justify-center">
-        Posting…
+      <span
+        aria-hidden="true"
+        className="absolute inset-0 flex items-center justify-center whitespace-nowrap"
+      >
+        <PostingStage />
       </span>
     )}
   </span>
@@ -103,19 +125,9 @@ const ArgumentInput = ({
     : (argumentSides.find((c) => c.post_user_id === user.id)?.side ?? null);
 
   const abuseNotice: Notice = {
-    title: "Flagged for Abuse",
-    body: (
-      <>
-        Your argument crossed the line of civil debate. Review the{" "}
-        <Link
-          className="text-side-against underline underline-offset-2 hover:text-ink"
-          href={"/rules"}
-        >
-          Arena Rules
-        </Link>{" "}
-        before posting again.
-      </>
-    ),
+    title: "Flagged for abuse",
+    body: "The moderator judged this an attack on a debater rather than on an argument. It was discarded before it reached the arena, and it cost you 4 logic. Go as hard as you like at the reasoning.",
+    action: { href: "/rules", label: "Read the rules" },
   };
 
   function requestPost(
@@ -166,10 +178,11 @@ const ArgumentInput = ({
       // threshold undiscoverable.
       if (isAxiosError(err) && err.response?.status === 422) {
         setNotice({
-          title: "Needs An Argument",
+          title: "That isn't an argument yet",
           body:
             err.response.data?.message ??
-            "Appreciated the effort — but this arena requires an argument. Think more.",
+            "Agreeing or disagreeing isn't an argument on its own. Give the reason, an example, or the mechanism. Nothing was charged, and your draft is still in the box.",
+          action: { href: "/rules", label: "How scoring works" },
         });
         return;
       }
@@ -277,6 +290,8 @@ const ArgumentInput = ({
               size="bare"
               className="flex-1 md:flex-none px-2 py-3 md:px-8 md:py-4 text-[10px] md:text-xs"
               disabled={posting !== null}
+              aria-busy={posting !== null}
+              aria-label={posting !== null ? BUSY_LABEL : undefined}
               onClick={() =>
                 requestPost(
                   target.side === "for" ? "negative" : "affirmative",
@@ -294,6 +309,10 @@ const ArgumentInput = ({
                 size="bare"
                 className="flex-1 md:flex-none px-2 py-3 md:px-8 md:py-4 text-[10px] md:text-xs"
                 disabled={lockedSide === "against" || posting !== null}
+                aria-busy={posting === "affirmative"}
+                aria-label={
+                  posting === "affirmative" ? BUSY_LABEL : undefined
+                }
                 title={
                   lockedSide === "against"
                     ? "You've committed to AGAINST in this debate."
@@ -310,6 +329,8 @@ const ArgumentInput = ({
                 size="bare"
                 className="flex-1 md:flex-none px-2 py-3 md:px-8 md:py-4 text-[10px] md:text-xs"
                 disabled={lockedSide === "for" || posting !== null}
+                aria-busy={posting === "negative"}
+                aria-label={posting === "negative" ? BUSY_LABEL : undefined}
                 title={
                   isAuthor
                     ? "You posted this motion — you can only argue FOR it."
@@ -341,28 +362,7 @@ const ArgumentInput = ({
         <PointsPopup award={award} onDismiss={() => setAward(null)} />
       )}
       {notice && (
-        <Portal>
-          <div className="fixed bottom-32 right-6 z-60 max-w-sm bg-raised border-l-4 border-side-against shadow-cast-deep p-4 flex items-start gap-4">
-            <div className="shrink-0 mt-1">
-              <LuTriangleAlert className="text-side-against font-bold text-xl" />
-            </div>
-            <div className="grow">
-              <h4 className="font-label text-[11px] uppercase tracking-[0.2em] text-side-against mb-1.5 font-bold">
-                {notice.title}
-              </h4>
-              <p className="font-body text-sm leading-relaxed text-ink-soft">
-                {notice.body}
-              </p>
-            </div>
-            <button
-              className="shrink-0 text-ink-soft hover:text-ink cursor-pointer"
-              aria-label="Dismiss"
-              onClick={() => setNotice(null)}
-            >
-              <LuX className="text-sm" />
-            </button>
-          </div>
-        </Portal>
+        <RefusalNotice notice={notice} onDismiss={() => setNotice(null)} />
       )}
     </div>
   );

@@ -7,8 +7,8 @@ import { DEBATE_SHELL } from "@/app/_components/motion/debateLayout";
 const Loading = () => (
   <section className={DEBATE_SHELL} aria-busy="true">
     <Skeleton className="h-5 w-72 mb-6" />
-    <Skeleton className="h-14 md:h-[4.7rem] w-full mb-2" />
-    <Skeleton className="h-14 md:h-[4.7rem] w-3/4 mb-8" />
+    <Skeleton className="h-15 md:h-22.5 w-full mb-2" />
+    <Skeleton className="h-15 md:h-22.5 w-3/4 mb-8" />
     <Skeleton className="h-12 w-full mb-8" />
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-px">
       {(["for", "against"] as const).map((side) => (
@@ -21,7 +21,7 @@ const Loading = () => (
           }
         >
           <div className="mb-10 flex items-center justify-between border-b border-ink-faint pb-4">
-            <Skeleton className="h-7 w-40" />
+            <Skeleton className="h-12 w-56" />
             <Skeleton className="h-3 w-24" />
           </div>
           <Skeleton className="h-52 w-full mb-6" />

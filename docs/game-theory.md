@@ -280,7 +280,8 @@ exist. The thing being protected is the person, not their claim.
 A second refusal, with nothing to do with moderation. **A post with no argument in it is not
 posted at all.** Not scored, not shown, and — unlike abuse — not penalised:
 
-> *"Appreciated the effort — but this arena requires an argument. Think more."*
+> *"Agreeing or disagreeing isn't an argument on its own. Give the reason, an example, or the
+> mechanism. Nothing was charged, and your draft is still in the box."*
 
 The test is whether the post, stripped of its agreement or disagreement, contains **any reason,
 evidence, mechanism, example or distinction**. Bare agreement ("yes exactly, this is what I've been

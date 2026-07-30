@@ -105,6 +105,13 @@ that fills a large area rather than a control should be checked the same way bef
   keyword lifted in laurel italic. A motion is a sentence someone is on the hook for, and condensed
   uppercase poster type turns an argument into a headline shouting at the reader. Section titles
   announce; a motion is written and signed. **Don't "fix" it back to the display face.**
+  It is also the one headline set at a **fixed two-step scale** rather than a clamp
+  (`text-5xl md:text-7xl`, bold, `tracking-tight`) — an owner's call for the poster weight of the
+  claim, taken knowingly against the fluid rule above. `motion/[id]/loading.tsx` hand-mirrors its
+  line box, so the two move together or the page jumps vertically on reload.
+- **The two case titles are framed, not filled** — a hairline box in the side's colour with the
+  label face inside at `text-lg`, tracked `0.28em`. Reversed-out type at that size turned the
+  column headers into two blocks of solid camp colour competing with the arguments under them.
 - **A debate column is set in Space Grotesk, not the serif** — the Crux AI panel and the arguments
   alike. It is the one place the label face carries running prose, and it earns it: the column is a
   screenful of short statements, which scan better in the label face than in an italic serif.

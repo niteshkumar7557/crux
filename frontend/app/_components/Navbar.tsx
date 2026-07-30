@@ -62,8 +62,8 @@ const Navbar = () => {
               );
             })}
           </div>
+          <SearchBar />
         </div>
-        <SearchBar />
         <div className="flex items-center gap-3 shrink-0">
           <Button href={user === null ? "/login" : "/motion/new"} size="sm">
             New motion

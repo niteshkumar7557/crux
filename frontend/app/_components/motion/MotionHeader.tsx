@@ -125,7 +125,7 @@ const MotionHeader = ({
         </div>
         <h1
           ref={headlineRef}
-          className="font-headline text-[clamp(2.2rem,5.2vw,4.2rem)] leading-[1.12] max-w-5xl break-words text-ink"
+          className="font-headline text-5xl md:text-7xl font-bold leading-tight tracking-tight max-w-5xl wrap-break-word text-ink"
         >
           {before}
           {highlight && (

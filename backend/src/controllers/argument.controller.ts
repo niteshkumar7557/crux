@@ -35,7 +35,7 @@ import { checkText, isTooShortToJudge } from "../lib/validate.js";
 const NO_ARGUMENT = {
   reason: "no_argument",
   message:
-    "Appreciated the effort — but this arena requires an argument. Think more.",
+    "Agreeing or disagreeing isn't an argument on its own. Give the reason, an example, or the mechanism. Nothing was charged, and your draft is still in the box.",
 };
 
 interface Judgement {
