@@ -42,6 +42,8 @@ Semantic CSS variables in `frontend/app/globals.css`, flipped by
 | `--against` (`side-against`) | AGAINST camp | `#9c4a34` | `#c97757` |
 | `--draw` (`side-draw`) | draw band | `#857a55` | `#a2966c` |
 | `--plate-ink` | text *on* plates (constant) | `#244134` | `#244134` |
+| `--bubble-own` (`bg-bubble-own`) | the viewer's own chat bubble, DM panel only | `#244134` | `#2f5241` |
+| `--bubble-own-ink` | text on it (constant) | `#f3edda` | `#f3edda` |
 | `--metal-gold/silver/bronze` | podium places, season titles | `#8f6e1f` / `#6b7478` / `#8c5a2f` | `#d4ac3a` / `#c9d1d4` / `#d09a6a` |
 | `--scrim` (`bg-scrim`) | modal overlays | `rgba(20,35,28,.45)` | `rgba(4,9,7,.7)` |
 
@@ -55,6 +57,14 @@ renders at 5% and the hairline vanishes. Use the token bare.
 
 **`--scrim` is not `ink` at low alpha.** Ink inverts between themes, so a cream
 scrim over a dark page lifts the backdrop instead of dimming it.
+
+**`--bubble-own` is not `ink` either, for the same reason.** The DM panel's
+outgoing bubble was `bg-ink text-paper` — the system's inverted `solid`
+treatment, which is right for a button and wrong for a block of message text: at
+night ink *is* cream, so a user's own messages became the brightest thing on a
+dark screen. The token is a forest fill with cream text in both themes, so the
+bubble keeps one identity instead of flipping. Anything that fills a large area
+rather than a control should be checked the same way before reaching for `ink`.
 
 Rules:
 - **No pure black, no pure white, no gradients, no texture/noise overlays.**
@@ -138,6 +148,16 @@ herald, laurel wreath, bust, medals ×3, amphitheater (full-bleed), doors
 
 - Corners: **square** everywhere except two shapes — **pills** (buttons,
   `rounded-full`) and **arches** (plates, the footer seal).
+  *One narrow third, by owner request:* **the chat bubbles and avatars in the
+  "Talk to the developer" panel** (`DevMessages`), which are drawn the way a
+  messaging app draws them — `rounded-[1.15rem]`, closing to `0.3rem` on the
+  sender's side between stacked bubbles, with circular portraits. It is at least
+  the right family of exception: a single-line bubble at that radius *is* a pill.
+  The corner overrides are inline `style`, not `rounded-tr-*` utilities, because
+  an all-corners `rounded-*` and a per-corner one write the same shorthand and
+  the winner depends on their order in the generated sheet. **This does not
+  generalise** — square corners are still the rule everywhere else, avatars are
+  square everywhere else, and a second rounded surface needs its own reason.
 - Borders are hairlines (`--ink-faint`); no glows. Elevation is expressed by
   paper tone (`paper` → `band` → `plate`).
 - **The cast — the one depth effect, and it is never black.** A surface that
@@ -149,7 +169,12 @@ herald, laurel wreath, bust, medals ×3, amphitheater (full-bleed), doors
   - the **Crux AI panel** on a debate — resting, `shadow-cast-{side}`;
   - an **argument card under the cursor** — `hover:shadow-cast-{side}-deep`;
   - the **side-lock dialog** — the side being committed to;
-  - the **points slip and the composer's error notice** — neutral.
+  - the **points slip and the composer's error notice** — neutral;
+  - the **two navbar dropdowns** (notifications, talk-to-the-developer) —
+    neutral, and at the **`-deep` step at rest**. `-deep` is the hover step
+    everywhere else, but these hang under a blurred paper navbar over a page
+    within a shade of their own surface, and the resting cast left both reading
+    as part of the page rather than above it.
 
   Three rules keep it working:
   1. **Shallow and low-alpha.** ~10–16px of throw at ≤0.32 alpha in light. The
@@ -300,6 +325,14 @@ full-bleed) → Fair by design + The Bench (herald) → The Doors (CTA) → Foot
   than as JSX. Both files are hand-synced with `globals.css` and `Logo.tsx`.
 
 ## 11. Changelog
+
+- **2026-07-30 — the DM panel.** `DevMessages` redrawn as a messaging thread:
+  grouped runs with one avatar and one clock time each, day rules, rounded
+  bubbles (the §5 exception above), a `--bubble-own` forest fill outgoing against
+  `bg-band` incoming, and a send button — without one the panel could be read but never
+  answered on a phone, where the return key inserts a newline. The panel moved
+  from `bg-band` to `bg-raised`, so it is now the lightest thing on screen as
+  §5 rule 3 requires; both navbar dropdowns rest at `shadow-cast-deep`.
 
 - **2026-07-29 — rolled out app-wide.** The landing's system now runs
   everywhere; the old Material palette, the cyan glow shadows, the grid

@@ -15,6 +15,7 @@ import searchRoutes from "./routes/search.route.js";
 import avatarRoutes from "./routes/avatar.route.js";
 import domainRoutes from "./routes/domain.route.js";
 import notificationRoutes from "./routes/notification.route.js";
+import devMessageRoutes from "./routes/devMessage.route.js";
 import adminRoutes from "./routes/admin.route.js";
 import { globalLimiter, clientIp } from "./middlewares/rateLimit.js";
 import { pinoHttp } from "pino-http";
@@ -76,6 +77,8 @@ app.use("/search", searchRoutes);
 app.use("/domains", domainRoutes);
 app.use("/avatar", avatarRoutes);
 app.use("/notifications", notificationRoutes);
+// "Talk to the developer": the user's own thread, relayed to Telegram.
+app.use("/messages", devMessageRoutes);
 app.use("/admin", adminRoutes);
 
 // After all routes; a no-op when init() didn't run (dev, CI, no DSN).

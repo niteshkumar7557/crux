@@ -6,6 +6,7 @@ import logger from "./lib/logger.js";
 import { startConclusionPoller } from "./jobs/conclusion.js";
 import { startFeaturingPoller } from "./jobs/featuring.js";
 import { startSeasonRolloverPoller } from "./jobs/seasonRollover.js";
+import { startTelegramPoller } from "./jobs/telegram.js";
 import { avatarStore } from "./controllers/avatar.controller.js";
 
 async function start() {
@@ -37,6 +38,11 @@ async function start() {
       startConclusionPoller();
       startFeaturingPoller();
       startSeasonRolloverPoller();
+      // Logs whether it is enabled either way. Unconfigured is the normal state
+      // in dev, but in production it means "talk to the developer" saves
+      // messages nobody will ever see — invisible otherwise until someone asks
+      // why they got no reply.
+      startTelegramPoller();
     });
   } catch (err) {
     logger.fatal({ err }, "Failed to connect to database");

@@ -29,6 +29,12 @@
   --against: #9c4a34; /* the AGAINST camp */
   --draw: #857a55; /* the draw band */
   --plate-ink: #244134; /* captions on plates (constant across modes) */
+  /* The outgoing bubble in the developer DM panel. It cannot be `--ink`: ink
+     inverts to cream at night, which made a user's own messages the brightest
+     blocks on the screen. A forest fill with cream text in BOTH themes instead,
+     so the bubble keeps one identity rather than flipping with the theme. */
+  --bubble-own: #244134;
+  --bubble-own-ink: #f3edda; /* constant, like --plate-ink */
   /* the three metals — podium places and season titles */
   --metal-gold: #8f6e1f;
   --metal-silver: #6b7478;
@@ -67,6 +73,10 @@
   --ink-soft: #a3b2a4;
   --ink-faint: rgba(236, 229, 208, 0.16);
   --ink-wash: rgba(236, 229, 208, 0.05);
+  /* Lifted off the page tone rather than inverted — a mid forest that reads as
+     the accent bubble against `--paper-raised` (#1b2c24) without glowing.
+     `--bubble-own-ink` stays the cream set in :root. */
+  --bubble-own: #2f5241;
   --laurel: #d4ac3a;
   --laurel-bright: #d4ac3a;
   --for: #63a882;
@@ -113,6 +123,8 @@
   --color-side-against: var(--against);
   --color-side-draw: var(--draw);
   --color-plate-ink: var(--plate-ink);
+  --color-bubble-own: var(--bubble-own);
+  --color-bubble-own-ink: var(--bubble-own-ink);
   --color-metal-gold: var(--metal-gold);
   --color-metal-silver: var(--metal-silver);
   --color-metal-bronze: var(--metal-bronze);

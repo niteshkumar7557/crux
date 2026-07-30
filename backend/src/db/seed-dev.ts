@@ -79,6 +79,25 @@ const seed = async () => {
 		);
 		console.log("✅ Seeded logic ledger for the Season board");
 
+		// A "talk to the developer" thread on user 1, because a fresh dev DB
+		// otherwise renders only the empty state — the least useful half of that
+		// component to look at while building it. One unread 'dev' row so the
+		// envelope badge shows too.
+		//
+		// `relayed_at` is stamped on the user rows even though nothing was really
+		// sent: leaving it NULL would make the poller's sweep deliver three lines
+		// of seed data into a real Telegram chat the first time a token is
+		// configured.
+		await client.query(
+			`INSERT INTO dev_messages (user_id, sender, body, relayed_at, is_read, created_at)
+			 VALUES
+			   (1, 'user', 'Small thing — I typed "affect" where I meant "effect" in my motion on rent caps. Any chance you can fix it?', NOW() - INTERVAL '3 hours', TRUE,  NOW() - INTERVAL '3 hours'),
+			   (1, 'dev',  'Fixed. There is no edit button yet, so keep sending these — it is the fastest way to get a typo corrected.', NULL, TRUE, NOW() - INTERVAL '2 hours'),
+			   (1, 'user', 'Also: the verdict page reads great on desktop but the score bar wraps oddly on my phone.', NOW() - INTERVAL '20 minutes', TRUE, NOW() - INTERVAL '20 minutes'),
+			   (1, 'dev',  'Good catch, that is a real bug. Looking at it now.', NULL, FALSE, NOW() - INTERVAL '5 minutes')`,
+		);
+		console.log("✅ Seeded a developer thread on user 1 (1 unread)");
+
 		await client.query("COMMIT");
 		console.log('🎉 Dev seeding complete! (every user\'s password is "secret")');
 	} catch (err) {

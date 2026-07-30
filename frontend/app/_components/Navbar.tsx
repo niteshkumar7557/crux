@@ -10,6 +10,7 @@ import Button from "./ui/Button";
 import Logo from "./ui/Logo";
 import ThemeToggle from "./ui/ThemeToggle";
 import NotificationBell from "./NotificationBell";
+import DevMessages from "./DevMessages";
 
 // Same shell as the landing's nav (blurred paper over a hairline) so crossing
 // from the story into the product does not feel like changing sites. The
@@ -78,6 +79,10 @@ const Navbar = () => {
             New motion
           </Button>
           <ThemeToggle className="hidden sm:flex" />
+          {/* Both are signed-in-only, so neither exists at all for a visitor.
+              The developer sits left of the bell: the bell is the game, and the
+              game is what people came for. */}
+          {user && <DevMessages user={user} avatar={avatar} />}
           {user && <NotificationBell />}
           <Link
             href={user ? "/profile/me" : "/login"}

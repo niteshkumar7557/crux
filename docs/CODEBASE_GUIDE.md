@@ -26,16 +26,18 @@ Product pitch & local setup live in the root [`README.md`](../README.md).
 Reading a big repo cold, do it in this order — depth-first through **one real path**, not
 breadth-first through every folder:
 
-1. **Entry points.** `backend/src/index.ts` (boots the server + three background jobs) and
+1. **Entry points.** `backend/src/index.ts` (boots the server + four background jobs) and
    `backend/src/app.ts` (mounts every route group). On the frontend, `frontend/app/layout.tsx`
    + `frontend/app/page.tsx` (the home "Arena"). Ten minutes here tells you the shape.
-2. **The data model.** Read `backend/src/db/migrations/*.sql` **in numeric order** — eleven files,
+2. **The data model.** Read `backend/src/db/migrations/*.sql` **in numeric order** — twelve files,
    and together they are the whole schema. (Section 4 narrates them.)
 3. **Trace one request end-to-end.** Pick "post an argument" and follow it: route →
    controller → the AI calls → the SQL writes → the response. Do this once and 80% of the
    codebase's conventions click. (Section 6 walks it for you.)
-4. **The background jobs.** Three in-process pollers (`jobs/conclusion.ts`, `jobs/featuring.ts`,
-   `jobs/seasonRollover.ts`) do everything that isn't request-driven. Read them next.
+4. **The background jobs.** Four in-process pollers (`jobs/conclusion.ts`, `jobs/featuring.ts`,
+   `jobs/seasonRollover.ts`, `jobs/telegram.ts`) do everything that isn't request-driven. Read
+   them next. The first three are `setInterval`; the fourth is a self-rescheduling loop, and
+   §9 says why.
 5. **Then widen out** to the other controllers/components — they all rhyme with what you've
    already seen.
 
@@ -132,10 +134,10 @@ cd frontend && npm i && npm run dev                      # Next.js :3000
 
 ---
 
-## 4. The data model — eleven migrations, one schema
+## 4. The data model — twelve migrations, one schema
 
 Postgres, raw SQL, applied by a home-grown runner (`db/migrate.ts`, tracks applied files in a
-`_migrations` table, filename-ordered). These eleven files *are* the schema — read them in order
+`_migrations` table, filename-ordered). These twelve files *are* the schema — read them in order
 and you have the whole data model.
 
 | Migration | Table | What it means |
@@ -151,6 +153,7 @@ and you have the whole data model.
 | `0008` | `notifications` | In-app return triggers (`opposition`, `reply`, `verdict`, `season`). |
 | `0009` | `logic_events` | The timestamped logic ledger. `season_only = TRUE` writes a ledger row **without** touching `logic_score` — that is how a loss costs the month's race and never the career total. |
 | `0010` | *(indexes only)* | Indexes the profile filters on: `arguments(user_id)`, `motions(user_id)`, `users(logic_score DESC, id ASC)`. Postgres does not auto-index foreign keys, and every profile query filters on those columns. |
+| `0011` | `dev_messages` | "Talk to the developer" — one thread per user, relayed to one Telegram chat. `sender` is `'user'`/`'dev'`; `tg_message_id` is what makes swipe-reply resolvable back to a user; `tg_update_id UNIQUE` is why there is no `getUpdates` offset table (a replayed batch just conflicts and does nothing); `relayed_at IS NULL` is the retry queue. A thread is not a table — it is every row for a `user_id` in `created_at` order. |
 
 **Two things to internalise:** there is no `seasons` table (a season is a **computed calendar
 month**, §5), and `motions.pinned` is the admin override — not a separate curation table.
@@ -420,6 +423,7 @@ the page and the code now say the same thing.
 | Change the debate page UI | `_components/motion/DebateView.tsx` + its children |
 | Change what a pop-up/banner says | `_components/ui/awardCopy.ts` (+ test) and the §14 surfaces in §7 |
 | Add a notification type | `notifications/messages.ts` (+ test) + `notifications/notify.ts` |
+| Change the developer DM channel | `jobs/telegram.logic.ts` (+ test) for what an update means, `jobs/telegram.ts` for the loop, `controllers/devMessage.controller.ts` for the web side, `_components/DevMessages.tsx` for the panel, `config/index.ts` → `telegram.dev_username` for whose handle and portrait the panel shows as the developer (`GET /messages` returns it as `dev`, read live from `users`) |
 
 ---
 
@@ -427,11 +431,18 @@ the page and the code now say the same thing.
 
 - **ESM `.js` imports** in backend `.ts` files are intentional — don't "fix" them.
 - **No ORM** — all SQL is inline in controllers; grep the table name to find every touch point.
-- **Three pollers, in-process** (no external queue/cron) — they run inside the API process,
-  each guarded against overlap; a `setInterval` is the whole scheduler. That means **they only
-  run where the API runs**: scaling to more than one instance needs a real scheduler first.
-  This is now *enforced*, not merely assumed — `backend/railway.toml` pins `numReplicas = 1`,
-  and the attached volume makes replicas impossible anyway.
+- **Four pollers, in-process** (no external queue/cron) — they run inside the API process,
+  each guarded against overlap. That means **they only run where the API runs**: scaling to
+  more than one instance needs a real scheduler first. `backend/railway.toml` pins
+  `numReplicas = 1`, and since avatars moved to R2 there is no volume left, so that pin is the
+  *only* thing enforcing it.
+- **The Telegram poller is not a `setInterval`, unlike the other three.** `getUpdates` blocks
+  for up to 30 seconds by design, so a fixed interval would stack overlapping in-flight
+  requests against the same offset. `jobs/telegram.ts` is a self-rescheduling loop instead:
+  `setTimeout(0)` after a good pass, exponential backoff (1s → 60s ceiling) after a failure so
+  a network blip cannot spin it hot. Its offset lives in memory on purpose — Telegram retains
+  unconfirmed updates for ~24h and `dev_messages.tg_update_id UNIQUE` makes a replayed batch a
+  no-op, which is simpler than persisting and transactionally advancing an offset.
 - **Editing a migration is invisible without a reset** — see §3. If `db-init` prints
   `⏭ skipping`, your edit did not land.
 - **`docs/superpowers/` is git-ignored** — the per-feature specs/plans there are local working
@@ -477,7 +488,7 @@ the page and the code now say the same thing.
 ## 10. A suggested first afternoon
 
 1. Read `docs/game-theory.md` end to end (30 min). It is short and it is the spec.
-2. Read the migrations `0000`→`0010` in order (20 min) — you now know the data model.
+2. Read the migrations `0000`→`0011` in order (20 min) — you now know the data model.
 3. Read `index.ts`, `app.ts`, then `argument.controller.ts` top to bottom, opening
    `analyst.logic.ts` when it's referenced (45 min) — you now know one full flow + the
    pure-logic convention.

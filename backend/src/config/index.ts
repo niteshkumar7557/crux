@@ -104,7 +104,33 @@ const config = {
     reasoning: str("LLM_REASONING", "off"),
   },
 
-  // ── Background jobs (in-process setInterval pollers) ──────────────────────
+  // ── Telegram relay ("talk to the developer") ──────────────────────────────
+  // BOTH values are required to enable the relay. With either missing the
+  // poller never starts and sendMessage is a no-op — but the web side works
+  // completely: messages save, the thread renders, unread counts work. So the
+  // panel is fully developable locally with no bot at all. Same shape as the
+  // avatar-storage local fallback, and like it the mode is logged on boot, so a
+  // misconfigured production is visible immediately rather than at first use.
+  telegram: {
+    /** BotFather token. Unset disables the relay entirely. */
+    bot_token: process.env.TELEGRAM_BOT_TOKEN,
+    /** The one chat the bot trusts. Unset disables the relay entirely. */
+    dev_chat_id: process.env.TELEGRAM_DEV_CHAT_ID,
+    /** Long-poll hold time, seconds. Telegram's own ceiling is 50. */
+    poll_timeout_s: num("TELEGRAM_POLL_TIMEOUT_S", 30),
+    /**
+     * The account the DM panel shows as the developer — its avatar and handle
+     * are what a user sees replying to them. Read from `users`, so the portrait
+     * follows whatever the owner has set on their own profile rather than being
+     * a second copy to keep in sync. A handle with no row still renders: the
+     * panel falls back to the handle's initials, which is also what happens
+     * before the owner has uploaded anything — so a typo here is silent, and
+     * looks exactly like "the avatar isn't loading". It must match `users`.
+     */
+    dev_username: str("DEV_USERNAME", "dev_nitesh"),
+  },
+
+  // ── Background jobs (in-process pollers) ──────────────────────────────────
   jobs: {
     /** How often to sweep for debates past closes_at. */
     conclusion_tick_ms: num("CONCLUSION_TICK_MS", 60_000),
@@ -132,6 +158,12 @@ const config = {
     profile_live_rows: num("PROFILE_LIVE_ROWS", 6),
     /** Weeks of the logic ledger charted on a profile. */
     profile_ledger_weeks: num("PROFILE_LEDGER_WEEKS", 12),
+    /**
+     * Max characters in one message to the developer. Shown in the UI by the
+     * composer's counter — per the transparency rule, a limit that binds a user
+     * has to be visible before it binds.
+     */
+    dev_message_chars: num("DEV_MESSAGE_MAX_CHARS", 1000),
   },
 };
 

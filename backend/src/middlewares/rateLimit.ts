@@ -7,6 +7,12 @@ export const AUTH_LIMIT = { windowMs: 15 * 60_000, limit: 10 };
 export const LLM_LIMIT = { windowMs: 60_000, limit: 6 };
 export const UPLOAD_LIMIT = { windowMs: 60_000, limit: 3 };
 export const GLOBAL_LIMIT = { windowMs: 60_000, limit: 300 };
+/**
+ * Messages to the developer. Every one of these relays to a Telegram chat one
+ * person reads, so the thing being protected is an inbox, not a CPU — five a
+ * minute is generous for writing prose and still cannot be used to flood it.
+ */
+export const DM_LIMIT = { windowMs: 60_000, limit: 5 };
 
 // ── The rate-limit key ───────────────────────────────────────────────────────
 //
@@ -121,6 +127,11 @@ export const uploadLimiter = makeLimiter({
   ...UPLOAD_LIMIT,
   byUser: true,
   message: "Too many uploads — try again in a minute.",
+});
+export const dmLimiter = makeLimiter({
+  ...DM_LIMIT,
+  byUser: true,
+  message: "That's a lot of messages — give me a minute to read them.",
 });
 export const globalLimiter = makeLimiter({
   ...GLOBAL_LIMIT,
