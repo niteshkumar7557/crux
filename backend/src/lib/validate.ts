@@ -16,3 +16,19 @@ export function checkText(
   if (value.length > max) return { ok: false, reason: `${field}_too_long` };
   return { ok: true, value };
 }
+
+// Layer one of the low-effort gate (§9). Bare agreement and bare negation are
+// short by nature — "yes, i agree", "no this is wrong" — so a length floor
+// catches the commonest form of them for free, before any model call is spent.
+// Layer two, the judge's "no_argument" verdict, catches the padded ones.
+//
+// The threshold is DELIBERATELY not disclosed on the product surface: no
+// counter, no distinct error, no mention in /rules. A user who learns the number
+// pads to 18 and buys themselves an LLM call; a user who does not gets the same
+// "think more" either way. Callers MUST respond identically to both layers, or
+// the difference between them becomes discoverable by probing.
+export const MIN_ARGUMENT_CHARS = 18;
+
+export function isTooShortToJudge(text: string): boolean {
+  return text.trim().length < MIN_ARGUMENT_CHARS;
+}

@@ -1,6 +1,11 @@
 // The only outbound LLM client: one OpenAI-compatible /chat/completions call, JSON
 // mode, repaired and parsed, retried LLM_RETRIES times. A failing call therefore
 // bills up to three times.
+//
+// Reasoning is off by default: thinking tokens bill as output AND count against
+// max_tokens, so leaving it on truncates the shorter calls into invalid JSON.
+// One persona overrides it per call — the argument judge, which has the token
+// headroom to afford it and is the call quality matters most on.
 // Spec: game-theory.md §16
 
 import { jsonrepair } from "jsonrepair";
@@ -9,24 +14,31 @@ import logger from "../lib/logger.js";
 
 const { base_url: BASE_URL, api_key: API_KEY, model: MODEL } = config.llm;
 
-const REASONING =
-  config.llm.reasoning === "off"
-    ? { enabled: false }
-    : config.llm.reasoning === "high" || config.llm.reasoning === "xhigh"
-      ? { effort: config.llm.reasoning }
-      : undefined;
+type ReasoningLevel = "off" | "high" | "xhigh";
+
+function resolveReasoning(level: ReasoningLevel | undefined) {
+  const l = level ?? config.llm.reasoning;
+  if (l === "off") return { enabled: false };
+  if (l === "high" || l === "xhigh") return { effort: l };
+  return undefined;
+}
 
 type LlmOpts = {
   system: string;
   user: string;
   temperature?: number;
   maxTokens?: number;
+  reasoning?: ReasoningLevel;
 };
 
-async function callOnce(opts: Required<LlmOpts>): Promise<{
+type FilledOpts = LlmOpts & { temperature: number; maxTokens: number };
+
+async function callOnce(opts: FilledOpts): Promise<{
   content: string;
   usage?: { prompt_tokens?: number; completion_tokens?: number } | undefined;
 }> {
+  const reasoning = resolveReasoning(opts.reasoning);
+
   const res = await fetch(`${BASE_URL}/chat/completions`, {
     method: "POST",
     headers: {
@@ -38,7 +50,7 @@ async function callOnce(opts: Required<LlmOpts>): Promise<{
       temperature: opts.temperature,
       max_tokens: opts.maxTokens,
       response_format: { type: "json_object" },
-      ...(REASONING ? { reasoning: REASONING } : {}),
+      ...(reasoning ? { reasoning } : {}),
       messages: [
         { role: "system", content: opts.system },
         { role: "user", content: opts.user },
@@ -59,11 +71,12 @@ async function callOnce(opts: Required<LlmOpts>): Promise<{
 }
 
 export async function llmJson<T = any>(opts: LlmOpts): Promise<T> {
-  const filled: Required<LlmOpts> = {
+  const filled: FilledOpts = {
     system: opts.system,
     user: opts.user,
     temperature: opts.temperature ?? config.llm.temperature,
     maxTokens: opts.maxTokens ?? config.llm.max_tokens,
+    ...(opts.reasoning ? { reasoning: opts.reasoning } : {}),
   };
 
   let lastErr: unknown;

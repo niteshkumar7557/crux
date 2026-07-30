@@ -5,30 +5,42 @@
 import "dotenv/config";
 import { llmJson } from "../llm.js";
 import { ARBITER_SYSTEM_PROMPT } from "../prompts/arbiter.prompt.js";
-import { MODERATOR_ANALYST_SYSTEM_PROMPT } from "../prompts/moderator-analyst.prompt.js";
-import { PROBABILITY_SYSTEM_PROMPT } from "../prompts/probability.prompt.js";
-import { buildAnalystPrompt, buildProbabilityPrompt, scoreArgument } from "../analyst.logic.js";
+import { ARGUMENT_JUDGE_SYSTEM_PROMPT } from "../prompts/argument-judge.prompt.js";
+import { buildAnalystPrompt, scoreArgument } from "../analyst.logic.js";
 import {
   SCORING_CASES,
   ARBITER_CASES,
-  PROBABILITY_CASES,
   type ScoringCase,
   type ArbiterCase,
-  type ProbabilityCase,
 } from "./gold.js";
 
 type Outcome = { pass: boolean; detail: string };
 
+// One call now returns the score AND the split, so both are asserted together.
+// That is the point of the merge: a case where the score and the bar disagree —
+// a restatement that still swings the split — is exactly the bug the two-call
+// version could not see, because neither call knew what the other decided.
 async function runScoring(c: ScoringCase): Promise<Outcome> {
-  const user = buildAnalystPrompt(c.input);
-  const out = await llmJson<{ abused: boolean; points: number }>({
-    system: MODERATOR_ANALYST_SYSTEM_PROMPT,
-    user,
-    maxTokens: 3000,
+  const out = await llmJson<{
+    verdict: string;
+    points: number;
+    affirmative: number;
+  }>({
+    system: ARGUMENT_JUDGE_SYSTEM_PROMPT,
+    user: buildAnalystPrompt(c.input),
+    reasoning: "high",
+    maxTokens: 8000,
   });
 
-  if (c.expect.abused) {
-    return { pass: out.abused === true, detail: `abused=${out.abused} (want true)` };
+  const wantVerdict = c.expect.verdict ?? "ok";
+  if (out.verdict !== wantVerdict) {
+    return {
+      pass: false,
+      detail: `verdict=${out.verdict} (want ${wantVerdict})`,
+    };
+  }
+  if (wantVerdict !== "ok") {
+    return { pass: true, detail: `verdict=${out.verdict}` };
   }
 
   const opp = c.input.opponentAnalysis;
@@ -36,12 +48,30 @@ async function runScoring(c: ScoringCase): Promise<Outcome> {
     rawPoints: out.points,
     isReply: c.input.replyTo != null,
     opponentHasArguments: !!(opp && opp.trim()),
-    priorCount: 0,
   }).judged;
 
   const [lo, hi] = c.expect.band;
-  const pass = !out.abused && judged >= lo && judged <= hi;
-  return { pass, detail: `judged=${judged} abused=${out.abused} (want ${lo}-${hi})` };
+  const bandOk = judged >= lo && judged <= hi;
+
+  let splitOk = true;
+  let splitDetail = "";
+  if (c.expect.splitDirection) {
+    const prior = c.input.priorAffirmative ?? 50;
+    const move = Math.round(out.affirmative) - prior;
+    splitOk =
+      c.expect.splitDirection === "flat"
+        ? Math.abs(move) <= 2
+        : c.expect.splitDirection === "for"
+          ? move > 0
+          : move < 0;
+    const sign = move >= 0 ? "+" : "";
+    splitDetail = ` split=${sign}${move}(${c.expect.splitDirection})`;
+  }
+
+  return {
+    pass: bandOk && splitOk,
+    detail: `judged=${judged} (want ${lo}-${hi})${splitDetail}`,
+  };
 }
 
 async function runArbiter(c: ArbiterCase): Promise<Outcome> {
@@ -54,29 +84,6 @@ async function runArbiter(c: ArbiterCase): Promise<Outcome> {
   return {
     pass: out.eligibility === c.expect.eligibility,
     detail: `eligibility=${out.eligibility} (want ${c.expect.eligibility})`,
-  };
-}
-
-async function runProbability(c: ProbabilityCase): Promise<Outcome> {
-  const user = buildProbabilityPrompt(c.input);
-  const out = await llmJson<{ affirmative: number }>({
-    system: PROBABILITY_SYSTEM_PROMPT,
-    user,
-    maxTokens: 2000,
-  });
-  const prior = c.input.priorAffirmative ?? 50;
-  const aff = Math.round(out.affirmative);
-  const move = aff - prior;
-
-  const inBand = aff >= 20 && aff <= 80;
-  const magOk = Math.abs(move) <= c.expect.maxMove;
-  const dirOk =
-    c.expect.direction === "flat" ? magOk : c.expect.direction === "for" ? move > 0 : move < 0;
-
-  const sign = move >= 0 ? "+" : "";
-  return {
-    pass: inBand && magOk && dirOk,
-    detail: `${prior}→${aff} move=${sign}${move} (want ${c.expect.direction} ≤${c.expect.maxMove})`,
   };
 }
 
@@ -126,9 +133,8 @@ async function main() {
   );
 
   const results = [
-    await section("SCORING (asserted on judged 1-8)", SCORING_CASES, runScoring, runs),
+    await section("SCORING (judged 2-10, verdict, and split direction)", SCORING_CASES, runScoring, runs),
     await section("ARBITER (pass/fail gate)", ARBITER_CASES, runArbiter, runs),
-    await section("PROBABILITY (direction + max move from prior)", PROBABILITY_CASES, runProbability, runs),
   ];
 
   const pass = results.reduce((s, r) => s + r.pass, 0);

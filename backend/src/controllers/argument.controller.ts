@@ -9,7 +9,7 @@ import pool from "../db/index.js";
 import { llmJson } from "../ai/llm.js";
 import {
   buildAnalystPrompt,
-  buildProbabilityPrompt,
+  clampAffirmative,
   scoreArgument,
   type OwnSideArgument,
   type ReplyTarget,
@@ -23,73 +23,33 @@ import {
   sanitizeAnalysis,
   writeAnalysis,
 } from "../ai/analysis.logic.js";
-import { MODERATOR_ANALYST_SYSTEM_PROMPT } from "../ai/prompts/moderator-analyst.prompt.js";
-import { PROBABILITY_SYSTEM_PROMPT } from "../ai/prompts/probability.prompt.js";
+import { ARGUMENT_JUDGE_SYSTEM_PROMPT } from "../ai/prompts/argument-judge.prompt.js";
 import { notifyOpposition, notifyReply } from "../notifications/notify.js";
 import { awardLogic } from "../economy/logic.js";
 import { currentSeasonStart } from "../economy/season.logic.js";
-import { checkText } from "../lib/validate.js";
-import logger from "../lib/logger.js";
+import { checkText, isTooShortToJudge } from "../lib/validate.js";
 
-async function updateProbability(motionId: number) {
-  const { rows } = await pool.query(
-    `
-            SELECT content, for_analysis, against_analysis, affirmative, negative
-            FROM motions
-            WHERE id = $1;
-        `,
-    [motionId],
-  );
+// §9: both refusal layers must be indistinguishable from outside, so the silent
+// length floor and the judge's "no_argument" verdict return this same body. A
+// user who could tell them apart could find the threshold by probing.
+const NO_ARGUMENT = {
+  reason: "no_argument",
+  message:
+    "Appreciated the effort — but this arena requires an argument. Think more.",
+};
 
-  const { rows: latest } = await pool.query(
-    `
-            SELECT c.content, c.side, u.name AS username
-            FROM arguments c
-            JOIN users u ON u.id = c.user_id
-            WHERE c.motion_id = $1
-            ORDER BY c.created_at DESC
-            LIMIT 1;
-        `,
-    [motionId],
-  );
-  if (latest.length === 0) return;
-
-  const userPrompt = buildProbabilityPrompt({
-    motion: rows[0].content,
-    priorAffirmative: rows[0].affirmative,
-    priorNegative: rows[0].negative,
-    forAnalysis: renderAnalysisForPrompt(readAnalysis(rows[0].for_analysis)),
-    againstAnalysis: renderAnalysisForPrompt(
-      readAnalysis(rows[0].against_analysis),
-    ),
-    latest: {
-      username: latest[0].username,
-      side: latest[0].side,
-      content: latest[0].content,
-    },
-  });
-
-  const parsed = await llmJson({
-    system: PROBABILITY_SYSTEM_PROMPT,
-    user: userPrompt,
-    maxTokens: 2000,
-  });
-
-  const affirmative = Math.round(parsed.affirmative);
-  const negative = 100 - affirmative;
-
-  await pool.query(
-    `
-            UPDATE motions
-            SET affirmative = $1,
-                negative = $2
-            WHERE id = $3
-        `,
-    [affirmative, negative, motionId],
-  );
+interface Judgement {
+  verdict: "ok" | "abuse" | "no_argument";
+  points: number;
+  newAnalysis: unknown;
+  affirmative: number | null;
 }
 
-async function moderateAndAnalyze(
+// ONE call per argument. The score and the win split come out of the SAME
+// judgement, which is what stops the bar moving for an argument that scored the
+// floor — the two used to be separate calls and the second never saw the first.
+// See ai/prompts/argument-judge.prompt.ts.
+async function judgeArgument(
   motionId: number,
   side: string,
   authorUsername: string,
@@ -98,26 +58,24 @@ async function moderateAndAnalyze(
   replyTo: ReplyTarget | null = null,
   ownSideArguments: OwnSideArgument[] = [],
   newArgumentId: number | null = null,
-) {
+): Promise<Judgement> {
   const motionRes = await pool.query(
     `
-            SELECT content, for_analysis, against_analysis
+            SELECT content, for_analysis, against_analysis, affirmative, negative
             FROM motions
             WHERE id = $1;
         `,
     [motionId],
   );
-  const motionContent = motionRes.rows[0].content;
+  const row = motionRes.rows[0];
 
-  const own = readAnalysis(
-    side === "for" ? motionRes.rows[0].for_analysis : motionRes.rows[0].against_analysis,
-  );
+  const own = readAnalysis(side === "for" ? row.for_analysis : row.against_analysis);
   const opponent = readAnalysis(
-    side === "for" ? motionRes.rows[0].against_analysis : motionRes.rows[0].for_analysis,
+    side === "for" ? row.against_analysis : row.for_analysis,
   );
 
   const userPrompt = buildAnalystPrompt({
-    motion: motionContent,
+    motion: row.content,
     side: side as "for" | "against",
     author: authorUsername,
     ownAnalysis: renderOwnAnalysisForAnalyst(own),
@@ -127,18 +85,33 @@ async function moderateAndAnalyze(
     replyTo,
     ownSideArguments,
     newArgumentId,
+    priorAffirmative: row.affirmative,
+    priorNegative: row.negative,
   });
 
   const parsed = await llmJson({
-    system: MODERATOR_ANALYST_SYSTEM_PROMPT,
+    system: ARGUMENT_JUDGE_SYSTEM_PROMPT,
     user: userPrompt,
-    maxTokens: 3000,
+    reasoning: "high",
+    maxTokens: 8000,
   });
 
-  return parsed as {
-    abused: boolean;
-    points: number;
-    newAnalysis: unknown;
+  const verdict: Judgement["verdict"] =
+    parsed.verdict === "abuse" || parsed.verdict === "no_argument"
+      ? parsed.verdict
+      : "ok";
+
+  // On anything but "ok" the model's other fields are ignored outright. The
+  // prompt is told to zero them; the code does not depend on that.
+  if (verdict !== "ok") {
+    return { verdict, points: 0, newAnalysis: null, affirmative: null };
+  }
+
+  return {
+    verdict,
+    points: Number(parsed.points),
+    newAnalysis: parsed.newAnalysis,
+    affirmative: clampAffirmative(parsed.affirmative),
   };
 }
 
@@ -172,6 +145,13 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
   const checkedInput = checkText(input, { field: "input", max: 2000 });
   if (!checkedInput.ok)
     return res.status(400).json({ error: checkedInput.reason });
+
+  // §9 layer one: the free half of the low-effort gate, placed at the earliest
+  // possible point so a throwaway post costs one round trip and no queries.
+  // Same response as the judge's verdict below, deliberately — see validate.ts.
+  if (isTooShortToJudge(checkedInput.value)) {
+    return res.status(422).json(NO_ARGUMENT);
+  }
 
   const rawReplyTo = req.body.replyToArgumentId;
   const replyToArgumentId =
@@ -293,7 +273,7 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
     const newArgumentId = Number(idRes.rows[0].id);
     const authorUsername = String(idRes.rows[0].username);
 
-    const { abused, points, newAnalysis } = await moderateAndAnalyze(
+    const judgement = await judgeArgument(
       motionId,
       effectiveSide,
       authorUsername,
@@ -308,17 +288,22 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
       newArgumentId,
     );
 
-    if (abused) {
+    if (judgement.verdict === "abuse") {
       await awardLogic(pool, userId, -4, "abuse");
       return res.status(201).json({ abused: true });
     }
 
-    // §7: clamp to 1-8, then the standalone cap, then the halving — in that order.
+    // §9 layer two. Laziness costs the post and nothing else — abuse is malice
+    // and costs 4 logic, this is not.
+    if (judgement.verdict === "no_argument") {
+      return res.status(422).json(NO_ARGUMENT);
+    }
+
+    // §7: clamp to 2-10, then the standalone cap. In that order.
     const breakdown = scoreArgument({
-      rawPoints: points,
+      rawPoints: judgement.points,
       isReply: replyToArgumentId !== null,
       opponentHasArguments: oppSideCount > 0,
-      priorCount,
     });
 
     // Insert, award and case-rewrite commit or roll back together — a failure
@@ -348,11 +333,22 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
         ownSideRows.map((c) => [Number(c.id), String(c.username)]),
       );
       authorByArgumentId.set(newArgumentId, authorUsername);
-      const analysis = sanitizeAnalysis(newAnalysis, authorByArgumentId);
+      const analysis = sanitizeAnalysis(judgement.newAnalysis, authorByArgumentId);
       if (!isEmptyAnalysis(analysis)) {
         await client.query(
           `UPDATE motions SET ${effectiveSide}_analysis = $1 WHERE id = $2;`,
           [writeAnalysis(analysis), motionId],
+        );
+      }
+
+      // §16: the split only goes live once BOTH sides have argued. oppSideCount
+      // is read pre-insert, so this argument already accounts for the own side.
+      // A null affirmative means the model returned nothing usable — leave the
+      // split alone rather than fail a post that is otherwise good.
+      if (oppSideCount > 0 && judgement.affirmative !== null) {
+        await client.query(
+          `UPDATE motions SET affirmative = $1, negative = $2 WHERE id = $3;`,
+          [judgement.affirmative, 100 - judgement.affirmative, motionId],
         );
       }
       await client.query("COMMIT");
@@ -369,33 +365,6 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
     }
     if (priorCount === 0) {
       void notifyOpposition(motionId, effectiveSide, userId);
-    }
-
-    const { rows } = await pool.query(
-      `
-        SELECT
-            COUNT(CASE WHEN side = 'for' THEN 1 END) AS for_count,
-            COUNT(CASE WHEN side = 'against' THEN 1 END) AS against_count
-        FROM arguments
-        WHERE motion_id = $1;
-    `,
-      [motionId],
-    );
-
-    const forCount = Number(rows[0].for_count);
-    const againstCount = Number(rows[0].against_count);
-
-    if (forCount >= 1 && againstCount >= 1) {
-      // Best-effort: the argument is already committed, so a failed nudge must
-      // not turn a successful post into a 500.
-      try {
-        await updateProbability(motionId);
-      } catch (err) {
-        logger.warn(
-          { motionId, err: String(err) },
-          "probability nudge failed",
-        );
-      }
     }
 
     // §19: the season standing the points pop-up reconciles the award against.
@@ -419,7 +388,6 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
       points: breakdown.points,
       judged: breakdown.judged,
       capped: breakdown.capped,
-      halved: breakdown.halved,
       isReply: replyToArgumentId !== null,
       replyToUsername: replyTarget?.username ?? null,
       seasonLogic: standing.rows[0].season_logic,

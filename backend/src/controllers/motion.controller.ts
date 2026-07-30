@@ -6,7 +6,7 @@ import type { Response, Request } from "express";
 import pool from "../db/index.js";
 import { llmJson } from "../ai/llm.js";
 import { DEBATER_PROFILER_SYSTEM_PROMPT } from "../ai/prompts/debater-profiler.prompt.js";
-import { OPENING_ANALYST_SYSTEM_PROMPT } from "../ai/prompts/opening-analyst.prompt.js";
+import { OPENING_BRIEF_SYSTEM_PROMPT } from "../ai/prompts/opening-brief.prompt.js";
 import { checkText } from "../lib/validate.js";
 import { readAnalysis, sanitizeAnalysis, writeAnalysis } from "../ai/analysis.logic.js";
 
@@ -81,7 +81,7 @@ Domain: ${domainName}`;
 
   try {
     const parsed = await llmJson({
-      system: OPENING_ANALYST_SYSTEM_PROMPT,
+      system: OPENING_BRIEF_SYSTEM_PROMPT,
       user: userPrompt,
       maxTokens: 3000,
     });
@@ -97,10 +97,15 @@ Domain: ${domainName}`;
         keyword.value,
         content.value,
         domainId,
-        // Nobody has argued, so there is nobody to credit: an empty author map
-        // nulls any id the model invented for its own draft points.
-        writeAnalysis(sanitizeAnalysis(parsed.for_analysis, new Map())),
-        writeAnalysis(sanitizeAnalysis(parsed.against_analysis, new Map())),
+        // §17: a brief is a lead with NO points. Nobody has argued, so there is
+        // nothing to credit — and an empty points array is what keeps the panel
+        // honest until a real argument fills it.
+        writeAnalysis(
+          sanitizeAnalysis({ lead: parsed.for_opening, points: [] }, new Map()),
+        ),
+        writeAnalysis(
+          sanitizeAnalysis({ lead: parsed.against_opening, points: [] }, new Map()),
+        ),
       ],
     );
 
