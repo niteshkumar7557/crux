@@ -160,6 +160,13 @@ herald, laurel wreath, bust, medals ×3, amphitheater (full-bleed), doors
      light shadow on green-black glows instead of shading.
   3. **Anything carrying a cast sits on `bg-raised`,** not `bg-paper`: a shadow
      under a surface no lighter than the page reads as a hole punched in it.
+     *One exception, by owner request:* the **notification panel** sits on
+     `bg-band` (one step down, in both themes). On `raised` it was a sheet of
+     near-white rows whose only separation was the hairline between them, and
+     the rows needed a surface to sit on more than the panel needed to be the
+     lightest thing on screen. It does not read as a hole: the hairline border
+     plus the neutral cast carry the elevation. Don't copy it to a third
+     surface without the same reason.
 
   Everything else in the product is still flat paper and hairlines — the cast
   means "this is above the page", so it is worth nothing once it is everywhere.

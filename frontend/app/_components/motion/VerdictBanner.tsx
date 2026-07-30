@@ -1,5 +1,6 @@
 "use client";
 import { useRef } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MatchState } from "@/app/motion/types";
 import ShareVerdict from "@/app/_components/motion/ShareVerdict";
@@ -112,8 +113,18 @@ const VerdictBanner = ({
             {affirmative} – {negative} · Margin {margin}
           </span>
         )}
+        {/* The MVP is the one person this banner names, and the point of naming
+            them is that you can go and read them. Laurel to laurel-bright on
+            hover rather than to ink: the award colour is the whole reason this
+            line is gold, and dropping it on hover would read as the title being
+            revoked under the cursor. */}
         {mvpUsername && (
-          <span className="text-laurel">MVP — @{mvpUsername}</span>
+          <Link
+            href={`/profile/${mvpUsername}`}
+            className="text-laurel transition-colors hover:text-laurel-bright"
+          >
+            MVP — @{mvpUsername}
+          </Link>
         )}
       </div>
 

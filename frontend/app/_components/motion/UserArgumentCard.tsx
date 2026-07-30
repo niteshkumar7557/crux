@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { UserArgumentCardProps } from "@/app/motion/types";
 import Avatar from "@/app/_components/ui/Avatar";
 import LikeButton from "@/app/_components/ui/LikeButton";
@@ -62,7 +63,19 @@ const UserArgumentCard = ({
         }`}
       >
         <div className="flex items-start mb-4">
-          <div className="flex items-center gap-3">
+          {/* The debater's name is a way to them. Every argument is signed, and
+              the signature was the one thing on the card you could not follow —
+              you could jump to the argument it answers, but not to the person
+              who made it. Avatar and handle are one link, as in the motion
+              header, so the whole identity block is the target rather than eight
+              characters of small caps. Named group: the card itself is a
+              `group`, and an unnamed `group-hover` here would fire from
+              anywhere on the card. */}
+          <Link
+            href={`/profile/${username}`}
+            aria-label={`@${username}'s profile`}
+            className="group/author flex items-center gap-3"
+          >
             <Avatar
               username={username}
               src={avatar}
@@ -73,36 +86,56 @@ const UserArgumentCard = ({
               <p className="font-label text-[10px] uppercase text-ink">
                 Reputation: {reputation}
               </p>
-              <p className="font-label text-[10px] uppercase text-ink-soft">
+              <p
+                className={`font-label text-[10px] uppercase text-ink-soft transition-colors ${
+                  side === "for"
+                    ? "group-hover/author:text-side-for"
+                    : "group-hover/author:text-side-against"
+                }`}
+              >
                 @{username}
               </p>
             </div>
-          </div>
+          </Link>
         </div>
         {/* §5: the quoted stub of the opposing argument this reply answers. The
             border takes the opponent's accent so it reads as a foreign quote,
             and the whole stub jumps to the argument it is quoting. */}
+        {/* The stub holds two destinations, so it can't be one button: the quote
+            jumps to the argument being answered, and the handle goes to the
+            person who wrote it. A link nested in a button is invalid markup and
+            unreachable by keyboard, so the box is a plain div — the quote is the
+            jump control, the handle is a link, and `has-[button:hover]` lets the
+            whole box still light up as one when the jump is hovered. */}
         {replyTo && (
-          <button
-            type="button"
-            onClick={() => focusArgument(replyTo.argumentId)}
-            aria-label={`Go to the argument by @${replyTo.username} this answers`}
-            className={`block w-full text-left cursor-pointer mb-4 border-l-2 pl-3 py-2 bg-paper/60 hover:bg-paper transition-colors ${side === "for" ? "border-side-against/40 hover:border-side-against" : "border-side-for/40 hover:border-side-for"}`}
+          <div
+            className={`mb-4 border-l-2 pl-3 py-2 bg-paper/60 transition-colors has-[button:hover]:bg-paper ${side === "for" ? "border-side-against/40 has-[button:hover]:border-side-against" : "border-side-for/40 has-[button:hover]:border-side-for"}`}
           >
             <p className="font-label text-[9px] uppercase tracking-[0.15em] text-ink-soft mb-1">
-              replying to @{replyTo.username}
+              replying to{" "}
+              <Link
+                href={`/profile/${replyTo.username}`}
+                className="transition-colors hover:text-ink"
+              >
+                @{replyTo.username}
+              </Link>
             </p>
             {/* Follows the argument face, since it *is* an argument. It keeps
                 its quote marks, though: unlike the card's own words, these are
                 genuinely someone else's, lifted into your card. */}
-            <p className="font-label text-[0.72rem] leading-relaxed text-ink-soft/80 truncate">
+            <button
+              type="button"
+              onClick={() => focusArgument(replyTo.argumentId)}
+              aria-label={`Go to the argument by @${replyTo.username} this answers`}
+              className="block w-full cursor-pointer text-left font-label text-[0.72rem] leading-relaxed text-ink-soft/80 truncate"
+            >
               &ldquo;
               {replyTo.content.length > 80
                 ? `${replyTo.content.slice(0, 80)}…`
                 : replyTo.content}
               &rdquo;
-            </p>
-          </button>
+            </button>
+          </div>
         )}
         {/* Set in the label face, like the Crux AI panel above it, and with no
             quotation marks. The card already says whose words these are — the

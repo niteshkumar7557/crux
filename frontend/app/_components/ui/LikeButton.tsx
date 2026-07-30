@@ -58,7 +58,14 @@ const LikeButton = ({
     if (!busy) setLiked(initiallyLiked);
   }
 
-  const accent = side === "for" ? "text-side-for" : "text-side-against";
+  // **The pressed thumb is ink, not the camp colour.** A liked argument used to
+  // fill forest on the FOR side and terracotta on the AGAINST side, which put
+  // the loudest colour in the column on the one control that says nothing about
+  // the debate — a like is a viewer's tap, not a claim about who is winning, and
+  // two of them in different colours read as two different features. One neutral
+  // fill for both sides; the outline/solid swap is what says "pressed". The
+  // hover tint stays the camp's, matching Reply and the reply count beside it.
+  const accent = "text-ink";
   const hover = side === "for" ? "hover:text-side-for" : "hover:text-side-against";
   const base = `font-label text-[10px] uppercase inline-flex items-center gap-1.5 transition-colors ${className}`;
 

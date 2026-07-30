@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { LuBell, LuX } from "react-icons/lu";
+import { LuX } from "react-icons/lu";
+import { PiBell, PiBellFill } from "react-icons/pi";
 import api from "../axios";
 
 type Notif = {
@@ -91,12 +92,24 @@ const NotificationBell = () => {
         type="button"
         onClick={toggle}
         aria-label="Notifications"
+        aria-expanded={open}
         // `flex`, not the default inline-block: an inline <svg> sits on a text
         // baseline, and the descender space under it left the bell riding ~4px
         // high of everything else in the nav row.
-        className="relative flex cursor-pointer items-center text-ink-soft hover:text-ink transition-colors"
+        //
+        // The last 2px are a transform rather than a margin: with
+        // `items-center` on the nav row, a margin is folded into the centring
+        // and only moves the icon half as far as it says.
+        className={`relative flex translate-y-[2px] cursor-pointer items-center transition-colors ${
+          open ? "text-ink" : "text-ink-soft hover:text-ink"
+        }`}
       >
-        <LuBell size={22} />
+        {/* A matched outline/solid pair, the same reasoning as the like control:
+            the panel being open is a state the bell should show, and filling a
+            stroked bell with `fill-current` closes up the clapper gap and turns
+            the drawing into a blob. Phosphor ships the solid cut, so the open
+            bell is the same bell, rung. */}
+        {open ? <PiBellFill size={22} /> : <PiBell size={22} />}
         {unread > 0 && (
           <span className="absolute -top-1.5 -right-1.5 bg-ink text-paper text-[9px] font-bold leading-none px-1 py-0.5 min-w-[16px] text-center">
             {unread > 9 ? "9+" : unread}
@@ -104,7 +117,15 @@ const NotificationBell = () => {
         )}
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-96 max-w-[calc(100vw-2rem)] max-h-96 overflow-y-auto bg-raised border border-ink-faint shadow-cast z-50">
+        // `bg-band` rather than `bg-raised`. The panel used to be the lightest
+        // surface on the page, which is the system's rule for anything casting a
+        // shadow — but on cream paper that made a floating white sheet of
+        // near-white rows, and the hairlines between them were the only thing
+        // separating one notification from the next. One paper step down in both
+        // themes (`#faf6e8 → #ece4cb` light, `#1b2c24 → #14231c` dark) gives the
+        // rows an edge to sit on. It still reads as above the page: the border
+        // and the cast do that work.
+        <div className="absolute right-0 mt-2 w-96 max-w-[calc(100vw-2rem)] max-h-96 overflow-y-auto bg-band border border-ink-faint shadow-cast z-50">
           <div className="sticky top-0 flex items-center gap-3 bg-band px-3 py-2.5 border-b border-ink-faint">
             <span className="font-label text-[11px] uppercase tracking-[0.2em] text-ink-soft">
               Notifications
@@ -136,16 +157,26 @@ const NotificationBell = () => {
             items.map((n) => {
               const tone = TYPE_TONE[n.type] ?? UNKNOWN_TONE;
               const body = (
+                // A read notification is no longer dimmed to 60%. Fading the
+                // whole row took the message, the rule and the type label down
+                // together, and a 14px serif at 60% on warm paper is the least
+                // readable text in the product — for the half of the inbox you
+                // are most likely to be going back to re-read. Read state is
+                // carried by the fill alone now: unread rows sit on a wash,
+                // read rows sit on the panel.
                 <div
-                  className={`border-l-2 ${tone.rule} border-b border-b-ink-faint px-3 py-3 transition-colors ${
-                    n.is_read ? "opacity-60 hover:bg-ink-wash" : "bg-ink-wash"
+                  className={`border-l-2 ${tone.rule} border-b border-b-ink-faint px-3.5 py-3 transition-colors ${
+                    n.is_read ? "hover:bg-ink-wash" : "bg-ink-wash"
                   }`}
                 >
-                  <p className="font-body text-sm text-ink leading-snug">
+                  {/* 15px and a full line-and-a-half of leading. These are
+                      sentences, not captions, and they were set tighter and
+                      smaller than any other prose in the app. */}
+                  <p className="font-body text-[0.95rem] leading-relaxed text-ink">
                     {n.message}
                   </p>
                   <span
-                    className={`font-label text-[10px] uppercase tracking-[0.15em] ${tone.label}`}
+                    className={`mt-1.5 inline-block font-label text-[10px] uppercase tracking-[0.15em] ${tone.label}`}
                   >
                     {n.type}
                   </span>

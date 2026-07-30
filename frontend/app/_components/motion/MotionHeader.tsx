@@ -6,6 +6,7 @@ import { MotionHeaderProps, MatchState } from "@/app/motion/types";
 import Avatar from "@/app/_components/ui/Avatar";
 import { shouldAnimate } from "@/app/_utils/animateOnce";
 import MotionProbability from "./MotionProbability";
+import StickyMotion from "./StickyMotion";
 import Countdown from "./Countdown";
 import VerdictBanner from "./VerdictBanner";
 import PinControl from "../arena/PinControl";
@@ -73,6 +74,14 @@ const MotionHeader = ({
 
   return (
     <div ref={rootRef}>
+      {/* Watches the h1 below and takes over for it once it scrolls under the
+          navbar, so the sentence being argued is never off screen. */}
+      <StickyMotion
+        watch={headlineRef}
+        before={before}
+        highlight={highlight}
+        after={after}
+      />
       <div className="flex flex-col items-start gap-4 mb-8">
         <div
           data-hero-meta

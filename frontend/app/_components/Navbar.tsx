@@ -27,7 +27,13 @@ const Navbar = () => {
   const avatar = useAvatar(user);
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-ink-faint bg-paper/85 backdrop-blur-md">
+    // `data-navbar` is how anything that has to sit *under* this bar finds its
+    // height (the debate page's sticky motion rail). Measured, not hardcoded:
+    // the row grows at the md breakpoint and with a wrapping search field.
+    <nav
+      data-navbar
+      className="sticky top-0 z-50 border-b border-ink-faint bg-paper/85 backdrop-blur-md"
+    >
       <div className="flex items-center justify-between gap-2 px-4 py-3 md:gap-6 md:px-6">
         <div className="flex items-center shrink-0">
           <Link

@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { PrimaryCardDataType } from "@/app/types";
 import Avatar from "@/app/_components/ui/Avatar";
 import Button from "@/app/_components/ui/Button";
@@ -28,17 +29,24 @@ const ArenaPrimaryCard = ({
       className="group mt-5 border border-ink-faint bg-band transition-colors hover:bg-raised"
     >
       <header className="flex items-start justify-between gap-3 border-b border-ink-faint px-8 py-4">
-        <div className="flex items-center gap-3">
+        {/* No stretched sheet needed here: this card's way in is the button at
+            the bottom, so the masthead is free to be a link to the person who
+            proposed the motion. */}
+        <Link
+          href={`/profile/${username}`}
+          aria-label={`@${username}'s profile`}
+          className="group/author flex items-center gap-3"
+        >
           <Avatar username={username} src={avatar} size="md" />
           <div className="flex flex-col gap-0.5">
             <span className="font-label text-[0.6rem] uppercase tracking-[0.28em] text-laurel">
               {isMotd ? "Motion of the Day" : "Proposed by"}
             </span>
-            <span className="font-label text-[0.7rem] uppercase tracking-[0.14em] text-ink">
+            <span className="font-label text-[0.7rem] uppercase tracking-[0.14em] text-ink transition-colors group-hover/author:text-laurel">
               {username}
             </span>
           </div>
-        </div>
+        </Link>
         {closesAt && <Countdown closesAt={closesAt} />}
       </header>
 

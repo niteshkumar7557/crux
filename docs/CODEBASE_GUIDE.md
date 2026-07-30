@@ -373,6 +373,13 @@ the page and the code now say the same thing.
   `argument/` (the debate page: header, arena columns, composer, reply context, side-lock
   confirmation, verdict banner, OG card, verdict certificate), `profile/`, `motion/`, `ui/` (primitives +
   `PointsPopup`). `Navbar.tsx` hosts the `NotificationBell`.
+- **`Navbar.tsx` carries `data-navbar`, and something depends on it.** The debate page's
+  `motion/StickyMotion.tsx` measures that element to park itself at the navbar's bottom edge:
+  once the motion `h1` scrolls under the bar, an `IntersectionObserver` slides a one-line
+  restatement of the claim out from behind it, so a reader deep in a column can still see the
+  sentence being argued. The height is measured, not hardcoded — the nav row grows at `md` and
+  with a wrapping search field. Remove the attribute and the rail parks itself at `top: 0`,
+  behind the navigation.
 - **`_utils/`** holds pure helpers (`slugify`, `debateMeta`, `timeAgo`, `logicScore`, gsap setup).
 - **Motion has two kinds, and they are gated differently.** An *entrance* (a page introducing
   itself: `Reveal`, the score-bar draw, the debate headline split, the sidebar stagger) runs
