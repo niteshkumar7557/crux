@@ -7,6 +7,9 @@ import Reveal from "@/app/_components/ui/Reveal";
 
 export const metadata: Metadata = {
   title: "About",
+  description:
+    "What Crux is and why it works this way: every claim gets both sides, an AI referee keeps the debate honest, and your reasoning becomes a permanent record.",
+  alternates: { canonical: "/about" },
 };
 
 const PILLARS = [

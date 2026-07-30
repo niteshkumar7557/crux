@@ -261,7 +261,9 @@ export async function getSeasonLeaderboard(req: Request, res: Response) {
 export async function getSitemapData(_req: Request, res: Response) {
   try {
     const r = await pool.query(
-      `SELECT id, content, content_keyword, status
+      // created_at/closes_at feed the sitemap's <lastmod>, which is the one hint
+      // Google still acts on — it schedules recrawls by it.
+      `SELECT id, content, content_keyword, status, created_at, closes_at
        FROM motions ORDER BY id DESC LIMIT ${config.limits.sitemap_rows}`,
     );
     res.status(200).json(r.rows);

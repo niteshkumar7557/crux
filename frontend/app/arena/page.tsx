@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "Arena",
   description:
     "Live debates on Crux — pick a side, argue, and watch the verdict land.",
+  alternates: { canonical: "/arena" },
 };
 
 const Arena = () => {

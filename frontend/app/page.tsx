@@ -12,6 +12,7 @@ export const metadata: Metadata = {
   title: "Crux — Every argument deserves a verdict",
   description:
     "Crux is the digital debate arena: stake a claim, take a side, argue for 48 hours, and an impartial AI judge rules — a winner, a margin, an MVP. Your reasoning becomes your reputation.",
+  alternates: { canonical: "/" },
 };
 
 /** The story landing page. The live app lives at /arena. */

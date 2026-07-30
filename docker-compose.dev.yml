@@ -4,13 +4,22 @@
 #
 #   docker compose -f docker-compose.dev.yml up -d
 #
-# NOTE: production runs Postgres 18. This is one major behind, which is fine for
-# development but means a production dump will not restore into this container.
+# Pinned to the SAME major as production (Railway managed Postgres 18), so a
+# production dump restores here and `ops/restore-drill.sh` proves something true.
+# Keep this in step with backup.yml and restore-drill.sh, which both pin 18 too —
+# a client older than the server refuses to dump at all.
+#
+# Postgres will not start on a data directory written by a different major
+# version, so moving this pin means dropping the volume first:
+#
+#   docker compose -f docker-compose.dev.yml down -v
+#   docker compose -f docker-compose.dev.yml up -d
+#   cd backend && npm run db-init
 
 name: crux-dev
 services:
   db:
-    image: postgres:17.4
+    image: postgres:18
     container_name: crux-dev-db
     env_file:
       - ./backend/.env

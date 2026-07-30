@@ -30,10 +30,38 @@ const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
 });
 
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+// Who Crux is, stated once for search engines. Without this nothing tells Google
+// that "Crux" is an entity rather than a common noun, which is what a brand query
+// has to resolve against. Deliberately NOT a canonical: an `alternates.canonical`
+// here would be inherited by every page that does not override it, pointing the
+// whole site at "/".
+const siteJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE}/#organization`,
+      name: "Crux",
+      url: SITE,
+      logo: `${SITE}/icon.svg`,
+      description:
+        "Crux is a debate platform where an AI referee gates every claim, two camps argue for 48 hours, and a neutral AI judge delivers a verdict.",
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE}/#website`,
+      name: "Crux",
+      url: SITE,
+      publisher: { "@id": `${SITE}/#organization` },
+      inLanguage: "en",
+    },
+  ],
+};
+
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-  ),
+  metadataBase: new URL(SITE),
   title: {
     default: "Crux — The Digital Debate Arena",
     template: "%s · Crux",
@@ -62,6 +90,12 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `try{var t=localStorage.getItem("crux-theme");if(t!=="light"&&t!=="dark")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=t}catch(e){}`,
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(siteJsonLd).replace(/</g, "\\u003c"),
           }}
         />
       </head>

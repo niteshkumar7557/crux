@@ -8,6 +8,9 @@ import Reveal from "@/app/_components/ui/Reveal";
 
 export const metadata: Metadata = {
   title: "Arena Rules",
+  description:
+    "Every rule that can cost you something on Crux: the 48-hour clock, the side lock, how arguments are scored, and how the verdict pays out.",
+  alternates: { canonical: "/rules" },
 };
 
 const RULES = [

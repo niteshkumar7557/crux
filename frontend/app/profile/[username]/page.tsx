@@ -1,6 +1,7 @@
 // A profile. The shell is server-rendered and the activity payload is fetched after
 // mount, so nothing slow blocks first paint. Spec: game-theory.md §13
 
+import { cache } from "react";
 import type { Metadata } from "next";
 import { isAxiosError } from "axios";
 import { notFound, redirect } from "next/navigation";
@@ -16,7 +17,11 @@ import type { ProfileShell } from "@/app/profile/types";
 
 const isLegacyId = (segment: string) => /^\d+$/.test(segment);
 
-async function fetchShell(username: string): Promise<ProfileShell | null> {
+// cache() because generateMetadata and the page both need the shell, and without
+// it every profile render costs two identical queries.
+const fetchShell = cache(async function fetchShell(
+  username: string,
+): Promise<ProfileShell | null> {
   try {
     const { data } = await serverApi.get(`/profile/${username}`);
     return data?.identity ? data : null;
@@ -24,6 +29,12 @@ async function fetchShell(username: string): Promise<ProfileShell | null> {
     if (isAxiosError(error) && error.response?.status === 404) return null;
     throw error;
   }
+});
+
+/** A registered account that has never argued: nothing here for anyone to find. */
+function hasNothingToShow(shell: ProfileShell): boolean {
+  const { logic, record } = shell.standing;
+  return logic === 0 && record.wins + record.losses + record.draws === 0;
 }
 
 export async function generateMetadata({
@@ -38,6 +49,13 @@ export async function generateMetadata({
   return {
     title: `${shell.identity.name} (@${shell.identity.username})`,
     description: `${shell.standing.logic} logic · ${shell.standing.record.wins}–${shell.standing.record.losses}–${shell.standing.record.draws} · ${shell.standing.tier} tier on Crux.`,
+    alternates: { canonical: `/profile/${shell.identity.username}` },
+    // Empty profiles are the bulk of a young platform's URLs and none of its
+    // value. Keep them out until there is a record to show; the page starts
+    // indexing itself as soon as there is.
+    ...(hasNothingToShow(shell)
+      ? { robots: { index: false, follow: true } }
+      : {}),
   };
 }
 

@@ -10,6 +10,7 @@ import serverApi from "@/app/axios.server";
 import { isAxiosError } from "axios";
 import { notFound } from "next/navigation";
 import { debateSlug } from "@/app/_utils/slugify";
+import { debateJsonLd } from "./debateJsonLd";
 import { DEBATE_SHELL } from "./debateLayout";
 import type { Analysis } from "@/app/motion/types";
 import {
@@ -19,28 +20,6 @@ import {
 } from "./walkoverRisk";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-
-function debateJsonLd(
-  row: Record<string, unknown>,
-  url: string,
-): Record<string, unknown> {
-  const concluded = row.status === "concluded";
-  const verdict = row.verdict_text ? String(row.verdict_text) : "";
-  return {
-    "@context": "https://schema.org",
-    "@type": "QAPage",
-    url,
-    mainEntity: {
-      "@type": "Question",
-      name: String(row.content ?? ""),
-      text: String(row.content ?? ""),
-      answerCount: concluded && verdict ? 1 : 0,
-      ...(concluded && verdict
-        ? { acceptedAnswer: { "@type": "Answer", text: verdict } }
-        : {}),
-    },
-  };
-}
 
 const DebateView = async ({ id }: { id: number }) => {
   let data;
@@ -104,10 +83,20 @@ const DebateView = async ({ id }: { id: number }) => {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(debateJsonLd(row, canonicalUrl)).replace(
-            /</g,
-            "\\u003c",
-          ),
+          __html: JSON.stringify(
+            debateJsonLd({
+              claim: String(row.content ?? ""),
+              url: canonicalUrl,
+              status: String(row.status ?? ""),
+              verdictText: row.verdict_text ?? null,
+              authorUsername: row.author_username ?? null,
+              authorUrl: row.author_username
+                ? `${SITE}/profile/${row.author_username}`
+                : null,
+              createdAt: row.created_at ?? null,
+              argumentCount: allArguments.length,
+            }),
+          ).replace(/</g, "\\u003c"),
         }}
       />
       <ReplyProvider>

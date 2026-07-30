@@ -30,10 +30,19 @@ export async function generateMetadata({
   searchParams: SearchParams;
 }): Promise<Metadata> {
   const { q } = await searchParams;
-  if (!q || q === "all") return { title: "Domains" };
+  // /domain and /domain?q=all are the same page under two URLs; point both at
+  // the clean one so the signal is not split between them.
+  if (!q || q === "all") {
+    return { title: "Domains", alternates: { canonical: "/domain" } };
+  }
   const domains = await fetchDomains();
   const match = domains.find((d) => slugifyDomain(d.name) === q);
-  return { title: match ? match.name : "Domains" };
+  return {
+    title: match ? match.name : "Domains",
+    alternates: {
+      canonical: match ? `/domain?q=${q}` : "/domain",
+    },
+  };
 }
 
 const chipClass = (active: boolean) =>
