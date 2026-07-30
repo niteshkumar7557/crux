@@ -26,7 +26,7 @@ is not part of the repo.
 Files that implement a game rule carry a header pointing at the spec:
 
 ```ts
-// Argument scoring: clamp, standalone cap, repeat halving.
+// Argument scoring: clamp, standalone cap.
 // Spec: game-theory.md §7, §8
 ```
 
@@ -64,7 +64,7 @@ Eight pure modules hold most of the game:
 
 | Pure module | Owns | Spec |
 |---|---|---|
-| `ai/analyst.logic.ts` | argument scoring — the 1–8 clamp, the standalone cap, the halving; and the Analyst/Probability prompt bodies | §7, §16 |
+| `ai/analyst.logic.ts` | argument scoring — the 2–10 clamp, the standalone cap, the 2–98 split clamp; and the Judge's prompt body | §7, §16 |
 | `ai/analysis.logic.ts` | the living case — parse, sanitize, attribute, render | §17 |
 | `ai/verdict.logic.ts` | the draw threshold, MVP validation, every payout | §11, §12 |
 | `lib/duplicate.logic.ts` | verbatim repost detection | §8 |
@@ -229,10 +229,10 @@ awarded.
 
 ## 6. The AI, and the core flows
 
-### The six personas
+### The five personas
 
 All go through `ai/llm.ts` → `llmJson()` → an OpenAI-compatible `/chat/completions` endpoint
-(OpenRouter, `deepseek/deepseek-v4-flash`, swappable by env). **One model runs all six.** Each
+(OpenRouter, `deepseek/deepseek-v4-flash`, swappable by env). **One model runs all five.** Each
 persona is one system prompt, one per file in **`backend/src/ai/prompts/`** — those files are the
 live strings the controllers import, and each carries a header documenting its inputs, its JSON
 contract, and which fields the code re-validates versus takes on trust. Start at
@@ -241,15 +241,17 @@ contract, and which fields the code re-validates versus takes on trust. Start at
 | # | Persona | Call site |
 |---|---|---|
 | 1 | Arbiter | `controllers/ai.controller.ts` — `POST /ai/motion`, nothing is persisted |
-| 2 | Opening Analyst | `controllers/motion.controller.ts` — `addNewMotion` |
-| 3 | Moderator / Analyst | `controllers/argument.controller.ts` — `moderateAndAnalyze`; prompt body built by pure `ai/analyst.logic.ts` |
-| 4 | Probability Judge | `controllers/argument.controller.ts` — `updateProbability` |
-| 5 | Verdict Judge | `ai/verdict.ts` — `concludeDebate`; decisions in pure `ai/verdict.logic.ts` |
-| 6 | Debater Profiler | `controllers/motion.controller.ts` — `updateDesciption`, best-effort |
+| 2 | Opening Brief | `controllers/motion.controller.ts` — `addNewMotion` |
+| 3 | Judge | `controllers/argument.controller.ts` — `judgeArgument`; prompt body built by pure `ai/analyst.logic.ts`. Scores the argument AND moves the split, in one call |
+| 4 | Verdict Judge | `ai/verdict.ts` — `concludeDebate`; decisions in pure `ai/verdict.logic.ts` |
+| 5 | Debater Profiler | `controllers/motion.controller.ts` — `updateDesciption`, best-effort |
 
-**Reasoning is off, deliberately.** Thinking tokens are billed as output *and* count against
-`max_tokens`, so leaving it on truncates the shorter calls into invalid JSON — measured, it turned
-a 40-token profile line into 267 against a 500-token ceiling. Every persona answers by rubric, so
+**Reasoning is off for four of the five, deliberately.** Thinking tokens are billed as output
+*and* count against `max_tokens`, so leaving it on truncates the shorter calls into invalid JSON —
+measured, it turned a 40-token profile line into 267 against a 500-token ceiling. The **Judge** is
+the documented exception: it passes `reasoning: "high"` with an 8000-token ceiling, because it has
+the headroom and it is the call that decides what every score in the product means. The other four
+answer by rubric, so
 thinking buys nothing. The replacement is **decode-first** (§16): each prompt makes the model write
 its analysis into fields the code never reads before it emits the number. **Field order in those
 prompts is load-bearing.**
@@ -282,8 +284,8 @@ to three times. A walkover conclusion costs nothing — `verdict.ts` returns bef
 ### Flow A — post a motion
 
 `POST /ai/motion` runs the **Arbiter** gate alone (fail → reason + rewrite, shown in the composer;
-nothing is written). On pass, `POST /motion` resolves the domain by name, the **Opening Analyst**
-writes both cases, the row is inserted with `closes_at = NOW() + INTERVAL '48 hours'`, and the
+nothing is written). On pass, `POST /motion` resolves the domain by name, the **Opening Brief**
+writes what each side must prove, the row is inserted with `closes_at = NOW() + INTERVAL '48 hours'`, and the
 **Debater Profiler** runs best-effort in its own try/catch. The arena is live.
 
 ### Flow B — post an argument (trace this one first)
@@ -304,18 +306,19 @@ writes both cases, the row is inserted with `closes_at = NOW() + INTERVAL '48 ho
 7. **Reserve the new argument's id** from the sequence. The Analyst has to attribute a point to a
    row that does not exist yet; an abusive argument is never inserted at all. A failed post just
    leaves a gap in the numbering.
-8. **Moderator / Analyst** → `{ abused, points, newAnalysis }`. Abuse → −4 logic, return 201
-   `{ abused: true }`.
-9. `scoreArgument()` (pure): clamp 1–8 → cap a standalone at 5 (exempt while the opposing side is
-   empty) → halve past 3 arguments.
-10. **One transaction**: insert the argument with its `points`, `awardLogic`, and write the
-    sanitized case. Attribution is resolved here against the side's real arguments (§17).
-11. **Probability Judge** once both sides have argued — best-effort, in its own try/catch, because
-    the argument is already committed and a failed nudge must not turn a successful post into a
-    500.
-12. **Notify** best-effort: the replied-to author, and the opposing side on a new participant.
-13. **Respond with the full breakdown** — `{ points, judged, capped, halved, isReply,
-    replyToUsername, seasonLogic, seasonRank }` — which is exactly what the points pop-up renders.
+8. **Judge** (ONE call) → `{ decoded_claim, engages, move, verdict, points, newAnalysis,
+   shift_reason, affirmative }`. `verdict: "abuse"` → −4 logic, return 201 `{ abused: true }`.
+   `verdict: "no_argument"` → 422, nothing inserted, no penalty. On anything but `"ok"` the
+   model's other fields are ignored outright — the code does not trust the prompt to zero them.
+9. `scoreArgument()` (pure): clamp 2–10 → cap a standalone at 7 (exempt while the opposing side is
+   empty). No halving; that rule is gone.
+10. **One transaction**: insert the argument with its `points`, `awardLogic`, write the sanitized
+    case, and write the new split. Attribution is resolved here against the side's real arguments
+    (§17). The split is written only once both sides have argued, and only if `clampAffirmative`
+    returned a number — a malformed one is skipped rather than failing a committed post.
+11. **Notify** best-effort: the replied-to author, and the opposing side on a new participant.
+12. **Respond with the full breakdown** — `{ points, judged, capped, isReply, replyToUsername,
+    seasonLogic, seasonRank }` — which is exactly what the points pop-up renders.
 
 ### Flow C — conclusion (background, 60s)
 
@@ -413,10 +416,10 @@ in four or five places at once, and missing the copy is how a product ends up ly
 | Constant | Source of truth | Also change |
 |---|---|---|
 | Debate duration 48h | *no constant* — `INTERVAL '48 hours'` inline in `controllers/motion.controller.ts` | `db/seed-data.ts` (same literal); `/rules` rule 1. Consider extracting it first. |
-| Score range 1–8 | `ai/analyst.logic.ts` `SCORE_MIN`/`SCORE_MAX` | `analyst.logic.test.ts`; the band descriptions in `ai/prompts/moderator-analyst.prompt.ts`; `/rules` rule 3 |
-| Standalone cap 5 | `ai/analyst.logic.ts` `STANDALONE_CAP` | `analyst.logic.test.ts`; **`_components/ui/awardCopy.ts` holds its own copy** + its test; the composer hint in `ArgumentInput.tsx`; `/rules` rule 3 |
-| Full-value arguments 3 | `ai/analyst.logic.ts` `FULL_VALUE_ARGUMENTS` | `analyst.logic.test.ts`; **`ArgumentInput.tsx` holds its own copy** for the counter; `awardCopy.ts`; `/rules` rule 4 |
-| Halving floor 1 | inline `Math.max(1, …)` in `scoreArgument` | `analyst.logic.test.ts`; `/rules` rule 4 |
+| Score range 2–10 | `ai/analyst.logic.ts` `SCORE_MIN`/`SCORE_MAX` | `analyst.logic.test.ts`; the band descriptions in `ai/prompts/argument-judge.prompt.ts`; `/rules` rule 3 |
+| Standalone cap 7 | `ai/analyst.logic.ts` `STANDALONE_CAP` | `analyst.logic.test.ts`; **`_components/ui/awardCopy.ts` holds its own copy** + its test; `ArgumentPattern.tsx`; `/rules` rule 3 |
+| Split clamp 2–98 | `ai/analyst.logic.ts` `AFFIRMATIVE_MIN`/`AFFIRMATIVE_MAX` | `analyst.logic.test.ts`. A sanity bound only — there is no move cap |
+| Min argument length 18 | `lib/validate.ts` `MIN_ARGUMENT_CHARS` | `validate.test.ts`. **Deliberately absent from the product surface** — no counter, no distinct error, nothing in `/rules`. Its response must stay byte-identical to the Judge's `no_argument` body |
 | Cross-user repost min 40 | `lib/duplicate.logic.ts` `CROSS_USER_MIN_LENGTH` | `duplicate.logic.test.ts` |
 | Abuse penalty −4 | *no constant* — inline in `controllers/argument.controller.ts` | the composer fine print in `ArgumentInput.tsx`; `/rules` rule 5 |
 | Like / unlike ±2 | *no constant* — inline in `controllers/like.controller.ts` | nothing states it in the UI today |
@@ -431,16 +434,15 @@ in four or five places at once, and missing the copy is how a product ends up ly
 | Main Stage size 4 | `jobs/featuring.logic.ts` `MAIN_STAGE_SIZE` | `featuring.logic.test.ts`. **`getSecondaryCardsData` in `arena.controller.ts` has its own `LIMIT 6`** — raise it too or the extra cards never render |
 | Heat window / balance floor | `jobs/featuring.logic.ts` | `featuring.logic.test.ts`; the SQL in `jobs/featuring.ts` mirrors the formula (it imports the constants, so only the shape can drift) |
 | Username rule | `lib/username.logic.ts` | `username.logic.test.ts`; **`frontend/app/_utils/username.ts` is a full duplicate**; the register form's hint |
-| Analysis caps | `ai/analysis.logic.ts` `MAX_POINTS` etc. | `analysis.logic.test.ts`; the caps stated in `ai/prompts/moderator-analyst.prompt.ts` |
+| Analysis caps | `ai/analysis.logic.ts` `MAX_POINTS` etc. | `analysis.logic.test.ts`; the caps stated in `ai/prompts/argument-judge.prompt.ts` |
 
-### The five values that exist in two places
+### The four values that exist in two places
 
 Duplicated across the backend/frontend boundary on purpose — the frontend cannot import backend
 modules — and they are the ones that silently drift:
 
 - `DRAW_MARGIN` → `ai/verdict.logic.ts` **and** `_utils/drawBand.ts`
 - `STANDALONE_CAP` → `ai/analyst.logic.ts` **and** `_components/ui/awardCopy.ts`
-- `FULL_VALUE_ARGUMENTS` → `ai/analyst.logic.ts` **and** `_components/motion/ArgumentInput.tsx`
 - the tier ladder → `profile.controller.ts` **and** `_utils/logicScore.ts`
 - the username rule → `lib/username.logic.ts` **and** `_utils/username.ts`
 

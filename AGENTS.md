@@ -38,10 +38,13 @@ header, then that section, then the code.**
 - **Pure decisions go in `*.logic.ts` with a `*.logic.test.ts` beside them.** If something is hard
   to test without mocking, that is the signal to extract it. The suite uses no module mocks, no
   fake timers, and no shared setup — inputs are injected instead.
-- **Five values are duplicated across the backend/frontend boundary on purpose** (the frontend
-  cannot import backend modules): `DRAW_MARGIN`, `STANDALONE_CAP`, `FULL_VALUE_ARGUMENTS`, the
-  tier ladder, and the username rule. Change both sides, or the UI states a rule the server does
-  not enforce — and both test suites stay green while it happens.
+- **Four values are duplicated across the backend/frontend boundary on purpose** (the frontend
+  cannot import backend modules): `DRAW_MARGIN`, `STANDALONE_CAP`, the tier ladder, and the
+  username rule. Change both sides, or the UI states a rule the server does not enforce — and both
+  test suites stay green while it happens.
+- **`MIN_ARGUMENT_CHARS` (`lib/validate.ts`) is deliberately backend-only and unmentioned in the
+  UI.** It is the free half of the low-effort gate; naming it would teach users to pad to it. Never
+  add a character counter, a length-aware disabled state, or a distinct error for it.
 - **Tailwind cannot see class names built at runtime.** Colour-by-variant goes through a lookup of
   literal class strings.
 - **Prompt field order is load-bearing.** Every judging prompt makes the model write its analysis

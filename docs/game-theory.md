@@ -32,7 +32,7 @@ Every row is a feature, what it is, and why a user cares.
 | **48-hour clock** | Every debate ends. No perpetual threads | Your effort resolves. There is a payoff moment, and a reason to come back |
 | **Side lock** | Your first argument commits you to one side for that debate | Nobody can hedge both sides to guarantee a win. The two camps are real |
 | **Direct replies** | You reply to a specific argument on the opposing side, and that reply earns the most | Being *right at* someone is worth more than talking past them. This is what makes it a debate |
-| **Logic score** | An AI scores every contribution 1–8 on how well it engages the actual argument | Reputation earned by reasoning, not by follower count or upvotes |
+| **Logic score** | An AI scores every contribution 2–10 on how well it engages the actual argument | Reputation earned by reasoning, not by follower count or upvotes |
 | **The verdict** | At 48h an AI judge names a winner, a margin, an MVP, and writes why | An unbiased conclusion — the thing normal internet arguments never produce |
 | **W–L–D record** | Permanent win/loss/draw record on your profile | A career. Proof you argue well, not just often |
 | **Monthly seasons** | The board tracks logic earned *this month* and resets on the 1st | A newcomer can top the board in week one. Nobody is locked out by a veteran's pile of points |
@@ -81,21 +81,20 @@ These words are used precisely, in the product and in the code. Fix them now.
      rewrite to try instead.                  │
          │  (on pass)                         ▼
          ▼                              6. Argument — standalone, or REPLY to a
-  3. OPENING ANALYST (AI) writes           specific opposing argument.
-     the strongest FOR case and               │
-     AGAINST case. The 48h clock              ▼
-     starts. The arena is live.        7. Server refuses a verbatim repost (§8).
+  3. OPENING BRIEF (AI) writes what        specific opposing argument.
+     each side must prove, and where          │
+     the fight will be. The 48h clock         ▼
+     starts. The arena is live.        7. Server refuses a verbatim repost (§8),
+         │                                and a post too short to hold a reason.
          │                                    │
          │                                    ▼
-         │                             8. ANALYST (AI) screens for abuse, scores
-         │                                you 1–8, and rewrites your side's case.
+         │                             8. JUDGE (AI) screens the post, scores you
+         │                                2–10, rewrites your side's case and
+         │                                moves the win bar — in ONE ruling.
+         │                                An empty post is refused here instead.
          │                                    │
          │                                    ▼
          │                             9. You see exactly what you earned and why.
-         │                                    │
-         │                                    ▼
-         │                            10. PROBABILITY JUDGE nudges the live split
-         │                                (once both sides have argued).
          │                                    │
          └──────────► arena ◄────────────────┘
                         │
@@ -196,16 +195,21 @@ against pasted AI text (§18), and it is what turns parallel monologues into a d
 
 | Action | Logic |
 |---|---|
-| **Reply** to a specific opposing argument | **1–8**, judged by the AI. A sharp, targeted rebuttal earns 7–8 |
-| **Standalone** argument | **1–8 judged, then capped at 5.** It engages nothing specific |
-| Standalone when **the opposing side is still empty** | **1–8, uncapped.** There was nothing to reply to yet |
-| Your **4th and later** argument in one debate | **halved** (floor 1), after all other rules |
-| A point already made on your side, reworded | **1**, however well written (§8) |
+| **Reply** to a specific opposing argument | **2–10**, judged by the AI. A rebuttal that closes the point earns 9–10 |
+| **Standalone** argument | **2–10 judged, then capped at 7.** It engages nothing specific |
+| Standalone when **the opposing side is still empty** | **2–10, uncapped.** There was nothing to reply to yet |
+| A point already made on your side, reworded | **2**, however well written (§8) |
+| A post with **no argument in it** | **Refused.** Not posted, not scored, no penalty (§9) |
 | Someone **likes** your argument | **+2** to you (§10) |
 | Your argument is flagged as **abuse** | **−4**, and the argument is discarded (§9) |
 
-**Order of operations** — score the argument 1–8 → apply the standalone cap → apply the halving →
-award. The user is shown this breakdown every time (§19).
+**Order of operations** — score the argument 2–10 → apply the standalone cap → award. The user is
+shown this breakdown every time (§19).
+
+**There is no volume penalty.** Your tenth argument in a debate is worth exactly what your first
+was. What stops flooding is not arithmetic but the floor: a repeated point scores 2, and a post
+with no reason in it is refused outright, so the only way to earn ten times is to land ten distinct
+arguments.
 
 Your all-time logic **never falls below 0**, whatever penalties land.
 
@@ -233,11 +237,16 @@ The same exploit at two levels of effort, refused at two different layers.
 Comparison ignores case, punctuation, spacing and Latin accents, so trivial edits do not evade it.
 It costs no tokens and takes no judgement.
 
-**A reworded restatement scores 1.** Making a point that has already been made on your side — by
+**A reworded restatement scores 2.** Making a point that has already been made on your side — by
 you or by a team-mate, reworded, translated or reordered — earns the floor. This is a judgement,
 so it belongs to the AI, which is shown your side's recent arguments precisely so it can recognise
-one. Adding a new reason, example, mechanism or piece of evidence to an existing point is **not** a
-restatement; only the same point again is.
+one.
+
+**The override is narrow on purpose.** It fires only when the argument adds **no new reason,
+example, mechanism, evidence, or burden**. Add any one of those five and it is a development of
+the point, not a repeat, and it scores normally. The wide version of this rule floored every
+follow-up that sharpened a team-mate's point — which punishes the one behaviour a side-based
+format exists to produce.
 
 **Why the split:** the cheap deterministic check handles the cheap attack, so the expensive
 judgement call is only spent where judgement is actually needed.
@@ -265,6 +274,31 @@ misses.
 
 **Why the line sits there:** a debate platform that punishes force of argument has no reason to
 exist. The thing being protected is the person, not their claim.
+
+### The empty post
+
+A second refusal, with nothing to do with moderation. **A post with no argument in it is not
+posted at all.** Not scored, not shown, and — unlike abuse — not penalised:
+
+> *"Appreciated the effort — but this arena requires an argument. Think more."*
+
+The test is whether the post, stripped of its agreement or disagreement, contains **any reason,
+evidence, mechanism, example or distinction**. Bare agreement ("yes exactly, this is what I've been
+saying"), bare negation ("no this is wrong"), and insisting the evidence disagrees without naming
+any ("wrong, the data says otherwise") all fail it.
+
+**The test is content, not effort.** A long, fluent, wholehearted paragraph of agreement that
+contains no claim is refused exactly like a two-word one. If padding bought a pass, the gate would
+be defeated by the precise behaviour it exists to stop — and defeated in one prompt by anyone using
+a language model to write for them.
+
+The line is drawn to let weak arguments through. An argument that gives *any* reason — unsupported,
+off-topic, or simply bad — is an argument, and gets scored rather than refused. Only the empty ones
+are turned away.
+
+**Why refusal and not a low score:** a 2 still puts the post on the page, still counts as a
+contribution, and still pays if someone likes it. Refusing it keeps the arena free of the thing
+that makes comment sections worthless, and costs the author nothing but the post.
 
 ---
 
@@ -466,41 +500,54 @@ carries its own, so nothing about placement is mysterious.
 
 ---
 
-## §16 The Crux AI — six personas
+## §16 The Crux AI — five personas
 
 Every AI call is a distinct persona with its own prompt and its own job. Naming them separately
 matters: features attach to specific personas, and a change to one should never silently change
-another. **One model runs all six** — there is no smart/fast split.
+another. **One model runs all five** — there is no smart/fast split.
 
 | # | Persona | Fires when | Decides |
 |---|---|---|---|
 | 1 | **Arbiter** | A motion is submitted | Pass or fail, the reason, a sharper rewrite, the keyword, the domain |
-| 2 | **Opening Analyst** | A motion passes | The strongest opening FOR case and AGAINST case |
-| 3 | **Moderator / Analyst** | Every argument | Abuse screen → a 1–8 score → a rewrite of that side's running case |
-| 4 | **Probability Judge** | Every argument, once both sides have argued | The live win split |
-| 5 | **Verdict Judge** | At lock | Winner, margin, MVP, and the written closing |
-| 6 | **Debater Profiler** | A motion is published (best-effort) | A character sketch for the author's profile |
+| 2 | **Opening Brief** | A motion passes | What each side must prove, and where the fight will be |
+| 3 | **Judge** | Every argument | Screen → a 2–10 score → a rewrite of that side's case → the new win split |
+| 4 | **Verdict Judge** | At lock | Winner, margin, MVP, and the written closing |
+| 5 | **Debater Profiler** | A motion is published (best-effort) | A character sketch for the author's profile |
 
-When an argument is a **reply**, persona 3 is additionally handed the exact argument being answered
+**Why the Judge is one persona and not two.** Scoring the argument and moving the win bar used to
+be two separate calls, and the second never saw what the first decided — it re-read the raw text
+and formed its own opinion. So an argument the scorer had just floored as a restatement could still
+swing the bar eight points, and the bar looked arbitrary because it *was* arbitrary: nothing
+connected the two numbers. They are now one ruling, and the score is emitted before the split and
+governs how far it may move. A 2 or 3 does not move the bar at all; a 9 or 10 moves it decisively.
+
+There is **no cap on how far one argument can move the split**, and no floor holding a losing side
+near the middle. If one argument changes who is winning, the bar says so.
+
+**Reasoning is on for the Judge and off everywhere else.** Thinking tokens bill as output and count
+against the token ceiling, which truncates the shorter calls into invalid JSON — but the Judge has
+the headroom, and it is the call whose quality decides what every score in the product means.
+
+When an argument is a **reply**, the Judge is additionally handed the exact argument being answered
 and scores the rebuttal against it. When it is standalone, it only sees the opposing side's case —
-and the score is capped at 5. **That difference in what the model is shown is precisely what makes
+and the score is capped at 7. **That difference in what the model is shown is precisely what makes
 replies worth more.** It is not a multiplier in code.
 
-The Probability Judge is **stateful**: it starts from the split the debate currently shows and
-nudges it by however much the argument that just landed changed the balance — nothing new moves it
-0, a solid point 3–8, a decisive unanswered hit up to 12. Re-deriving the split cold each time made
-the bar swing for no visible reason. It judges the two synthesised cases, never argument counts,
-vote counts, or the conventional position.
+The split is **stateful**: the Judge starts from the number the debate currently shows and moves it
+by what it just scored, rather than re-deriving it cold. Re-deriving made the bar swing for no
+visible reason. It judges the two synthesised cases, never argument counts, vote counts, or the
+conventional position.
 
 ### Decode first — the house technique
 
-Reasoning tokens are **off**, deliberately: on this model they are billed as output *and* counted
-against the token ceiling, which truncates the shorter calls into invalid JSON, and every persona
-answers by rubric rather than by derivation.
+Reasoning tokens are **off** for four of the five personas: on this model they are billed as output
+*and* counted against the token ceiling, which truncates the shorter calls into invalid JSON. Those
+four answer by rubric rather than by derivation. The Judge is the exception — it has the ceiling to
+afford thinking, and it is the call worth spending it on.
 
 So the "thinking" lives somewhere else. **Every judging prompt makes the model write its analysis
 into fields the code never reads, before it emits the number it is judged on** — the Arbiter
-restates the claim with its grammar repaired before ruling on it; the Analyst names the decoded
+restates the claim with its grammar repaired before ruling on it; the Judge names the decoded
 claim, what it engages and the logical move before scoring; the Verdict Judge names which argument
 won it and why before naming a person.
 
@@ -521,13 +568,13 @@ else. The author is looked up **server-side** from that id against the debate's 
 an id the model invents costs that point its link and nothing more. It can never invent a person,
 and it can never credit a point to the other side.
 
-When the Analyst rewrites a side, it keeps the strong existing points (re-using their ids), adds
+When the Judge rewrites a side, it keeps the strong existing points (re-using their ids), adds
 the new argument's point, and silently drops weak or repeated ones. It is shown its **own** side's
 ids so a carried-forward point keeps its link, and the opposing case **without** ids — that side is
 context, not material. A rewrite that sanitises to empty is treated as "no update" and the previous
 case stands.
 
-The two cases never merge: an Analyst is forbidden from pulling opposing content into its own side,
+The two cases never merge: the Judge is forbidden from pulling opposing content into its own side,
 because over a long debate that converges both sides into the same document.
 
 ---
@@ -538,18 +585,19 @@ Four structural facts, not four detectors.
 
 **1. You must reply to score high.** A language model can write a polished, general essay about
 any claim. It cannot read the room, pick which live opponent is most vulnerable, and dismantle that
-specific point — because it doesn't know what's in the thread. Standalone arguments cap at 5;
-replies reach 8. The highest-scoring move in the game is the one that is hardest to automate.
+specific point — because it doesn't know what's in the thread. Standalone arguments cap at 7;
+replies reach 10. The highest-scoring move in the game is the one that is hardest to automate.
 
-**2. Diminishing returns.** Your first three arguments in a debate score full; everything after is
-halved. Volume never beats sharpness. Flooding a debate is a losing strategy by arithmetic.
+**2. Volume earns nothing on its own.** There is no penalty for arguing often — but a point already
+made on your side scores the floor, and a post with no argument in it is refused before it appears.
+Ten posts only pay ten times if they are ten distinct arguments.
 
 **3. The side lock.** You commit to one side, publicly, before your first argument lands. You
 cannot hedge, and you cannot farm both outcomes. The motion's author cannot argue against their own
 claim at all.
 
 **4. Originality is enforced twice** — verbatim reposts refused deterministically, restatements
-scored 1 by judgement (§8). Neither your own text nor a team-mate's proven argument can be
+scored 2 by judgement (§8). Neither your own text nor a team-mate's proven argument can be
 recycled.
 
 **What we deliberately do not do: run an AI-text detector.** They are unreliable, they are an arms
@@ -577,8 +625,8 @@ it.** A user should never be able to say "I didn't know."
 |---|---|---|
 | **Side lock** | A confirmation step on your first argument: *"You're committing to FOR. You will not be able to argue AGAINST in this debate."* | **Before** it happens |
 | Side lock, after | A persistent "You're arguing FOR" badge on the composer; the opposing composer visibly disabled with the reason | Always |
-| **Reply beats standalone** | The composer states it plainly: *"Standalone arguments cap at 5 logic. Reply to an opponent to earn up to 8."* Reply buttons sit on every opposing argument | While writing |
-| **Diminishing returns** | A counter on the composer: *"Argument 2 of 3 at full value"* → then *"Half value"* | While writing |
+| **Reply beats standalone** | Stated plainly wherever the record is shown: *"Standalone arguments cap at 7 logic. Replies reach 10."* Reply buttons sit on every opposing argument | While writing |
+| **The empty post** | Refused with *"Appreciated the effort — but this arena requires an argument. Think more."* The draft is kept, so the fix is to add a reason | On posting |
 | **What you just earned** | The points pop-up (below) | Immediately after posting |
 | **48h clock** | A live countdown in the arena and on every card | Always |
 | **The draw zone** | The probability bar renders the draw band (47.5–52.5) as a marked zone, so you can *see* a debate heading for a draw and that it's still winnable | Always |
@@ -605,18 +653,17 @@ animated pop-up shows **what you earned and exactly why** — as a ledger, where
 is priced:
 
 ```
-        +2  logic
+        +7  logic
    ─────────────────────
-   Judged                8
+   Judged               10
    Standalone cap       −3
-   Repeat halving       −3
    ─────────────────────
-   Awarded               2
+   Awarded               7
 
    Season total  143   ·   Rank #12
 ```
 
-Pricing each rule is the point. "Capped at 5" tells you where you landed; "Standalone cap −3" tells
+Pricing each rule is the point. "Capped at 7" tells you where you landed; "Standalone cap −3" tells
 you what it cost — and that is the number that changes behaviour. When nothing bit, there is no
 arithmetic: one row, and a note saying why the full range was in play.
 
@@ -655,10 +702,9 @@ Every tunable constant in the game. **If a number is in the code, it is in this 
 |---|---|---|
 | Debate duration | **48 hours** | §4 |
 | Argument length cap | **2000 characters** | §6 |
-| Argument score range | **1–8** | §7 |
-| Standalone argument cap | **5** | §7 |
-| Full-value arguments per debate | **3**, then halved | §7 |
-| Halving floor | **1** | §7 |
+| Argument score range | **2–10** | §7 |
+| Standalone argument cap | **7** | §7 |
+| Minimum argument length | **18** characters, trimmed — never disclosed to users | §9 |
 | Cross-user repost minimum | **40** normalised characters | §8 |
 | Abuse penalty | **−4** | §9 |
 | Like / unlike | **+2 / −2** | §10 |
@@ -681,7 +727,7 @@ Every tunable constant in the game. **If a number is in the code, it is in this 
 | Heat window | **6 hours** | §15 |
 | Heat balance floor | **0.25** | §15 |
 | Case points per side | **6** max | §17 |
-| Probability move cap | **12** points per update, floor/ceiling 20–80 | §16 |
+| Probability move cap | **none** — sanity clamp only, 2–98 | §16 |
 | Username | **3–20** chars, `a-z0-9_`, ≥1 letter | §13 |
 
 **These are deliberately not environment variables.** Each is asserted by a unit test and most are

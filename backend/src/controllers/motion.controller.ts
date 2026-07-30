@@ -1,4 +1,4 @@
-// Create a motion, and read one back. Creating runs the Opening Analyst, starts the
+// Create a motion, and read one back. Creating runs the Opening Brief, starts the
 // 48h clock, and fires the Debater Profiler best-effort.
 // Spec: game-theory.md §3, §4, §16, §17
 

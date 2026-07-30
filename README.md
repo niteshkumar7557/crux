@@ -22,7 +22,7 @@ pitch and the setup.
 | **An AI gates every motion** | The Arbiter reads your claim before it goes live and rejects the vague and the unarguable, offering a sharper rewrite. You never walk into a debate that was doomed by a bad question. |
 | **Two camps, two living cases** | Every debate has exactly two sides, each with an AI-maintained case that is rewritten as arguments land — with every point linked back to the argument that made it. |
 | **Your first argument locks your side** | Confirmed before it happens, never discovered after. Nobody can hedge both sides to guarantee a win. |
-| **Replies are worth the most** | Answer a specific opponent and you can earn the full 1–8. A standalone argument caps at 5, because it engages nothing in particular. |
+| **Replies are worth the most** | Answer a specific opponent and you can earn the full 2–10. A standalone argument caps at 7, because it engages nothing in particular. |
 | **The clock always runs out** | 48 hours, no extensions. At zero the arena locks read-only and the Verdict Judge delivers the ruling that the whole two days was building toward. |
 | **A record, a tier, a season** | Permanent W–L–D and an all-time logic score that never falls — plus a monthly board that resets, so a newcomer can top it in week one. |
 | **Nothing is hidden** | Every rule that can cost you something is shown *before* it can bite, and every award shows its arithmetic. A rule that is not surfaced is treated as a bug. |
@@ -55,7 +55,7 @@ header, then that section of the spec, then the code.
 | Frontend | Next.js 16 (App Router), React 19, TypeScript, Tailwind v4, GSAP |
 | Backend | Node.js, Express 5, TypeScript, hand-written SQL (no ORM) |
 | Database | PostgreSQL |
-| AI | OpenRouter — one model behind all six personas, swappable by env |
+| AI | OpenRouter — one model behind all five personas, swappable by env |
 | Auth | JWT access tokens + database-backed refresh tokens |
 | Tests | Vitest, on pure logic only — the whole suite runs with zero secrets |
 | Local | Docker Compose (Postgres + pgAdmin) |

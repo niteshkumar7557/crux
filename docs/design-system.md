@@ -314,7 +314,7 @@ carry the imagery.
 ## §10 Voice
 
 Formal but alive; the register of a courtroom that enjoys itself. **Every rule is stated with its
-real number** (+25 MVP, cap at 5, −5 season-only) — transparency is a product requirement
+real number** (+25 MVP, cap at 7, −5 season-only) — transparency is a product requirement
 (game-theory §19), so marketing copy quotes the actual constants. Buttons say what they do ("Enter
 the arena", "Claim your name"). No hype adjectives.
 
