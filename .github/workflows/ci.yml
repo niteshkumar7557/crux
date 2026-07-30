@@ -43,6 +43,7 @@ jobs:
       - run: npm test
       - run: npm run build
         env:
+          NEXT_PUBLIC_SITE_URL: http://localhost:3000
           NEXT_PUBLIC_API_URL: http://localhost:4001
 
   docker-images:
@@ -53,4 +54,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker build backend
-      - run: docker build frontend --build-arg NEXT_PUBLIC_API_URL=http://crux-backend.railway.internal:8000
+      - run: docker build frontend --build-arg NEXT_PUBLIC_SITE_URL=https://crux.kumarnitesh.in NEXT_PUBLIC_API_URL=http://crux-backend.railway.internal:8000
