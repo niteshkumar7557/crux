@@ -1,3 +1,5 @@
+// Page links that preserve the rest of the query.
+
 import Link from "next/link";
 import { LuArrowLeft, LuArrowRight } from "react-icons/lu";
 
@@ -11,7 +13,6 @@ type PaginationProps = {
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-// Window: first + last + current ±1; null marks a collapsed gap.
 function pageWindow(page: number, totalPages: number): (number | null)[] {
   const pages: (number | null)[] = [];
   let last = 0;

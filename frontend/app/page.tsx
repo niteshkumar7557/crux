@@ -1,3 +1,5 @@
+// The landing story. Ships its own nav and footer (see ConditionalLayout) and is the
+// only page carrying engravings and scroll choreography. See design-system.md §11.
 import type { Metadata } from "next";
 import LandingNav from "./_components/landing/LandingNav";
 import Hero from "./_components/landing/Hero";

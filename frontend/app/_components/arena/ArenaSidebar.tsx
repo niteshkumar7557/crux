@@ -1,4 +1,7 @@
 "use client";
+
+// Trending domains, top debaters, system health.
+
 import TopDebaters from "./TopDebaters";
 import SystemHealth from "./SystemHealth";
 import TrendingDomains from "./TrendingDomains";
@@ -43,8 +46,6 @@ const ArenaSidebar = () => {
 
   useGSAP(
     () => {
-      // The arena sidebar is client-fetched, so it lands on its own commit and
-      // carries its own key rather than sharing the home page's.
       if (!shouldAnimate("/#sidebar")) return;
       const mm = gsap.matchMedia();
       mm.add(MOTION_OK, () => {

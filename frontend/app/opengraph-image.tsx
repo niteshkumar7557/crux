@@ -1,3 +1,4 @@
+// The site-wide share card.
 import { ImageResponse } from "next/og";
 import { loadOgFonts, MONO, SERIF } from "./_utils/ogFonts";
 import { BRAND, markOutline } from "./_utils/brandMark";

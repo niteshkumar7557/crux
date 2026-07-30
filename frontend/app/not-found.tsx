@@ -1,3 +1,4 @@
+// 404.
 import { LuArrowRight } from "react-icons/lu";
 import Button from "./_components/ui/Button";
 

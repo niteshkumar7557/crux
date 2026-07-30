@@ -1,9 +1,9 @@
+// One sidebar standing.
+
 import { TopDebatersCardProps } from "@/app/types";
 import Link from "next/link";
 import Avatar from "@/app/_components/ui/Avatar";
 
-// Rank numerals are laurel only at the top of the board — gold is for things
-// that were earned, and fourth place is not one of them (design-system.md §2).
 const TopDebatersCard = ({
   rank,
   name,

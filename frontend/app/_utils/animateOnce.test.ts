@@ -52,9 +52,6 @@ describe("claimOnce", () => {
   });
 });
 
-// The property that keeps a feed coherent: a page full of score bars asks the
-// same question many times in one commit and must get one answer. Timing this
-// in a browser is flaky; the contract is exact, so assert it directly.
 describe("shouldAnimate batching", () => {
   const realWindow = globalThis.window;
 

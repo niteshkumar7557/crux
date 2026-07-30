@@ -1,4 +1,7 @@
 "use client";
+
+// Landing hero: the mixed headline, the orator plates, the drifting statues. design-system.md §6
+
 import { useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
@@ -43,7 +46,6 @@ const Hero = () => {
           { autoAlpha: 1, y: 0, duration: 0.8, stagger: 0.08 },
           "-=0.6",
         );
-      // The statues keep breathing after the entrance — a slow drift.
       gsap.to("[data-hero='orator']", {
         y: -14,
         duration: 5,

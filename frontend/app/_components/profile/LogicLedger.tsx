@@ -1,21 +1,16 @@
 "use client";
+
+// Twelve weeks of earnings. A week can net negative — the season-only loss penalty
+// is included, because that is the honest reading of the month.
+// Spec: game-theory.md §12, §13
+
 import type { LedgerWeek } from "@/app/profile/types";
 
-// The real logic ledger — a windowed sum over logic_events, the same table
-// the season board reads. §8's season-only loss penalty means a week can net
-// negative, so negatives render downward in `outline` rather than being
-// hidden. Red is reserved for stance (working rule 4).
 const label = (weekStart: string) => {
   const [, m, d] = weekStart.split("-");
   return `${Number(d)}/${Number(m)}`;
 };
 
-/**
- * §10: a season is a calendar month, so the reset lands on the week
- * containing the 1st. Marking that column makes "everyone starts at 0"
- * legible in the chart instead of only being claimed in the season band.
- * Returns the Monday of that week, matching the ledger's own week keys.
- */
 function seasonStartWeek(now: Date = new Date()): string {
   const first = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
   const dow = (first.getUTCDay() + 6) % 7; // Mon = 0 … Sun = 6

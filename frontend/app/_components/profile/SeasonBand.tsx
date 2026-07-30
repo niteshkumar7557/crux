@@ -1,9 +1,8 @@
+// The season window and where this user stands in it. Spec: game-theory.md §14, §19
+
 import Link from "next/link";
 import type { ProfileSeason } from "@/app/profile/types";
 
-// §14 requires the season window on the profile as well as the leaderboard,
-// stated and never left to be inferred. The wording matches the leaderboard's
-// strip so the same fact reads the same way in both places.
 const SeasonBand = ({ season }: { season: ProfileSeason }) => (
   <section className="mb-12 border border-ink-faint bg-band p-6">
     <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">

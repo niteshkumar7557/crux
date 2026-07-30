@@ -1,72 +1,25 @@
-/**
- * VERDICT JUDGE — the closing ruling, once per debate, at lock.
- *
- * WHAT IT DOES
- * Delivers the final split, the winner, the MVP, and the one-paragraph
- * closing that becomes the public verdict card. This is the only prompt whose
- * output moves logic scores in bulk (win bonus, MVP bonus, loss penalty), and
- * the only one that is irreversible — a debate concludes exactly once.
- *
- * CALLED FROM
- * `ai/verdict.ts` → `concludeDebate(motionId)`, driven by the close-time
- * poller. It runs inside the concluding transaction.
- *
- * NOT CALLED on a walkover: if either side has zero participants,
- * `verdict.ts` returns a fixed text and pays nobody, without an LLM call.
- *
- * WHAT THE USER MESSAGE CONTAINS (required inputs)
- *   MOTION: <content>
- *
- *   FOR analysis:
- *   <motions.for_analysis>
- *
- *   AGAINST analysis:
- *   <motions.against_analysis>
- *
- *   SCORED ARGUMENTS:
- *   @<username> [<side>, <n> likes]: <content>     × up to LIMITS.verdict_arguments
- *
- * Arguments are the top N by likes (default 40, `config.limits.verdict_arguments`),
- * which is what bounds this call's token cost. Every username the model may
- * legally name as MVP appears in that block — it cannot see anyone else.
- *
- * WHAT IT MUST RETURN
- *   { for: int, against: int,
- *     winner: "for" | "against" | "draw",
- *     mvp_reason:   string,          // decode-first: why this argument won it
- *     mvp_username: string | null,
- *     closing: string }              // ≤60 words, one paragraph
- *
- * DOWNSTREAM CONTRACT — what breaks if the shape drifts
- * `resolveVerdict()` in `ai/verdict.logic.ts` (pure, unit tested) does not
- * take this output at face value:
- * - `mvp_reason` is NOT read by code. It is the decode-first field: naming
- *   which argument won it, and why, BEFORE picking a username produces a better
- *   pick than naming a winner cold.
- * - `for`/`against` are treated as a ratio and renormalised to sum to 100, so
- *   a sloppy pair cannot produce a nonsense margin.
- * - `winner` is IGNORED and recomputed: a margin of ≤5 points is a draw,
- *   whatever the model said.
- * - `mvp_username` must string-match a real participant AND be on the winning
- *   side, or it is dropped to null. "The MVP comes from the winning side" is a
- *   rule stated to users, not a request made of the model.
- * - `closing` is the only field taken verbatim; it falls back to "The debate
- *   has been ruled." when blank.
- *
- * CALL SETTINGS
- * `maxTokens: 2500`, temperature from config (0.2). A failure rolls the
- * conclusion transaction back and rethrows — the debate stays live and the
- * poller will retry it.
- *
- * TUNING NOTES
- * `closing` is the most-read AI output in the product (it lands on the verdict
- * card, the archive and the certificate), so it is the field worth spending
- * iterations on. Naming "the crux" is deliberate: a summary of who said what
- * reads as filler, a motion of what the disagreement actually hinged on
- * does not — hence the one worked closing example. `mvp_reason` pins the MVP to
- * the same definition of a top contribution the scorer uses: the specific
- * landed hit, not the most eloquent or the longest argument.
- */
+// VERDICT JUDGE — the closing ruling, once per debate. Persona 5 of 6.
+//
+// Called from: ai/verdict.ts (concludeDebate), inside the concluding transaction.
+// NOT called on a walkover — that path pays nobody and spends no tokens.
+// In:  MOTION, both final analyses, the top arguments by likes (config-capped).
+// Out: { for, against, winner, mvp_reason, mvp_username, closing }
+//
+// The only prompt whose output moves logic in bulk, and the only irreversible one.
+// resolveVerdict() does not take it at face value:
+//   * for/against are treated as a ratio and renormalised to sum to 100.
+//   * winner is IGNORED and recomputed — a margin of 5 or less is a draw, whatever
+//     the model said.
+//   * mvp_username must match a real participant AND be on the winning side, or it
+//     is dropped. "The MVP comes from the winning side" is a rule we state to users,
+//     not a request we make of a model.
+//   * mvp_reason is NOT read — decode-first, so the pick is reasoned before it is
+//     named. closing is the only field taken verbatim.
+//
+// `closing` is the most-read AI output in the product (verdict card, archive,
+// certificate), so it is the field worth spending iterations on.
+// Spec: game-theory.md §11, §16
+
 export const VERDICT_JUDGE_SYSTEM_PROMPT = `You are CRUX VERDICT JUDGE. A timed debate has closed. Read the motion, both sides' final analyses and the scored arguments, then deliver the closing ruling. Judge the arguments, never the writers' grammar, and never your own opinion on the topic.
 
 Return JSON in this exact order: {"for":int,"against":int,"winner":"for"|"against"|"draw","mvp_reason":string,"mvp_username":string|null,"closing":string}

@@ -1,4 +1,7 @@
 "use client";
+
+// The two argument columns. Spec: game-theory.md §6
+
 import CaseColumn from "./CaseColumn";
 import { getUser } from "@/app/_utils/getUser";
 import { jwtPayload } from "@/app/_types/jwt";
@@ -36,9 +39,6 @@ const MotionArena = ({
   authorId: number;
 }) => {
   const [user, setUser] = useState<jwtPayload | null>(null);
-  // §5: which arguments the viewer has already liked. The JWT is client-only, so
-  // the SSR fetch can't tell — we load it here after the user resolves so the
-  // hearts render already filled.
   const [likedIds, setLikedIds] = useState<Set<number>>(new Set());
   const arenaRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
@@ -64,7 +64,6 @@ const MotionArena = ({
     };
   }, [user, motionId]);
 
-  // Each case column slides in once from its own side of the argument.
   useGSAP(
     () => {
       if (!shouldAnimate(pathname)) return;
@@ -93,9 +92,6 @@ const MotionArena = ({
     { scope: arenaRef },
   );
 
-  // §5: a reply targets a specific opposing argument. Count replies per target
-  // (the "↳ N replies" badge) and remember the earliest one (the scroll anchor).
-  // Arguments arrive chronologically, so the first reply seen for a target wins.
   const replyCounts = new Map<number, number>();
   const firstReplyIds = new Map<number, number>();
   argumentsPayload.arguments.forEach((c) => {
@@ -110,11 +106,6 @@ const MotionArena = ({
     }
   });
 
-  // §4: the viewer's locked side, read off their own arguments. Gates the
-  // cross-side-only Reply button on each card. The motion's author is bound
-  // to the affirmative from the start — even before their first argument — so
-  // their Reply button never appears on a FOR argument (which would derive
-  // AGAINST) and only on the opposing case.
   const viewerLockedSide: "for" | "against" | null =
     user && user.id === authorId
       ? "for"
@@ -156,10 +147,6 @@ const MotionArena = ({
       againstCaseArguments.push(arenaArgument);
     }
   });
-  // Newest first: a debate you come back to should open on what has just been
-  // argued, not on the opener you already read. Only the display order flips —
-  // the reply counts and thread anchors above are built from the chronological
-  // array, where "the first reply seen wins" still means the earliest one.
   forCaseArguments.reverse();
   againstCaseArguments.reverse();
 

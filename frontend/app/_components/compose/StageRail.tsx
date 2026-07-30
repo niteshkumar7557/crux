@@ -1,15 +1,13 @@
+// Where you are in the compose flow.
+
 import { Stage } from "@/app/motion/new/types";
 
-// Roman numerals, the same way the landing numbers its Order of Proceedings —
-// posting a motion is the first proceeding, so it counts itself the same way.
 const STAGES: { id: Stage; numeral: string; label: string }[] = [
   { id: "compose", numeral: "I", label: "Compose" },
   { id: "arbiter", numeral: "II", label: "Arbiter" },
   { id: "broadcast", numeral: "III", label: "Broadcast" },
 ];
 
-// Slim progress rail across the top of the form card. Purely derived from
-// `stage`; colors transition via CSS so reduced-motion needs no special case.
 const StageRail = ({ stage }: { stage: Stage }) => {
   const activeIdx = STAGES.findIndex((s) => s.id === stage);
 

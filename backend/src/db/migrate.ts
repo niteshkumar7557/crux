@@ -1,3 +1,9 @@
+// Migration runner: applies backend/src/db/migrations/*.sql in filename order and
+// records each in _migrations, so an already-applied file is skipped.
+//
+// EDITING A MIGRATION IN PLACE IS INVISIBLE TO A DATABASE THAT ALREADY RAN IT.
+// If this prints "skipping", your edit did not land — run db:reset:dev first.
+
 import fs from "fs";
 import path from "path";
 import { Pool } from "pg";

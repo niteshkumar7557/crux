@@ -1,16 +1,12 @@
 "use client";
+
+// The app-wide [data-reveal] entrance. Gated to once per page per session.
+
 import { ReactNode, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { gsap, useGSAP, ScrollTrigger, MOTION_OK } from "@/app/_utils/gsap";
 import { shouldAnimate } from "@/app/_utils/animateOnce";
 
-// Rise-in for every [data-reveal] descendant. Server pages wrap sections in
-// this to get the feed-stagger treatment: elements start dimmed (never fully
-// hidden), then batch-animate as they scroll into view — above-the-fold
-// content fires immediately.
-//
-// Once per page per session (see animateOnce): coming back to a page you have
-// already met should put the content in front of you, not re-introduce it.
 const Reveal = ({
   children,
   className,
@@ -22,7 +18,6 @@ const Reveal = ({
   className?: string;
   stagger?: number;
   y?: number;
-  /** Override the surface identity; defaults to the pathname. */
   animationKey?: string;
 }) => {
   const rootRef = useRef<HTMLDivElement>(null);

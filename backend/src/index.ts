@@ -1,3 +1,7 @@
+// Boot: prove the database is reachable, log which storage and relay modes are
+// live, then serve and start the four pollers. Binds "::" — the private network
+// resolves to IPv6, and an IPv4-only bind 502s while looking healthy.
+
 import "./instrument.js";
 import app from "./app.js";
 import config from "./config/index.js";
@@ -12,9 +16,8 @@ import { avatarStore } from "./controllers/avatar.controller.js";
 async function start() {
   try {
     // Loud on boot rather than silent forever: without the shared secret,
-    // nothing proves a request came through the CDN, so anything that reaches
-    // this origin directly can forge CF-Connecting-IP and slip every rate
-    // limit — including the one guarding login. See middlewares/rateLimit.ts.
+    // anything reaching this origin directly can forge its rate-limit identity
+    // and slip every limiter, including the one guarding login.
     if (config.node_env === "production" && !config.edge_secret) {
       logger.warn(
         "EDGE_SECRET is not set — client IPs cannot be verified, so requests " +
@@ -25,23 +28,16 @@ async function start() {
     await pool.query("SELECT 1");
     logger.info("Database connected");
 
-    // Which storage the avatar uploads landed in is invisible until someone
-    // uploads one, and "local" in production means they vanish on next deploy.
+    // Which store the uploads land in is invisible until someone uploads one,
+    // and "local" in production means they vanish on the next deploy.
     logger.info({ store: avatarStore.kind }, "avatar storage");
 
-    // "::" binds every interface, IPv6 and IPv4 alike. Required: the platform's
-    // private network resolves service hostnames to IPv6, so an IPv4-only bind
-    // makes this API unreachable from the frontend (502s) while looking healthy.
     app.listen(config.server_port, "::", () => {
       logger.info({ port: config.server_port }, "server up");
 
       startConclusionPoller();
       startFeaturingPoller();
       startSeasonRolloverPoller();
-      // Logs whether it is enabled either way. Unconfigured is the normal state
-      // in dev, but in production it means "talk to the developer" saves
-      // messages nobody will ever see — invisible otherwise until someone asks
-      // why they got no reply.
       startTelegramPoller();
     });
   } catch (err) {

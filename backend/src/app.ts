@@ -1,3 +1,7 @@
+// The Express app: middleware order, then every route group.
+// /health is mounted ABOVE the rate limiter so user traffic can never starve the
+// platform's own liveness probe. See codebase-guide.md §10.
+
 import express from "express";
 import helmet from "helmet";
 import cors from "cors";
@@ -26,7 +30,6 @@ import { makeHealthHandler } from "./lib/health.js";
 
 const app = express();
 
-// middlewares
 app.use(helmet());
 app.use(
   cors({
@@ -38,17 +41,14 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(PUBLIC_DIR));
 
-// Above the limiter, deliberately. Unverified traffic all shares one rate-limit
-// bucket (see middlewares/rateLimit.ts), so a flood arriving off-edge would
-// exhaust it — and if /health sat below, the platform's own probe would start
-// getting 429s and cycle a perfectly healthy container. A liveness check must
-// never be starved by user traffic. It costs one `SELECT 1`.
+// Above the limiter, deliberately. Unverified traffic shares one bucket, so a
+// flood arriving off-edge would exhaust it — and a starved liveness probe cycles
+// a perfectly healthy container. It costs one SELECT 1.
 app.get("/health", makeHealthHandler(() => pool.query("SELECT 1")));
 
-// After static (avatars don't spend budget), before every API route.
+// After static (avatars spend no budget), before every API route.
 app.use(globalLimiter);
 
-// One JSON line per request; /health is noise (polled every few seconds).
 app.use(
   pinoHttp({
     logger,
@@ -64,7 +64,6 @@ app.use(
   }),
 );
 
-// routes
 app.use("/user", userRoutes);
 app.use("/motion", motionRoutes);
 // Arguments live under the motion they belong to: /motion/:id/arguments.
@@ -77,11 +76,9 @@ app.use("/search", searchRoutes);
 app.use("/domains", domainRoutes);
 app.use("/avatar", avatarRoutes);
 app.use("/notifications", notificationRoutes);
-// "Talk to the developer": the user's own thread, relayed to Telegram.
 app.use("/messages", devMessageRoutes);
 app.use("/admin", adminRoutes);
 
-// After all routes; a no-op when init() didn't run (dev, CI, no DSN).
 Sentry.setupExpressErrorHandler(app);
 
 export default app;

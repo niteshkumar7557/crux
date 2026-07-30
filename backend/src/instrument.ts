@@ -1,4 +1,5 @@
-// Must be imported before anything else so Sentry can instrument requires.
+// Sentry, imported first in index.ts so it wraps everything. Inert without a DSN.
+
 import * as Sentry from "@sentry/node";
 import config from "./config/index.js";
 

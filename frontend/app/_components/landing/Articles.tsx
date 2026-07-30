@@ -1,4 +1,9 @@
 "use client";
+
+// Landing Articles I-V — motion, camps, clock, duel, verdict. Each carries a live
+// exhibit demonstrating the rule it describes, so the numbers here are the real
+// ones from game-theory.md §21. design-system.md §11
+
 import { useRef, type ReactNode } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
@@ -14,8 +19,6 @@ import {
 import { Eyebrow, initReveals, Plate, prefersReduced, Section, Serif } from "./ui";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
-
-/* ------------------------------------------------------------- shell */
 
 const Article = ({
   numeral,
@@ -58,7 +61,6 @@ const Body = ({ children }: { children: ReactNode }) => (
   </div>
 );
 
-/** A rule the game will hold you to — surfaced here exactly as it is in play. */
 const Rule = ({ children }: { children: ReactNode }) => (
   <p
     data-reveal
@@ -68,11 +70,6 @@ const Rule = ({ children }: { children: ReactNode }) => (
   </p>
 );
 
-/* ------------------------------------------------------------- exhibits */
-
-// Exhibits are documents, not engravings, so they sit on `raised` — the same
-// cream as a plate in light, but a dark surface at night. `plate` is reserved
-// for sheets that actually carry an engraving.
 const MotionExhibit = () => (
   <div data-reveal className="flex flex-col gap-4">
     <div className="border border-ink-faint bg-raised p-5">
@@ -208,7 +205,6 @@ const VerdictExhibit = () => (
       <div className="relative mt-2 h-9 overflow-hidden border border-ink-faint">
         <div data-split className="absolute inset-y-0 left-0 w-[58%] bg-side-for" />
         <div className="absolute inset-y-0 right-0 left-[58%] bg-side-against" />
-        {/* The draw band — margins of 5 or less are a draw, and you can see it. */}
         <div className="absolute inset-y-0 left-[47.5%] w-[5%] border-x border-dashed border-paper/80 bg-side-draw/40" />
       </div>
       <p className="mt-2 font-body text-xs uppercase tracking-[0.14em] text-ink-soft">
@@ -238,8 +234,6 @@ const VerdictExhibit = () => (
   </div>
 );
 
-/* ------------------------------------------------------------- section */
-
 const Articles = () => {
   const scope = useRef<HTMLDivElement>(null);
 
@@ -252,12 +246,6 @@ const Articles = () => {
         gsap.set("[data-locked]", { autoAlpha: 1 });
         return;
       }
-      // Scroll drains the clock: 48:00:00 → 00:00:00, then the arena stamps
-      // itself shut. The trigger is the clock itself, not the zone around it —
-      // hanging it off the zone started the countdown while the numbers were
-      // still below the fold, so the reader arrived to a clock already half
-      // spent. It now starts as the clock crosses 85% down the viewport and
-      // burns through in a short stretch of scroll, all of it in view.
       const state = { t: 48 * 3600 };
       gsap
         .timeline({
@@ -285,7 +273,6 @@ const Articles = () => {
           { autoAlpha: 0, scale: 1.6, rotate: -6 },
           { autoAlpha: 1, scale: 1, rotate: -6, duration: 1.2, ease: "power4.in" },
         );
-      // Split bar sweeps in once when the verdict exhibit arrives.
       gsap.fromTo(
         "[data-split]",
         { width: "50%" },
@@ -337,9 +324,6 @@ const Articles = () => {
           </Rule>
         </Body>
         <MotionExhibit />
-        {/* Spans the whole article and centres on the page, below both
-            columns — a specimen plate under the exhibit, not a third thing
-            stacked in the right-hand column. */}
         <Plate
           data-reveal
           src="/landing/motion-quill-seal.jpeg"
@@ -389,13 +373,6 @@ const Articles = () => {
             scores.
           </Rule>
         </Body>
-        {/* Pulled up out of the grid so the plate starts level with the
-            article's numeral rather than with the copy — the column runs
-            taller than the paragraphs, and hanging it from the same top line
-            left it dangling well below them. 11.5rem is the header block plus
-            the grid's own top margin. No arch on this one: the hourglass fills
-            its plate corner to corner, and the arch was cutting the cap and
-            the finials off the top of it. */}
         <div
           data-clock-zone
           className="flex flex-col items-center gap-8 lg:-mt-[11.5rem]"

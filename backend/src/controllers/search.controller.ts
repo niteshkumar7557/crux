@@ -1,3 +1,5 @@
+// Cross-entity search: motions, domains, users.
+
 import type { Response, Request } from "express";
 import pool from "../db/index.js";
 

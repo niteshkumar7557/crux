@@ -1,17 +1,13 @@
+// Poller: awards a finished season. Idempotent twice over — the already-filed check,
+// and UNIQUE (season_key, rank). Safe to run hourly forever, and safe to run twice.
+// Spec: game-theory.md §14
+
 import pool from "../db/index.js";
 import logger from "../lib/logger.js";
 import { awardsForSeason, previousSeason } from "./seasonRollover.logic.js";
 import { createNotification } from "../notifications/notify.js";
 import { seasonAwardMessage } from "../notifications/messages.js";
 import config from "../config/index.js";
-
-// §10 Season end. Hourly is plenty — the trigger is a month boundary, and the
-// only cost of firing an hour late is an hour's delay on a badge.
-//
-// The job is idempotent by construction: it does nothing once the finished
-// season already has awards on file, and the INSERT carries
-// ON CONFLICT (season_key, rank) besides. It is safe to run every hour forever,
-// and safe to run twice at once.
 
 const TICK_MS = config.jobs.season_rollover_tick_ms;
 let running = false;
@@ -21,7 +17,6 @@ async function tick(): Promise<void> {
   running = true;
   try {
     const season = previousSeason();
-    // Null before Season 0 closes — there is no pre-launch month to win.
     if (!season) return;
 
     const filed = await pool.query(
@@ -30,10 +25,6 @@ async function tick(): Promise<void> {
     );
     if (filed.rows.length > 0) return;
 
-    // The final board for that month, on the same window and tiebreak the live
-    // season board used, so the snapshot matches what players actually saw.
-    // Season-only rows (the §8 loss penalty) count here exactly as they did
-    // there: they cost the month, not the career.
     const board = await pool.query(
       `SELECT le.user_id AS "userId", SUM(le.amount)::int AS "seasonLogic"
        FROM logic_events le
@@ -54,9 +45,6 @@ async function tick(): Promise<void> {
       return;
     }
 
-    // One transaction for all three: a partial write would leave the
-    // already-filed check above returning true, and ranks 2 and 3 would never
-    // be awarded at all.
     const client = await pool.connect();
     try {
       await client.query("BEGIN");

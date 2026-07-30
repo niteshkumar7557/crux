@@ -1,57 +1,20 @@
-/**
- * ARBITER — the gate on every new motion.
- *
- * WHAT IT DOES
- * Decides whether a submitted motion can sustain a real debate, and if so
- * hands back a sharpened version of it plus the metadata the arena needs
- * (keyword, domain). This is the only persona a user can trigger repeatedly
- * for free, and the only one whose output the user sees before anything is
- * written to the database.
- *
- * CALLED FROM
- * `controllers/ai.controller.ts` → `checkEligibleMotion`
- * Route: `POST /ai/motion`, body `{ content, domain }`.
- * Nothing is persisted here — the frontend shows the ruling, and only a
- * separate `POST /motion` (Opening Analyst) actually creates the debate.
- *
- * WHAT THE USER MESSAGE CONTAINS (required inputs)
- *   MOTION: "<content>"   — the raw motion, exactly as typed
- *   DOMAIN:    "<domain>"    — the user's picked domain, or "auto"/"" for none
- *
- * WHAT IT MUST RETURN
- *   { intent:      string,   // decode-first: the claim, expression repaired
- *     eligibility: "pass" | "fail",
- *     improved:    string,   // ≤15 words, one declarative sentence
- *     feedback:    string,   // ≤35 words, one sentence
- *     keyword:     string,   // 1-2 words copied verbatim out of `improved`
- *     domain:      string }  // one name copied verbatim from the fixed list
- *
- * DOWNSTREAM CONTRACT — what breaks if the shape drifts
- * - `intent` is NOT read by code. It exists to force the model to restate the
- *   claim (grammar repaired, idea untouched) BEFORE it rules on it — the
- *   decode-first order is what lets a good idea in broken English pass. Judged
- *   on the surface, non-native phrasing gets failed as "too vague".
- * - `domain` is matched against the `domains` table by name in
- *   `motion.controller.ts`; an off-list value makes motion creation fail
- *   with 400 "Unknown domain". The list in this prompt must stay in sync with
- *   the seeded domain rows.
- * - `keyword` is stored as `motions.content_keyword` and rendered as the
- *   card headline, so it must appear verbatim inside `improved`.
- * - No field is validated or clamped in code — this prompt IS the validation.
- *
- * CALL SETTINGS
- * `maxTokens: 2000`, temperature from config (0.2). On any error the route
- * answers 502 `arbiter_unavailable`; there is no fallback ruling.
- *
- * TUNING NOTES
- * Two failure modes pull in opposite directions, and `intent` reconciles them:
- * (1) failing a genuinely arguable claim because it is written in rough,
- * non-native English — fixed by ruling on the repaired `intent`, not the
- * surface; (2) passing a weak claim just because `improved` could be made to
- * read well — fixed by the explicit "judge the intent, never your rewrite"
- * clause. Repair the *expression* of the idea; never swap in a *different*,
- * stronger claim to force a pass.
- */
+// ARBITER — the gate on every new motion. Persona 1 of 6.
+//
+// Called from: controllers/ai.controller.ts (POST /ai/motion). Nothing is persisted.
+// In:  MOTION, DOMAIN
+// Out: { intent, eligibility: pass|fail, improved, feedback, keyword, domain }
+//
+// Code re-validates NOTHING here — this prompt IS the validation. Two consequences:
+//   * `domain` must be copied verbatim from the list below, which must stay in sync
+//     with the seeded `domains` rows, or motion creation 400s on "Unknown domain".
+//   * `keyword` is stored as motions.content_keyword and headlines the card, so it
+//     must appear verbatim inside `improved`.
+//
+// `intent` is never read. It is the decode-first field: restating the claim with its
+// grammar repaired BEFORE ruling on it is what lets a good idea in rough English
+// pass. Judged on the surface, non-native phrasing gets failed as "too vague".
+// Spec: game-theory.md §3, §16
+
 export const ARBITER_SYSTEM_PROMPT = `You are CRUX ARBITER. Decide if a motion can sustain a real debate between two strong opposing sides. Many writers are not native English speakers — judge the idea, never the grammar.
 
 Return JSON with the fields in this exact order: {"intent":string,"eligibility":"pass"|"fail","improved":string,"feedback":string,"keyword":string,"domain":string}

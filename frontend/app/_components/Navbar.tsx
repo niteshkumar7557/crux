@@ -1,4 +1,9 @@
 "use client";
+
+// Carries data-navbar, and something depends on it: StickyMotion measures this
+// element to park itself at the navbar's bottom edge. The height is measured, not
+// hardcoded — the row grows at md and with a wrapping search field.
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LuCircleUserRound } from "react-icons/lu";
@@ -12,9 +17,6 @@ import ThemeToggle from "./ui/ThemeToggle";
 import NotificationBell from "./NotificationBell";
 import DevMessages from "./DevMessages";
 
-// Same shell as the landing's nav (blurred paper over a hairline) so crossing
-// from the story into the product does not feel like changing sites. The
-// difference is what it carries: the landing sells, this one navigates.
 const navLinks = [
   { label: "Arena", href: "/arena" },
   { label: "Domains", href: "/domain?q=all" },
@@ -28,9 +30,6 @@ const Navbar = () => {
   const avatar = useAvatar(user);
 
   return (
-    // `data-navbar` is how anything that has to sit *under* this bar finds its
-    // height (the debate page's sticky motion rail). Measured, not hardcoded:
-    // the row grows at the md breakpoint and with a wrapping search field.
     <nav
       data-navbar
       className="sticky top-0 z-50 border-b border-ink-faint bg-paper/85 backdrop-blur-md"
@@ -52,15 +51,6 @@ const Navbar = () => {
                   href={link.href}
                   key={link.href}
                   aria-current={active ? "page" : undefined}
-                  // The active mark is an ink underline rather than a color
-                  // swap: in a two-ink palette, color cannot carry state.
-                  //
-                  // The rule is an `after` pseudo-element rather than
-                  // `border-b pb-1`. A border and its padding are part of the
-                  // link's box, so `items-center` on the row was centring
-                  // *text + underline gap* and pushing the words ~3px above
-                  // every other item in the bar. Absolute, the rule hangs
-                  // below without ever entering the box the row aligns.
                   className={`relative font-label text-[0.7rem] uppercase tracking-[0.22em] transition-colors after:absolute after:inset-x-0 after:-bottom-1.5 after:h-px after:content-[''] ${
                     active
                       ? "text-ink after:bg-ink"
@@ -79,9 +69,6 @@ const Navbar = () => {
             New motion
           </Button>
           <ThemeToggle className="hidden sm:flex" />
-          {/* Both are signed-in-only, so neither exists at all for a visitor.
-              The developer sits left of the bell: the bell is the game, and the
-              game is what people came for. */}
           {user && <DevMessages user={user} avatar={avatar} />}
           {user && <NotificationBell />}
           <Link

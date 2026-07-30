@@ -1,3 +1,6 @@
+// Stress seed for query testing — millions of rows, sized by its own SEED_* vars.
+// A standalone script, so it reads the environment directly rather than via config.
+
 import pool from "./index.js";
 import {
 	insertBaseData,
@@ -5,27 +8,6 @@ import {
 	FOR_ARGUMENTS,
 	AGAINST_ARGUMENTS,
 } from "./seed-data.js";
-
-// Stress seeder — base data plus millions of generated rows for testing
-// database queries under load. Wipes and refills users, motions, arguments.
-//
-// Phase 1 (unique):  30 real users + 30 real motions (seed-data.ts).
-// Phase 2 (stress):  10,000 duplicate users and 1,000,000 duplicate motions
-//                    via generate_series. Each duplicate clones base row
-//                    ((i - 1) % 30) + 1 and gets a random 8-char hex keyword
-//                    (e.g. "a1b2c3d4") attached:
-//                      username: a1b2c3d4_vector_shif          (hex + 11 chars, fits VARCHAR(20))
-//                      email:    a1b2c3d4_vector_shift@example.com
-//                      content:  a1b2c3d4 AI should be granted legal personhood.
-//                    Then EVERY motion gets 0–12 arguments (count, side, text,
-//                    debater, likes, timestamp all random) — ~6M arguments total.
-//
-// Scale via env vars (defaults below), e.g. for a 10M-motion run:
-//   SEED_MOTIONS=10000000 npm run db:seed:stress
-// Inserts run in batches of SEED_BATCH rows so big runs log progress as they go.
-//
-// For a small, realistic dataset (feature development) run seed-dev.ts instead:
-//   npm run db:seed:dev
 
 const intEnv = (name: string, fallback: number): number => {
 	const raw = process.env[name];
@@ -42,14 +24,8 @@ const DUP_MOTIONS = intEnv("SEED_MOTIONS", 1_000_000);
 const MAX_ARGUMENTS_PER_MOTION = intEnv("SEED_MAX_ARGUMENTS", 12); // 0..N, uniform → ~N/2 avg
 const BATCH_SIZE = Math.max(1, intEnv("SEED_BATCH", 1_000_000));
 
-// ============================================================
-// Phase 2 — stress SQL (pure Postgres, generate_series loops)
-// ============================================================
 const U = USERS.length; // 30 base rows for both users and motions
 
-// Duplicate users: clone base user ((i - 1) % 30) + 1 with a random hex keyword.
-// username is VARCHAR(20), so hex (8) + "_" + first 11 chars of the base username.
-// ON CONFLICT DO NOTHING absorbs the astronomically rare hex collision.
 const STRESS_USERS_SQL = `
 	INSERT INTO users (name, username, email, hashed_password, role, logic_score, description, avatar)
 	SELECT
@@ -68,8 +44,6 @@ const STRESS_USERS_SQL = `
 	ON CONFLICT DO NOTHING;
 `;
 
-// Duplicate motions: hex keyword prepended to content, random author from the
-// full user pool, re-randomized vote split (15–85) and created_at (last 45 days).
 const STRESS_MOTIONS_SQL = `
 	WITH uids AS (SELECT array_agg(id) AS ids, count(*)::int AS n FROM users)
 	INSERT INTO motions (user_id, content, content_keyword, domain_id, for_analysis, against_analysis, affirmative, negative, created_at)
@@ -94,9 +68,6 @@ const STRESS_MOTIONS_SQL = `
 	) k;
 `;
 
-// Arguments: EVERY motion gets a random number of arguments (0–12), each with a
-// random side, random text from the matching pool ($1 for / $2 against), random
-// debater, random likes, posted 1–96h after the motion.
 const STRESS_ARGUMENTS_SQL = `
 	WITH uids AS (SELECT array_agg(id) AS ids, count(*)::int AS n FROM users)
 	INSERT INTO arguments (user_id, motion_id, side, content, likes, created_at)
@@ -131,14 +102,8 @@ const seed = async () => {
 	try {
 		await client.query("BEGIN");
 
-		// ============================================================
-		// Phase 1 — 30 unique users + 30 unique motions
-		// ============================================================
 		const { hashedPassword } = await insertBaseData(client);
 
-		// ============================================================
-		// Phase 2 — stress data via generate_series
-		// ============================================================
 		let t = Date.now();
 		const dupUsers = await client.query(STRESS_USERS_SQL, [
 			hashedPassword,

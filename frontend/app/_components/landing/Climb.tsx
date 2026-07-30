@@ -1,4 +1,7 @@
 "use client";
+
+// Landing: the record, the tiers, the seasons. Spec: game-theory.md §13, §14
+
 import { useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
@@ -8,9 +11,6 @@ import { Eyebrow, initReveals, Plate, prefersReduced, Section, SectionHead, Seri
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-// The §9 tier ladder — names only. The letter grades that used to ride
-// alongside are gone from the product (frontend/app/_utils/logicScore.ts), and
-// the landing may not advertise something the arena will not show you.
 const tiers = [
   { range: "0-99", name: "Beginner" },
   { range: "100-199", name: "Intermediate" },
@@ -32,7 +32,6 @@ const Climb = () => {
     () => {
       initReveals(scope.current);
       if (prefersReduced()) return;
-      // The debating chamber drifts slowly behind its caption — monumental.
       gsap.fromTo(
         "[data-hall]",
         { y: 60 },
@@ -53,7 +52,6 @@ const Climb = () => {
 
   return (
     <div ref={scope}>
-      {/* ------------------------------------------------ your record */}
       <Section band>
         <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.3fr] lg:gap-20">
           <Plate
@@ -83,9 +81,6 @@ const Climb = () => {
                 record of who you are.
               </p>
             </div>
-            {/* `w-fit`: with the grades gone the rules ran the full column
-                width past two short words. They now stop at the longest tier
-                name, which is what they are measuring. */}
             <ul
               data-reveal
               className="mt-8 w-fit divide-y divide-ink-faint border-y border-ink-faint"
@@ -106,7 +101,6 @@ const Climb = () => {
         </div>
       </Section>
 
-      {/* ------------------------------------------------ seasons */}
       <Section id="seasons">
         <div className="grid items-center gap-12 lg:grid-cols-[1.3fr_1fr] lg:gap-20">
           <div>
@@ -159,11 +153,7 @@ const Climb = () => {
         </div>
       </Section>
 
-      {/* ------------------------------------------------ the stage */}
       <section id="stage" data-hall-zone className="relative overflow-hidden bg-plate">
-        {/* The chamber is scaled up so the parallax has room to drift, so it
-            has to be clipped to a band of its own — left unclipped it spilled
-            over the copy below and the eyebrow landed on the benches. */}
         <div className="relative aspect-[2048/878] overflow-hidden">
           <Image
             data-hall

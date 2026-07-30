@@ -1,29 +1,11 @@
 "use client";
+
+// One side's living case. Attributed points link back to the argument that made
+// them. Spec: game-theory.md §17
+
 import { LuCpu } from "react-icons/lu";
 import type { Analysis } from "@/app/motion/types";
 import { focusArgument } from "@/app/_utils/focusArgument";
-
-// The Crux AI analysis for one side.
-//
-// The DOM is authored directly rather than serialised back to Markdown and
-// parsed again: it keeps the debater's name a real control instead of bold
-// text, and avoids handing model-authored prose to a Markdown parser that would
-// treat a stray asterisk or bracket as formatting. A point knows which argument
-// it came from (backend `ai/analysis.logic.ts` records the id), so the name
-// jumps to that exact argument. A point with no argument behind it — the AI's
-// opening draft, written before anyone argued — has no name and nothing to
-// press.
-//
-// **The whole column speaks in Space Grotesk.** This panel moved to the label
-// face first, and the arguments below it followed — the page is a screenful of
-// short, scannable statements, and the label face carries them better at that
-// length than the italic serif did.
-//
-// So the face no longer separates the machine from the debaters; the *surface*
-// does. This panel is `bg-raised` with a side-tinted cast and a ruled
-// "Crux AI Analysis" header, while an argument is a flat `bg-band` card with a
-// human attached to it. If this panel ever loses that shell, it will need
-// another way to say it is not a person — the type will not do it any more.
 
 const NAME =
   "text-ink font-bold font-label text-xs tracking-wide transition-colors";
@@ -54,9 +36,6 @@ const AnalysisPanel = ({
   const lead = analysis?.lead ?? "";
   const points = analysis?.points ?? [];
 
-  // `bg-raised` rather than `bg-paper`: a cast shadow needs the surface above
-  // it to be lighter than the page, or the panel reads as a hole punched in it.
-  // The cast itself is the side's own colour and comes in with `s.panel`.
   return (
     <div className={`mb-6 relative p-6 bg-raised border ${s.panel}`}>
       <div className="flex items-center gap-2 mb-3">

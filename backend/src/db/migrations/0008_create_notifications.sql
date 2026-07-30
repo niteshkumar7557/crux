@@ -1,7 +1,8 @@
+-- The four return triggers. Spec: game-theory.md §20
 CREATE TABLE notifications (
     id          SERIAL PRIMARY KEY,
     user_id     INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    type        VARCHAR(24) NOT NULL,   -- 'opposition' | 'verdict'
+    type        VARCHAR(24) NOT NULL,   -- opposition | reply | verdict | season
     motion_id   INT REFERENCES motions(id) ON DELETE CASCADE,
     actor       VARCHAR(50),            -- username that triggered it (nullable)
     message     TEXT NOT NULL,

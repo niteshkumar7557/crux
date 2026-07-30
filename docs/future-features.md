@@ -6,7 +6,7 @@ each was worked through and then cut to keep v1 small enough to launch, explain,
 **How to use this file:** when a feature earns its way in — because real users asked, or a real
 metric demands it — the design is already here. Move it into
 [`game-theory.md`](./game-theory.md) and build it. Until then it stays out of the product and
-out of the pitch.
+out of the pitch. Section references like §13 point at the spec unless they name this file.
 
 **The ordering below is roughly the order these should be considered**, not a roadmap.
 
@@ -151,8 +151,9 @@ volume): win +100, MVP +50, upset-from-behind +100, main-stage marquee ×1.5, dr
 losing-side standout +15, loss −25.
 
 **Divisions by LP:** Circuit → Contender → Regional → National → Elite → Champion. Deliberately
-*not* the academic B/A/M grades — a "grade" reads as skill, a "division" reads as competitive
-standing. Two vocabularies, no collision.
+distinct from the §13 tier names (Beginner → Master) — a "tier" reads as accumulated skill, a
+"division" reads as current competitive standing. Two vocabularies, no collision. Note the
+name clash to resolve if this is ever built: "Contender" is already a season title (§14).
 
 **Soft placement reset:** finish in division D → start the next season at the floor of D−1. It
 protects the climb you invested while making you re-earn the top.
@@ -181,23 +182,27 @@ the grind problem through the back door. **All seasonal payoff stays status-only
 
 ---
 
-## 5. The AI-written profile blurb
+## 5. Bio ownership — the manual override
 
-§9 of the spec describes "an AI-written blurb describing how you think, inferred from the
-motions you open and the arguments you make." It is the one identity feature v1 does not
-build.
+**This one is a fix, not a feature, and it is the highest-priority item in this file.**
 
-**Why it's deferred:** §12 fixes the AI at five personas, each with one job, and none of them
-writes profile copy. A blurb needs a sixth persona, a prompt, a regeneration trigger (on a
-argument-count threshold, or a background job), and a decision about what happens when the user
-disagrees with what it says about them. v1 ships an editable bio instead — one endpoint, no LLM
-cost, and it replaces the dead default text ("Post some Motions to get to know about you.")
-that most profiles show today.
+Today the profile bio has two writers and no arbitration. The Debater Profiler (§16, persona 6)
+rewrites `users.description` from your recent motions every time you publish one, and the bio
+editor writes the same column by hand. So **posting a motion silently destroys a bio you wrote
+yourself** — the user sees their own words replaced by a machine's, with no warning and no way to
+keep them.
 
-**The shape if it's built:** generate on a threshold rather than per argument (it is expensive and
-changes slowly), keep the user's manual override winning over the generated text, and show which
-one is being displayed. A profile that silently rewrites itself is unsettling; one that offers to
-is a feature.
+**The shape of the fix:**
+
+- **Store the two separately** — a generated blurb and a manual bio, in different columns.
+- **The manual one always wins when it exists.** A profile that silently rewrites itself is
+  unsettling; one that *offers* to is a feature.
+- **Show which one is displayed**, with a one-tap way to switch or to regenerate.
+- **Generate on a threshold**, not on every motion: the sketch is expensive and changes slowly.
+
+Until then, treat the generated blurb as the default state and the editor as a temporary override
+that the next motion will overwrite. It is recorded as a known gap in
+[`codebase-guide.md`](./codebase-guide.md).
 
 ---
 
@@ -207,7 +212,7 @@ Top-division players carry **weighted votes on curation**: which debates get pro
 Main Stage, and which claims re-run as rounds. Very Crux-native — being good at arguing earns you
 a say in what the community argues about next.
 
-Depends on both the division ladder (§3) and community voting (§8).
+Depends on both the division ladder (section 3 of this file) and community voting (section 8).
 
 ---
 

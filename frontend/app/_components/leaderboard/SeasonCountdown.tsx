@@ -1,15 +1,9 @@
 "use client";
+
+// Time left in the season. Spec: game-theory.md §14, §19
+
 import { useEffect, useState } from "react";
 
-// The season clock, to the second. `endsAt` is the backend's own season
-// boundary (§10, midnight UTC on the 1st) — the month is never computed here,
-// only counted down, so a client with a skewed calendar cannot invent a
-// different season end.
-//
-// The first paint is rendered from the browser's clock and therefore cannot
-// match the server's HTML to the second; the digits carry
-// suppressHydrationWarning rather than waiting for mount, because a blank slot
-// that fills in after hydration is worse than a value that ticks once.
 const SEGMENTS = ["Days", "Hrs", "Min", "Sec"] as const;
 
 function split(msLeft: number): string[] {
@@ -50,8 +44,6 @@ const SeasonCountdown = ({
       </span>
       <div
         className="flex items-start gap-1"
-        // The label carries the clock, so it mismatches for the same reason the
-        // digits do — the server's second is not the browser's.
         suppressHydrationWarning
         aria-label={`Season ${season} closes in ${parts[0]} days, ${parts[1]} hours, ${parts[2]} minutes, ${parts[3]} seconds`}
       >

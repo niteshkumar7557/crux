@@ -1,3 +1,5 @@
+// The settled record — concluded debates, filtered by outcome and domain.
+
 export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import Link from "next/link";

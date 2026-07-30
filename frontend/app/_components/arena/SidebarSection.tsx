@@ -1,11 +1,8 @@
+// Shared sidebar section shell.
+
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-// The sidebar's three modules all wore the same hand-built header. One shell
-// now: rule-and-eyebrow on the left, a quiet link out on the right, hairline
-// under the whole thing. Rows below it are divided by rules rather than boxed
-// as cards — a sidebar of stacked cards competes with the feed's cards for
-// attention, and the feed should win.
 const SidebarSection = ({
   title,
   action,
@@ -17,8 +14,6 @@ const SidebarSection = ({
   children: ReactNode;
   className?: string;
 }) => (
-  // `px-4` so the module's contents — and the row hover wash under them — stand
-  // off the column's edge rule instead of running into it.
   <section className={`px-4 ${className}`}>
     <div className="flex items-baseline justify-between gap-4 border-b border-ink-faint pb-3">
       <h2 className="flex items-center gap-2 font-label text-[0.62rem] uppercase tracking-[0.3em] text-ink-soft">

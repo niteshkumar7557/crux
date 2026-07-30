@@ -1,15 +1,12 @@
 "use client";
+
+// Admin-only stage curation. The server re-checks the role; this only hides the
+// control. Spec: game-theory.md §15
+
 import { useEffect, useState } from "react";
 import { getUser } from "@/app/_utils/getUser";
 import type { jwtPayload } from "@/app/_types/jwt";
 import api from "@/app/axios";
-
-// §11 The pin — an admin curates the stage by hand while heat has too little
-// volume to mean anything. Renders nothing for everyone else.
-//
-// Hiding the buttons is not the access control: `requireRole("admin")` on the
-// server is. This only keeps a control off the screen of someone who cannot
-// use it.
 
 const CHIP =
   "font-label text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 border transition-colors disabled:cursor-not-allowed";
@@ -34,7 +31,6 @@ const PinControl = ({
         if (live) setIsAdmin((user as jwtPayload | null)?.role === "admin");
       })
       .catch(() => {
-        /* logged out — getUser rejects when the token refresh fails */
       });
     return () => {
       live = false;
@@ -47,10 +43,8 @@ const PinControl = ({
     setBusy("pin");
     try {
       const { data } = await api.post(`/admin/pin/${motionId}`);
-      // Trust the row the server actually wrote, not an optimistic flip.
       setStage((s) => ({ ...s, pinned: Boolean(data.pinned) }));
     } catch {
-      /* the displayed state still matches the server — leave it */
     } finally {
       setBusy(null);
     }
@@ -62,14 +56,11 @@ const PinControl = ({
       await api.post(`/admin/motd/${motionId}`);
       setStage((s) => ({ ...s, isMotd: true }));
     } catch {
-      /* as above */
     } finally {
       setBusy(null);
     }
   };
 
-  // Dim only while a request is in flight. The `disabled:` variant would also
-  // dim "Motion of the Day", which is an *active* state, not a dead control.
   const pending = busy !== null ? "opacity-60" : "";
 
   return (

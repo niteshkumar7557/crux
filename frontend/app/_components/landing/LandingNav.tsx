@@ -1,4 +1,7 @@
 "use client";
+
+// Landing nav. The landing ships its own chrome — see ConditionalLayout.
+
 import Link from "next/link";
 import { useUser } from "../../_hooks/useUser";
 import { useAvatar } from "../../_hooks/useAvatar";
@@ -21,9 +24,6 @@ const LandingNav = () => {
   return (
     <nav className="sticky top-0 z-50 border-b border-ink-faint bg-paper/85 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4 md:px-10">
-        {/* `flex` on the link, not just on the lockup inside it: an inline
-            anchor reserves descender space under the lockup, which pushed the
-            mark and wordmark a few pixels above the rest of the bar. */}
         <Link
           href="/"
           className="flex items-center text-ink"
@@ -43,14 +43,7 @@ const LandingNav = () => {
           ))}
         </div>
         <div className="flex items-center gap-3">
-          {/* Folded away on phones, as in the product's navbar: the avatar is
-              wide enough that keeping all four controls wrapped the CTA onto a
-              second line. */}
           <ThemeToggle className="hidden sm:flex" />
-          {/* Someone already signed in is not a visitor to be sold to — the
-              story page hands them their own face and a way back into the
-              product instead of a login link. `user` starts null while the
-              token is read, so the signed-out state is what renders first. */}
           {user ? (
             <Link
               href="/profile/me"

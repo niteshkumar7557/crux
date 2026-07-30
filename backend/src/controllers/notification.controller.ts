@@ -1,7 +1,10 @@
+// The inbox. Every handler is scoped to req.user.id, so there is nothing to
+// authorise beyond being signed in.
+// Spec: game-theory.md §20
+
 import type { Request, Response } from "express";
 import pool from "../db/index.js";
 
-// GET /notifications — the current user's recent inbox + unread count.
 export async function listNotifications(req: Request, res: Response) {
   const userId = req.user?.id;
   if (!userId) return res.status(401).json({ error: "Unauthorized" });
@@ -22,10 +25,6 @@ export async function listNotifications(req: Request, res: Response) {
   }
 }
 
-// DELETE /notifications — empty the current user's inbox for good.
-// Scoped to the caller's own rows, so there is nothing to authorise beyond
-// being signed in. Notifications are a re-engagement nudge, not a record —
-// the debate, the verdict and the season title all survive this.
 export async function clearNotifications(req: Request, res: Response) {
   const userId = req.user?.id;
   if (!userId) return res.status(401).json({ error: "Unauthorized" });
@@ -37,7 +36,6 @@ export async function clearNotifications(req: Request, res: Response) {
   }
 }
 
-// POST /notifications/read — mark the current user's notifications read.
 export async function markRead(req: Request, res: Response) {
   const userId = req.user?.id;
   if (!userId) return res.status(401).json({ error: "Unauthorized" });

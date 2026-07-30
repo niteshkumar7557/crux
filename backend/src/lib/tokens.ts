@@ -1,3 +1,5 @@
+// JWT access tokens and opaque database-backed refresh tokens.
+
 import pool from "../db/index.js";
 import jwt from "jsonwebtoken";
 import config from "../config/index.js";

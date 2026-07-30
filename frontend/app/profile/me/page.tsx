@@ -1,13 +1,12 @@
 "use client";
+
+// Client shim: resolves the signed-in user and redirects to their canonical URL.
+
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getUser } from "@/app/_utils/getUser";
 import Skeleton from "@/app/_components/ui/Skeleton";
 
-// The JWT lives in localStorage, so a server component cannot know who you
-// are. /profile/me resolves the handle here and hands off to the canonical
-// /profile/<username> URL — one rendering path, and the URL you land on is
-// the one you can share.
 const ProfileMe = () => {
   const router = useRouter();
 

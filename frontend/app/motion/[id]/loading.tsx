@@ -1,14 +1,9 @@
+// The debate route skeleton. It MUST lay out at the same width as the page it stands
+// in for — see debateLayout.ts, or every reload ends with content jumping sideways.
+
 import Skeleton from "@/app/_components/ui/Skeleton";
 import { DEBATE_SHELL } from "@/app/_components/motion/debateLayout";
 
-// The route skeleton stands in for DebateView while the motion and its
-// arguments are fetched, so it has to lay out where DebateView lays out —
-// same shell, same two columns, same centre gap. It shared none of that before
-// and rendered 464px wide inside a 1440px page, which is why every reload of a
-// debate ended with the whole arena snapping sideways once the data landed.
-//
-// Block heights are matched to the real thing rather than eyeballed: the meta
-// row, two headline lines at the h1's own leading, and the probability bar.
 const Loading = () => (
   <section className={DEBATE_SHELL} aria-busy="true">
     <Skeleton className="h-5 w-72 mb-6" />

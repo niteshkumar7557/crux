@@ -1,10 +1,9 @@
+// Ranks four through the page size.
+
 import Link from "next/link";
 import Avatar from "@/app/_components/ui/Avatar";
 import type { BoardRow } from "@/app/leaderboard/board";
 
-// The ranked table under the podium. Career counts only exist on the all-time
-// board, so their columns come and go with the data rather than rendering
-// empty cells on the season board.
 const BoardTable = ({
   rows,
   metric,

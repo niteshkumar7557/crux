@@ -1,4 +1,9 @@
 "use client";
+
+// The live win split, with the draw band marked. The band belongs here and not on
+// the feed's ScoreBar — it is a rule about how a debate ENDS, so it goes where a
+// debate is read and acted on. Spec: game-theory.md §11, §19
+
 import { useRef } from "react";
 import { usePathname } from "next/navigation";
 import { MotionHeaderProps } from "@/app/motion/types";
@@ -22,15 +27,11 @@ const MotionProbability = ({
       if (!shouldAnimate(pathname)) return;
       const mm = gsap.matchMedia();
       mm.add(MOTION_OK, () => {
-        // Concluded bars are a frozen final result, not a running forecast —
-        // render them at their final widths with no draw/count-up.
         if (status === "concluded") return;
         const tl = gsap.timeline({
           delay: 0.45,
           defaults: { duration: 1.2, ease: "power3.out" },
         });
-        // The inline width styles are the end state; bars draw in from
-        // their outer edges while the percentages count up alongside.
         tl.from("[data-bar]", { width: 0 }, 0)
           .from(
             "[data-count]",
@@ -43,13 +44,6 @@ const MotionProbability = ({
     { scope: rootRef },
   );
 
-  // §7: a side wins only when the margin EXCEEDS 5. With the two shares summing
-  // to 100, |for - against| <= 5 is exactly for in [47.5, 52.5] — so the draw
-  // is a band on this bar, not a knife edge.
-  //
-  // Only while the debate is live: once the result is final the band is a
-  // threshold nobody can still cross, and would read as a live target on a bar
-  // that can no longer move.
   const showDrawBand = status === "live";
 
   return (
@@ -65,8 +59,6 @@ const MotionProbability = ({
             <span data-count>{affirmativeProbability}</span>%
           </span>
         </div>
-        {/* §14 the draw band — you can see a debate heading for a draw, and
-            that it is still winnable, without being told after the fact. */}
         {showDrawBand && (
           <div
             className="absolute top-0 bottom-0 z-10 pointer-events-none border-x border-dashed border-paper/60 bg-paper/10 flex items-center justify-center"

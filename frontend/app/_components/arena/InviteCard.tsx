@@ -1,10 +1,10 @@
 "use client";
+
+// Signed-out prompt in the sidebar.
+
 import { useUser } from "@/app/_hooks/useUser";
 import Button from "@/app/_components/ui/Button";
 
-// Closes the feed, and stands in for it entirely when the stage is empty. The
-// gradient wash it used to carry is gone — §2 bans gradients, and the invite
-// earns its weight from the display setting and the surrounding rules instead.
 const InviteCard = () => {
   const user = useUser();
 

@@ -1,3 +1,11 @@
+// The closing ruling and every payout. Pure.
+//
+// The judge's numbers are a ratio, not gospel: they are renormalised to 100, the
+// winner is recomputed from the margin, and the MVP must match a real participant
+// on the winning side. Rules we state to users are enforced here, not requested of
+// the model.
+// Spec: game-theory.md §11, §12
+
 export type Side = "for" | "against";
 
 export interface RawVerdict {
@@ -23,25 +31,12 @@ export interface ResolvedVerdict {
   mvpUserId: number | null;
 }
 
-// §15 — the verdict constants.
-/** §7: the margin must EXCEED this for a side to win. At or below it, a draw. */
 export const DRAW_MARGIN = 5;
-/** §8: replaces the win bonus for the MVP, never stacks with it. */
 export const MVP_BONUS = 25;
 export const WIN_BONUS = 10;
-/** §8: negative, and applied season-only so a career total never falls. */
 export const LOSS_PENALTY = -5;
 export const AUTHOR_BONUS = 5;
 
-/**
- * §7 — turn the judge's raw ruling into the settled result.
- *
- * The model's percentages are treated as a ratio, not gospel: they are
- * normalised to sum to 100 so a sloppy response can't produce a nonsense
- * margin. The MVP is validated hard — it must be a real participant AND on
- * the winning side, because "the MVP comes from the winning side" is a rule
- * we state to users, not a suggestion we make to the model.
- */
 export function resolveVerdict(
   raw: RawVerdict,
   participants: ParticipantWithName[],
@@ -78,7 +73,6 @@ export interface DebateResultRow {
 export interface LogicAward {
   userId: number;
   amount: number;
-  /** True for the loss penalty: ledger it, but never touch logic_score. */
   seasonOnly: boolean;
 }
 
@@ -87,10 +81,6 @@ export interface Payouts {
   logicAwards: LogicAward[];
 }
 
-/**
- * §8 — who gets what. The author bonus is a separate award from any
- * participation bonus, so an author who also argued receives both.
- */
 export function resolvePayouts(input: {
   winner: Side | "draw";
   participants: Participant[];
@@ -121,7 +111,6 @@ export function resolvePayouts(input: {
         seasonOnly: true,
       });
     }
-    // A draw pays nothing either way.
   }
 
   logicAwards.push({ userId: authorId, amount: AUTHOR_BONUS, seasonOnly: false });
@@ -129,11 +118,6 @@ export function resolvePayouts(input: {
   return { results, logicAwards };
 }
 
-/**
- * §7 — a side was empty at lock. Nobody scores, the author included: you
- * cannot win a contest nobody entered, and paying the author here would
- * reward posting motions nobody wants to argue.
- */
 export function walkoverPayout(): Payouts {
   return { results: [], logicAwards: [] };
 }

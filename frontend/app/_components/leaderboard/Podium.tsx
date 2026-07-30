@@ -1,3 +1,6 @@
+// The top three. The champion carries shadow-podium — the one true-black drop in the
+// product, and it has exactly this one consumer. See design-system.md §5.
+
 import Link from "next/link";
 import { LuCrown, LuMedal, LuStar } from "react-icons/lu";
 import { MdWorkspacePremium } from "react-icons/md";
@@ -5,21 +8,6 @@ import Avatar from "@/app/_components/ui/Avatar";
 import { convertLogicScore } from "@/app/_utils/logicScore";
 import type { BoardRow } from "@/app/leaderboard/board";
 
-// The three places, keyed to the three metals.
-//
-// This used to colour second place with `secondary` and third with `tertiary`
-// — which in the new palette are the AGAINST camp and laurel, so the podium
-// read as "the negative side came second" and "third place won a prize". The
-// metals are their own tokens now (globals.css), shared with the season titles
-// on profiles so a rank means the same colour everywhere it appears.
-//
-// The champion card and the two flanking cards were also near-identical blocks
-// of markup maintained twice. One card, three configs.
-// Each place also carries its own accent edge. The champion is capped with a
-// gold rule and a star seal struck over it; the flanks are ruled down the
-// outside, so the three cards lean toward the middle instead of reading as one
-// bar of three. The edge is a positioned span rather than a `border-*` override
-// so it cannot lose a cascade fight with the card's hairline.
 const PLACES = {
   1: {
     metal: "text-metal-gold",
@@ -74,8 +62,6 @@ const PodiumCard = ({
 }) => {
   const p = PLACES[place];
   const share = topScore > 0 ? (debater.score / topScore) * 100 : 0;
-  // The season board carries no career counts, so the stat feet only appear
-  // on a board that actually has them to show.
   const hasCounts = debater.motionCount !== undefined;
   const champion = place === 1;
 
@@ -89,20 +75,12 @@ const PodiumCard = ({
         className={`relative flex h-full ${p.height} flex-col justify-end border border-ink-faint p-8 transition duration-300 ${
           champion
             ? // The one card that stands off the page: raised paper over a black
-              // drop, deepening and lifting under the cursor. This is the single
-              // sanctioned exception to §5's "the cast is never black" — the
-              // ink-tinted cast cannot separate a card from two neighbours it is
-              // touching. It still obeys the rest of the rule: `bg-raised`, so
-              // the shadow reads as lift rather than a hole in the page.
               "bg-raised shadow-podium hover:shadow-podium-deep md:p-10"
             : "bg-band hover:bg-raised"
         }`}
       >
         <span aria-hidden className={`absolute ${p.edge} ${p.metalBg}`} />
 
-        {/* The champion's medal, hung over the top edge: the medallion clears
-            the card, the ribbon hangs down over it. The one ornament on the
-            board, so it marks first place and nothing else. */}
         {champion && (
           <MdWorkspacePremium
             aria-hidden
@@ -188,7 +166,6 @@ const PodiumCard = ({
   );
 };
 
-/** The top three of whichever board is showing. */
 const Podium = ({
   top,
   metric,
@@ -196,14 +173,11 @@ const Podium = ({
 }: {
   top: BoardRow[];
   metric: string;
-  /** All-time only: a tier is a career standing, not a monthly one. */
   showTier: boolean;
 }) => {
   const topScore = top[0]?.score ?? 0;
 
   return (
-    // Fourteen columns, not twelve: the flanks needed room to breathe (4/6/4
-    // rather than 3/6/3) without the champion giving up its share of the row.
     <div className="mb-16 grid grid-cols-1 items-end gap-6 pt-8 md:grid-cols-14 md:gap-0">
       {([2, 1, 3] as const).map((place) => {
         const debater = top[place - 1];

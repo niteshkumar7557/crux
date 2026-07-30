@@ -1,10 +1,7 @@
+// W-L-D, MVPs, rank. Spec: game-theory.md §13
+
 import type { ProfileStanding } from "@/app/profile/types";
 
-// §9: logic, record, MVP count and rank — the four numbers a profile carries.
-// One hairline-divided band, not four floating cards.
-//
-// W-L-D stays neutral on purpose: working rule 4 reserves `secondary` (red)
-// for stance — it means AGAINST — and there is no stance on a profile.
 const Cell = ({
   label,
   children,

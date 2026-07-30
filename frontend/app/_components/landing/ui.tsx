@@ -1,4 +1,9 @@
 "use client";
+
+// The landing's own primitives — PillButton, Eyebrow, SectionHead, Plate, Section,
+// reveals. Landing-only on purpose: the product ships no engravings and no scroll
+// choreography. design-system.md §4, §6
+
 import Link from "next/link";
 import Image from "next/image";
 import gsap from "gsap";
@@ -7,14 +12,10 @@ import type { HTMLAttributes, ReactNode } from "react";
 
 gsap.registerPlugin(ScrollTrigger);
 
-/* ---------------------------------------------------------------- helpers */
-
 export const prefersReduced = () =>
   typeof window !== "undefined" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/** Fade-and-rise every [data-reveal] inside the scope as it scrolls in.
- *  Call inside a section's useGSAP. Respects reduced motion. */
 export const initReveals = (scope: HTMLElement | null) => {
   if (!scope) return;
   const targets = gsap.utils.toArray<HTMLElement>("[data-reveal]", scope);
@@ -37,8 +38,6 @@ export const initReveals = (scope: HTMLElement | null) => {
     );
   });
 };
-
-/* ---------------------------------------------------------------- pieces */
 
 export const PillButton = ({
   href,
@@ -78,7 +77,6 @@ export const Eyebrow = ({
   </p>
 );
 
-/** Section header: eyebrow + big display headline. */
 export const SectionHead = ({
   kicker,
   title,
@@ -101,21 +99,12 @@ export const SectionHead = ({
   </header>
 );
 
-/** A serif italic aside inside a display headline. */
 export const Serif = ({ children }: { children: ReactNode }) => (
   <span className="font-headline lowercase italic tracking-normal">
     {children}
   </span>
 );
 
-/** Specimen plate: engraving on its own sheet of cream paper. The sheet stays
- *  cream in dark mode — the archive at night. `arch` tops portrait plates
- *  with the arena-door arch.
- *
- *  The caption sits *below* the sheet rather than on it. A flat cream strip
- *  with no engraving on it is the brightest thing on a dark page, and it read
- *  as a glare rather than a label; on the page's own paper it stays a label in
- *  both modes. */
 export const Plate = ({
   src,
   alt,
@@ -160,7 +149,6 @@ export const Plate = ({
   </figure>
 );
 
-/** Standard section shell — consistent rhythm, optional band background. */
 export const Section = ({
   id,
   band = false,

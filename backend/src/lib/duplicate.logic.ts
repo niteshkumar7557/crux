@@ -1,37 +1,14 @@
-/**
- * §6 — repost detection, the layer that runs before the model is ever called.
- *
- * Two separate exploits, one comparison:
- *   - posting your own argument again to collect its score twice;
- *   - copying somebody else's argument and posting it as your own, which is the
- *     more valuable of the two because the text has already been proven to
- *     score well.
- *
- * This catches verbatim and near-verbatim reposts only — it is cheap,
- * deterministic and spends no tokens. A reworded restatement is the analyst
- * prompt's job (it is handed the side's arguments and told to score a
- * restatement 1), not this module's.
- */
+// Verbatim repost detection, run before the model is ever called. Cheap,
+// deterministic, no tokens. Paraphrase is the analyst's job, not this module's.
+// Spec: game-theory.md §8
 
-/**
- * Below this many normalised characters a repost is not worth refusing across
- * users: short agreements ("i agree", "exactly this") collide innocently, and
- * they score 1-2 anyway, so copying one gains nothing. Repeating *yourself* is
- * refused at any length.
- */
 export const CROSS_USER_MIN_LENGTH = 40;
 
-/**
- * The form two arguments are compared in: case, punctuation and spacing are all
- * noise, and so are Latin accents (typing "cafe" for "café" is the same word).
- *
- * The character class keeps marks (`\p{M}`) as well as letters and numbers,
- * which is load-bearing rather than defensive: Devanagari matras are marks, not
- * letters, so `\p{L}\p{N}` alone turns "यह तर्क गलत है" into "यह तर क गलत ह" —
- * a mangling that would make two identical Hindi arguments compare as different.
- * Latin combining accents are stripped explicitly just above, before the class
- * can preserve them.
- */
+// Case, punctuation, spacing and Latin accents are all noise.
+//
+// Keeping marks (\p{M}) alongside letters and numbers is load-bearing, not
+// defensive: Devanagari matras are marks, so \p{L}\p{N} alone would mangle
+// "यह तर्क गलत है" and make two identical Hindi arguments compare as different.
 export function normaliseArgument(text: string): string {
   return text
     .normalize("NFKD")
@@ -54,13 +31,6 @@ export type DuplicateVerdict =
 
 const NOT_DUPLICATE: DuplicateVerdict = { duplicate: false };
 
-/**
- * Compares one new argument against every argument already in the debate.
- *
- * Self-repeats win over cross-user matches: if you are reposting your own text
- * that is what you are told, even when somebody else happens to have posted
- * the same words first.
- */
 export function findDuplicate(
   input: string,
   prior: PriorArgument[],
@@ -73,8 +43,9 @@ export function findDuplicate(
 
   for (const c of prior) {
     if (normaliseArgument(c.content) !== needle) continue;
+    // Self-repeats win over cross-user matches: if you are reposting your own
+    // text that is what you are told, even if somebody else posted it first.
     if (c.userId === authorId) return { duplicate: true, of: "self" };
-    // Keep looking — an own repost further down the list outranks this one.
     if (byOther === null) byOther = c;
   }
 

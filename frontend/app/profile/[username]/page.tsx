@@ -1,3 +1,6 @@
+// A profile. The shell is server-rendered and the activity payload is fetched after
+// mount, so nothing slow blocks first paint. Spec: game-theory.md §13
+
 import type { Metadata } from "next";
 import { isAxiosError } from "axios";
 import { notFound, redirect } from "next/navigation";
@@ -11,8 +14,6 @@ import ProfileActivity from "@/app/_components/profile/ProfileActivity";
 import { validateUsername } from "@/app/_utils/username";
 import type { ProfileShell } from "@/app/profile/types";
 
-/** A numeric segment is always a legacy profile id — the username rule
- *  guarantees a handle contains at least one letter. */
 const isLegacyId = (segment: string) => /^\d+$/.test(segment);
 
 async function fetchShell(username: string): Promise<ProfileShell | null> {
@@ -47,8 +48,6 @@ const ProfilePage = async ({
 }) => {
   const { username } = await params;
 
-  // Legacy /profile/<id> links redirect to the canonical URL. redirect()
-  // throws by design, so it must sit outside any try/catch that swallows.
   if (isLegacyId(username)) {
     let canonical: string | null = null;
     try {

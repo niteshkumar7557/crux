@@ -1,6 +1,6 @@
-// §14 pure notification copy — testable, no I/O.
+// Notification copy, pure and testable.
+// Spec: game-theory.md §20
 
-/** The "verdict's in" message, flavoured by the recipient's outcome. */
 export function verdictMessage(outcome: string, isMvp: boolean): string {
   if (outcome === "win") {
     return isMvp
@@ -11,20 +11,14 @@ export function verdictMessage(outcome: string, isMvp: boolean): string {
   return "The verdict is in — the debate ended in a draw.";
 }
 
-/** Someone replied directly to one of your arguments (§14, the strongest pull). */
 export function replyMessage(actor: string): string {
   return `@${actor} replied directly to your argument.`;
 }
 
-/** A new challenger joined the opposing side of a debate you're in. */
 export function oppositionMessage(actor: string): string {
   return `@${actor} joined the opposing side of your debate.`;
 }
 
-/**
- * §10: a season closed and you placed. The title is the only reward that
- * survives a season, so the copy says "permanently" out loud.
- */
 export function seasonAwardMessage(title: string, rank: number): string {
   return `You finished #${rank} last season — "${title}" is yours, permanently.`;
 }

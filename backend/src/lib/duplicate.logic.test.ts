@@ -6,7 +6,6 @@ import {
   type PriorArgument,
 } from "./duplicate.logic.js";
 
-// An argument long enough that a cross-user repost of it is refused.
 const LONG =
   "France built 56 reactors in 15 years, but only under a state monopoly with cheap public debt.";
 

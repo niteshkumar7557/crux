@@ -1,4 +1,7 @@
 "use client";
+
+// Sign in. Ships its own chrome.
+
 import { LuLockKeyhole, LuMail, LuZap } from "react-icons/lu";
 import { isAxiosError } from "axios";
 import Link from "next/link";
@@ -18,7 +21,6 @@ const Login = () => {
   const router = useRouter();
   const rootRef = useRef<HTMLElement>(null);
 
-  // Entrance: brand drops in, the card rises, then the status strip fades.
   useGSAP(
     () => {
       const mm = gsap.matchMedia();
@@ -75,21 +77,13 @@ const Login = () => {
     }
   }
 
-  // `overflow-hidden` used to clip a radial glow that no longer exists, and with
-  // a centred column it silently clipped the masthead instead once the mark made
-  // the content taller than a short viewport. Padding plus normal overflow lets
-  // the page scroll rather than lose its top.
   return (
     <main
       ref={rootRef}
       className="bg-paper text-ink font-body selection:bg-ink/30 min-h-screen flex flex-col items-center justify-center relative py-16"
     >
 
-      {/* <!-- Login Container --> */}
       <div className="relative z-10 w-full max-w-md px-6">
-        {/* The mark carries the masthead here, stacked over the wordmark —
-            this is the one screen with room for it and no navigation to
-            compete with. */}
         <div data-auth-brand className="mb-12 flex flex-col items-center gap-3">
           <LogoMark size={54} className="text-ink" />
           <h1 className="font-headline text-4xl italic tracking-tighter leading-none text-ink">
@@ -99,7 +93,6 @@ const Login = () => {
             Digital Intellectual Arena
           </span>
         </div>
-        {/* <!-- Login Card --> */}
         <div
           data-auth-card
           className="relative border border-ink-faint bg-band p-8 md:p-10"
@@ -115,7 +108,6 @@ const Login = () => {
             </p>
           </header>
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* <!-- Email Field --> */}
             <div className="space-y-2">
               <label
                 className="block font-label text-[10px] uppercase tracking-widest text-ink-soft"
@@ -137,7 +129,6 @@ const Login = () => {
                 />
               </div>
             </div>
-            {/* <!-- Password Field --> */}
             <div className="space-y-2">
               <div className="flex justify-between items-end">
                 <label
@@ -172,7 +163,6 @@ const Login = () => {
                 </a>
               </div>
             </div>
-            {/* <!-- Action Button --> */}
             <div className="pt-4">
               <Button type="submit" size="lg" className="w-full group">
                 Log in
@@ -180,7 +170,6 @@ const Login = () => {
               </Button>
             </div>
           </form>
-          {/* <!-- Secondary Actions --> */}
           <div className="mt-8 pt-8 border-t border-ink-faint text-center">
             <p className="font-body text-sm text-ink-soft">
               New to Crux?
@@ -193,9 +182,6 @@ const Login = () => {
             </p>
           </div>
         </div>
-        {/* A rule under the card, the way the landing closes a section. The
-            "System_Ready" telemetry strip that used to sit here belonged to the
-            old machine-room look and says nothing to someone logging in. */}
         <div data-auth-deco className="mt-8 flex items-center gap-4 px-2">
           <span aria-hidden className="h-px grow bg-ink-faint" />
           <span className="font-label text-[0.58rem] uppercase tracking-[0.3em] text-ink-soft">
@@ -205,7 +191,6 @@ const Login = () => {
         </div>
       </div>
 
-      {/* <!-- Global Footer (Suppressed for transactional focus per mandate, but keeping branding) --> */}
       <div className="absolute bottom-0 w-full p-8 flex flex-col md:flex-row justify-between items-center gap-4 border-t border-ink-faint">
         <span className="font-label text-[10px] uppercase tracking-[0.2em] text-ink-soft">
           © 2026 CRUX DIGITAL ARENA. ALL RIGHTS RESERVED.

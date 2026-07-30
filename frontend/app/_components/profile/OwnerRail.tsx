@@ -1,12 +1,13 @@
 "use client";
+
+// Actions only the profile's owner sees.
+
 import { useState } from "react";
 import { LuPencil } from "react-icons/lu";
 import { useUser } from "@/app/_hooks/useUser";
 import BioEditor from "./BioEditor";
 import LogoutButton from "./LogoutButton";
 
-// Owner-only controls, grouped in one place instead of floating over the
-// header. Renders nothing at all for a visitor.
 const OwnerRail = ({ profileId, bio }: { profileId: number; bio: string }) => {
   const user = useUser();
   const [editing, setEditing] = useState(false);

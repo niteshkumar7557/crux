@@ -1,3 +1,5 @@
+// Identity, standing and season titles. Spec: game-theory.md §13
+
 import type {
   ProfileIdentity,
   ProfileStanding,
@@ -16,8 +18,6 @@ const ProfileHeader = ({
   standing: ProfileStanding;
   titles: SeasonTitle[];
 }) => {
-  // §10: the best placing ever earned frames the avatar. Square, to match the
-  // avatar itself.
   const best = bestTitle(titles);
   const frame = best ? FRAME_RING[best.frame] : undefined;
 
@@ -43,10 +43,6 @@ const ProfileHeader = ({
             avatar={identity.avatar}
           />
         </div>
-        {/* The one place the product borrows the landing's arch: a person is
-            the only thing here that gets a portrait, and the arch is the
-            system's signature shape (design-system.md §5). No engraving — the
-            product carries none — just the geometry. */}
         <h1 className="display-type min-w-0 break-words text-[clamp(2.6rem,7vw,5.5rem)] text-ink">
           {identity.name}
         </h1>

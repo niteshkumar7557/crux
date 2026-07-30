@@ -1,16 +1,7 @@
+// Drops and recreates the public schema. Dev only — refuses under NODE_ENV=production.
+
 import { Pool } from "pg";
 import config from "../config/index.js";
-
-// Drops the entire public schema and recreates it empty.
-//
-// v1 migrations are edited IN PLACE rather than stacked (the product is not
-// live), and migrate.ts skips any filename already recorded in _migrations --
-// so an in-place edit is invisible to an existing database. This is the reset
-// that makes the edit take effect:
-//
-//   npm run db:reset:dev && npm run db-init
-//
-// It destroys every row. That is the point.
 
 const pool = new Pool({ connectionString: config.db.url });
 

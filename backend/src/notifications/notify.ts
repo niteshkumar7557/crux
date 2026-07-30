@@ -1,3 +1,8 @@
+// Writes notifications. Every fan-out here is best-effort and swallows its own
+// errors: these are called after the work they describe has committed, and a failed
+// nudge must never roll back a verdict or a posted argument.
+// Spec: game-theory.md §20
+
 import pool from "../db/index.js";
 import { verdictMessage, oppositionMessage, replyMessage } from "./messages.js";
 
@@ -22,8 +27,6 @@ export async function createNotification(
   );
 }
 
-// Best-effort: a new participant joined a debate → tell the opposing side and
-// the debate's author "a challenger showed up". Never throws into the caller.
 export async function notifyOpposition(
   motionId: number,
   side: string,
@@ -61,8 +64,6 @@ export async function notifyOpposition(
   }
 }
 
-// Best-effort verdict fan-out to every participant. Call after the conclusion
-// transaction has committed.
 export async function notifyVerdict(
   motionId: number,
   results: { userId: number; outcome: string; isMvp: boolean }[],
@@ -81,9 +82,6 @@ export async function notifyVerdict(
   }
 }
 
-// §14's strongest return trigger: someone answered your argument directly.
-// Best-effort — never blocks the argument response. Replying to yourself is
-// impossible across sides, but guard anyway rather than rely on that.
 export async function notifyReply(
   motionId: number,
   targetUserId: number,

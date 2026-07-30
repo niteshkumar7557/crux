@@ -1,3 +1,7 @@
+// Poller: concludes debates past closes_at. FOR UPDATE SKIP LOCKED, so an overlapping
+// tick picks up different rows rather than blocking.
+// Spec: game-theory.md §4, §11
+
 import pool from "../db/index.js";
 import config from "../config/index.js";
 import logger from "../lib/logger.js";
@@ -23,7 +27,7 @@ async function tick(): Promise<void> {
       try {
         await concludeDebate(row.id);
       } catch {
-        // concludeDebate already logged + rolled back; move on.
+        // concludeDebate already logged and rolled back; move on.
       }
     }
   } catch (err) {

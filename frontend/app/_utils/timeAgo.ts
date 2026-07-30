@@ -1,3 +1,5 @@
+// Relative timestamps.
+
 export function timeAgo(timestamp: string): string {
   const now = Date.now();
   const past = new Date(timestamp).getTime();

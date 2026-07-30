@@ -31,7 +31,7 @@ restartPolicyType = "ON_FAILURE"
 # Exactly one instance. The three in-process pollers (conclusion, featuring,
 # season rollover) each run on a setInterval inside this process, and the rate
 # limiter counts requests in this process's own memory — at two replicas the
-# limits double and the buckets split. See CODEBASE_GUIDE §9.
+# limits double and the buckets split. See docs/codebase-guide.md §10.
 #
 # There is no volume any more (avatars live in object storage), so nothing else
 # enforces this — the line below is the enforcement. Do not raise it without

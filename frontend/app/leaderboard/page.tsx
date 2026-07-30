@@ -1,3 +1,6 @@
+// Two boards, one layout: this season by default, all-time behind a tab.
+// Spec: game-theory.md §14
+
 export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -38,7 +41,6 @@ const EMPTY: BoardResponse = { rows: [], total: 0, page: 1, pageSize: 20 };
 const chipClass = (active: boolean) =>
   `${active ? "border-ink text-ink bg-ink/5" : "border-ink-faint bg-band text-ink-soft"} border px-4 py-2 font-label text-xs uppercase tracking-widest hover:border-ink hover:text-ink transition-colors`;
 
-/** Both endpoints answer with the same envelope; only the score field differs. */
 function toRows(res: BoardResponse, tab: BoardTab): BoardRow[] {
   const scoreKey = tab === "season" ? "seasonLogic" : "logicScore";
   return res.rows.map((r) => ({
@@ -64,9 +66,6 @@ const Leaderboard = async ({ searchParams }: { searchParams: SearchParams }) => 
   const requestedPage =
     Number.isInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1;
 
-  // The season strip states the window and its prize unconditionally (§14), so
-  // the season endpoint is read on both tabs — it is the only source of the
-  // season number and the days left.
   let board: BoardResponse = EMPTY;
   let season = { season: 0, endsAt: "" };
   try {
@@ -85,9 +84,6 @@ const Leaderboard = async ({ searchParams }: { searchParams: SearchParams }) => 
     const meta = seasonMeta?.data ?? boardRes.data;
     season = {
       season: Number(meta?.season ?? 0),
-      // The season boundary is the backend's to state (§10). Without it the
-      // clock simply does not render — a countdown the client invented for
-      // itself would be a second, competing answer.
       endsAt: String(meta?.endsAt ?? ""),
     };
   } catch (error) {
@@ -98,7 +94,6 @@ const Leaderboard = async ({ searchParams }: { searchParams: SearchParams }) => 
   const metric = metricLabel(tab);
   const totalPages = Math.max(Math.ceil(board.total / board.pageSize), 1);
 
-  // The podium is the head of the board, so it only belongs on its first page.
   const showPodium = board.page === 1 && rows.length >= 3;
   const podium = showPodium ? rows.slice(0, 3) : [];
   const rest = showPodium ? rows.slice(3) : rows;
@@ -131,8 +126,6 @@ const Leaderboard = async ({ searchParams }: { searchParams: SearchParams }) => 
         )}
       </header>
 
-      {/* The board's own controls: which board on the left, how deep it goes on
-          the right, on one line. */}
       <div
         data-reveal
         className="mb-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-3"
@@ -159,9 +152,6 @@ const Leaderboard = async ({ searchParams }: { searchParams: SearchParams }) => 
         </div>
       </div>
 
-      {/* §14: the season window and its prize are stated unconditionally — an
-          empty board is exactly when a newcomer most needs to know the month is
-          still winnable. */}
       <p
         data-reveal
         className="mb-12 font-body text-sm text-ink-soft border-l-2 border-ink-faint pl-4"

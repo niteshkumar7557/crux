@@ -1,56 +1,33 @@
+// Five limit tiers, all keyed off clientIp() — which is about PROVENANCE, not about
+// finding an IP. Return the same value for everyone and every tier collapses into
+// one site-wide budget; return an attacker-chosen value and no limit binds at all,
+// including the guard on login.
+//
+// So the CDN stamps a shared secret and the IP header is trusted only when it
+// matches. Anything unverified fails CLOSED into one shared bucket: throttling a
+// stranger too hard is recoverable, not throttling an attacker is not.
+// X-Forwarded-For is deliberately never read — proxies APPEND to it, so its leftmost
+// entry is whatever the client sent.
+//
+// resolveClientIp takes its trust configuration as an argument so the tests assert
+// real behaviour without depending on anyone's .env.
+
 import { rateLimit } from "express-rate-limit";
 import type { Request } from "express";
 import { timingSafeEqual } from "crypto";
 
-// ── Spec §2: starting values, adjustable post-launch ─────────────────────────
 export const AUTH_LIMIT = { windowMs: 15 * 60_000, limit: 10 };
 export const LLM_LIMIT = { windowMs: 60_000, limit: 6 };
 export const UPLOAD_LIMIT = { windowMs: 60_000, limit: 3 };
 export const GLOBAL_LIMIT = { windowMs: 60_000, limit: 300 };
-/**
- * Messages to the developer. Every one of these relays to a Telegram chat one
- * person reads, so the thing being protected is an inbox, not a CPU — five a
- * minute is generous for writing prose and still cannot be used to flood it.
- */
 export const DM_LIMIT = { windowMs: 60_000, limit: 5 };
 
-// ── The rate-limit key ───────────────────────────────────────────────────────
-//
-// Every limiter derives from this one function, which gives it two failure
-// modes. If it returns the SAME value for everyone, all four tiers collapse into
-// a single site-wide budget. If it returns an ATTACKER-CHOSEN value, they mint a
-// fresh identity per request and no limit binds at all. The second is far worse:
-// the auth tier (10 per 15 min) is what stands between a stranger and unlimited
-// password guesses at /user/login.
-//
-// So the question is not "which header holds the client IP" but "can this
-// request prove where it came from".
-//
-// Cloudflare overwrites CF-Connecting-IP at its edge, so a client cannot forge
-// it *past Cloudflare*. That is the only guarantee we have — and it only covers
-// traffic that actually went through Cloudflare. A request that reaches this
-// origin directly can set CF-Connecting-IP to whatever it likes, because there
-// is no edge in that path to overwrite it. Origin discovery is realistic (DNS
-// history predating the CDN, a stray platform hostname), and a PaaS origin
-// cannot be IP-restricted to Cloudflare's ranges the way a VPS can.
-//
-// X-Forwarded-For is worse still and is deliberately not consulted: proxies
-// APPEND to it, so its leftmost entry is simply whatever the client sent.
-//
-// Hence: Cloudflare stamps every request with a shared secret (a Transform Rule
-// adding X-Edge-Secret — see RUNBOOK), and the IP header is trusted only when
-// that secret matches. Anything unverified fails CLOSED into one shared bucket:
-// bypass traffic gets collectively throttled instead of being handed unlimited
-// identities. Throttling a stranger too hard is recoverable; not throttling an
-// attacker at all is not.
-
-/** Shared bucket for traffic that cannot prove it came through the edge. */
 export const UNVERIFIED_KEY = "unverified";
 
 function secretMatches(presented: string, expected: string): boolean {
   const a = Buffer.from(presented);
   const b = Buffer.from(expected);
-  // timingSafeEqual throws on length mismatch, and comparing lengths first
+  // timingSafeEqual throws on a length mismatch, and comparing lengths first
   // leaks only the length of a random secret.
   if (a.length !== b.length) return false;
   return timingSafeEqual(a, b);
@@ -61,19 +38,12 @@ function header(req: Pick<Request, "headers">, name: string): string | undefined
   return Array.isArray(raw) ? raw[0] : raw;
 }
 
-/**
- * Pure: takes its trust configuration as an argument rather than reading the
- * environment, so the tests below assert on real behaviour without depending on
- * anyone's .env. (Same reason `economy/season.logic.ts` takes a timestamp.)
- */
 export function resolveClientIp(
   req: Pick<Request, "headers" | "ip">,
   opts: { production: boolean; edgeSecret?: string | undefined },
 ): string {
-  // Dev and CI have no CDN in front, so the socket address IS the client.
   if (!opts.production) return req.ip ?? "unknown";
 
-  // With a secret configured, provenance is proven or the request is unverified.
   if (opts.edgeSecret) {
     const presented = header(req, "x-edge-secret");
     if (!presented || !secretMatches(presented, opts.edgeSecret)) {
@@ -102,12 +72,12 @@ function makeLimiter(opts: {
     limit: opts.limit,
     standardHeaders: "draft-8",
     legacyHeaders: false,
-    // Own key derivation (above); library IP validations don't apply to it.
+    // Own key derivation below; the library's IP validations do not apply to it.
     validate: false,
     keyGenerator: (req: Request) =>
       opts.byUser && req.user ? `u:${req.user.id}` : `ip:${clientIp(req)}`,
     handler: (_req, res) => {
-      // Transparency rule: a limit a user can hit must explain itself.
+      // §19: a limit a user can hit must explain itself.
       res.setHeader("Retry-After", String(Math.ceil(opts.windowMs / 1000)));
       res.status(429).json({ error: "rate_limited", message: opts.message });
     },

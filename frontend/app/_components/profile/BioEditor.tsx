@@ -1,4 +1,9 @@
 "use client";
+
+// The bio. NOTE: the Debater Profiler writes this same column on every motion post,
+// so a hand-written bio does not survive. See future-features.md §5.
+// Spec: game-theory.md §13
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
@@ -6,7 +11,6 @@ import api from "@/app/axios";
 import Button from "@/app/_components/ui/Button";
 import AutoGrowTextarea from "@/app/_components/ui/AutoGrowTextarea";
 
-/** Mirrors BIO_MAX in backend/src/controllers/profile.controller.ts. */
 const BIO_MAX = 280;
 
 const BioEditor = ({ bio, onDone }: { bio: string; onDone: () => void }) => {

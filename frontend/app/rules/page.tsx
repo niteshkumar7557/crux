@@ -1,3 +1,7 @@
+// Every rule with its real number, taken from game-theory.md §21. This page is a
+// DISCLOSURE, not marketing copy — a rule that is not surfaced is a bug.
+// Spec: game-theory.md §19
+
 import type { Metadata } from "next";
 import Button from "@/app/_components/ui/Button";
 import Reveal from "@/app/_components/ui/Reveal";
@@ -6,9 +10,6 @@ export const metadata: Metadata = {
   title: "Arena Rules",
 };
 
-// §14: "A rule that is not surfaced is a bug." Every number below is the real
-// one, taken from §15 of the game spec. If a number changes there, it changes
-// here — this page is a disclosure, not marketing copy.
 const RULES = [
   {
     title: "Every debate ends in 48 hours",

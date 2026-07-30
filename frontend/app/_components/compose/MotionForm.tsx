@@ -1,4 +1,8 @@
 "use client";
+
+// The motion composer. States the author bonus and the walkover rule before you
+// post, not after. Spec: game-theory.md §3, §12, §19
+
 import {
 	ArbiterVerdict,
 	AUTO_DOMAIN,
@@ -38,9 +42,7 @@ const MotionForm = ({ domains }: { domains: DomainClassification }) => {
 	const [similar, setSimilar] = useState<SimilarMotion[]>([]);
 	const [composeNotice, setComposeNotice] = useState("");
 	const [castNotice, setCastNotice] = useState("");
-	// undefined = auth unknown (checking), null = logged out
 	const [authUser, setAuthUser] = useState<jwtPayload | null | undefined>(undefined);
-	// the JWT doesn't carry the avatar, so fetch it once we know who's here
 	const [avatar, setAvatar] = useState<string | null>(null);
 
 	const restored = useRef(false);
@@ -68,10 +70,6 @@ const MotionForm = ({ domains }: { domains: DomainClassification }) => {
 		};
 	}, []);
 
-	// Restore draft once, before the save effect may overwrite it. setState
-	// calls are deferred into a timer (react-hooks/set-state-in-effect forbids
-	// synchronous setState in an effect body); 0ms always precedes the 300ms
-	// save-effect debounce below, so no draft is ever clobbered.
 	useEffect(() => {
 		if (restored.current) return;
 		const timer = setTimeout(() => {
@@ -92,7 +90,6 @@ const MotionForm = ({ domains }: { domains: DomainClassification }) => {
 		return () => clearTimeout(timer);
 	}, [domains]);
 
-	// Debounced draft save.
 	useEffect(() => {
 		if (!restored.current) return;
 		const timer = setTimeout(() => {
@@ -154,7 +151,6 @@ const MotionForm = ({ domains }: { domains: DomainClassification }) => {
 			if (seq !== similarSeq.current) return;
 			setSimilar(((data.motions ?? []) as SimilarMotion[]).slice(0, 3));
 		} catch {
-			// Similar fights are a bonus — never block the flow.
 		}
 	}
 
@@ -233,7 +229,6 @@ const MotionForm = ({ domains }: { domains: DomainClassification }) => {
 				localStorage.removeItem(DRAFT_KEY);
 			} catch {}
 			router.push(`/motion/CRX-${data.id}-A`);
-			// Keep `casting` true — the redirect is the success state.
 		} catch (err) {
 			if (isAxiosError(err) && err.response?.status === 429) {
 				setCastNotice(
@@ -297,8 +292,6 @@ const MotionForm = ({ domains }: { domains: DomainClassification }) => {
 						{composeNotice}
 					</p>
 				)}
-				{/* §14: the author bonus, and the condition attached to it, stated
-				    before posting rather than discovered at the verdict. */}
 				<p className="font-body text-[11px] text-ink-soft leading-relaxed">
 					You earn +5 logic when your motion produces a real debate —
 					both sides must argue. If one side is still empty at the deadline it

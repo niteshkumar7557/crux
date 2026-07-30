@@ -1,273 +1,172 @@
 <h1>
-  <img src="./frontend/app/icon.png" width="32" height="32" style="vertical-align: middle;" alt="Crux Logo" />
+  <img src="./frontend/app/icon.svg" width="30" height="30" alt="" align="top" />
   CRUX — The Intellectual Arena
 </h1>
 
 > *One claim. One arena. No neutral ground.*
 
-CRUX is an AI-powered debate platform where motions are judged before they reach the arena. The AI decides if your claim has enough tension to become a live argument — then scores every argument, updates both sides' analysis in real time, and shifts win probability as the debate evolves.
+**Crux is a debate platform where every argument ends.** You post a claim, an AI referee decides
+whether it can sustain a real fight, two camps form, and you argue for 48 hours. Then a neutral AI
+judge rules — a winner, a margin, an MVP, and a written verdict. Your reasoning earns you a score.
+Every month the board resets, so anyone can win it.
+
+The complete rules are in **[`docs/game-theory.md`](./docs/game-theory.md)**. This file is the
+pitch and the setup.
 
 ---
 
-## What Makes It Different
+## How it works
 
-- **AI Gatekeeping** — Every submitted motion is evaluated for controversy potential, logical viability, and debate merit. Weak claims don't survive.
-- **Live Analysis** — Both sides of every argument have a continuously updated AI analysis that evolves as users post arguments.
-- **Logic Scoring** — Every argument is scored 4–8 based on novelty, reasoning quality, and argumentative strength. Scores update your global Logic Score.
-- **Abuse Detection** — Arguments are screened for English and Hindi abuse before posting. Violations deduct from your Logic Score.
-- **Win Probability** — Once both sides have at least one argument, the AI calculates a live probability split based on argument quality.
-- **Debater Profiles** — Your intellectual identity is inferred from your argument history. Not what you argued — how you think.
+| | |
+|---|---|
+| **An AI gates every motion** | The Arbiter reads your claim before it goes live and rejects the vague and the unarguable, offering a sharper rewrite. You never walk into a debate that was doomed by a bad question. |
+| **Two camps, two living cases** | Every debate has exactly two sides, each with an AI-maintained case that is rewritten as arguments land — with every point linked back to the argument that made it. |
+| **Your first argument locks your side** | Confirmed before it happens, never discovered after. Nobody can hedge both sides to guarantee a win. |
+| **Replies are worth the most** | Answer a specific opponent and you can earn the full 1–8. A standalone argument caps at 5, because it engages nothing in particular. |
+| **The clock always runs out** | 48 hours, no extensions. At zero the arena locks read-only and the Verdict Judge delivers the ruling that the whole two days was building toward. |
+| **A record, a tier, a season** | Permanent W–L–D and an all-time logic score that never falls — plus a monthly board that resets, so a newcomer can top it in week one. |
+| **Nothing is hidden** | Every rule that can cost you something is shown *before* it can bite, and every award shows its arithmetic. A rule that is not surfaced is treated as a bug. |
+
+Read [`docs/game-theory.md`](./docs/game-theory.md) for the mechanics, the numbers, and the
+reasoning behind each one.
 
 ---
 
-## Tech Stack
+## Documentation
+
+| File | What it owns |
+|---|---|
+| [`docs/game-theory.md`](./docs/game-theory.md) | **The spec.** Every rule, every number (§21), and why. If anything else disagrees with it, it wins. |
+| [`docs/codebase-guide.md`](./docs/codebase-guide.md) | How the code is organised, how a request flows, and where to change what. **Start here to contribute.** |
+| [`docs/design-system.md`](./docs/design-system.md) | Colour, type, shape, motion, voice. |
+| [`docs/future-features.md`](./docs/future-features.md) | Designed-and-deferred features — check before proposing one. |
+| [`AGENTS.md`](./AGENTS.md) | The short version, for AI coding agents. |
+
+Files that implement a game rule carry a header pointing back at the spec
+(`Spec: game-theory.md §7`), and a test fails if any of those pointers goes stale. Read a file's
+header, then that section of the spec, then the code.
+
+---
+
+## Stack
 
 | Layer | Technology |
-|-------|-----------|
-| Frontend | Next.js 16, TypeScript, Tailwind CSS v4 |
-| Backend | Node.js, Express, TypeScript |
+|---|---|
+| Frontend | Next.js 16 (App Router), React 19, TypeScript, Tailwind v4, GSAP |
+| Backend | Node.js, Express 5, TypeScript, hand-written SQL (no ORM) |
 | Database | PostgreSQL |
-| AI | OpenRouter (DeepSeek V4 Flash) |
-| Auth | JWT (Access and Refresh tokens) |
-| Containerization | Docker (Docker Compose for local development) |
-| Hosting | Railway (frontend, API, Postgres) behind Cloudflare |
-
----
-
-## Project Structure
+| AI | OpenRouter — one model behind all six personas, swappable by env |
+| Auth | JWT access tokens + database-backed refresh tokens |
+| Tests | Vitest, on pure logic only — the whole suite runs with zero secrets |
+| Local | Docker Compose (Postgres + pgAdmin) |
 
 ```
 crux/
-├── frontend/               # Next.js app
-│   ├── app/
-│   │   ├── _components/
-│   │   ├── _hooks/
-│   │   ├── _types/
-│   │   ├── (auth)/
-│   │   ├── about/
-│   │   ├── archive/
-│   │   ├── argument/
-│   │   ├── leaderboard/
-│   │   ├── profile/
-│   │   ├── rules/
-│   │   └── motion/
-│   └── ...
-├── backend/                # Express API
-│   ├── src/
-│   │   ├── ai/
-│   │   ├── config/
-│   │   ├── controllers/
-│   │   ├── db/
-│   │   ├── lib/
-│   │   ├── middlewares/
-│   │   ├── routes/
-│   │   └── types/
-│   └── ...
-├── ops/                    # restore drill
-└── docker-compose.dev.yml  # local Postgres + pgAdmin
+├── backend/                    Express API
+│   └── src/
+│       ├── ai/                 the six AI personas, their prompts, and the pure judging logic
+│       ├── controllers/        request parsing + SQL + response (no service layer)
+│       ├── db/migrations/      twelve .sql files — together, the whole schema
+│       ├── economy/            logic awards and the season window
+│       ├── jobs/               four in-process pollers
+│       ├── lib/ middlewares/ notifications/ routes/
+├── frontend/                   Next.js app
+│   └── app/
+│       ├── _components/        arena · motion · compose · profile · leaderboard · landing · ui
+│       ├── _utils/ _hooks/
+│       └── <routes>
+├── docs/                       the four committed docs
+├── ops/                        the restore drill
+└── .github/workflows/          CI, and the nightly database backup
 ```
 
 ---
 
-## Developer Setup
+## Setup
 
-### Prerequisites
-
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed
-- An [OpenRouter API key](https://openrouter.ai/keys) with credit on it
-
----
-
-### 1. Clone the Repository
+**You need:** [Docker Desktop](https://www.docker.com/products/docker-desktop/), Node 24+, and an
+[OpenRouter API key](https://openrouter.ai/keys) with credit on it. There is no free LLM tier, but
+running costs are tiny — roughly **$0.0002 per motion** and **$0.00014 per argument**.
 
 ```bash
 git clone https://github.com/Nitesh-Kumar-7557/crux
 cd crux
+
+cp backend/.env.example  backend/.env      # then add your OPENROUTER_API_KEY
+cp frontend/.env.example frontend/.env
+cp pgadmin.example.env   pgadmin.env       # pick any email + password
+
+docker compose -f docker-compose.dev.yml up -d     # Postgres :5432, pgAdmin :5051
 ```
-
----
-
-### 2. Environment Variables
-
-Rename `pgadmin.example.env` to `pgadmin.env` and replace email password of your choice.
-
-Rename `.env.example` file in both `frontend/` and `backend/` directories to `.env`
-
-and add your OpenRouter api key inside `backend/.env` as `OPENROUTER_API_KEY`.
-
-**LLM provider.** The backend talks to OpenRouter and runs every AI persona on a
-single model, `deepseek/deepseek-v4-flash` — 1M context, $0.098 in / $0.196 out
-per 1M tokens. The client speaks plain OpenAI-compatible `/chat/completions`, so
-the provider is env-only, no code change:
-
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `LLM_BASE_URL` | `https://openrouter.ai/api/v1` | Chat-completions base URL |
-| `LLM_API_KEY` | falls back to `OPENROUTER_API_KEY` | API key for the provider |
-| `LLM_MODEL` | `deepseek/deepseek-v4-flash` | The one model behind all six personas |
-| `LLM_REASONING` | `off` | `off` \| `high` \| `xhigh` — see below |
-
-**Leave `LLM_REASONING=off`.** V4 Flash is a reasoning model, and its thinking
-tokens are billed as output *and* count against `max_tokens`. Every persona
-returns a rubric-scored JSON object rather than a derivation, so thinking buys
-nothing here and costs roughly 5-7x the output tokens — measured, it turned a
-40-token reply into 267. It also eats the budget on the tighter calls (the
-debater-description call caps at 500) until JSON mode returns a truncated body.
-
-Running cost is roughly **$0.0002 per motion published, $0.00014 per argument,
-$0.00017 per verdict** — see §6 of `docs/CODEBASE_GUIDE.md` for the full model.
-
----
-
-### 3. Run the Stack
-
-```bash
-docker compose -f docker-compose.dev.yml up -d
-```
-
-This will ->  Start a PostgreSQL instance on port `5432` and PgAdmin on port `5051`
 
 ```bash
 cd backend && npm i
+npm run db-init        # migrate + seed — 30 users and motions, every password is "secret"
+npm run dev            # API on :8000
 ```
-```bash
-npm run db-init  
-# if this shows error, then it's already ran, skip it!
-```
-
-This will ->  Migrate the tables and seed the data into the database.
 
 ```bash
-npm run dev
+cd frontend && npm i
+npm run dev            # app on http://localhost:3000
 ```
 
-This will ->  Start the Express backend on port `8000`
+`backend/.env.example` is the complete, annotated list of every setting. The two that matter most
+in production are **`CRUX_SEASON_ZERO`** (the launch month — season numbers derive from it) and
+**`NEXT_PUBLIC_SITE_URL`** (or share links and the sitemap point at localhost).
 
-Now on a new terminal window
+Avatar uploads fall back to local disk when object-storage credentials are absent, and the
+developer-message relay is simply off without a bot token — so neither is needed to run or
+contribute. The boot log says which mode each is in.
 
-```bash
-cd frontend && npm i && npm run dev
-```
-
-This will ->  Start the Next.js frontend on port `3000`
-
-
----
-
-### 4. Open the App
-
-```
-http://localhost:3000
-```
-
----
-
-### Stopping the Stack
-
-```bash
-docker compose -f docker-compose.dev.yml down
-```
-
-To also remove the database volume (full reset):
-
-```bash
-docker compose -f docker-compose.dev.yml down -v
-```
-
----
-
-## Deployment
-
-Production runs on Railway as three services, behind Cloudflare:
-
-```
-Browser ──HTTPS──> Cloudflare (DNS proxied, TLS, rate rule)
-                      │
-                      ▼
-                Railway edge ──> crux-frontend (Next.js, public)
-                                       │ /api/* rewrite
-                                       ▼
-                                 crux-backend (Express, private)
-                                       │
-                                       ▼
-                                 Postgres 17 (managed)
-```
-
-The API has no public hostname. The browser only ever talks to the frontend's
-origin, and Next's `/api/:path*` rewrite proxies to the backend over Railway's
-private network — so the app is same-origin, the auth cookie stays `sameSite:
-lax`, and the API is never directly reachable.
-
-Uploaded avatars go to Cloudflare R2 rather than to disk — container filesystems
-are discarded on every deploy, and a mounted volume would forbid replicas and be
-unbackupable on Railway's Hobby plan. Locally, with no R2 credentials configured,
-uploads fall back to `backend/public/uploads/avatars` so the app runs unchanged.
-
-Each service reads its own config from `backend/railway.toml` and
-`frontend/railway.toml`; the path to each must be set explicitly in that
-service's settings, because Railway does not resolve it relative to the
-service's root directory.
-
-**Deploying** is a push to `main`. CI must go green before Railway will build —
-migrations then run in a pre-deploy container, so a failed migration halts the
-deploy instead of taking the running site down with it. **Rolling back** is
-redeploying a previous deployment from the Railway dashboard.
-
-`ops/restore-drill.sh` restores a nightly dump into a throwaway container and
-prints row counts — the proof that a backup is a backup, and the recovery
-procedure if the database is ever lost.
-
----
-
-## API Overview
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/profile/:id` | Get profile data with ID |
-| `POST` | `/ai/motion` | Check eligibility of a motion |
-| `POST` | `/like` | Post like on an argument |
-| `POST` | `/motion` | Post a new motion |
-| `GET` | `/motion/:id` | Get a motion by ID |
-| `GET` | `/motion/:id/arguments` | Get every argument on a motion |
-| `POST` | `/motion/:id/arguments/affirmative` | Post an argument on the FOR side |
-| `POST` | `/motion/:id/arguments/negative` | Post an argument on the AGAINST side |
-| `GET` | `/arena/motions` | Paged motion feed (archive, domain, topic) |
-| `POST` | `/user/refresh` | Generate a new Access token |
-| `POST` | `/user/register` | Register a new user |
-| `POST` | `/user/login` | Login |
-
----
-
-## AI Functionality
-
-| Function | Model | Trigger |
-|----------|-------|---------|
-| Motion eligibility check | Gpt OSS | On motion eligiblity check |
-| Initial Crux AI analysis | Gpt OSS | On motion broadcast |
-| User description generation | Gpt OSS | After each new argument posted |
-| Argument abuse detection | Gpt OSS | Before every argument post |
-| Argument scoring + analysis update | Gpt OSS | After every valid argument |
-| Win probability update | Gpt OSS | After analysis updation |
+**Stopping:** `docker compose -f docker-compose.dev.yml down`, or `down -v` to drop the database
+volume too.
 
 ---
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Commit your changes: `git commit -m 'add: your feature'`
-4. Push to the branch: `git push origin feature/your-feature`
-5. Open a Pull Request
+1. Read [`docs/codebase-guide.md`](./docs/codebase-guide.md) — the map, the flows, and the
+   change-checklists.
+2. Branch off `main`. If your change alters a rule, change
+   [`docs/game-theory.md`](./docs/game-theory.md) **first**.
+3. Put decisions in a pure `*.logic.ts` with a test beside it, then wire it up.
+4. If it adds a rule that changes a user's outcome, give it a surface (spec §19).
+5. Run all six gates:
+
+```bash
+cd backend  && npm test && npx tsc --noEmit && npm run build
+cd frontend && npm test && npm run lint && npx tsc --noEmit && npm run build
+```
+
+CI runs exactly these on every push and PR. Commit messages follow `type(scope): summary`.
+
+---
+
+## Deployment
+
+The frontend is public and the API is not: Next rewrites `/api/:path*` to the backend over a
+private network, so the browser only ever talks to one origin, the auth cookie stays
+`sameSite: lax`, and the API has no public route at all.
+
+```
+Browser ──HTTPS──> CDN ──> frontend (Next.js, public)
+                                │ /api/* rewrite
+                                ▼
+                           backend (Express, private) ──> Postgres
+```
+
+Deploying is a push to `main`: CI must go green first, then migrations run in a pre-deploy
+container — so a failed migration halts the deploy instead of taking the running site down.
+Rolling back is redeploying a previous build. Uploaded avatars go to object storage rather than to
+disk, because container filesystems are discarded on every deploy.
+
+`ops/restore-drill.sh` restores a nightly dump into a throwaway container and prints row counts —
+the proof that a backup is a backup, and the recovery procedure if the database is ever lost.
 
 ---
 
 ## License
 
-MIT License — see [LICENSE](./LICENSE) for details.
+MIT — see [LICENSE](./LICENSE).
 
----
-
-<p align="center">
-  <strong>CRUX DIGITAL ARENA</strong><br/>
-  <em>Where arguments are decided.</em>
-</p>
+<p align="center"><em>Where arguments are decided.</em></p>

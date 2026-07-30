@@ -1,3 +1,7 @@
+// Create a motion, and read one back. Creating runs the Opening Analyst, starts the
+// 48h clock, and fires the Debater Profiler best-effort.
+// Spec: game-theory.md §3, §4, §16, §17
+
 import type { Response, Request } from "express";
 import pool from "../db/index.js";
 import { llmJson } from "../ai/llm.js";
@@ -93,8 +97,8 @@ Domain: ${domainName}`;
         keyword.value,
         content.value,
         domainId,
-        // Nobody has argued, so there is nobody to credit: an empty author
-        // map nulls any id the model invented for its own draft points.
+        // Nobody has argued, so there is nobody to credit: an empty author map
+        // nulls any id the model invented for its own draft points.
         writeAnalysis(sanitizeAnalysis(parsed.for_analysis, new Map())),
         writeAnalysis(sanitizeAnalysis(parsed.against_analysis, new Map())),
       ],
@@ -134,9 +138,8 @@ export async function getMotionById(req: Request, res: Response) {
       [id],
     );
     // The analyses leave here already parsed. Both the arena panel and the
-    // certificate image read this one endpoint, so parsing server-side means
-    // there is no second reader on the frontend to drift out of sync — and
-    // rows still holding the old Markdown are handled in exactly one place.
+    // certificate read this one endpoint, so there is no second reader on the
+    // frontend to drift — and legacy rows are handled in exactly one place.
     const row = rows[0];
     res.status(200).json({
       data: row && {

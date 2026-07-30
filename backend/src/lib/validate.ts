@@ -1,6 +1,7 @@
-// Pure input checks for user text that reaches an LLM prompt. A missing field
-// must never interpolate "undefined" into a prompt, and every char accepted
-// here is a char we pay for — the cap is the cost-control perimeter.
+// Input checks for user text that reaches an LLM prompt. A missing field must never
+// interpolate "undefined" into a prompt, and every character accepted here is one
+// we pay for — the cap is the cost-control perimeter.
+
 export type TextCheck =
   | { ok: true; value: string }
   | { ok: false; reason: string };

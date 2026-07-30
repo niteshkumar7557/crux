@@ -1,15 +1,11 @@
 "use client";
+
+// The confirmation before a first argument. The side lock is irreversible, so it is
+// confirmed rather than discovered. Spec: game-theory.md §5, §19
+
 import { useEffect } from "react";
 import Button from "@/app/_components/ui/Button";
 import Portal from "@/app/_components/ui/Portal";
-
-// §4/§14 — the side lock, confirmed BEFORE it binds.
-//
-// "A strict rule discovered by surprise feels like punishment. The same rule,
-// known in advance, feels like a game." The lock is the single most
-// irreversible thing a user can do in a debate, so it gets the one modal in
-// the product. The season-only loss penalty is stated here too, because §14
-// requires it before as well as after.
 
 const SideLockConfirm = ({
   side,
@@ -32,11 +28,6 @@ const SideLockConfirm = ({
   }, [onCancel]);
 
   return (
-    // Portalled to <body>. Its caller is the composer, a sticky bar with
-    // `backdrop-blur-xl`, and a backdrop-filtered ancestor becomes the
-    // containing block for `position: fixed` children — so nested here the
-    // dialog centred itself inside the 128px composer strip and hung off the
-    // bottom of the screen. See ui/Portal.
     <Portal>
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
         <div
@@ -47,8 +38,6 @@ const SideLockConfirm = ({
           role="dialog"
           aria-modal="true"
           aria-labelledby="side-lock-title"
-          // The cast takes the side being committed to — the dialog is about
-          // one camp, so it stands in that camp's light.
           className={`relative w-full max-w-md bg-raised border border-ink-faint p-8 ${
             side === "for" ? "shadow-cast-for-deep" : "shadow-cast-against-deep"
           }`}

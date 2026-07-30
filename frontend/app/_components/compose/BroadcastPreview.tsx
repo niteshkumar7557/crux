@@ -1,4 +1,7 @@
 "use client";
+
+// What the motion will look like once live.
+
 import { useEffect, useRef, useState } from "react";
 import { LuRadioTower } from "react-icons/lu";
 import Avatar from "@/app/_components/ui/Avatar";
@@ -13,9 +16,6 @@ const CAST_STAGES = [
 ];
 const CAST_STAGE_MS = 2200;
 
-// Highlight the arbiter keyword inside the claim. The keyword is only
-// guaranteed to exist in the IMPROVED text — if the user chose ORIGINAL and
-// it's absent, render plain text (spec-mandated fallback).
 function highlightKeyword(content: string, keyword: string) {
   if (!keyword) return content;
   const idx = content.toLowerCase().indexOf(keyword.toLowerCase());

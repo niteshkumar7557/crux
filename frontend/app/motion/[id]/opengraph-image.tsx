@@ -1,3 +1,5 @@
+// The share card for one debate, rendered by satori.
+
 import { ImageResponse } from "next/og";
 import { isAxiosError } from "axios";
 import serverApi from "@/app/axios.server";
@@ -87,7 +89,6 @@ export default async function Image({
   return new ImageResponse(
     (
       <div style={frame}>
-        {/* top row */}
         <div
           style={{
             display: "flex",
@@ -101,7 +102,6 @@ export default async function Image({
           <div>{id}</div>
         </div>
 
-        {/* body */}
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           {model.mode !== "live" && (
             <div
@@ -145,7 +145,6 @@ export default async function Image({
           </div>
         </div>
 
-        {/* split bar */}
         {model.split && (
           <div
             style={{
@@ -164,7 +163,6 @@ export default async function Image({
           </div>
         )}
 
-        {/* bottom row */}
         <div
           style={{
             display: "flex",

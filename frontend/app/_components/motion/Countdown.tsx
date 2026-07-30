@@ -1,4 +1,7 @@
 "use client";
+
+// The live 48h clock. Spec: game-theory.md §4
+
 import { useEffect, useState } from "react";
 
 function fmt(msLeft: number): string {

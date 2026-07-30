@@ -1,3 +1,5 @@
+// What the AI does and does not decide. Spec: game-theory.md §16
+
 import { LuBrain, LuUsers } from "react-icons/lu";
 
 const CruxAIRoleInfo = () => {

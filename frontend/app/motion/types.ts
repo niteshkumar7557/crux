@@ -1,12 +1,5 @@
-/**
- * The Crux AI analysis, as `GET /motion/:id` returns it. A point that came
- * from a real argument carries that argument's id, which is what lets the panel
- * link a named point to the argument it was made in; the AI's own opening-draft
- * points carry neither an author nor an id.
- *
- * Parsed server-side (backend `ai/analysis.logic.ts`) — including the legacy
- * Markdown rows — so there is no reader on this side to drift out of sync.
- */
+// The debate page's view model.
+
 export interface AnalysisPoint {
   author: string | null;
   argumentId: number | null;
@@ -28,9 +21,7 @@ export interface UserArgumentCardProps {
   user_id?: number; // the viewer's id (undefined when logged out)
   argument_id: number;
   post_user_id: number;
-  initiallyLiked: boolean; // §5: filled on load when the viewer already liked it
-  // §5: the opposing argument this one answers, or null for a standalone.
-  // `argumentId` is the jump target behind the quoted stub.
+  initiallyLiked: boolean; // §10: filled on load when the viewer already liked it
   replyTo: { argumentId: number; username: string; content: string } | null;
   replyCount: number; // "↳ N replies" shown on the target argument
   firstReplyId: number | null; // scroll anchor for the replies link

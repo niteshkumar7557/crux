@@ -83,7 +83,6 @@ describe("clientIp — no edge secret configured", () => {
     ).toBe("203.0.113.7");
   });
   it("but a request with no CF header is unverified, never req.ip", () => {
-    // req.ip here is the frontend container, shared by every visitor.
     expect(resolveClientIp(fakeReq({}), { production: true })).toBe(
       UNVERIFIED_KEY,
     );

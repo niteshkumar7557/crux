@@ -1,4 +1,7 @@
 "use client";
+
+// The feed ranked by heat. Spec: game-theory.md §15
+
 import { useEffect, useRef, useState } from "react";
 import ArenaPrimaryCard from "./ArenaPrimaryCard";
 import ArenaSecondaryCard from "./ArenaSecondaryCard";
@@ -9,8 +12,6 @@ import { gsap, useGSAP } from "@/app/_utils/gsap";
 import { shouldAnimate } from "@/app/_utils/animateOnce";
 
 const TrendingTab = () => {
-	// The hero is ONE debate (§11's Motion of the Day), so the API returns a
-	// single object -- and an empty {} when nothing is crowned.
 	const [primaryCardData, setPrimaryCardData] =
 		useState<PrimaryCardDataType | null>(null);
 	const [secondaryCardsData, setSecondaryCardsData] = useState<
@@ -22,14 +23,8 @@ const TrendingTab = () => {
 
 	useGSAP(
 		() => {
-			// The container is always mounted (the loading state renders inside
-			// it), but bail defensively -- a null scope makes gsap fall back to
-			// the context selector and warn "Invalid scope".
 			if (!containerRef.current) return;
 
-			// Client-fetched, and re-mounted on every tab switch, so it owns its
-			// key. The tab-switch crossfade in ActiveMotions is NOT gated —
-			// that one answers a click and has to fire every time.
 			if (!shouldAnimate("/#trending")) return;
 
 			const cards = gsap.utils.toArray(
@@ -55,8 +50,6 @@ const TrendingTab = () => {
 		},
 		{
 			scope: containerRef,
-			// `loading` matters too: when the fetch fails the data deps never
-			// change, so without it the reveal would never fire.
 			dependencies: [loading, primaryCardData, secondaryCardsData],
 		},
 	);
@@ -68,7 +61,6 @@ const TrendingTab = () => {
 					api.get("/arena/active/primary"),
 					api.get("/arena/active/secondary"),
 				]);
-				// Both endpoints answer with a bare {} when the stage is empty.
 				const primary = primaryResponse.data as PrimaryCardDataType | null;
 				setPrimaryCardData(primary?.motionId ? primary : null);
 				setSecondaryCardsData(

@@ -1,95 +1,27 @@
-/**
- * MODERATOR / ANALYST — the hot path. Runs on every single argument.
- *
- * WHAT IT DOES
- * Four jobs in one call, in order: (1) moderate the argument, (2) decode it —
- * repair its expression to a plain claim, name what it engages and the logical
- * move it makes — (3) score it 1-8 on how much it moves the argument, (4)
- * rewrite the debater's own-side analysis. It is the most expensive prompt
- * to get wrong — its `points` is the game's currency and its `newAnalysis` is
- * the public record of a side's case.
- *
- * CALLED FROM
- * `controllers/argument.controller.ts` → `moderateAndAnalyze`, on every
- * `POST /argument/:id/for` and `/against`.
- *
- * WHAT THE USER MESSAGE CONTAINS (required inputs)
- * Built by `ai/analyst.logic.ts` → `buildAnalystPrompt()` (pure and unit
- * tested in `analyst.logic.test.ts` — edit the shape there, not here):
- *
- *   MOTION: "<motion>"
- *   SIDE: FOR | AGAINST
- *   AUTHOR: <debater's display name>
- *   OWN SIDE ANALYSIS: <markdown | "(none yet)">
- *   OPPONENT ANALYSIS: <markdown | "(none yet)">
- *   OWN SIDE ARGUMENTS:                            ← "(none yet)" when empty
- *     [#<id>] @<username>: "<their argument>"       ← up to 12, oldest first
- *   REPLYING TO @<username>: "<their argument>"    ← present ONLY on a reply
- *   ARGUMENT: "<the new argument>"
- *
- * The REPLYING TO block is the single most important lever in this file. Its
- * presence is what makes replies worth more than standalones — not a
- * multiplier in code, but the fact that the model is handed the exact text
- * being rebutted and scored against it. `(none yet)` on OWN SIDE ANALYSIS
- * means this is the side's opening argument; `(none yet)` on OPPONENT ANALYSIS
- * triggers the opener exception below.
- *
- * WHAT IT MUST RETURN
- *   { abused:        boolean,
- *     decoded_claim: string,   // the argument's point, expression repaired
- *     engages:       string,   // the specific thing it answers, or "nothing specific"
- *     move:          string,   // the logical move, in a few words
- *     points:        number,   // 1-8
- *     newAnalysis:   { lead: string,
- *                      points: { argumentId: number | null, text: string }[] } }
- *
- * DOWNSTREAM CONTRACT — what breaks if the shape drifts
- * - `decoded_claim`, `engages`, `move` are NOT read by code. They are the
- *   decode-first fields: reasoning is off, so making the model WRITE the
- *   repaired claim, the target and the move BEFORE it scores is the only place
- *   its "thinking" can live. `points` is then judged on those fields, not on
- *   the raw prose — which is what makes the score blind to grammar and
- *   eloquence. Reordering them after `points` defeats the mechanism.
- * - `abused: true` → −4 logic, the argument is discarded, response is 201
- *   `{ abused: true }`. The prompt must also zero `points` and empty
- *   `newAnalysis` in that case; the controller does not re-check them.
- * - `points` is NOT trusted. `scoreArgument()` in `ai/analyst.logic.ts` clamps
- *   it to 1-8, applies the standalone cap (5, unless the opposing side is
- *   empty), then halves it after 3 arguments in the same debate. The user is
- *   shown that arithmetic, so the raw judged value must be defensible on its
- *   own — the code fixes range, not judgement.
- * - `newAnalysis` goes through `sanitizeAnalysis()` in `ai/analysis.logic.ts`
- *   before it is stored, and that function — not this prompt — is the guard.
- *   Authors are resolved from `argumentId` against the side's real arguments, so
- *   an `argumentId` this model invents costs the point its link and nothing more;
- *   an `author` field, if it emits one, is ignored outright. An analysis that
- *   sanitizes to empty is treated as "no update" and the old one stands.
- * - The structure must match what `opening-analyst.prompt.ts` produces, since
- *   it is replacing that document in the same panel.
- *
- * CALL SETTINGS
- * `maxTokens: 3000`, temperature from config (0.2). On failure the whole
- * argument post 500s — nothing is written.
- *
- * TUNING NOTES
- * - Scoring runs off the decoded fields, not the surface text — a rough-English
- *   argument that lands a specific point must outscore a polished one that
- *   engages no one. The single worked example plus the prose anchors set the
- *   whole 1-8 range; the least-consequential prompts used to carry examples
- *   while this, the currency, carried none.
- * - The abuse line is argument-versus-person, shown in several registers so a
- *   blunt non-native attack on the *reasoning* is not mistaken for an attack on
- *   the *writer*. Romanized Hindi profanity is called out explicitly because
- *   the model's default moderation misses it.
- * - "Never incorporate OPPONENT ANALYSIS content" stops the two sides
- *   converging into the same document over a long debate.
- * - OWN SIDE ARGUMENTS is what makes the restatement rule enforceable: the model
- *   cannot recognise a reworded repost of a point it has never been shown. It
- *   deliberately carries EVERY debater on the side, not just AUTHOR's own
- *   arguments — copying a proven high-scorer off a team-mate is the version of
- *   this exploit worth money. Verbatim reposts are refused before this prompt
- *   runs (`lib/duplicate.logic.ts`), so the rule here is aimed at paraphrase.
- */
+// MODERATOR / ANALYST — the hot path. Runs on every single argument. Persona 3 of 6.
+//
+// Called from: controllers/argument.controller.ts (moderateAndAnalyze).
+// In:  built by ai/analyst.logic.ts buildAnalystPrompt() — edit the shape THERE.
+// Out: { abused, decoded_claim, engages, move, points, newAnalysis }
+//
+// The REPLYING TO block is the single most important lever in this file. Its presence
+// is what makes replies worth more than standalones — not a multiplier in code, but
+// the fact that the model is handed the exact text being rebutted.
+//
+// What the code does with each field:
+//   * decoded_claim / engages / move — NOT read. Decode-first: reasoning is off, so
+//     making the model write the repaired claim, the target and the move BEFORE it
+//     scores is the only place its thinking can live, and it is what makes the score
+//     blind to grammar and eloquence. Reordering them after `points` defeats it.
+//   * abused: true — the argument is discarded and costs 4 logic. The prompt must
+//     also zero `points` and empty `newAnalysis`; the controller does not re-check.
+//   * points — NOT trusted. scoreArgument() clamps, caps and halves it. The code
+//     fixes range, never judgement, and the user is shown the arithmetic.
+//   * newAnalysis — sanitizeAnalysis() is the guard, not this prompt. Authors are
+//     resolved from argumentId server-side, so an invented id costs a point its link
+//     and nothing more. An analysis that sanitizes to empty means "no update".
+// Spec: game-theory.md §7, §8, §9, §16, §17
+
 export const MODERATOR_ANALYST_SYSTEM_PROMPT = `You are CRUX ANALYST for a debate arena. A motion has a FOR side and an AGAINST side, each with a running analysis. A user posted a new argument on one side. You see that side (OWN SIDE ANALYSIS), the other side (OPPONENT ANALYSIS), and the argument. Many users are not native English speakers — judge the reasoning, never the grammar.
 
 Do four things, in order: moderate the argument, decode it, score it, then rewrite the OWN side's analysis.

@@ -1,4 +1,7 @@
 "use client";
+
+// The claim, its author, its domain and its clock.
+
 import { useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -47,9 +50,6 @@ const MotionHeader = ({
 
   useGSAP(
     () => {
-      // The header, the arena columns and the probability bar all mount in the
-      // same commit and share one key: the debate introduces itself once, as a
-      // whole, rather than in three independently-gated pieces.
       if (!shouldAnimate(pathname)) return;
       const mm = gsap.matchMedia();
       mm.add(MOTION_OK, () => {
@@ -74,8 +74,6 @@ const MotionHeader = ({
 
   return (
     <div ref={rootRef}>
-      {/* Watches the h1 below and takes over for it once it scrolls under the
-          navbar, so the sentence being argued is never off screen. */}
       <StickyMotion
         watch={headlineRef}
         before={before}
@@ -99,8 +97,6 @@ const MotionHeader = ({
           <span className="font-label text-[10px] uppercase tracking-[0.2em] text-ink-soft">
             ID: {motionHeaderData.motionId}
           </span>
-          {/* Whose claim this is. Every argument names its debater; the motion
-              itself did not, so the one person on the hook for it was anonymous. */}
           <Link
             href={`/profile/${motionHeaderData.authorUsername}`}
             className="flex items-center gap-2 text-ink-soft hover:text-ink transition-colors"
@@ -114,10 +110,7 @@ const MotionHeader = ({
               Opened by @{motionHeaderData.authorUsername}
             </span>
           </Link>
-          {/* The clock and the curation control sit on the right edge, away
-              from the identity of the claim. */}
           <div className="ml-auto flex items-center gap-3">
-            {/* §11: admin-only, and only while there is still a stage to curate. */}
             {matchState.status === "live" && (
               <PinControl
                 motionId={motionId}
@@ -130,12 +123,6 @@ const MotionHeader = ({
             )}
           </div>
         </div>
-        {/* The claim is set in Newsreader, not the display face. Anton was
-            tried here and rejected: a motion is a sentence someone is on the
-            hook for, and setting it in condensed uppercase poster type turned
-            an argument into a headline shouting at the reader. The serif reads
-            as something written and signed, which is what a motion is. The
-            keyword lifts in laurel italic. */}
         <h1
           ref={headlineRef}
           className="font-headline text-[clamp(2.2rem,5.2vw,4.2rem)] leading-[1.12] max-w-5xl break-words text-ink"

@@ -99,7 +99,6 @@ describe("buildCertificate", () => {
 });
 
 describe("buildCertificate analysis", () => {
-  // The structured shape `GET /motion/:id` returns.
   const withAnalysis = {
     ...source,
     forAnalysis: {

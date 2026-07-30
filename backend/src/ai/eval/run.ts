@@ -1,14 +1,7 @@
-/**
- * RUN — the gold eval runner. Sends every case in `gold.ts` through the real
- * prompt and checks the model's output against `expect`.
- *
- * This hits the live LLM (it costs tokens and needs LLM_API_KEY), so it is a
- * manual / CI-optional check — NOT part of `npm test`, which stays pure and
- * offline. The deterministic scoring/verdict maths is unit-tested separately.
- *
- *   npm run eval               one pass per case
- *   npm run eval -- --runs=3   run each case 3x, pass on the majority
- */
+// Scores the live prompts against gold.ts. SPENDS REAL CREDITS, so it is a manual
+// gate (npm run eval) and never a CI job — which is what keeps the suite runnable
+// with zero secrets. Run it before shipping any prompt change.
+
 import "dotenv/config";
 import { llmJson } from "../llm.js";
 import { ARBITER_SYSTEM_PROMPT } from "../prompts/arbiter.prompt.js";
@@ -87,7 +80,6 @@ async function runProbability(c: ProbabilityCase): Promise<Outcome> {
   };
 }
 
-/** Run one case `runs` times; pass on the majority. Errors count as a miss. */
 async function repeat(fn: () => Promise<Outcome>, runs: number) {
   let passCount = 0;
   let detail = "";

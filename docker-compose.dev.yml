@@ -1,5 +1,11 @@
 
-# docker compose -f docker-compose.dev.yml up
+# Local Postgres + pgAdmin. Reads backend/.env for the database credentials and
+# pgadmin.env for the console login, so `cp` both examples before starting.
+#
+#   docker compose -f docker-compose.dev.yml up -d
+#
+# NOTE: production runs Postgres 18. This is one major behind, which is fine for
+# development but means a production dump will not restore into this container.
 
 name: crux-dev
 services:

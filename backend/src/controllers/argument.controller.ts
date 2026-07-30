@@ -1,3 +1,9 @@
+// The hot path: post an argument. Read this file first — it exercises most of the
+// codebase's conventions in one flow, walked step by step in codebase-guide.md §6.
+//
+// Order is deliberate throughout: validate, then refuse cheaply, then spend tokens.
+// Spec: game-theory.md §5, §6, §7, §8, §9, §16, §17, §19, §20
+
 import type { Request, Response } from "express";
 import pool from "../db/index.js";
 import { llmJson } from "../ai/llm.js";
@@ -35,7 +41,6 @@ async function updateProbability(motionId: number) {
     [motionId],
   );
 
-  // The argument that just landed — the delta this nudge reacts to.
   const { rows: latest } = await pool.query(
     `
             SELECT c.content, c.side, u.name AS username
@@ -114,11 +119,7 @@ async function moderateAndAnalyze(
   const userPrompt = buildAnalystPrompt({
     motion: motionContent,
     side: side as "for" | "against",
-    // The username, not the display name: OWN SIDE ARGUMENTS lists @handles, and
-    // the restatement rule asks the model to compare this author against them.
     author: authorUsername,
-    // Own side carries its argument ids so a kept point keeps its link;
-    // the opponent's is context only, so its ids would just be noise.
     ownAnalysis: renderOwnAnalysisForAnalyst(own),
     opponentAnalysis: renderAnalysisForPrompt(opponent),
     ownIsFirst: first,
@@ -183,7 +184,7 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
       return res.status(409).json({ reason: "bad_reply_target" });
     }
 
-    // Arena is read-only once concluded.
+    // The arena is read-only once concluded (§4).
     const statusRes = await pool.query(
       `SELECT status, user_id AS author_id FROM motions WHERE id = $1`,
       [motionId],
@@ -196,16 +197,16 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
     }
     const authorId: number = statusRes.rows[0].author_id;
 
-    // Commit-to-one-side (§4): the user's first argument locks their side.
+    // §5: the user's first argument locks their side for this debate.
     const sideRes = await pool.query(
       `SELECT side FROM arguments WHERE motion_id = $1 AND user_id = $2 LIMIT 1`,
       [motionId, userId],
     );
     const lockedSide: "for" | "against" | null = sideRes.rows[0]?.side ?? null;
 
-    // §5: a reply targets a specific argument on the OPPOSING side. Validated
-    // here, server-side, before the LLM call -- cross-side-only is a rule, not
-    // a UI convention, so it cannot be bypassed by posting straight at the API.
+    // §6: a reply targets a specific argument on the OPPOSING side. Validated
+    // server-side, before the LLM call — cross-side-only is a rule, not a UI
+    // convention, so posting straight at the API cannot bypass it.
     let effectiveSide: "for" | "against" = side;
     let replyTarget: ReplyTarget | null = null;
     let replyTargetUserId: number | null = null;
@@ -224,14 +225,14 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
       const requiredSide: "for" | "against" =
         target.side === "for" ? "against" : "for";
 
-      // Already locked to the target's own side => this would be a same-side
-      // reply, which §5 forbids.
+      // Already locked to the target's own side, so this would be a same-side
+      // reply — which §6 forbids.
       if (lockedSide !== null && lockedSide !== requiredSide) {
         return res.status(409).json({ reason: "bad_reply_target" });
       }
 
       // Derive the side from the target, never from the URL: replying commits
-      // you to the side opposite the argument you are answering (§5).
+      // you to the side opposite the argument you answer.
       effectiveSide = requiredSide;
       replyTarget = { username: target.username, content: target.content };
       replyTargetUserId = target.user_id;
@@ -239,18 +240,16 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
       return res.status(409).json({ reason: "side_locked" });
     }
 
-    // The motion's author owns the affirmative case: they may only argue FOR
-    // their own claim, never against it (whether by a direct post or a reply
-    // that would derive AGAINST). Enforced server-side so it holds even if the
-    // UI's disabled button is bypassed.
+    // §5: the motion's author owns the affirmative case and may never argue
+    // against their own claim — by a direct post or by a reply deriving AGAINST.
     if (userId === Number(authorId) && effectiveSide === "against") {
       return res.status(409).json({ reason: "author_affirmative_only" });
     }
 
-    // Every argument already in this debate, read once: the side counts, the
-    // user's own prior count, the repost check and the analyst's OWN SIDE
-    // ARGUMENTS block are all views of the same rows. Captured before the
-    // insert, so a user's first argument sees priorCount 0.
+    // Every argument in this debate, read once: the side counts, this user's
+    // prior count, the repost check and the analyst's own-side block are all
+    // views of these rows. Captured before the insert, so a first argument
+    // correctly sees priorCount 0.
     const { rows: existing } = await pool.query(
       `SELECT c.id, c.user_id, c.side, c.content, u.username
        FROM arguments c JOIN users u ON u.id = c.user_id
@@ -259,10 +258,8 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
       [motionId],
     );
 
-    // §6: a verbatim repost scores nothing, whether you are repeating yourself
-    // or lifting somebody else's proven argument. Refused here — before the
-    // model is called — so the exploit costs the attacker a round trip and us
-    // no tokens. Paraphrase is the analyst's job (see the restatement rule).
+    // §8: refused before the model is called, so the exploit costs the attacker
+    // a round trip and us no tokens. Paraphrase is the analyst's job.
     const dupe = findDuplicate(checkedInput.value, existing.map((c) => ({
       userId: Number(c.user_id),
       username: String(c.username),
@@ -276,7 +273,7 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
     }
 
     // Pre-insert side counts drive the opener exception (own side still empty)
-    // and §6's standalone-cap exemption (opposing side still empty).
+    // and §7's standalone-cap exemption (opposing side still empty).
     const ownSideRows = existing.filter((c) => c.side === effectiveSide);
     const oppSideCount = existing.length - ownSideRows.length;
     const first = ownSideRows.length === 0;
@@ -284,10 +281,10 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
       (c) => Number(c.user_id) === userId,
     ).length;
 
-    // The analyst has to attribute a point to this argument, but the row is not
-    // inserted until after it runs (an abusive argument is never inserted at
-    // all). So the id is taken from the sequence up front and the INSERT uses
-    // it explicitly. A post that fails just leaves a gap in the numbering.
+    // §17: the analyst must attribute a point to this argument, but the row is
+    // not inserted until after it runs (an abusive argument is never inserted at
+    // all). So the id is taken from the sequence up front and the INSERT uses it
+    // explicitly. A failed post just leaves a gap in the numbering.
     const idRes = await pool.query(
       `SELECT nextval(pg_get_serial_sequence('arguments','id'))::int AS id,
               (SELECT username FROM users WHERE id = $1) AS username`,
@@ -316,7 +313,7 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
       return res.status(201).json({ abused: true });
     }
 
-    // §6: clamp to 1-8 -> standalone cap -> halving, in that order.
+    // §7: clamp to 1-8, then the standalone cap, then the halving — in that order.
     const breakdown = scoreArgument({
       rawPoints: points,
       isReply: replyToArgumentId !== null,
@@ -324,10 +321,8 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
       priorCount,
     });
 
-    // §14: the award is stored on the row so the arena can show what each
-    // argument earned without recomputing it. Insert + award + analysis commit
-    // or roll back together — a failure between them must never leave a
-    // half-persisted argument (CODEBASE_GUIDE §9 gap).
+    // Insert, award and case-rewrite commit or roll back together — a failure
+    // between them must never leave a half-persisted argument.
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
@@ -345,10 +340,10 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
         ],
       );
       await awardLogic(client, userId, breakdown.points, "argument");
-      // Attribution is resolved against this side's real arguments, including
-      // the one being inserted right now — so an id the model invented costs a
-      // point its link and nothing more. An analysis that sanitizes to empty
-      // means "no update", and the previous one stands.
+      // §17: attribution is resolved against this side's real arguments,
+      // including the one being inserted right now — so an id the model invented
+      // costs a point its link and nothing more. An analysis that sanitizes to
+      // empty means "no update", and the previous one stands.
       const authorByArgumentId = new Map<number, string>(
         ownSideRows.map((c) => [Number(c.id), String(c.username)]),
       );
@@ -368,7 +363,7 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
       client.release();
     }
 
-    // §14 return triggers, both best-effort — neither blocks the response.
+    // §20 return triggers, both best-effort — neither blocks the response.
     if (replyTargetUserId !== null) {
       void notifyReply(motionId, replyTargetUserId, userId);
     }
@@ -391,9 +386,8 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
     const againstCount = Number(rows[0].against_count);
 
     if (forCount >= 1 && againstCount >= 1) {
-      // Best-effort: the argument is already committed; a rate-limited or failed
-      // probability call must not turn a successful post into a 500
-      // (CODEBASE_GUIDE §9 gap).
+      // Best-effort: the argument is already committed, so a failed nudge must
+      // not turn a successful post into a 500.
       try {
         await updateProbability(motionId);
       } catch (err) {
@@ -404,7 +398,7 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
       }
     }
 
-    // §14: the season standing the points pop-up reconciles the award against.
+    // §19: the season standing the points pop-up reconciles the award against.
     // Rank is "how many people are strictly ahead, plus one".
     const standing = await pool.query(
       `WITH totals AS (

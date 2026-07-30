@@ -1,9 +1,8 @@
+// Sidebar: logic staked and arenas open.
+
 import { SystemHealthData } from "@/app/types";
 import SidebarSection from "./SidebarSection";
 
-// Two arena-wide numbers. Set as a tracked label over a numeral — the same
-// figure/label pairing the certificate, the points slip and the profile
-// standing row all use, so a number means the same thing wherever it appears.
 const SystemHealth = ({ data }: { data: SystemHealthData }) => {
   return (
     <SidebarSection title="Arena Status" className="mt-12">

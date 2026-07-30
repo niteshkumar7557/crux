@@ -1,3 +1,5 @@
+// Sidebar: the busiest domains.
+
 import TrendingDomainCard from "./TrendingDomainCard";
 import SidebarSection from "./SidebarSection";
 import { TrendingDomainCardData } from "@/app/types";

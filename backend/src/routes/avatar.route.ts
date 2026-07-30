@@ -1,3 +1,5 @@
+// Upload limits are enforced by multer (size, MIME) before the handler sees a byte.
+
 import { Router } from "express";
 import type { NextFunction, Request, Response } from "express";
 import multer from "multer";
@@ -14,7 +16,6 @@ import config from "../config/index.js";
 const UNSUPPORTED_TYPE = "UNSUPPORTED_IMAGE_TYPE";
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-// Memory storage: the raw upload never touches disk — sharp gets the buffer
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: config.limits.avatar_upload_mb * 1024 * 1024 },
@@ -26,7 +27,6 @@ const upload = multer({
   },
 });
 
-// Wraps multer so its errors come back as user-facing 400s
 function uploadAvatarImage(req: Request, res: Response, next: NextFunction) {
   upload.single("avatar")(req, res, (err) => {
     if (!err) return next();
@@ -51,7 +51,6 @@ const avatarRoutes = Router();
 
 avatarRoutes.get("/presets", getAvatarPresets);
 
-// Authorized routes
 avatarRoutes.post(
   "/upload",
   authMiddleware,

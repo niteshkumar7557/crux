@@ -1,3 +1,5 @@
+// The claim field.
+
 import { LuPenLine, LuTriangleAlert } from "react-icons/lu";
 import AutoGrowTextarea from "@/app/_components/ui/AutoGrowTextarea";
 
@@ -18,7 +20,6 @@ const HEDGE_PATTERNS = [
   /\bprobably\b/i,
 ];
 
-// Free local pre-checks — nudges only, never blocking.
 function getNudges(text: string): string[] {
   const nudges: string[] = [];
   if (text.trim().endsWith("?")) {

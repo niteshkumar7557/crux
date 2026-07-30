@@ -1,7 +1,5 @@
-// The archive has two independent filters and a page, all in the URL. Every
-// link on the page rebuilds the whole query, so the rule that matters is that
-// changing one filter never silently drops another — and that defaults stay out
-// of the URL, so /archive is always the canonical "everything" address.
+// The archive's filters live in the URL. Changing one must never silently drop
+// another, and defaults stay out of the query so /archive is always canonical.
 
 export const ARCHIVE_OUTCOMES = [
   { slug: "all", label: "All" },
@@ -28,7 +26,6 @@ export function archiveHref({ outcome, domain, page }: ArchiveQuery): string {
   return query ? `/archive?${query}` : "/archive";
 }
 
-/** Unknown or missing outcome slugs fall back to "all" rather than 404. */
 export function parseOutcome(raw: string | undefined): ArchiveOutcome {
   return ARCHIVE_OUTCOMES.find((o) => o.slug === raw)?.slug ?? "all";
 }

@@ -1,3 +1,5 @@
+// The downloadable verdict certificate.
+
 import { ImageResponse } from "next/og";
 import { isAxiosError } from "axios";
 import serverApi from "@/app/axios.server";
@@ -45,16 +47,6 @@ async function fetchModel(rawId: string): Promise<CertificateModel | null> {
   }
 }
 
-/**
- * The downloadable verdict certificate (§11/§14). Deliberately a separate image
- * from `opengraph-image.tsx`: that one is fetched by scrapers and must stay a
- * link preview, while this is a document a debater saves and posts — framed,
- * dated, naming everyone on the record, and carrying the arbiter's case for
- * both sides so the picture argues for itself away from the site.
- *
- * Live debates 404 rather than render: a certificate for a result that has not
- * happened is a lie, and this URL is guessable whether or not a button exists.
- */
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -71,10 +63,7 @@ export async function GET(
     ...CERT_SIZE,
     fonts,
     headers: {
-      // The point of the whole route: a click saves a file instead of
-      // opening an image in a tab.
       "Content-Disposition": `attachment; filename="${certificateFilename(model.reference)}"`,
-      // Verdicts are immutable once settled, so this can be cached hard.
       "Cache-Control": "public, max-age=3600, s-maxage=86400, immutable",
     },
   });

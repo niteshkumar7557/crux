@@ -16,7 +16,6 @@ describe("store selection", () => {
   });
 
   it("falls back to local disk when any one is missing", () => {
-    // Dev and CI must run with no credentials at all.
     expect(makeAvatarStore({}).kind).toBe("local");
     for (const key of Object.keys(R2) as (keyof typeof R2)[]) {
       const partial = { ...R2, [key]: undefined };
@@ -25,7 +24,6 @@ describe("store selection", () => {
   });
 
   it("does not half-configure: a missing public URL must not yield r2 URLs", () => {
-    // The dangerous shape — writes succeed but every avatar URL is malformed.
     const store = makeAvatarStore({ ...R2, publicUrl: undefined });
     expect(store.urlFor("u1-abc.webp")).toBe("/uploads/avatars/u1-abc.webp");
   });
@@ -64,8 +62,6 @@ describe("keyFromAvatarUrl", () => {
   });
 
   it("cannot be walked out of its directory", () => {
-    // basename discards every leading segment, so a hostile column value
-    // resolves to a plain filename rather than a path.
     expect(keyFromAvatarUrl("/uploads/avatars/../../../etc/passwd")).toBe(
       "passwd",
     );

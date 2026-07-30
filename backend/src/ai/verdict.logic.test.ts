@@ -34,7 +34,6 @@ describe("resolveVerdict", () => {
   });
 
   it("draws at exactly the threshold", () => {
-    // 53-47 is a margin of 6 -> decisive; 52-48 is 4 -> draw.
     expect(resolveVerdict(raw({ for: 53, against: 47 }), people).winner).toBe("for");
     expect(resolveVerdict(raw({ for: 52, against: 48 }), people).winner).toBe("draw");
     expect(DRAW_MARGIN).toBe(5);
@@ -139,8 +138,6 @@ describe("resolvePayouts", () => {
       authorId: 1, // maya wrote the motion AND argued for
     });
     const maya = p.logicAwards.filter((a) => a.userId === 1);
-    // Numeric comparator: a bare .sort() is lexicographic, so [10, 5] would
-    // "sort" to [10, 5] ("1" < "5") and never match [5, 10].
     expect(maya.map((a) => a.amount).sort((a, b) => a - b)).toEqual([
       AUTHOR_BONUS,
       WIN_BONUS,

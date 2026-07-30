@@ -1,3 +1,6 @@
+-- Identity. logic_score is the all-time skill number (game-theory.md §13);
+-- `description` is the bio, and is ALSO written by the Debater Profiler.
+-- `role` is carried in the JWT and guarded by requireRole.
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     role VARCHAR(20) DEFAULT 'user',

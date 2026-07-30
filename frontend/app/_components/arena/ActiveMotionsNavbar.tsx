@@ -1,15 +1,13 @@
+// Trending / Newest switch above the feed.
+
 import Link from "next/link";
 
 interface ActiveNavbarProps {
   tabList: string[];
   active: string;
-  /** Builds the href for a tab; the tab lives in the URL so it survives a
-   *  refresh and a pager link can name the tab it belongs to. */
   hrefFor: (tab: string) => string;
 }
 
-// The feed's masthead. Same eyebrow-over-display-headline as the landing's
-// section heads, so the arena reads as the next page of the same document.
 const ActiveMotionsNavbar = ({
   tabList,
   active,
@@ -39,8 +37,6 @@ const ActiveMotionsNavbar = ({
                 href={hrefFor(tab)}
                 scroll={false}
                 aria-current={isActive ? "page" : undefined}
-                // Same rule as the navbar: state is an ink underline, not a
-                // colour swap, because colour is spoken for by the two camps.
                 className={`border-b pb-1 transition-colors ${
                   isActive
                     ? "border-ink text-ink"

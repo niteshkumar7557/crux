@@ -1,17 +1,13 @@
-// The logic ledger charted on a profile. Postgres only returns weeks that
-// actually have events, but the chart needs a stable axis — so the gaps are
-// filled here, and the series is always exactly `weeks` long.
+// Fills the gaps in the profile's weekly logic chart, so the axis is stable even in
+// weeks with no events. Weeks can net negative — the season-only loss penalty is
+// included, because that is the honest reading of the month.
+// Spec: game-theory.md §13
 
-/** One charted week. `weekStart` is a Monday, `YYYY-MM-DD`. */
 export interface LedgerWeek {
   weekStart: string;
   amount: number;
 }
 
-/**
- * The Monday of the week containing `d`, in UTC — matching Postgres's
- * date_trunc('week', …), which is ISO and therefore Monday-based.
- */
 function mondayOf(d: Date): Date {
   const m = new Date(
     Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()),

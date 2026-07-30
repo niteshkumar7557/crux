@@ -1,4 +1,6 @@
 "use client";
+
+// Route error boundary.
 import { useEffect } from "react";
 import * as Sentry from "@sentry/nextjs";
 import { LuRotateCcw } from "react-icons/lu";

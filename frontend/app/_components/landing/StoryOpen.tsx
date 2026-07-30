@@ -1,4 +1,7 @@
 "use client";
+
+// Landing: the problem, and the order of proceedings.
+
 import { useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
@@ -26,7 +29,6 @@ const steps = [
   },
 ];
 
-/** Act one: why Crux exists, and the whole game in three beats. */
 const StoryOpen = () => {
   const scope = useRef<HTMLDivElement>(null);
 
@@ -34,7 +36,6 @@ const StoryOpen = () => {
     () => {
       initReveals(scope.current);
       if (prefersReduced()) return;
-      // The rule line linking I → II → III draws itself as you scroll past.
       gsap.fromTo(
         "[data-loop-line]",
         { scaleX: 0 },
@@ -50,7 +51,6 @@ const StoryOpen = () => {
           },
         },
       );
-      // Crowd drifts slower than the page — an engraving with depth.
       gsap.fromTo(
         "[data-quarrel]",
         { y: 40 },
@@ -96,10 +96,6 @@ const StoryOpen = () => {
         </p>
       </div>
 
-      {/* The plate is set shorter than the engraving and the image is anchored
-          to its foot, which trims the dead sky above the ribbon without
-          touching the file. The extra scale is headroom for the parallax —
-          the drift is ±40px and must never expose an edge. */}
       <div
         data-reveal
         className="relative mt-16 aspect-[2048/979] overflow-hidden border border-[#24413440] bg-plate"

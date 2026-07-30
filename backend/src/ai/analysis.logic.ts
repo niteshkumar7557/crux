@@ -1,33 +1,18 @@
-/**
- * §13 — the Crux AI analysis, as data rather than a Markdown blob.
- *
- * A side's analysis is a lead sentence plus a list of points, and each point
- * that came from a real argument carries that argument's id. The id is what lets
- * the arena link a named point to the argument it was made in; before this the
- * panel could print "@dev" but had no way to say WHICH of @dev's arguments it
- * meant.
- *
- * TRUST BOUNDARY
- * The model returns `{argumentId, text}` and nothing else. Authors are looked up
- * from the argument id server-side, never taken from the model — so a
- * hallucinated id cannot invent a person, it can only cost that point its link.
- *
- * STORAGE
- * Serialised to JSON into the existing `motions.{side}_analysis` text
- * columns. `readAnalysis` accepts the legacy Markdown that every row written
- * before this change still holds, so no migration is needed and concluded
- * debates keep rendering exactly as they did.
- */
+// A side's living case, as data: a lead plus attributed points. Parse, sanitize,
+// render. Pure.
+//
+// TRUST BOUNDARY: the model returns { argumentId, text } and nothing else. Authors
+// are resolved server-side from the id, so a hallucinated id costs that point its
+// link and can never invent a person. readAnalysis also accepts the Markdown that
+// rows written before the structured format still hold.
+// Spec: game-theory.md §17
 
-/** Points past this are dropped — the panel is a summary, not a transcript. */
 export const MAX_POINTS = 6;
 export const LEAD_MAX_CHARS = 400;
 export const POINT_MAX_CHARS = 240;
 
 export interface AnalysisPoint {
-  /** Username without "@", or null for an AI opening-draft point. */
   author: string | null;
-  /** The argument this point came from; null for opening-draft points. */
   argumentId: number | null;
   text: string;
 }
@@ -48,9 +33,6 @@ function trimTo(text: string, max: number): string {
   return t.length > max ? `${t.slice(0, max).trimEnd()}…` : t;
 }
 
-// ── Reading ──────────────────────────────────────────────────────────────────
-
-/** Strips the inline Markdown the legacy prompts emitted. */
 function stripInline(text: string): string {
   return text
     .replace(/\*\*(.+?)\*\*/g, "$1")
@@ -58,15 +40,9 @@ function stripInline(text: string): string {
     .trim();
 }
 
-/**
- * The pre-JSON shape: a lead paragraph, a "### Key Arguments" heading, then
- * bullets of the form `- **@name** — the point`. Rows written before the
- * structured format still look like this, and concluded debates are read-only,
- * so they will look like this forever.
- */
+// The pre-JSON shape. Rows written before the structured format still look like
+// this, and concluded debates are read-only, so they always will.
 export function parseLegacyMarkdown(raw: string): Analysis {
-  // Some rows escaped their newlines and some did not, depending on how the
-  // model returned them — normalise both to real breaks.
   const lines = raw
     .replace(/\\n/g, "\n")
     .split("\n")
@@ -85,7 +61,6 @@ export function parseLegacyMarkdown(raw: string): Analysis {
     if (/^[-*]\s+/.test(line)) {
       seenBullet = true;
       const body = line.replace(/^[-*]\s+/, "");
-      // `**@name** — point`, the shape the old analyst prompt specified.
       const attributed = body.match(/^\*\*@?([^*]+?)\*\*\s*[—–-]\s*(.+)$/);
       if (attributed) {
         points.push({
@@ -124,15 +99,9 @@ function coercePoint(raw: unknown): AnalysisPoint | null {
   return { author, argumentId, text };
 }
 
-/**
- * Reads whatever is in the column: the structured JSON written from now on, or
- * the Markdown written before it. Never throws — a column this can't make sense
- * of yields an empty analysis, which renders as no panel rather than a crash.
- */
 export function readAnalysis(raw: unknown): Analysis {
   if (raw === null || raw === undefined) return EMPTY_ANALYSIS;
 
-  // A driver or caller that already handed us an object.
   if (typeof raw === "object") return normalise(raw);
 
   if (typeof raw !== "string") return EMPTY_ANALYSIS;
@@ -143,7 +112,6 @@ export function readAnalysis(raw: unknown): Analysis {
     try {
       return normalise(JSON.parse(text));
     } catch {
-      // Malformed JSON — fall through and read it as prose rather than lose it.
     }
   }
   return parseLegacyMarkdown(text);
@@ -161,20 +129,10 @@ function normalise(raw: unknown): Analysis {
   return { lead, points };
 }
 
-// ── Writing ──────────────────────────────────────────────────────────────────
-
 export function writeAnalysis(a: Analysis): string {
   return JSON.stringify(a);
 }
 
-/**
- * The model's `newAnalysis`, made safe to store.
- *
- * Attribution is resolved here and only here: a point's author is whatever the
- * arguments table says wrote that argument. An id the model invented, or one
- * belonging to the other side, is dropped to null — the point survives
- * unattributed rather than being credited to nobody in particular.
- */
 export function sanitizeAnalysis(
   raw: unknown,
   authorByArgumentId: Map<number, string>,
@@ -187,7 +145,6 @@ export function sanitizeAnalysis(
   const clean: AnalysisPoint[] = [];
 
   for (const p of points) {
-    // Two points saying the same thing is the model padding the list.
     const key = p.text.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
@@ -212,13 +169,6 @@ function safeParse(text: string): unknown {
   }
 }
 
-// ── Rendering back into prompts ──────────────────────────────────────────────
-
-/**
- * The compact prose form the probability judge, the verdict judge and the
- * OPPONENT ANALYSIS slot all already expect. Keeping this shape is what lets
- * the storage change without touching those three prompts.
- */
 export function renderAnalysisForPrompt(a: Analysis): string {
   if (isEmptyAnalysis(a)) return "";
   const bullets = a.points
@@ -228,15 +178,10 @@ export function renderAnalysisForPrompt(a: Analysis): string {
   return `${a.lead}\n\n### Key Arguments\n${bullets}`;
 }
 
-/**
- * The same document, but with each attributed point's argument id exposed.
- *
- * Only the analyst sees this, and only for its OWN side: when it keeps an
- * existing point it has to re-emit that point's id, and it cannot do that from
- * a name alone — a debater may have several arguments. Without the ids here,
- * every carried-forward point would quietly lose its link the first time the
- * analysis was rewritten.
- */
+// The same document with each attributed point's argument id exposed. Only the
+// analyst sees this, and only for its OWN side: to keep an existing point it has
+// to re-emit that point's id, which it cannot do from a name alone. Without the
+// ids here, every carried-forward point loses its link on the first rewrite.
 export function renderOwnAnalysisForAnalyst(a: Analysis): string {
   if (isEmptyAnalysis(a)) return "";
   const bullets = a.points

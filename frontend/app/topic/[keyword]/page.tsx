@@ -1,3 +1,5 @@
+// SEO hub for one Arbiter-assigned keyword.
+
 export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { LuMessageSquare } from "react-icons/lu";

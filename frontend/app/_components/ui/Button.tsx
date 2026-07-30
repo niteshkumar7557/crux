@@ -1,22 +1,15 @@
+// The pill — one of the system's two non-square shapes. Hover LIFTS, never scales:
+// nothing here has the depth to justify being pressed into the page.
+// See design-system.md §5.
+
 import Link from "next/link";
 import { ButtonHTMLAttributes, ReactNode } from "react";
-
-// Pills are one of the system's two non-square shapes (design-system.md §5);
-// the other is the arch. Everything else in the app has square corners, which
-// is what makes a pill read as "this is a control" without needing a fill.
-//
-// Hover lifts rather than scales. The old `active:scale-95` was borrowed from
-// the material era and fights the flat-paper surfaces — nothing here has the
-// depth to justify being pressed into the page.
 
 type Variant =
   | "solid"
   | "outline"
   | "for"
   | "against"
-  // Kept so the two camp-flavoured call sites keep working while pass 2 walks
-  // the pages; `outline-secondary` always meant AGAINST, `outline-neutral`
-  // always meant "quiet outline".
   | "outline-secondary"
   | "outline-neutral";
 
@@ -35,8 +28,6 @@ const VARIANTS: Record<Variant, string> = {
   "outline-neutral": "border border-ink-faint text-ink-soft hover:bg-ink-wash",
 };
 
-// One padding/type scale for every CTA; "bare" leaves sizing to the caller
-// (e.g. responsive paddings).
 const SIZES: Record<Size, string> = {
   sm: "px-5 py-2.5 text-[0.65rem]",
   md: "px-7 py-3 text-xs",

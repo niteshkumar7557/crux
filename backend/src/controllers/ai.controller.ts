@@ -1,3 +1,7 @@
+// The Arbiter gate. Nothing is persisted — the composer shows the ruling, and a
+// separate POST /motion actually creates the debate.
+// Spec: game-theory.md §3, §16
+
 import type { Request, Response } from "express";
 import { llmJson } from "../ai/llm.js";
 import { ARBITER_SYSTEM_PROMPT } from "../ai/prompts/arbiter.prompt.js";

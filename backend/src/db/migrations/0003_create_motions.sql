@@ -1,3 +1,6 @@
+-- THE CORE TABLE. One row is a motion AND its debate: the claim, both AI-written
+-- cases, the live split, the lifecycle, and its place on the stage.
+-- Spec: game-theory.md §4, §11, §15, §17
 CREATE TABLE motions (
     id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
@@ -10,16 +13,16 @@ CREATE TABLE motions (
     created_at TIMESTAMP DEFAULT NOW(),
     domain_id INT NOT NULL,
 
-    -- lifecycle (§3, §7)
+    -- lifecycle (§4, §11)
     status       VARCHAR(12) NOT NULL DEFAULT 'live',  -- live | concluded
     closes_at    TIMESTAMP,                            -- set to NOW() + 48h on insert
     concluded_at TIMESTAMP DEFAULT NULL,
     winner       VARCHAR(12) DEFAULT NULL,             -- for | against | draw | walkover
     margin       INT DEFAULT NULL,                     -- |affirmative - negative|
-    mvp_user_id  INT DEFAULT NULL,                     -- winning side only (§7)
+    mvp_user_id  INT DEFAULT NULL,                     -- winning side only (§11)
     verdict_text TEXT DEFAULT NULL,
 
-    -- the stage (§11)
+    -- the stage (§15)
     heat        REAL      NOT NULL DEFAULT 0,     -- velocity x side balance
     featured    BOOLEAN   NOT NULL DEFAULT FALSE, -- on the Main Stage
     pinned      BOOLEAN   NOT NULL DEFAULT FALSE, -- admin pin, forces featured

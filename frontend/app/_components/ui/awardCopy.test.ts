@@ -21,8 +21,6 @@ describe("awardLedger", () => {
   });
 
   it("prices the standalone cap, rather than only naming it", () => {
-    // §14: "+5 logic / Judged 6 / Capped at 5". What changes behaviour is the
-    // cost of the cap, so the row carries the delta.
     expect(awardLedger(award({ points: 5, judged: 6, capped: true }))).toEqual([
       { label: "Judged", value: "6" },
       { label: "Standalone cap", value: "−1" },
@@ -43,8 +41,6 @@ describe("awardLedger", () => {
   });
 
   it("prices BOTH modifiers when both bit, in the order they applied", () => {
-    // scoreArgument: judged 7 -> capped to 5 -> halved to 2. Naming only the
-    // last would hide the step that cost the most.
     expect(
       awardLedger(award({ points: 2, judged: 7, capped: true, halved: true })),
     ).toEqual([
@@ -56,8 +52,6 @@ describe("awardLedger", () => {
   });
 
   it("still shows the halving row when the floor made it free", () => {
-    // §6 floors the award at 1, so halving a running 1 costs nothing. The row
-    // stays: a total that appeared from nowhere is worse than a "0".
     const rows = awardLedger(award({ points: 1, judged: 1, halved: true }));
     expect(rows).toEqual([
       { label: "Judged", value: "1" },
@@ -87,8 +81,6 @@ describe("awardNote", () => {
   });
 
   it("does not claim a rebuttal when a modifier bit", () => {
-    // The arithmetic is the story once something reduced the award, and the
-    // cap's lesson outranks the compliment.
     const capped = awardNote(
       award({ judged: 7, capped: true, isReply: true, replyToUsername: "maya" }),
     );

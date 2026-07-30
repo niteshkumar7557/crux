@@ -1,3 +1,5 @@
+// Composer masthead.
+
 const ComposeHeader = () => {
   return (
     <div className="mb-14">

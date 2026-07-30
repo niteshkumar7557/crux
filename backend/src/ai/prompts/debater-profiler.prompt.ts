@@ -1,43 +1,22 @@
-/**
- * DEBATER PROFILER — rewrites a user's profile description.
- *
- * WHAT IT DOES
- * Reads a user's recent motions and infers an intellectual character
- * sketch from them. The result replaces `users.description`, which is shown
- * on the profile page and the hover card.
- *
- * CALLED FROM
- * `controllers/motion.controller.ts` → `updateDesciption(user_id)`, fired at
- * the end of `addNewMotion` after the motion row is inserted.
- * **Best-effort**: it is wrapped in its own try/catch, so a failure logs and
- * the motion still publishes. Never make this call blocking.
- *
- * WHAT THE USER MESSAGE CONTAINS (required inputs)
- *   ARGUMENTS POSTED:
- *   1. "<motion>"
- *   2. "<motion>"        — the user's last 25 motions, newest first
- *
- * Only motions are supplied — never arguments, likes, or scores. A user with
- * one motion gets a one-line list, and the prompt has to cope with that.
- *
- * WHAT IT MUST RETURN
- *   { newDescription: string }   // ≤2 sentences, third person, present tense
- *
- * DOWNSTREAM CONTRACT — what breaks if the shape drifts
- * - Written straight to `users.description` with no validation or length
- *   clamp. An over-long value simply overflows the profile card.
- *
- * CALL SETTINGS
- * `temperature: 0.6` (the only persona above the 0.2 default — this one is
- * meant to have voice) and `maxTokens: 500`. That ceiling is tight: with
- * `LLM_REASONING` turned on, thinking tokens count against it and this call
- * was measured returning truncated JSON. Leave reasoning off.
- *
- * TUNING NOTES
- * The failure mode this prompt fights is the resume summary — "has debated AI,
- * economics and climate". Hence the explicit ban on naming topics, and the
- * good/bad example pair carrying most of the weight.
- */
+// DEBATER PROFILER — the profile character sketch. Persona 6 of 6.
+//
+// Called from: controllers/motion.controller.ts (updateDesciption), after a motion
+// is inserted. BEST-EFFORT — wrapped in its own try/catch, so a failure never blocks
+// the post. Never make this call blocking.
+// In:  the user's last 25 motions. Never arguments, likes or scores.
+// Out: { newDescription }
+//
+// Written straight to users.description with no validation or length clamp.
+//
+// KNOWN CONFLICT: that is the same column the bio editor writes, so publishing a
+// motion overwrites a hand-written bio. See future-features.md §5.
+//
+// maxTokens is 500 and temperature 0.6 — the only persona above the 0.2 default,
+// because this one is meant to have voice. The ceiling is tight: with reasoning on,
+// thinking tokens count against it and this call returns truncated JSON.
+// The failure mode the prompt fights is the resume summary.
+// Spec: game-theory.md §13, §16
+
 export const DEBATER_PROFILER_SYSTEM_PROMPT = `You infer a debater's intellectual identity from the argument motions they have posted.
 
 Return JSON: {"newDescription":string}

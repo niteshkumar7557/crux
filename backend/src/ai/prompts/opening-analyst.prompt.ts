@@ -1,44 +1,18 @@
-/**
- * OPENING ANALYST — writes the two starting cases for a new debate.
- *
- * WHAT IT DOES
- * Given an accepted motion, drafts the strongest possible case FOR and the
- * strongest possible case AGAINST. These become `motions.for_analysis` and
- * `motions.against_analysis`: the opening state of the two living documents
- * that users then push around by arguing.
- *
- * CALLED FROM
- * `controllers/motion.controller.ts` → `addNewMotion`
- * Route: `POST /motion`, after the domain row has been resolved. Fires once
- * per debate, at creation, and never again.
- *
- * WHAT THE USER MESSAGE CONTAINS (required inputs)
- *   Motion: <content>      — the (already arbiter-approved) motion
- *   Domain:    <domainName>   — the resolved domain row's name, not the raw input
- *
- * WHAT IT MUST RETURN
- *   { for_analysis: Analysis, against_analysis: Analysis }
- *   Analysis = { lead: string, points: { argumentId: null, text: string }[] }
- *
- * DOWNSTREAM CONTRACT — what breaks if the shape drifts
- * - Both values pass through `sanitizeAnalysis()` (`ai/analysis.logic.ts`) with
- *   an empty author map before being stored, so a malformed side degrades to an
- *   empty panel rather than 500ing the request or writing junk into the column.
- * - `argumentId` is null on every point and the sanitizer would null it anyway:
- *   no argument exists yet, so nothing here can be credited to a person. Points
- *   gain authors only when real debaters replace them.
- * - The structure is what the arena's analysis panel renders, and it is the
- *   shape the Moderator/Analyst is told to preserve when it rewrites a side
- *   later. Change it here and you must change `moderator-analyst.prompt.ts`.
- *
- * CALL SETTINGS
- * `maxTokens: 3000`, temperature from config (0.2). On failure the route
- * answers 500 and no debate is created — this call is not best-effort.
- *
- * TUNING NOTES
- * "No hedging or balance within a side" is load-bearing: a balanced opener
- * gives debaters nothing to attack and flattens the probability split.
- */
+// OPENING ANALYST — the two starting cases for a new debate. Persona 2 of 6.
+//
+// Called from: controllers/motion.controller.ts (addNewMotion). Once per debate.
+// In:  Motion, Domain (the resolved row's name, not the raw input)
+// Out: { for_analysis: Analysis, against_analysis: Analysis }
+//
+// Both sides go through sanitizeAnalysis() with an empty author map, so a malformed
+// side degrades to an empty panel rather than 500ing the request. argumentId is null
+// on every point — nobody has argued yet, so nothing here can be credited to anyone.
+//
+// The shape must match what moderator-analyst.prompt.ts produces; it replaces this
+// document in the same panel. "No hedging within a side" is load-bearing: a balanced
+// opener gives debaters nothing to attack and flattens the probability split.
+// Spec: game-theory.md §16, §17
+
 export const OPENING_ANALYST_SYSTEM_PROMPT = `You are a debate analyst. Given a motion and its domain, write the strongest possible case for each side.
 
 Return JSON: {"for_analysis":Analysis,"against_analysis":Analysis}

@@ -1,18 +1,5 @@
-/**
- * GOLD — the hand-labeled eval set for the judging personas.
- *
- * Decision (d) of the AI judgment overhaul: "accurate" is a measured property.
- * These are the cases the product owner sanity-checked; `run.ts` sends each
- * through the real prompt and checks the model's output against `expect`.
- *
- * Because a temp-0.2 flash model is stochastic, scoring bands are RANGES and
- * probability checks are DIRECTIONAL — never exact matches. The point is to
- * catch drift (a fluency-biased score, an over-swinging bar, a mis-gated
- * motion), not to pin a stochastic judge to a single number.
- *
- * Run:  npm run eval           (one pass)
- *       npm run eval -- --runs=3   (majority-of-N, smooths the jitter)
- */
+// The gold set the AI is scored against. Fixtures only, no logic.
+
 import type {
   AnalystPromptInput,
   OwnSideArgument,
@@ -26,10 +13,6 @@ const FOR_ANALYSIS =
 const AGAINST_ANALYSIS =
   "Nuclear is too slow and too costly to scale in time.\n\n### Key Arguments\n- **@arjun** — a single plant takes over 12 years to build";
 
-// The arguments those two analyses were built from. The analyst is shown its own
-// side's arguments so it can recognise a reworded repost of a point already
-// made; a case that passed `[]` here would exercise the prompt with a block the
-// real controller never sends.
 const FOR_ARGUMENTS: OwnSideArgument[] = [
   {
     id: 101,
@@ -46,10 +29,6 @@ const AGAINST_ARGUMENTS: OwnSideArgument[] = [
       "A single plant takes over 12 years to build, from first concrete to grid connection. On that timeline nuclear cannot be the answer to a 2035 target.",
   },
 ];
-
-// ── Scoring cases ────────────────────────────────────────────────────────────
-// Asserted on scoreArgument(...).judged (the model's 1-8 after clamp). The cap
-// and halving are deterministic code, already covered by analyst.logic.test.ts.
 
 export interface ScoringCase {
   id: string;
@@ -307,8 +286,6 @@ export const SCORING_CASES: ScoringCase[] = [
   },
 ];
 
-// ── Arbiter cases ────────────────────────────────────────────────────────────
-
 export interface ArbiterCase {
   id: string;
   content: string;
@@ -327,9 +304,6 @@ export const ARBITER_CASES: ArbiterCase[] = [
   { id: "arb-07", content: "life is hard sometimes", domain: "auto", expect: { eligibility: "fail" }, note: "too vague to argue even after repair" },
   { id: "arb-08", content: "everyone who disagrees with me is a worthless idiot who should be silenced", domain: "auto", expect: { eligibility: "fail" }, note: "offensive, no intellectual merit" },
 ];
-
-// ── Probability cases ────────────────────────────────────────────────────────
-// move = round(affirmative) - priorAffirmative. "flat" means |move| <= maxMove.
 
 export interface ProbabilityCase {
   id: string;

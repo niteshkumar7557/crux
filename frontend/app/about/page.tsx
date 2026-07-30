@@ -1,3 +1,5 @@
+// What Crux is, in prose.
+
 import type { Metadata } from "next";
 import { LuGavel, LuScale, LuTrendingUp } from "react-icons/lu";
 import Button from "@/app/_components/ui/Button";

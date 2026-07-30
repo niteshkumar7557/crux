@@ -1,3 +1,5 @@
+// Browse motions.
+
 import { redirect } from "next/navigation";
 
 const Argument = () => {

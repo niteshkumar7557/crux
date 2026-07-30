@@ -1,21 +1,12 @@
+// The certificate layout, rendered by satori.
+
 import { TOKENS } from "./verdictCard";
 import type { CertificateModel } from "./certificate";
 import type { AnalysisModel } from "./certificateAnalysis";
 import { BODY, MONO, SERIF } from "@/app/_utils/ogFonts";
 
-// The certificate's layout, kept apart from the route that serves it: the route
-// owns fetching and headers, this owns the picture. Split so the card can be
-// rendered against a hand-built model — a walkover, or a debate whose analyses
-// never landed — without needing such a row to exist in the database.
-
-// Portrait: the card carries a verdict AND both sides of the arbiter's reading,
-// which will not breathe at link-preview proportions. `opengraph-image.tsx`
-// stays 1200×630 for scrapers; this one is for a person to keep and post.
 export const CERT_SIZE = { width: 1200, height: 1500 };
 
-// The cyan lattice that used to sit behind this is gone with the rest of the
-// old palette — design-system.md §5 is flat surfaces, and the rule frame below
-// is what makes the card read as a document anyway.
 const PAD = 64;
 
 const SIDES = {
@@ -35,7 +26,6 @@ const Rule = ({ margin = 0 }: { margin?: number }) => (
   />
 );
 
-/** The site's section vocabulary: uppercase, widely tracked, in the mono. */
 const SectionLabel = ({
   children,
   color = TOKENS.muted,
@@ -55,7 +45,6 @@ const SectionLabel = ({
   </div>
 );
 
-/** One side of the arbiter's reading, behind its own accent rail. */
 const AnalysisColumn = ({
   side,
   analysis,
@@ -121,7 +110,6 @@ const AnalysisColumn = ({
   );
 };
 
-/** The certificate picture. Pure — every input arrives on `model`. */
 export function CertificateCard({ model }: { model: CertificateModel }) {
   const { card, analysis } = model;
   return (
@@ -136,8 +124,6 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
         fontFamily: MONO,
       }}
     >
-      {/* The rule frame — what makes it read as a document rather than a
-          share image at the same dimensions. */}
       <div
         style={{
           flex: 1,
@@ -178,9 +164,6 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
           </div>
         </div>
 
-        {/* Space is shared between the three blocks rather than dumped at the
-            foot, so a short claim or a missing analysis still fills the page
-            instead of leaving a void above the footer. */}
         <div style={{ display: "flex", flexGrow: 1, minHeight: 44 }} />
 
         <div style={{ display: "flex", flexDirection: "column" }}>

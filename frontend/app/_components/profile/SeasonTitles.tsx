@@ -1,24 +1,20 @@
+// Permanent, stacking season titles. FRAME_BADGE and FRAME_RING need a key per
+// frame — a new frame with no entry renders unstyled. Spec: game-theory.md §14
+
 import type { SeasonTitle } from "@/app/profile/types";
 
-// §10: the only reward that survives a season — permanent, stacking, and
-// status-only. A profile shows every title ever earned.
-//
-// Frame colours are spelled out because Tailwind cannot see a class name that
-// is assembled at runtime; a lookup keeps all three variants in the built CSS.
 const FRAME_BADGE: Record<string, string> = {
   gold: "text-metal-gold border-metal-gold/40",
   silver: "text-metal-silver border-metal-silver/40",
   bronze: "text-metal-bronze border-metal-bronze/40",
 };
 
-/** The avatar frame that goes with each rank (§10). */
 export const FRAME_RING: Record<string, string> = {
   gold: "border-metal-gold",
   silver: "border-metal-silver",
   bronze: "border-metal-bronze",
 };
 
-/** The best rank this profile has ever placed — it styles the avatar frame. */
 export function bestTitle(titles: SeasonTitle[]): SeasonTitle | null {
   return titles.reduce<SeasonTitle | null>(
     (best, t) => (best === null || t.rank < best.rank ? t : best),

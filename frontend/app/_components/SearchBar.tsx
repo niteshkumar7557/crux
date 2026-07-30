@@ -1,4 +1,7 @@
 "use client";
+
+// Debounced search across motions, domains and users.
+
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { LuSearch, LuX } from "react-icons/lu";
@@ -17,12 +20,6 @@ export default function SearchBar() {
   const [isLoading, setIsLoading] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  // Modal open choreography only — results re-render every debounce tick and
-  // must never animate per keystroke.
-  //
-  // Scoped to the overlay, not to the search box: the overlay is portalled to
-  // <body>, so it is no longer a DOM descendant of this component and a scope
-  // rooted here would select nothing.
   useGSAP(
     () => {
       if (!isOpen) return;
@@ -52,7 +49,6 @@ export default function SearchBar() {
     { dependencies: [isOpen], scope: overlayRef },
   );
 
-  // State resets live in the handlers (not effects) so renders never cascade.
   function close() {
     setIsOpen(false);
     setSearchInput("");
@@ -127,12 +123,6 @@ export default function SearchBar() {
       </button>
 
       {isOpen && (
-        // Portalled to <body>: the navbar this search box lives in is
-        // `backdrop-blur-md`, which makes it the containing block AND the
-        // backdrop root for any fixed child. Left in place, `fixed inset-0`
-        // resolved to the nav's own 1440×66 strip and the scrim's blur had
-        // nothing but the nav to sample — so the page behind was neither
-        // dimmed nor blurred. See ui/Portal.
         <Portal>
           <div
             ref={overlayRef}
@@ -155,10 +145,6 @@ export default function SearchBar() {
               <div className="flex items-center px-4 py-4 bg-band border-b border-transparent focus-within:border-ink transition-colors">
                 <LuSearch className="text-ink-soft text-2xl mr-2" />
                 <input
-                  // The field ships its own focus affordance — the rule under
-                  // the row lights up — so it opts out of the app-wide ring,
-                  // which drew a boxed outline around the field inside a dialog
-                  // that is already the only thing on screen.
                   data-focus-ring="self"
                   className="flex-1 bg-transparent border-none outline-none text-lg text-ink placeholder:text-ink-soft"
                   placeholder="Search motions, domains, or users..."

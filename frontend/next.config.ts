@@ -1,3 +1,8 @@
+// The /api/:path* rewrite is what makes the app same-origin: the browser only ever
+// talks to this origin, so the auth cookie stays sameSite lax and the API needs no
+// public route. NEXT_PUBLIC_API_URL is baked in at BUILD time — changing it needs a
+// rebuild, not a restart.
+
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
@@ -13,8 +18,6 @@ const nextConfig: NextConfig = {
   }
 };
 
-// No org/project/authToken here — source-map upload is skipped (a warning, not
-// an error). The SDK itself stays inert without NEXT_PUBLIC_SENTRY_DSN.
 export default withSentryConfig(nextConfig, {
   silent: true,
   disableLogger: true,

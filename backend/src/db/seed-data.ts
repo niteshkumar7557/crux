@@ -1,15 +1,10 @@
+// Fixture content for the dev seed: users, motions, arguments. The 48h literal here
+// mirrors the one in motion.controller.ts (game-theory.md §4).
+
 import bcrypt from "bcrypt";
 import type { PoolClient } from "pg";
 import { listPresets } from "../lib/avatars.js";
 import config from "../config/index.js";
-
-// Shared base dataset for both seeders:
-//   seed-dev.ts    — small, realistic data for feature development
-//   seed-stress.ts — base data + millions of generated rows for query stress tests
-//
-// insertBaseData() wipes the tables and inserts the 30 real users + 30 real
-// motions. Every account logs in with the password "secret".
-// Refresh tokens are NOT seeded — they're created on login/register.
 
 export const randInt = (min: number, max: number) =>
 	Math.floor(Math.random() * (max - min + 1)) + min;
@@ -17,10 +12,6 @@ export const pick = <T>(arr: T[]): T => arr[randInt(0, arr.length - 1)]!;
 export const sample = <T>(arr: T[], n: number): T[] =>
 	[...arr].sort(() => Math.random() - 0.5).slice(0, n);
 
-// ============================================================
-// USERS — [name, username, logicScore, description]
-// (first entry is the admin; scores spread across every tier B → M)
-// ============================================================
 type SeedUser = [string, string, number, string];
 export const USERS: SeedUser[] = [
 	["Nitesh Kumar", "nitesh_dev", 245, "Founder of the arena. Argues with receipts."],
@@ -55,10 +46,6 @@ export const USERS: SeedUser[] = [
 	["Ravi Menon", "ravi_menon", 0, "Post some Motions to get to know about you."],
 ];
 
-// ============================================================
-// MOTIONS — [author index, claim, keyword, domain, affirmative]
-// (negative = 100 - affirmative; analyses and arguments are templated below)
-// ============================================================
 type SeedMotion = [number, string, string, string, number];
 export const MOTIONS: SeedMotion[] = [
 	[0, "AI should be granted legal personhood.", "legal personhood", "Technology & AI", 54],
@@ -93,9 +80,6 @@ export const MOTIONS: SeedMotion[] = [
 	[29, "The replication crisis has invalidated most of social psychology.", "replication crisis", "Science", 36],
 ];
 
-// ============================================================
-// Templated analyses & arguments — dev data, doesn't need to be unique
-// ============================================================
 const FOR_POINTS = [
 	"The empirical evidence consistently supports this position",
 	"Early adopters and case studies already demonstrate the claim in practice",
@@ -131,19 +115,12 @@ export const AGAINST_ARGUMENTS = [
 	"The steelman of the opposing view is stronger than anything argued here.",
 ];
 
-// The structured analysis shape (see ai/analysis.logic.ts). Seeded points are
-// the AI's opening draft, so they carry no argumentId — nobody argued them.
 const analysis = (lead: string, points: string[]) =>
 	JSON.stringify({
 		lead,
 		points: sample(points, 3).map((text) => ({ author: null, argumentId: null, text })),
 	});
 
-// ============================================================
-// Base insert — truncate everything, then seed the 30 real users
-// and 30 real motions. Returns what the callers build on:
-// the shared bcrypt hash and each motion's created_at.
-// ============================================================
 export const insertBaseData = async (
 	client: PoolClient,
 ): Promise<{ hashedPassword: string; motionTimes: Date[] }> => {
@@ -152,12 +129,10 @@ export const insertBaseData = async (
 		throw new Error("no preset avatars found — cannot assign user avatars");
 	}
 
-	// Idempotent: re-running a seed resets the dummy data (and ids)
 	await client.query(
 		"TRUNCATE users, motions, arguments, refresh_tokens RESTART IDENTITY CASCADE",
 	);
 
-	// One shared hash: bcrypt-ing thousands of passwords individually would take minutes
 	const hashedPassword = await bcrypt.hash("secret", config.bcrypt_rounds);
 
 	const userValues: unknown[] = [];
@@ -186,7 +161,6 @@ export const insertBaseData = async (
 	);
 	console.log(`✅ Seeded ${USERS.length} unique users`);
 
-	// Motions staggered over the last ~45 days
 	const now = Date.now();
 	const HOUR = 60 * 60 * 1000;
 	const motionTimes = MOTIONS.map(

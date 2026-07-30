@@ -1,3 +1,5 @@
+// Shared response shapes for the arena feed, sidebar and search.
+
 export interface PrimaryCardDataType {
   username: string;
   avatar: string | null;

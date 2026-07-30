@@ -1,3 +1,5 @@
+// Sidebar: the top three by all-time logic.
+
 import { TopDebatersCardData } from "@/app/types";
 import TopDebatersCard from "./TopDebatersCard";
 import SidebarSection from "./SidebarSection";

@@ -1,11 +1,10 @@
+// Shared metadata for both debate routes, so the canonical URL is stated once.
+
 import type { Metadata } from "next";
 import serverApi from "@/app/axios.server";
 import { truncate } from "@/app/_components/motion/verdictCard";
 import { debateSlug } from "@/app/_utils/slugify";
 
-// §11 SEO: shared metadata for a debate, canonicalised to /debate/<slug> so both
-// the /motion/CRX-… and /debate/… routes consolidate onto one indexable URL.
-// The OG image reuses the existing /motion OG generator.
 export async function buildDebateMetadata(id: number): Promise<Metadata> {
   if (!Number.isInteger(id) || id <= 0) return {};
   try {

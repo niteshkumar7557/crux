@@ -1,3 +1,8 @@
+// Likes, and their reversal. A like pays the author +2, so liking your own argument
+// would be minting your own currency — refused here, because the missing UI button
+// is not a rule. Both directions are idempotent.
+// Spec: game-theory.md §10
+
 import type { Request, Response } from "express";
 import pool from "../db/index.js";
 import { awardLogic } from "../economy/logic.js";
@@ -22,9 +27,8 @@ export async function registerLike(req: Request, res: Response) {
 
     const post_user_id = argumentRows[0].user_id;
 
-    // A like pays the author +2 logic, so liking your own argument is minting
-    // your own currency. The UI does not offer the button, but the rule lives
-    // here — it has to hold against a direct call to the API.
+    // A like pays the author +2, so liking your own argument mints your own
+    // currency. The UI hides the button; the rule lives here.
     if (Number(post_user_id) === Number(user_id)) {
       return res
         .status(403)
@@ -62,10 +66,6 @@ export async function registerLike(req: Request, res: Response) {
   }
 }
 
-// The mirror of registerLike: pull the row, decrement the count, and reverse
-// the +2 the author was paid. Idempotent — un-liking what you never liked is a
-// no-op, so a double click or a stale button can't drive the count negative or
-// claw back logic twice.
 export async function removeLike(req: Request, res: Response) {
   const { argument_id } = req.body;
   const user_id = req.user?.id;
@@ -96,6 +96,8 @@ export async function removeLike(req: Request, res: Response) {
       `UPDATE arguments SET likes = GREATEST(likes - 1, 0) WHERE id = $1`,
       [argument_id],
     );
+    // Reverse the +2. Idempotent — the DELETE above already returned 0 rows if
+    // there was nothing to un-like, so logic cannot be clawed back twice.
     await awardLogic(pool, post_user_id, -2, "unlike");
     res.status(200).json({ message: "Successful!" });
   } catch (err) {
@@ -103,9 +105,6 @@ export async function removeLike(req: Request, res: Response) {
   }
 }
 
-// §5 like state on load: the JWT lives in localStorage, so the SSR argument
-// fetch can't know the viewer. The arena calls this after mount to fill the
-// hearts the viewer already tapped.
 export async function listMyLikes(req: Request, res: Response) {
   const { motionId } = req.params;
   const user_id = req.user?.id;

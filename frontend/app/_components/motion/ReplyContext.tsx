@@ -1,16 +1,13 @@
 "use client";
 
-// §5: replies target a specific opposing argument. A Reply button lives deep in
-// a case column while the composer sits at the bottom of the page, so the two
-// talk through this small context instead of prop-drilling a setter through
-// CaseColumn. The provider wraps both the arena and the composer (in DebateView).
+// The quote stub that carries what a reply answers. Spec: game-theory.md §6
+
 import { createContext, useContext, useState, type ReactNode } from "react";
 
 export interface ReplyTarget {
   argumentId: number;
   username: string;
   content: string;
-  /** The target argument's own side; the reply commits to the opposite (§5). */
   side: "for" | "against";
 }
 

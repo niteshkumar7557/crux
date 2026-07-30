@@ -1,3 +1,5 @@
+-- The permanent W/L/D record, one row per user per concluded debate.
+-- Spec: game-theory.md §12, §13
 CREATE TABLE debate_results (
     id           SERIAL PRIMARY KEY,
     motion_id    INT NOT NULL REFERENCES motions(id) ON DELETE CASCADE,

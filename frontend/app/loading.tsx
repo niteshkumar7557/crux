@@ -1,3 +1,4 @@
+// Root loading state.
 import Skeleton from "./_components/ui/Skeleton";
 
 const Loading = () => (

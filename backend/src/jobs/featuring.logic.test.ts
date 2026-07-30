@@ -12,7 +12,6 @@ describe("computeHeat", () => {
   });
 
   it("ranks a balanced fight above a busier blowout", () => {
-    // §11: a 50/50 fight at 10 arguments beats a 90/10 pile-on at 20.
     expect(computeHeat(10, 5, 5)).toBeGreaterThan(computeHeat(20, 18, 2));
   });
 
@@ -21,7 +20,6 @@ describe("computeHeat", () => {
   });
 
   it("discounts a lopsided debate against an even one at the same velocity", () => {
-    // The balance factor is the whole point: same volume, different contest.
     expect(computeHeat(10, 5, 5)).toBeGreaterThan(computeHeat(10, 8, 2));
     expect(computeHeat(10, 8, 2)).toBeGreaterThan(computeHeat(10, 10, 0));
   });
@@ -40,7 +38,6 @@ describe("computeHeat", () => {
   });
 
   it("never returns a negative or non-finite heat", () => {
-    // heat feeds an ORDER BY, so garbage must sort last, not crash the tick.
     expect(computeHeat(-5, 0, 0)).toBe(0);
     expect(computeHeat(NaN, 1, 1)).toBe(0);
     expect(computeHeat(10, NaN, 1)).toBe(0);

@@ -1,12 +1,11 @@
 "use client";
+
+// Craft stats: how many arguments, how many were replies, the best one.
+
 import Link from "next/link";
 import type { CraftStats } from "@/app/profile/types";
 import { debateSlug } from "@/app/_utils/slugify";
 
-// §13's integrity design in one number: the reply rate. Standalone arguments
-// cap at 5 logic and replies reach 8, so a high reply rate is what a sharp
-// debater actually looks like. §14 says a rule that changes an outcome owes
-// itself a surface — so the rule that produced this number is printed under it.
 const ArgumentPattern = ({ craft }: { craft: CraftStats }) => {
   const replyRate = craft.arguments > 0 ? craft.replies / craft.arguments : 0;
 

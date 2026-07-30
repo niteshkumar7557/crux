@@ -1,5 +1,10 @@
 "use client";
 
+// The composer, and most of the transparency layer: the side badge, the
+// standalone-vs-reply hint, the full-value counter and the abuse fine print all live
+// here, because every one of them must be visible BEFORE it can bite.
+// Spec: game-theory.md §19
+
 import { getUser } from "@/app/_utils/getUser";
 import { jwtPayload } from "@/app/_types/jwt";
 import { ArgumentSide } from "@/app/motion/types";
@@ -20,12 +25,6 @@ import type { Award } from "../ui/awardCopy";
 
 type Notice = { title: string; body: ReactNode };
 
-/** A button label that does not resize when the post goes out.
- *
- *  Swapping the text for "Posting…" shortened the button mid-flight, which
- *  shoved the button beside it sideways under the user's cursor. The real label
- *  stays in the flow holding the width open, just made invisible, and "Posting…"
- *  is centred over it. */
 const PostLabel = ({
   busy,
   children,
@@ -43,7 +42,6 @@ const PostLabel = ({
   </span>
 );
 
-/** A post held back until the user confirms the side lock (§14). */
 type Pending = {
   urlSide: string;
   side: "for" | "against";
@@ -66,9 +64,6 @@ const ArgumentInput = ({
   const [notice, setNotice] = useState<Notice | null>(null);
   const [award, setAward] = useState<Award | null>(null);
   const [pending, setPending] = useState<Pending | null>(null);
-  // Which side is in flight, or null. The post is not fast — it waits on the
-  // moderator/analyst call — so without this the composer looks inert for
-  // several seconds and people press the button again.
   const [posting, setPosting] = useState<string | null>(null);
   const { target, setTarget } = useReplyTarget();
 
@@ -82,7 +77,6 @@ const ArgumentInput = ({
     fetchUser();
   }, []);
 
-  // Concluded arenas are read-only — shown to everyone, logged in or not.
   if (status === "concluded") {
     return (
       <div
@@ -97,13 +91,8 @@ const ArgumentInput = ({
 
   if (!user) return null;
 
-  // The motion's author owns the affirmative case: they are locked to FOR
-  // from the very first argument, so the AGAINST button is disabled before it can
-  // be pressed and the server rejects it either way (author_affirmative_only).
   const isAuthor = user.id === authorId;
 
-  // The viewer's first argument locks their side for this debate; the opposite
-  // side's button is pre-disabled so the lock is visible before they hit it.
   const lockedSide = isAuthor
     ? "for"
     : (argumentSides.find((c) => c.post_user_id === user.id)?.side ?? null);
@@ -124,9 +113,6 @@ const ArgumentInput = ({
     ),
   };
 
-  // §14: the lock is confirmed BEFORE it happens, never discovered after. A
-  // reply commits you too (§5 — to the side opposite the argument you answer),
-  // so it routes through the same gate rather than sneaking past it.
   function requestPost(
     urlSide: string,
     side: "for" | "against",
@@ -140,9 +126,6 @@ const ArgumentInput = ({
     submit(urlSide, replyToArgumentId);
   }
 
-  // One poster for standalone arguments and cross-side replies alike. For a
-  // reply the side is implied by the target (§5): the URL carries the opposite
-  // side and the body the target id, and the server re-derives + validates it.
   async function submit(urlSide: string, replyToArgumentId: number | null) {
     if (input.length === 0) return;
     setPosting(urlSide);
@@ -241,12 +224,6 @@ const ArgumentInput = ({
           </button>
         </div>
       )}
-      {/* §14: the side lock is the one rule that has already bound by the time
-          you are typing, so it stays stated at the composer. */}
-      {/* The stamp stays a tracked label, but the sentence explaining the lock
-          is prose and was being set at label size — 10px of body copy nobody
-          could read, stating the one rule on this page that cannot be undone.
-          It is now `text-sm`, the size the rest of the product reads at. */}
       {lockedSide && (
         <div className="max-w-screen-2xl mx-auto mb-2.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <span
@@ -277,8 +254,6 @@ const ArgumentInput = ({
         </div>
         <div className="flex gap-2 w-full md:w-auto">
           {target ? (
-            // The reply's side is implied by the target, so a side choice here
-            // would be a contradiction — one action, opposite of the target.
             <Button
               variant={target.side === "for" ? "outline-secondary" : "outline"}
               size="bare"
@@ -334,7 +309,6 @@ const ArgumentInput = ({
           )}
         </div>
       </div>
-      {/* §14 the side lock, confirmed before it binds. */}
       {pending && (
         <SideLockConfirm
           side={pending.side}
@@ -345,13 +319,9 @@ const ArgumentInput = ({
           }}
         />
       )}
-      {/* §14 the points pop-up — what you earned and exactly why. */}
       {award && (
         <PointsPopup award={award} onDismiss={() => setAward(null)} />
       )}
-      {/* Portalled for the same reason as the two above: this bar is
-          `backdrop-blur-xl`, which makes it the containing block for its
-          `fixed` children. See ui/Portal. */}
       {notice && (
         <Portal>
           <div className="fixed bottom-32 right-6 z-60 max-w-sm bg-raised border-l-4 border-side-against shadow-cast-deep p-4 flex items-start gap-4">

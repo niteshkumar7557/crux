@@ -1,4 +1,7 @@
 "use client";
+
+// The chronological feed.
+
 import { useEffect, useState } from "react";
 import api from "@/app/axios";
 import { PaginatedMotions } from "@/app/types";
@@ -15,8 +18,6 @@ const EMPTY: PaginatedMotions = {
   pageSize: 12,
 };
 
-// The whole record, newest first — the same paginated endpoint /domain reads,
-// just without a domain filter. There is no separate "newest" query any more.
 const NewestTab = ({ page }: { page: number }) => {
   const [result, setResult] = useState<PaginatedMotions>(EMPTY);
 

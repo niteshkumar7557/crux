@@ -1,6 +1,4 @@
-// §11 SEO: human-readable, claim-derived debate slugs. The trailing "-<id>" is
-// the real key (id is unique), so the slug text is free to change without
-// breaking links — the route reads the id off the end.
+// Builds the canonical /debate/[slug] URL. The trailing id is what the lookup uses.
 
 export function slugify(text: string): string {
   return text

@@ -1,4 +1,9 @@
 "use client";
+
+// The CLIENT-side API instance: base /api (same-origin, through the Next rewrite),
+// attaches the JWT from localStorage, and refreshes once on a 401 before giving up.
+// Server components use axios.server.ts instead.
+
 import axios from "axios";
 
 const api = axios.create({

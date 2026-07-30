@@ -1,3 +1,5 @@
+// Crawl rules and the sitemap pointer.
+
 import type { MetadataRoute } from "next";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";

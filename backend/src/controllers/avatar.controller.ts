@@ -1,3 +1,7 @@
+// Avatar presets and uploads. An upload is re-encoded by sharp, which also strips
+// EXIF (it never calls withMetadata), and stored under a fresh UUID — so objects are
+// immutable and a replacement never races a reader of the old one.
+
 import type { Request, Response } from "express";
 import crypto from "crypto";
 import sharp from "sharp";
@@ -11,10 +15,6 @@ const AVATAR_CONTENT_TYPE = "image/webp";
 
 export const avatarStore = makeAvatarStore(config.avatar_storage);
 
-// Presets are shared and never deleted; only a user's own upload is removed.
-// Failure here is logged, not surfaced: the DB row has already moved on, and a
-// leftover object costs a fraction of a cent, whereas failing the request would
-// tell the user their avatar change didn't work when it did.
 async function removeOldAvatar(avatar: string | null) {
   if (!avatar || !isCustomAvatar(avatar)) return;
   try {
@@ -24,7 +24,6 @@ async function removeOldAvatar(avatar: string | null) {
   }
 }
 
-// Preset list for the picker
 export async function getAvatarPresets(req: Request, res: Response) {
   try {
     const presets = await listPresets();
@@ -35,7 +34,6 @@ export async function getAvatarPresets(req: Request, res: Response) {
   }
 }
 
-// Custom upload: multer (memory) already ran; process the buffer with sharp
 export async function uploadAvatar(req: Request, res: Response) {
   const file = req.file;
 
@@ -43,7 +41,6 @@ export async function uploadAvatar(req: Request, res: Response) {
     return res.status(400).json({ error: "Please provide an image file!" });
   }
 
-  // MIME type was checked by multer; verify the actual bytes too
   if (!detectImageType(file.buffer)) {
     return res
       .status(400)
@@ -52,7 +49,6 @@ export async function uploadAvatar(req: Request, res: Response) {
 
   let processed: Buffer;
   try {
-    // sharp strips EXIF/metadata by default (no .withMetadata() call)
     processed = await sharp(file.buffer)
       .resize(AVATAR_SIZE, AVATAR_SIZE, { fit: "cover", position: "centre" })
       .webp({ quality: 82 })
@@ -64,8 +60,6 @@ export async function uploadAvatar(req: Request, res: Response) {
       .json({ error: "Could not process that image. Try a different file!" });
   }
 
-  // A fresh UUID per upload, so stored objects are immutable and can be cached
-  // forever — and so a replacement never races a reader of the old one.
   const key = `u${req.user!.id}-${crypto.randomUUID()}.webp`;
   const avatarUrl = avatarStore.urlFor(key);
 
@@ -97,13 +91,11 @@ export async function uploadAvatar(req: Request, res: Response) {
     res.status(200).json({ avatar: avatarUrl });
   } catch (err) {
     console.error(err);
-    // the DB never saw the new object — remove it so nothing orphans
     await avatarStore.remove(key).catch(() => {});
     res.status(500).json({ error: "avatar update failed!" });
   }
 }
 
-// Preset select: validate the id server-side, never trust a client path
 export async function setPresetAvatar(req: Request, res: Response) {
   const { presetId } = req.body;
 
@@ -139,7 +131,6 @@ export async function setPresetAvatar(req: Request, res: Response) {
   }
 }
 
-// Remove avatar: null the column and drop the custom file if there was one
 export async function deleteAvatar(req: Request, res: Response) {
   try {
     const { rows } = await pool.query(

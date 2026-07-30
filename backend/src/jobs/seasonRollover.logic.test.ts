@@ -40,7 +40,6 @@ describe("awardsForSeason", () => {
   });
 
   it("carries the season key onto every award", () => {
-    // The key is what makes the job idempotent, via UNIQUE (season_key, rank).
     const a = awardsForSeason(board, 4, "2026-12");
     expect(a.every((x) => x.seasonKey === "2026-12")).toBe(true);
     expect(a.every((x) => x.seasonNumber === 4)).toBe(true);
@@ -55,14 +54,11 @@ describe("awardsForSeason", () => {
   });
 
   it("never awards a non-positive score", () => {
-    // A month nobody played is not a month somebody won.
     const a = awardsForSeason([{ userId: 1, seasonLogic: 0 }], 0, "2026-08");
     expect(a).toEqual([]);
   });
 
   it("skips a non-positive score without spending its rank", () => {
-    // A user who ended the month negative must not push a real winner off the
-    // podium, nor silently take a rank number with them.
     const a = awardsForSeason(
       [
         { userId: 1, seasonLogic: 50 },
@@ -83,8 +79,6 @@ describe("awardsForSeason", () => {
   });
 });
 
-// SEASON_ZERO is read from the environment at import time; these cases assume
-// the built-in default of 2026-08.
 describe("previousSeason", () => {
   it("returns the month before the one containing `now`", () => {
     const p = previousSeason(at("2026-09-15T13:45:00Z"))!;
@@ -107,15 +101,12 @@ describe("previousSeason", () => {
   });
 
   it("works on the first instant of a month", () => {
-    // The boundary itself belongs to the NEW month, so its predecessor is the
-    // month that just closed -- this is the instant the job actually fires on.
     const p = previousSeason(at("2026-09-01T00:00:00Z"))!;
     expect(p.key).toBe("2026-08");
     expect(p.number).toBe(0);
   });
 
   it("returns null before Season 0 has finished", () => {
-    // §10 numbers the launch month Season 0; there is no Season -1 to win.
     expect(previousSeason(at("2026-08-15T00:00:00Z"))).toBeNull();
     expect(previousSeason(at("2026-07-22T00:00:00Z"))).toBeNull();
   });

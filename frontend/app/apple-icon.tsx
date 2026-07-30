@@ -1,3 +1,5 @@
+// The touch icon. Deliberately the OUTLINED mark: at 60-120pt the filled variant's
+// knocked-out braces grow dominant enough to read as an envelope.
 import { ImageResponse } from "next/og";
 import { BRAND, markOutline } from "./_utils/brandMark";
 

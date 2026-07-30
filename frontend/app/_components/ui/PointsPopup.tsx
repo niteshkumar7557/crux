@@ -1,21 +1,16 @@
 "use client";
+
+// The single most important piece of feedback in the product: what you earned and
+// the arithmetic behind it, priced rule by rule. The ticking numeral is aria-hidden
+// with an sr-only line beside it, or a screen reader reads the award ~30 times.
+// Spec: game-theory.md §19
+
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { LuArrowRight, LuX } from "react-icons/lu";
 import { gsap, MOTION_OK } from "@/app/_utils/gsap";
 import Portal from "./Portal";
 import { awardLedger, awardNote, type Award } from "./awardCopy";
-
-// §14 the points pop-up — "the single most important piece of feedback in the
-// product". Every accepted argument shows what it earned and exactly why, so the
-// scoring rules are taught through play instead of discovered by surprise.
-//
-// Shaped as a ruled slip rather than a toast, because that is the arena's own
-// vocabulary: the certificate, the profile's standing row and the argument
-// header all state a value as a tracked label over a numeral, divided by
-// hairlines. A sparkle-and-sentence toast is the one register this product
-// does not speak — and it read as a generic app notification sitting next to
-// the far more formal page behind it.
 
 const DISMISS_MS = 12000;
 
@@ -28,30 +23,13 @@ const PointsPopup = ({
 }) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const countRef = useRef<HTMLSpanElement>(null);
-  // Reading it or reaching for the rules link holds it open — a panel that
-  // vanishes from under the cursor is the reason people never finish reading
-  // the arithmetic. Keyboard focus counts too, or tabbing to the link would
-  // start a countdown the user cannot see.
   const [held, setHeld] = useState(false);
 
-  // Held in a ref so the auto-dismiss timer keys off the award alone. The
-  // composer re-renders on every keystroke, and depending on the callback
-  // would restart the countdown each time a user typed.
   const dismissRef = useRef(onDismiss);
   useEffect(() => {
     dismissRef.current = onDismiss;
   });
 
-  // Entrance, plus the count-up on the numeral — one of the system's three
-  // motion moments (design-system.md §6), because a score arriving should be
-  // announced rather than simply present.
-  //
-  // The count-up was rejected once before for a good reason: this is an
-  // aria-live region, and animating text mutates it ~30 times, which a screen
-  // reader may read out ~30 times. The fix is not to drop the animation but to
-  // keep it out of the accessibility tree — the ticking numeral is aria-hidden
-  // and a static sr-only line carries the announcement, so assistive tech gets
-  // one clean utterance and everyone else gets the tick.
   useEffect(() => {
     if (!rootRef.current || !window.matchMedia(MOTION_OK).matches) return;
     const ctx = gsap.context(() => {
@@ -77,8 +55,6 @@ const PointsPopup = ({
     return () => ctx.revert();
   }, [award]);
 
-  // No timer at all while it is held; leaving gives the full window back
-  // rather than the remainder, so a glance never costs you the read.
   useEffect(() => {
     if (held) return;
     const t = setTimeout(() => dismissRef.current(), DISMISS_MS);
@@ -89,10 +65,6 @@ const PointsPopup = ({
   const note = awardNote(award);
 
   return (
-    // Portalled: the composer that raises this slip is `backdrop-blur-xl`, and
-    // a backdrop-filtered ancestor is the containing block for `fixed`
-    // children — nested there, `bottom-32` measured from the composer's own
-    // bottom edge instead of the viewport's. See ui/Portal.
     <Portal>
       <div
         ref={rootRef}
@@ -118,8 +90,6 @@ const PointsPopup = ({
         </div>
 
         <div className="px-5 py-4">
-          {/* The numeral ticks up and is therefore kept out of the accessibility
-              tree; the sr-only line beside it is what actually gets announced. */}
           <p className="sr-only">
             {award.points} logic awarded. Season total {award.seasonLogic}, rank{" "}
             {award.seasonRank}.
@@ -136,8 +106,6 @@ const PointsPopup = ({
             </span>
           </div>
 
-          {/* The arithmetic, priced step by step — §14 shows it rather than
-              hiding it. A description list because that is what it is. */}
           <dl className="mt-5 space-y-1.5">
             {rows.map((row) => (
               <div
@@ -172,8 +140,6 @@ const PointsPopup = ({
             </p>
           )}
 
-          {/* Where the rest of the arithmetic is written down. The slip explains
-              this one award; the rules explain every award. */}
           <Link
             href="/rules"
             className="mt-4 inline-flex items-center gap-1.5 font-label text-[10px] uppercase tracking-[0.15em] text-ink-soft hover:text-ink transition-colors"

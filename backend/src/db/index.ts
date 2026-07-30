@@ -1,3 +1,5 @@
+// The shared Postgres pool. Every query in the app goes through this.
+
 import { Pool } from "pg";
 import config from "../config/index.js";
 

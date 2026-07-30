@@ -1,3 +1,7 @@
+// Root layout: three faces, and the theme stamped on <html> before first paint so
+// no page flashes the wrong mode. To try a different display face, swap the Anton
+// import and keep the variable name — globals.css routes through it.
+// See design-system.md §3.
 import type { Metadata } from "next";
 import { Anton, Newsreader, Space_Grotesk } from "next/font/google";
 import "./globals.css";

@@ -1,4 +1,6 @@
--- §10: the only thing that survives a season. Permanent, stacking, status-only.
+-- The only thing that survives a season. Permanent, stacking, status-only.
+-- UNIQUE (season_key, rank) is what makes the rollover job idempotent.
+-- Spec: game-theory.md §14
 CREATE TABLE season_awards (
     id           SERIAL PRIMARY KEY,
     season_key   VARCHAR(7)  NOT NULL,  -- 'YYYY-MM', the month that was won

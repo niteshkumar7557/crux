@@ -1,9 +1,11 @@
 // The ONE place logic changes hands. Updates the all-time score and writes the
-// ledger row together, so the career total and the seasonal window can never
-// drift. `db` is the pool or a transaction client.
+// ledger row together, so the career total and the seasonal window cannot drift.
+// `db` is the pool or a transaction client, so this composes inside a transaction.
 //
-// seasonOnly = true writes the ledger row WITHOUT touching logic_score. That is
-// the §8 loss penalty: it costs you the month's race, never your career.
+// seasonOnly = true writes the ledger row WITHOUT touching logic_score. That is the
+// loss penalty: it costs you the month's race, never your career.
+// Spec: game-theory.md §12
+
 interface Queryable {
   query: (text: string, params?: unknown[]) => Promise<{ rows: unknown[] }>;
 }
@@ -16,7 +18,6 @@ export async function awardLogic(
   seasonOnly = false,
 ): Promise<void> {
   if (!seasonOnly) {
-    // Floor at 0 -- the abuse penalty must never show a negative career score.
     await db.query(
       `UPDATE users SET logic_score = GREATEST(logic_score + $2, 0) WHERE id = $1`,
       [userId, amount],

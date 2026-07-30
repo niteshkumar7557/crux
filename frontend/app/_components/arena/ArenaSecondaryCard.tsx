@@ -1,4 +1,7 @@
 "use client";
+
+// One Main Stage card.
+
 import { ReactNode } from "react";
 import Link from "next/link";
 import Avatar from "@/app/_components/ui/Avatar";
@@ -6,7 +9,6 @@ import ScoreBar from "./ScoreBar";
 import Countdown from "@/app/_components/motion/Countdown";
 import { settledSide } from "./settledSides";
 
-// The compact feed card used by both the trending grid and the newest tab.
 export interface ArenaCardComponentProps {
   username: string;
   avatar?: string | null;
@@ -37,9 +39,6 @@ const ArenaSecondaryCard = ({
   winner,
   className = "",
 }: ArenaCardComponentProps) => {
-  // A settled card must not read like a live one. Where a live card counts
-  // down, a concluded card names its ruling — otherwise the archive is a wall
-  // of debates that all look like they are still running.
   const concluded = status === "concluded";
   const ruling = concluded ? settledSide(winner) : null;
 
@@ -48,13 +47,6 @@ const ArenaSecondaryCard = ({
       data-reveal
       className={`relative mt-5 border border-ink-faint transition-colors hover:bg-band ${className}`}
     >
-      {/* The card used to *be* one link wrapped around everything, which made
-          the author's name unreachable: an <a> inside an <a> is invalid markup,
-          so the handle could only ever open the debate. The card link is now a
-          transparent sheet over the whole card instead, and the author sits on
-          top of it — so the card still opens the debate from anywhere you press
-          it, and the one thing that isn't about the debate goes to the person.
-          The sheet carries the accessible name the wrapped content used to. */}
       <Link
         href={`/motion/CRX-${motionid}-A`}
         aria-label={`Open the debate: ${title}`}
@@ -63,8 +55,6 @@ const ArenaSecondaryCard = ({
       <div className="flex h-full flex-col justify-between p-6">
         <div>
           <div className="mb-4 flex items-start justify-between gap-3">
-            {/* `relative z-10` lifts the author clear of the sheet — without it
-                the sheet is painted over the handle and swallows the press. */}
             <Link
               href={`/profile/${username}`}
               aria-label={`@${username}'s profile`}

@@ -1,10 +1,9 @@
+// One trending domain.
+
 import Link from "next/link";
 import { TrendingDomainCardProps } from "@/app/types";
 import { slugifyDomain } from "@/app/_utils/domainSlug";
 
-// A rising domain is FOR-green and a falling one AGAINST-terracotta. Those two
-// are the only colours in the system that mean direction, and re-using them
-// here costs nothing — nothing on this row is a camp, so there is no clash.
 const TrendingDomainCard = ({
   topic,
   changePercentage,

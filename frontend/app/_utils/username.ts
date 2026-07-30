@@ -1,7 +1,5 @@
-// Mirror of backend/src/lib/username.logic.ts. The frontend cannot import
-// backend modules, so this rule is duplicated on purpose — see
-// docs/CODEBASE_GUIDE.md §6a. Change one and you must change the other, or
-// the form will accept a handle the server rejects.
+// Duplicates backend/src/lib/username.logic.ts so the register form can validate
+// before a round trip. The server is still the authority. Spec: game-theory.md §13
 
 export const USERNAME_MIN = 3;
 export const USERNAME_MAX = 20;

@@ -1,3 +1,6 @@
+// Register, login, refresh, logout. The refresh cookie is sameSite "lax" because v1
+// is same-origin end to end — the browser only ever talks to the frontend's domain.
+
 import type { CookieOptions, Request, Response } from "express";
 import type { userLoginData, userRegisterData } from "../types/userInfo.js";
 import pool from "../db/index.js";
@@ -16,14 +19,12 @@ const isProduction = config.node_env === "production";
 const cookieOptions: CookieOptions = {
   httpOnly: true,
   secure: isProduction,
-  // v1 is same-origin end to end (browser -> frontend domain -> /api proxy),
-  // so "lax" holds everywhere and blocks cross-site sends. The old production
-  // "none" was for v0's split-domain deploy — do not resurrect it.
+  // v1 is same-origin end to end (browser -> frontend domain -> /api proxy), so
+  // "lax" holds everywhere and blocks cross-site sends.
   sameSite: "lax",
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 Days
 };
 
-// Register
 export async function addNewUser(req: Request, res: Response) {
   const { name, userName, email, password }: userRegisterData = req.body;
 
@@ -33,9 +34,6 @@ export async function addNewUser(req: Request, res: Response) {
       .json({ error: "Please provide every Required field!" });
   }
 
-  // The username becomes a URL segment, so it is validated before anything
-  // else touches it — and stored normalised, so `/profile/<username>` is
-  // case-safe without a case-insensitive index.
   const handle = validateUsername(userName);
   if (!handle.ok) {
     return res.status(400).json({ error: handle.reason });
@@ -81,7 +79,6 @@ export async function addNewUser(req: Request, res: Response) {
   }
 }
 
-// Login
 export async function loginUser(req: Request, res: Response) {
   const { email, password }: userLoginData = req.body;
 
@@ -97,7 +94,6 @@ export async function loginUser(req: Request, res: Response) {
       [email],
     );
 
-    // Check if email doesn't exists
     if (rows.length === 0) {
       return res.status(400).json({ error: "Email not found!" });
     }
@@ -137,7 +133,6 @@ export async function loginUser(req: Request, res: Response) {
   }
 }
 
-// Refresh
 export async function generateNewAccess(req: Request, res: Response) {
   const refreshToken = req.cookies.refresh_token;
 
@@ -168,7 +163,6 @@ export async function generateNewAccess(req: Request, res: Response) {
   }
 }
 
-// Logout
 export async function logoutUser(req: Request, res: Response) {
   const refreshToken = req.cookies.refresh_token;
 
@@ -180,7 +174,6 @@ export async function logoutUser(req: Request, res: Response) {
   res.json({ message: "logged out successfully" });
 }
 
-// loggedIn user info
 export async function getUserInfo(req: Request, res: Response) {
   try {
     const { rows } = await pool.query(

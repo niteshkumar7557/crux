@@ -1,3 +1,6 @@
+// JWT verification. Identity always comes from the token, never from the request
+// body. requireRole guards the admin routes.
+
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import config from "../config/index.js";
@@ -41,7 +44,6 @@ export async function authMiddleware(
   }
 }
 
-// Optional Middleware
 export async function optionalMiddleware(
   req: Request,
   res: Response,
@@ -71,7 +73,6 @@ export async function optionalMiddleware(
   }
 }
 
-// Role check middleware
 export function requireRole(...roles: string[]) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user || !roles.includes(req.user.role)) {

@@ -1,5 +1,6 @@
+// The motion composer's view model.
+
 export type DomainClassification = string[];
-// Sentinel for the AUTO chip — the arbiter picks the domain from the closed list.
 export const AUTO_DOMAIN = "auto";
 export type Stage = "compose" | "arbiter" | "broadcast";
 export type VerdictStatus = "pass" | "fail" | "unavailable";

@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { fillLedgerWeeks } from "./ledger.logic.js";
 
-// A Thursday, so the week's Monday is 2026-07-20.
 const NOW = new Date("2026-07-23T12:00:00Z");
 
 describe("fillLedgerWeeks", () => {

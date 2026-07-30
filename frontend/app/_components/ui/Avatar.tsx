@@ -1,19 +1,9 @@
+// Image, or ink initials on a raised chip. Two src shapes arrive: presets are
+// relative and go through the /api rewrite; uploads are absolute object-storage URLs
+// and must be used as-is, or prefixing one points at the API's host and 404s.
+
 import Image from "next/image";
 
-// Brand avatar. With a `src` it shows the image; without one it falls back to
-// initials on a raised paper chip. Argument cards pass `accent` to tint the
-// initials with their stance side.
-//
-// The fallback used to hash the username into one of two accent colors so an
-// imageless feed still varied. That was a dark-palette device: on paper it just
-// reads as two arbitrary inks, and one of the two would have to be laurel —
-// which is reserved for earned things (design-system.md §2). Initials are ink
-// now, and the feed varies by type and rule instead.
-//
-// Two shapes arrive in `src`. Presets are static files the backend serves, so
-// they are relative and go through the /api rewrite. Uploads live in object
-// storage and arrive as absolute URLs, which must be used as-is — prefixing one
-// with /api would point at the API's own host and 404.
 const avatarSrc = (src: string) =>
   /^https?:\/\//.test(src) ? src : `/api${src}`;
 

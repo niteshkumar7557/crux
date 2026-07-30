@@ -1,14 +1,12 @@
 "use client";
+
+// Concluded debates, newest first.
+
 import Link from "next/link";
 import { LuStar } from "react-icons/lu";
 import type { HistoryRow } from "@/app/profile/types";
 import { debateSlug } from "@/app/_utils/slugify";
 
-// The concluded debates behind the W-L-D. debate_results existed from the
-// start and the profile never read it, so the record had nothing under it.
-//
-// Outcome colours stay off the camp tokens: terracotta means AGAINST, not
-// "you lost". A win is an earned thing, so it takes laurel (design-system §2).
 const OUTCOME = {
   win: "text-laurel",
   loss: "text-ink-soft",

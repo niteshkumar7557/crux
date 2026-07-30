@@ -1,4 +1,8 @@
 "use client";
+
+// The Arbiter's ruling: pass or fail, the reason, and the sharper rewrite to try
+// instead. Spec: game-theory.md §3, §16
+
 import { useRef } from "react";
 import Link from "next/link";
 import { LuCpu, LuRefreshCw } from "react-icons/lu";
@@ -12,14 +16,6 @@ import {
   VerdictStatus,
 } from "@/app/motion/new/types";
 
-// Admitted is green and rejected terracotta. Those are the camp colours
-// elsewhere, but nothing in the composer has a side yet — no motion exists to
-// take one on — so here they can carry their plain meaning of yes and no.
-//
-// "Unreachable" is neither: it is the arbiter failing to answer, so it stays
-// muted rather than taking laurel, which marks things that were earned.
-//
-// The `chipGlow` slot went with the glow shadows the palette dropped.
 const ACCENT: Record<
   VerdictStatus,
   { headline: string; text: string; chipBorder: string; dot: string; barBorder: string }

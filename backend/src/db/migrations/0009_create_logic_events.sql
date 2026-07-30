@@ -1,7 +1,7 @@
--- §8/§10: the timestamped logic ledger. "Logic earned this season" is a
--- windowed SUM(amount) over every row; the all-time users.logic_score is
--- updated only for rows where season_only = FALSE. That is how a loss can
--- cost you the monthly race without ever touching your career total.
+-- The timestamped logic ledger. "Logic earned this season" is a windowed
+-- SUM(amount) over these rows; users.logic_score is updated only where
+-- season_only = FALSE. That is how a loss costs the month's race and never the
+-- career total. Spec: game-theory.md §12, §14
 CREATE TABLE logic_events (
     id          SERIAL PRIMARY KEY,
     user_id     INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

@@ -1,10 +1,12 @@
+// The canonical, indexable URL for a debate. Same DebateView as /motion/[id] — the
+// slug carries the claim for search engines and the trailing id does the lookup.
+
 import DebateView from "@/app/_components/motion/DebateView";
 import { buildDebateMetadata } from "@/app/_utils/debateMeta";
 import { idFromSlug } from "@/app/_utils/slugify";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-// §11: the canonical, claim-slugged debate URL. The trailing "-<id>" is the key.
 export async function generateMetadata({
   params,
 }: {

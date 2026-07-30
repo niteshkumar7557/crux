@@ -50,7 +50,6 @@ describe("scoreArgument", () => {
   });
 
   it("applies the cap before the halving", () => {
-    // judged 7 -> capped to 5 -> halved to 2
     const r = scoreArgument({ ...base, rawPoints: 7, priorCount: 3 });
     expect(r.points).toBe(2);
     expect(r.capped).toBe(true);
@@ -141,7 +140,6 @@ describe("buildOwnSideBlock", () => {
     const block = buildOwnSideBlock(many);
     const ids = [...block.matchAll(/\[#(\d+)\]/g)].map((m) => Number(m[1]));
     expect(ids).toHaveLength(OWN_SIDE_ARGUMENT_LIMIT);
-    // The four oldest are dropped, and the newest is last.
     expect(ids[0]).toBe(5);
     expect(ids.at(-1)).toBe(OWN_SIDE_ARGUMENT_LIMIT + 4);
   });

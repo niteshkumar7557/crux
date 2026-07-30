@@ -1,3 +1,5 @@
+// A debate by id. Renders the shared DebateView; /debate/[slug] is the canonical alias.
+
 import DebateView from "@/app/_components/motion/DebateView";
 import { buildDebateMetadata } from "@/app/_utils/debateMeta";
 import type { Metadata } from "next";

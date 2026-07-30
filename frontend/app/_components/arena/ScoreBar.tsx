@@ -1,19 +1,10 @@
 "use client";
+
+// The feed's split bar. No draw band here — see MotionProbability for why.
+// See design-system.md §2, §6.
+
 import { useScoreBarReveal } from "@/app/_hooks/useScoreBarReveal";
 
-// The FOR/AGAINST split bar on every feed card. "lg" is the featured-card
-// variant; "sm" the compact card variant.
-//
-// FOR is always the green family and AGAINST always terracotta — never a
-// red/green stoplight pair (design-system.md §2).
-//
-// **No draw band here.** The feed used to mark it on every bar, which put a
-// pair of hairlines through the middle of a dozen cards at once and made the
-// page look ruled rather than read. The band is a rule about how a debate ends,
-// so it is marked where that matters and where the bar is tall enough to carry
-// it: the debate page's own probability bar (MotionProbability), which still
-// draws it and still states the margin. A feed card is a doorway, not a
-// scoreboard — nothing is decided from this bar.
 const ScoreBar = ({
   affirmative,
   negative,

@@ -3,7 +3,6 @@ import { parseDevUpdate, formatRelay } from "./telegram.logic.js";
 
 const DEV_CHAT = "12345";
 
-/** A minimal well-formed update from the developer's own chat. */
 function devMessage(
   extra: Record<string, unknown> = {},
   updateId = 100,
@@ -15,10 +14,6 @@ function devMessage(
 }
 
 describe("parseDevUpdate — the chat whitelist", () => {
-  // The single most important assertion in this feature. getUpdates returns
-  // messages from ANYONE who finds the bot, and bot usernames are public and
-  // enumerable. Without this check a stranger posts as the developer into any
-  // user's thread by typing "@someone <text>".
   it("drops an update from a foreign chat id", () => {
     const out = parseDevUpdate(
       { update_id: 7, message: { chat: { id: 99999 }, text: "@nitesh hi" } },
@@ -32,14 +27,11 @@ describe("parseDevUpdate — the chat whitelist", () => {
       { update_id: 42, message: { chat: { id: 1 }, text: "hi" } },
       DEV_CHAT,
     );
-    // A rejected update that did not advance the offset would be re-fetched
-    // forever, and one stranger could wedge the poller permanently.
     expect(out.ok).toBe(false);
     expect(out.updateId).toBe(42);
   });
 
   it("compares chat ids as strings, so a numeric id from Telegram matches", () => {
-    // Telegram sends chat.id as a JSON number; the env var is a string.
     const out = parseDevUpdate(devMessage({ text: "@nitesh yes" }), DEV_CHAT);
     expect(out.ok).toBe(true);
   });
@@ -47,9 +39,6 @@ describe("parseDevUpdate — the chat whitelist", () => {
 
 describe("parseDevUpdate — update shapes", () => {
   it("accepts a channel_post exactly like a message", () => {
-    // Which one Telegram sends depends on whether the configured chat is a
-    // direct chat/group or a broadcast channel. Getting this wrong is an
-    // invisible "the bot does nothing" failure.
     const out = parseDevUpdate(
       {
         update_id: 5,
@@ -106,8 +95,6 @@ describe("parseDevUpdate — reply context wins", () => {
   });
 
   it("passes the body through untouched when it is a reply", () => {
-    // A leading @ inside a reply is far more likely a mention than a redirect,
-    // so nothing is stripped and the reply target still wins.
     const out = parseDevUpdate(
       devMessage({
         text: "@nitesh is right about this",
@@ -199,17 +186,12 @@ describe("parseDevUpdate — the @handle fallback", () => {
   });
 
   it("rejects a handle containing a character usernames cannot hold", () => {
-    // The charset comes from lib/username.logic.ts and must not drift from it.
     for (const bad of ["@ni-tesh hi", "@ni.tesh hi", "@ni!tesh hi", "@ni/tesh hi"]) {
       expect(parseDevUpdate(devMessage({ text: bad }), DEV_CHAT).ok).toBe(false);
     }
   });
 
   it("accepts a handle too short to be a real username, and lets lookup answer", () => {
-    // No minimum is enforced here on purpose, unlike validateUsername: "@ni"
-    // resolves to no user and the poller replies "no user @ni" in the chat.
-    // Rejecting it in the parser would drop the message silently instead —
-    // the one failure mode this feature cannot have.
     const out = parseDevUpdate(devMessage({ text: "@ni tesh hi" }), DEV_CHAT);
     expect(out).toEqual({
       ok: true,
@@ -222,9 +204,6 @@ describe("parseDevUpdate — the @handle fallback", () => {
 
 describe("formatRelay", () => {
   it("puts the handle on its own line above the body", () => {
-    // Load-bearing: the handle comes from our own users table, never from user
-    // input, so a user writing "@someone_else" as their first line cannot make
-    // the developer's reply land in the wrong thread.
     expect(formatRelay("nitesh", "there's a typo in my motion")).toBe(
       "@nitesh\nthere's a typo in my motion",
     );

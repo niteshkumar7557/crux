@@ -1,3 +1,5 @@
+// Server-side Sentry init. Inert without a DSN.
+
 import * as Sentry from "@sentry/nextjs";
 
 export async function register() {

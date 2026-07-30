@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { convertLogicScore, tierProgress, TIER_LADDER } from "./logicScore";
 
 describe("TIER_LADDER", () => {
-  it("is §15's ladder, unchanged", () => {
+  it("is §13's ladder, unchanged", () => {
     expect(TIER_LADDER.map((t) => t.at)).toEqual([0, 100, 200, 300, 400]);
     expect(TIER_LADDER.map((t) => t.tier)).toEqual([
       "beginner",

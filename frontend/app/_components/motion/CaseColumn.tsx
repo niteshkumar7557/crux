@@ -1,14 +1,9 @@
+// One side's column of arguments.
+
 import { MotionArenaProps, Analysis } from "@/app/motion/types";
 import UserArgumentCard from "./UserArgumentCard";
 import AnalysisPanel from "./AnalysisPanel";
 
-// Both sides share one layout; only the accent token and column padding
-// differ. Full literal class strings per side so Tailwind can see them.
-//
-// Each column is headed by a stamp — the side's name filled in its own camp
-// colour, the way a clerk marks which pile a document belongs to. It replaces
-// an accent rail on the column edge: at column height a 4px rail is a wall,
-// and the two of them boxed the arguments in.
 const SIDES = {
   for: {
     title: "The Case For",

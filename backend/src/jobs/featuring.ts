@@ -1,3 +1,9 @@
+// Poller: the stage. Recompute heat, crown the Motion of the Day, refresh the
+// featured set — IN THAT ORDER, because the MotD is picked by heat and then
+// force-featured, and the hero query asks for featured AND is_motd. All three steps
+// are set-based: the stage is a property of the whole table.
+// Spec: game-theory.md §15
+
 import pool from "../db/index.js";
 import logger from "../lib/logger.js";
 import {
@@ -9,25 +15,11 @@ import config from "../config/index.js";
 
 const TICK_MS = config.jobs.featuring_tick_ms;
 
-// §11 The stage. Every tick recomputes heat, crowns the Motion of the Day, and
-// refreshes the featured set. All three steps are set-based: the stage is a
-// property of the whole table, and the stress dataset has a million rows.
-//
-// Timestamps in this schema are naive and the database runs UTC (Etc/UTC), so
-// "the current UTC day" is just today's date here.
-
 let running = false;
 
-/**
- * §11 — heat = argument velocity x side balance, over HEAT_WINDOW_HOURS.
- *
- * This is `computeHeat()` from featuring.logic.ts expressed in SQL so every
- * live debate is rescored in one motion. The constants come from that
- * module, so the two can only drift in shape, never in numbers.
- *
- * Only rows whose heat actually moved are written — a no-op tick must not
- * rewrite the table.
- */
+// computeHeat() expressed in SQL so every live debate is rescored in one
+// statement. The constants are imported, so the two can drift in shape but never
+// in numbers. Only rows whose heat actually moved are written.
 async function recomputeHeat(): Promise<void> {
   await pool.query(
     `
@@ -61,13 +53,8 @@ async function recomputeHeat(): Promise<void> {
   );
 }
 
-/**
- * §11 — one Motion of the Day, crowned once per UTC day.
- *
- * Re-crowns when the reigning MotD is no longer live: `getPrimaryCardData`
- * only serves a live hero, so letting a concluded debate hold the crown would
- * blank the home hero for the rest of the day.
- */
+// Re-crowns when the reigning MotD is no longer live: the hero query only serves
+// a live debate, so letting a concluded one hold the crown blanks the hero.
 async function rotateMotd(): Promise<void> {
   const held = await pool.query(
     `SELECT EXISTS (
@@ -109,17 +96,10 @@ async function rotateMotd(): Promise<void> {
   }
 }
 
-/**
- * §11/§15 — the featured set is the Motion of the Day, the MAIN_STAGE_SIZE
- * hottest live debates below it, and every admin pin regardless of heat.
- *
- * The MotD is excluded from the ranking so the hero never eats a grid slot,
- * and is force-featured because the home hero query asks for
- * `featured = TRUE AND is_motd = TRUE`. Concluded debates leave the stage.
- *
- * `featured_at` is stamped only on entry, so the grid's ordering stays stable
- * while a debate keeps its slot.
- */
+// The MotD is excluded from the ranking so the hero never eats a grid slot, and
+// force-featured because the hero query asks for featured AND is_motd.
+// `featured_at` is stamped only on entry, so ordering is stable while a debate
+// keeps its slot.
 async function refreshFeatured(): Promise<void> {
   await pool.query(
     `
@@ -162,9 +142,9 @@ async function tick(): Promise<void> {
   if (running) return; // never overlap ticks
   running = true;
   try {
-    // Order matters: the MotD is picked by heat, and is then force-featured.
-    // Crowning after refreshFeatured would leave a fresh hero unfeatured — and
-    // so invisible — until the next tick.
+    // Order matters: the MotD is picked by heat and then force-featured, so
+    // crowning after refreshFeatured would leave a fresh hero unfeatured — and so
+    // invisible — until the next tick.
     await recomputeHeat();
     await rotateMotd();
     await refreshFeatured();

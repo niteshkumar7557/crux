@@ -1,19 +1,16 @@
-import "dotenv/config";
-
-// The ONE place the backend reads process.env. Everything tunable without a
-// code change is defined here, with its default, and imported from here — so
-// `.env.example` and this file together are the complete list of knobs.
+// The ONE place the backend reads process.env. Every knob is defined here with its
+// default and imported from here, so this file and .env.example together are the
+// complete list. Never read process.env at a call site.
 //
-// Two deliberate exceptions:
-//   * `economy/season.logic.ts` reads CRUX_SEASON_ZERO itself. It is a pure
-//     module and must not import this one — importing it runs `dotenv/config`
-//     as a side effect, which would make the season tests depend on your .env.
-//   * The GAME RULES are not here. Score ranges, payouts, the draw threshold,
-//     the Main Stage size and so on live in the four `*.logic.ts` modules and
-//     are fixed by §15 of docs/game-theory.md. They are asserted by unit tests
-//     and printed to users on /rules, so an env var that silently changed one
-//     would make the product lie to its users. Change those in the spec and
-//     the code together.
+// Two modules read the environment directly instead — season.logic.ts and
+// rateLimit.ts — because they must stay pure and importable by tests without
+// dragging dotenv/config in as a side effect.
+//
+// GAME RULES ARE NOT CONFIG. Score ranges, payouts and the rest live in the
+// *.logic.ts modules and are fixed by game-theory.md §21: they are asserted by
+// unit tests and printed to users, so an env override would make the product lie.
+
+import "dotenv/config";
 
 function str(name: string, fallback: string): string {
   const v = process.env[name];
@@ -31,138 +28,63 @@ function num(name: string, fallback: number): number {
 }
 
 const config = {
-  // ── Server ────────────────────────────────────────────────────────────────
-  /**
-   * PORT is what the hosting platform injects and must win in production;
-   * SERVER_PORT stays the local-dev knob so `.env` keeps working unchanged.
-   */
   server_port: num("PORT", num("SERVER_PORT", 8000)),
   client_url: process.env.CLIENT_URL,
   node_env: process.env.NODE_ENV,
-  /** pino level: fatal|error|warn|info|debug|trace. */
   log_level: str("LOG_LEVEL", "info"),
-  /** Sentry DSN; empty disables the SDK (dev, CI). */
   sentry_dsn: process.env.SENTRY_DSN,
-  /**
-   * Shared secret the CDN stamps on every request it forwards, proving the
-   * request came through the edge. Rate limiting trusts CF-Connecting-IP only
-   * when this matches — see middlewares/rateLimit.ts. Unset in dev; unset in
-   * production means bypass traffic can forge its own identity.
-   *
-   * Read directly by rateLimit.ts rather than through this object, for the same
-   * reason CRUX_SEASON_ZERO is: that module must stay pure and importable by
-   * tests without dragging `dotenv/config` in as a side effect. It is listed
-   * here so this file remains the complete inventory of knobs.
-   */
   edge_secret: process.env.EDGE_SECRET,
 
   db: {
     url: process.env.DB_URL,
   },
 
-  // ── Avatar storage (S3-compatible object storage; R2 in production) ───────
-  // All five are required to use object storage. With any of them missing the
-  // app falls back to writing uploads to the local disk, which is what dev and
-  // CI want — no credentials needed to run or contribute. See lib/avatarStorage.
   avatar_storage: {
-    /** e.g. https://<account-id>.r2.cloudflarestorage.com */
     endpoint: process.env.R2_ENDPOINT,
     bucket: process.env.R2_AVATAR_BUCKET,
     accessKeyId: process.env.R2_ACCESS_KEY_ID,
     secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
-    /** Public base the bucket is served from, e.g. https://avatars.example.com */
     publicUrl: process.env.R2_AVATAR_PUBLIC_URL,
   },
 
-  // ── Auth ──────────────────────────────────────────────────────────────────
   jwt_secret: process.env.JWT_SECRET,
-  /** Access-token lifetime — any span string jsonwebtoken accepts. */
   access_token_ttl: str("ACCESS_TOKEN_TTL", "15m"),
-  /** Refresh-token lifetime in days; used to build a Postgres interval. */
   refresh_token_days: num("REFRESH_TOKEN_DAYS", 7),
-  /** bcrypt cost factor. Higher is slower and safer. */
   bcrypt_rounds: num("BCRYPT_ROUNDS", 10),
 
-  // ── LLM provider ──────────────────────────────────────────────────────────
   llm: {
     base_url: str("LLM_BASE_URL", "https://openrouter.ai/api/v1"),
     api_key: process.env.LLM_API_KEY ?? process.env.OPENROUTER_API_KEY,
-    /** One model for every persona. See docs/CODEBASE_GUIDE.md §6. */
     model: str("LLM_MODEL", "deepseek/deepseek-v4-flash"),
-    /** Per-request abort, in ms. */
     timeout_ms: num("LLM_TIMEOUT_MS", 30_000),
-    /** Attempts after the first one fails. */
     retries: num("LLM_RETRIES", 2),
     temperature: num("LLM_TEMPERATURE", 0.2),
     max_tokens: num("LLM_MAX_TOKENS", 3000),
-    /**
-     * "off" | "high" | "xhigh". DeepSeek V4 Flash is a reasoning model whose
-     * thinking tokens are billed as output AND count toward max_tokens, so
-     * leaving it on truncates the shorter calls into invalid JSON. Every
-     * persona returns a rubric-scored JSON object, not a derivation — off.
-     */
     reasoning: str("LLM_REASONING", "off"),
   },
 
-  // ── Telegram relay ("talk to the developer") ──────────────────────────────
-  // BOTH values are required to enable the relay. With either missing the
-  // poller never starts and sendMessage is a no-op — but the web side works
-  // completely: messages save, the thread renders, unread counts work. So the
-  // panel is fully developable locally with no bot at all. Same shape as the
-  // avatar-storage local fallback, and like it the mode is logged on boot, so a
-  // misconfigured production is visible immediately rather than at first use.
   telegram: {
-    /** BotFather token. Unset disables the relay entirely. */
     bot_token: process.env.TELEGRAM_BOT_TOKEN,
-    /** The one chat the bot trusts. Unset disables the relay entirely. */
     dev_chat_id: process.env.TELEGRAM_DEV_CHAT_ID,
-    /** Long-poll hold time, seconds. Telegram's own ceiling is 50. */
     poll_timeout_s: num("TELEGRAM_POLL_TIMEOUT_S", 30),
-    /**
-     * The account the DM panel shows as the developer — its avatar and handle
-     * are what a user sees replying to them. Read from `users`, so the portrait
-     * follows whatever the owner has set on their own profile rather than being
-     * a second copy to keep in sync. A handle with no row still renders: the
-     * panel falls back to the handle's initials, which is also what happens
-     * before the owner has uploaded anything — so a typo here is silent, and
-     * looks exactly like "the avatar isn't loading". It must match `users`.
-     */
     dev_username: str("DEV_USERNAME", "dev_nitesh"),
   },
 
-  // ── Background jobs (in-process pollers) ──────────────────────────────────
   jobs: {
-    /** How often to sweep for debates past closes_at. */
     conclusion_tick_ms: num("CONCLUSION_TICK_MS", 60_000),
-    /** Max debates concluded per conclusion tick. */
     conclusion_batch: num("CONCLUSION_BATCH", 20),
-    /** How often heat, the Main Stage and the MotD are recomputed. */
     featuring_tick_ms: num("FEATURING_TICK_MS", 5 * 60_000),
-    /** How often to check whether a season has closed. */
     season_rollover_tick_ms: num("SEASON_ROLLOVER_TICK_MS", 60 * 60_000),
   },
 
-  // ── Limits ────────────────────────────────────────────────────────────────
   limits: {
-    /** Arguments handed to the Verdict Judge. Caps prompt size and cost. */
     verdict_arguments: num("VERDICT_MAX_ARGUMENTS", 40),
-    /** Rows returned by the leaderboard endpoints. */
     leaderboard_rows: num("LEADERBOARD_ROWS", 50),
-    /** URLs in the generated sitemap. */
     sitemap_rows: num("SITEMAP_ROWS", 5000),
-    /** Max avatar upload, in megabytes. */
     avatar_upload_mb: num("AVATAR_UPLOAD_MB", 5),
-    /** Concluded debates listed on a profile. */
     profile_history_rows: num("PROFILE_HISTORY_ROWS", 10),
-    /** Live debates listed on a profile. */
     profile_live_rows: num("PROFILE_LIVE_ROWS", 6),
-    /** Weeks of the logic ledger charted on a profile. */
     profile_ledger_weeks: num("PROFILE_LEDGER_WEEKS", 12),
-    /**
-     * Max characters in one message to the developer. Shown in the UI by the
-     * composer's counter — per the transparency rule, a limit that binds a user
-     * has to be visible before it binds.
-     */
     dev_message_chars: num("DEV_MESSAGE_MAX_CHARS", 1000),
   },
 };

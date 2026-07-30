@@ -1,3 +1,4 @@
+-- One row per (user, argument); deleted on unlike. Spec: game-theory.md §10
 CREATE TABLE likes (
     id SERIAL PRIMARY KEY,
     argument_id INT NOT NULL,

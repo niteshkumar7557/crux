@@ -1,12 +1,14 @@
+// The only outbound LLM client: one OpenAI-compatible /chat/completions call, JSON
+// mode, repaired and parsed, retried LLM_RETRIES times. A failing call therefore
+// bills up to three times.
+// Spec: game-theory.md §16
+
 import { jsonrepair } from "jsonrepair";
 import config from "../config/index.js";
 import logger from "../lib/logger.js";
 
 const { base_url: BASE_URL, api_key: API_KEY, model: MODEL } = config.llm;
 
-// OpenRouter's shape: `{ enabled: false }` suppresses thinking entirely,
-// `{ effort }` picks a budget. Anything else and we send no field at all,
-// leaving the model on its own default.
 const REASONING =
   config.llm.reasoning === "off"
     ? { enabled: false }
@@ -61,9 +63,6 @@ export async function llmJson<T = any>(opts: LlmOpts): Promise<T> {
     system: opts.system,
     user: opts.user,
     temperature: opts.temperature ?? config.llm.temperature,
-    // Keep this ceiling generous. If LLM_REASONING is turned back on, thinking
-    // tokens count toward max_tokens and vary a lot, so a tight value returns
-    // truncated, invalid JSON rather than a clean error.
     maxTokens: opts.maxTokens ?? config.llm.max_tokens,
   };
 

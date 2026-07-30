@@ -1,3 +1,5 @@
+// Dev seed: a browsable arena in one command. Every password is "secret".
+
 import pool from "./index.js";
 import {
 	insertBaseData,
@@ -9,14 +11,6 @@ import {
 	pick,
 } from "./seed-data.js";
 
-// Dev seeder — small, realistic dataset for feature development.
-// Wipes and refills users, motions, and arguments:
-//   30 real users + 30 real motions, each motion with 1–6 arguments.
-// Every account logs in with the password "secret".
-//
-// For millions of rows (query stress testing) run seed-stress.ts instead:
-//   npm run db:seed:stress
-
 const seed = async () => {
 	const client = await pool.connect();
 
@@ -25,8 +19,6 @@ const seed = async () => {
 
 		const { motionTimes } = await insertBaseData(client);
 
-		// 1–6 arguments per motion: random side, text, debater, likes,
-		// posted 1–96h after the motion (clamped to now)
 		const now = Date.now();
 		const HOUR = 60 * 60 * 1000;
 		const argumentValues: unknown[] = [];
@@ -65,29 +57,15 @@ const seed = async () => {
 		);
 		console.log(`✅ Seeded ${argumentRows.length} arguments`);
 
-		// §11: pin two debates onto the Main Stage so a fresh dev DB shows a
-		// populated stage immediately (the featuring poller also fills it by heat).
-		// User 1 (nitesh_dev) is already seeded with role 'admin' by seed-data.ts.
 		await client.query(`UPDATE motions SET pinned = TRUE WHERE id IN (1, 2)`);
 		console.log("✅ Pinned 2 Main Stage debates");
 
-		// §10: seed the logic ledger from each user's all-time score so the Season
-		// board is populated on a fresh dev DB (one 'seed' event, dated now).
 		await client.query(
 			`INSERT INTO logic_events (user_id, amount, reason)
 			 SELECT id, ROUND(logic_score)::int, 'seed' FROM users WHERE logic_score <> 0`,
 		);
 		console.log("✅ Seeded logic ledger for the Season board");
 
-		// A "talk to the developer" thread on user 1, because a fresh dev DB
-		// otherwise renders only the empty state — the least useful half of that
-		// component to look at while building it. One unread 'dev' row so the
-		// envelope badge shows too.
-		//
-		// `relayed_at` is stamped on the user rows even though nothing was really
-		// sent: leaving it NULL would make the poller's sweep deliver three lines
-		// of seed data into a real Telegram chat the first time a token is
-		// configured.
 		await client.query(
 			`INSERT INTO dev_messages (user_id, sender, body, relayed_at, is_read, created_at)
 			 VALUES

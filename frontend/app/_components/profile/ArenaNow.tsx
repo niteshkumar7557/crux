@@ -1,4 +1,7 @@
 "use client";
+
+// Live debates this user is in, and the side they locked. Spec: game-theory.md §5
+
 import Link from "next/link";
 import type { LiveDebate } from "@/app/profile/types";
 import Button from "@/app/_components/ui/Button";
@@ -6,12 +9,6 @@ import Countdown from "@/app/_components/motion/Countdown";
 import { useUser } from "@/app/_hooks/useUser";
 import { debateSlug } from "@/app/_utils/slugify";
 
-// Replaces ActiveMotions, which queried without a status filter and then
-// rendered every row — concluded ones included — with a pulsing dot and
-// "Live in Arena #N".
-//
-// Red here IS correct: §4's side lock is stance, and working rule 4 reserves
-// `secondary` for AGAINST.
 const SIDE_BADGE = {
   for: "text-side-for border-side-for/40",
   against: "text-side-against border-side-against/40",

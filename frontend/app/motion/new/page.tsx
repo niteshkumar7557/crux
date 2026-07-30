@@ -1,3 +1,5 @@
+// The composer: Arbiter gate, then publish. Spec: game-theory.md §3
+
 export const dynamic = "force-dynamic";
 import ComposeHeader from "@/app/_components/compose/ComposeHeader";
 import CruxAIRoleInfo from "@/app/_components/compose/CruxAIRoleInfo";

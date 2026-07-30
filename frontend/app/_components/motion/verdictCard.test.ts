@@ -45,8 +45,6 @@ describe("buildVerdictCard", () => {
     expect(m.accent).toBe(TOKENS.againstSide);
   });
 
-  // Laurel marks things that were won; a draw was not won, so it takes the
-  // neutral draw tone instead (design-system.md §2). It used to be amber.
   it("draw: draw accent, still shows score/split/mvp", () => {
     const m = buildVerdictCard(
       { ...base, winner: "draw", margin: 4, affirmative: 52, negative: 48 },

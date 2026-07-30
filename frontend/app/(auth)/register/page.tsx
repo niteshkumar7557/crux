@@ -1,4 +1,8 @@
 "use client";
+
+// Sign up. Validates the handle client-side against _utils/username.ts before the
+// round trip; the server is still the authority. Spec: game-theory.md §13
+
 import api from "@/app/axios";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -29,8 +33,6 @@ const Register = () => {
   const router = useRouter();
   const rootRef = useRef<HTMLElement>(null);
 
-  // Entrance: the form column rises while the reputation panel slides in
-  // from its own edge; form fields follow with a soft stagger.
   useGSAP(
     () => {
       const mm = gsap.matchMedia();
@@ -100,7 +102,6 @@ const Register = () => {
         ref={rootRef}
         className="relative min-h-screen grow flex items-center justify-center pt-14 pb-12 px-6"
       >
-        {/* <!-- Background Technical Layer --> */}
 
         <div className="w-full max-w-5xl grid md:grid-cols-12 gap-0 border border-ink-faint bg-paper overflow-hidden">
           <div
@@ -159,8 +160,6 @@ const Register = () => {
                     aria-describedby="username-hint"
                     value={userName}
                     onChange={(e) => {
-                      // Lowercase as you type, so the normalisation the server
-                      // performs is visible rather than a surprise after submit.
                       const next = normalizeUsername(e.currentTarget.value);
                       setUserName(next);
                       if (next === "") {

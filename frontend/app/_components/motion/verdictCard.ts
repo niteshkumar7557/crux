@@ -1,17 +1,9 @@
+// The share card's model and its palette, mirrored as hex because satori cannot read
+// CSS variables. Uses the LIGHT values on purpose — a certificate is a document you
+// keep. Hand-synced with globals.css.
+
 import type { MatchState } from "@/app/motion/types";
 
-// satori (inside next/og) cannot read CSS custom properties, so the
-// globals.css design tokens are mirrored here as hex. Keep in sync with
-// globals.css — each key names the variable it copies.
-//
-// These are the LIGHT values on purpose. A verdict card is something a person
-// posts and keeps, and "Certificate of Verdict" should look like a document:
-// forest ink printed on cream. The dark theme is the room you read the app in,
-// not the paper you carry out of it.
-//
-// Keys are named for what they mean rather than what colour they are — the
-// previous set was `cyan`/`red`/`amber`, which stopped being true the moment
-// the palette changed.
 export const TOKENS = {
   paper: "#f3edda", // --paper
   forSide: "#2f6b4f", // --for      (affirmative)

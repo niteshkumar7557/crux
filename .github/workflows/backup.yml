@@ -1,5 +1,6 @@
-# Nightly offsite backup. Replaces ops/backup.sh, which ran on the laptop and
-# shelled out to `docker exec crux-db` — neither of which exists any more.
+# Nightly offsite backup of the database. On this hosting plan there are no
+# platform-scheduled backups, so this workflow is not a second layer — it is the
+# only one.
 #
 # The dead-man switch is the whole point: healthchecks.io is pinged ONLY if every
 # step above it succeeded, and it alerts when a ping does not arrive. That catches
@@ -15,15 +16,10 @@
 # workflow is not a second layer — it is the ONLY layer, and it covers the
 # database only.
 #
-# Uploaded avatars are NOT backed up. An earlier version of this file streamed a
-# tar off the volume with `railway ssh`, but that command needs an SSH keypair
-# registered against the Railway *account*, and doing that from CI would mean
-# storing an account-wide API token here — broad standing access, to protect
-# files that are individually re-uploadable. The proportionate fix is to stop
-# storing them on a volume at all: move avatars to R2, where they are durable by
-# default and need no backup job. Until then this gap is accepted and known.
-#
-# See docs/RUNBOOK.md → Backups for what a loss actually looks like.
+# Uploaded avatars need no job here: they live in object storage, which is
+# durable by default and independent of the deployment. The volume that used to
+# hold them could not be backed up on this plan at all — the fix was to delete
+# the thing needing protection rather than to write a job to protect it.
 
 name: Nightly backup
 

@@ -1,3 +1,5 @@
+-- The twelve fixed domains. The Arbiter prompt copies a name verbatim out of
+-- its own list, which must stay in sync with these rows.
 CREATE TABLE domains (
     id SERIAL PRIMARY KEY,
     name VARCHAR(40) UNIQUE NOT NULL

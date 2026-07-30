@@ -1,4 +1,7 @@
 "use client";
+
+// Fetches everything below the shell after mount.
+
 import { useEffect, useRef, useState } from "react";
 import api from "@/app/axios";
 import Skeleton from "@/app/_components/ui/Skeleton";
@@ -10,13 +13,6 @@ import ArgumentPattern from "./ArgumentPattern";
 import CareerHistory from "./CareerHistory";
 import LogicLedger from "./LogicLedger";
 
-// Everything below the fold, in one fetch. The identity half is already on
-// screen by the time this runs, so a failure degrades to a line rather than
-// blanking a useful page.
-//
-// Nothing in here carries `data-reveal`: Reveal batches its descendants once
-// on mount, so a skeleton tagged that way would be dimmed to 0.25 and never
-// re-batched when the real content arrived. This owns its own entrance.
 const ProfileActivity = ({
   username,
   profileId,
@@ -48,9 +44,6 @@ const ProfileActivity = ({
   useGSAP(
     () => {
       if (!data) return;
-      // Its own key, not the bare pathname: this section arrives on a later
-      // commit than the identity half above it, so it cannot share that
-      // decision — the page's own batch has long been released by then.
       if (!shouldAnimate(`/profile/${username}#activity`)) return;
       const mm = gsap.matchMedia();
       mm.add(MOTION_OK, () => {

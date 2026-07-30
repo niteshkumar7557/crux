@@ -1,3 +1,8 @@
+// Concludes one debate in a single transaction: re-check status under FOR UPDATE,
+// run the Verdict Judge, write results and payouts, then commit before notifying.
+// A side with zero arguments short-circuits to a walkover and spends no tokens.
+// Spec: game-theory.md §11, §12, §20
+
 import pool from "../db/index.js";
 import { llmJson } from "./llm.js";
 import { notifyVerdict } from "../notifications/notify.js";
@@ -36,7 +41,8 @@ export async function concludeDebate(motionId: number): Promise<void> {
     }
     const authorId: number = motion.user_id;
 
-    // Top arguments by likes, for the judge's prompt (token-bounded).
+    // Top arguments by likes — this is what bounds the prompt's token cost, and
+    // the model can only name an MVP it can see.
     const argumentsRes = await client.query(
       `SELECT u.username, c.side, c.likes, c.content
        FROM arguments c JOIN users u ON u.id = c.user_id
@@ -46,7 +52,6 @@ export async function concludeDebate(motionId: number): Promise<void> {
       [motionId, MAX_ARGUMENTS],
     );
 
-    // Distinct participants with their (locked) side + username for the MVP match.
     const partRes = await client.query(
       `SELECT DISTINCT ON (c.user_id) c.user_id, c.side, u.username
        FROM arguments c JOIN users u ON u.id = c.user_id
@@ -70,8 +75,8 @@ export async function concludeDebate(motionId: number): Promise<void> {
     let affirmative: number | null = null;
     let negative: number | null = null;
 
+    // §11 walkover: no contest, no LLM call, and nobody scores.
     if (forCount === 0 || againstCount === 0) {
-      // Walkover — no contest, no LLM call.
       winner = "walkover";
       verdictText = "Concluded unopposed — a contest needs two committed sides.";
       payouts = walkoverPayout();
@@ -102,7 +107,6 @@ ${argumentBlock}`,
       negative = resolved.negative;
       verdictText = raw.closing?.trim() || "The debate has been ruled.";
 
-      // §7: resolveVerdict already validated the MVP onto the winning side.
       mvpUserId = resolved.mvpUserId;
 
       payouts = resolvePayouts({
@@ -113,7 +117,6 @@ ${argumentBlock}`,
       });
     }
 
-    // Write debate_results rows.
     for (const r of payouts.results) {
       await client.query(
         `INSERT INTO debate_results (motion_id, user_id, side, outcome, is_mvp)
@@ -122,8 +125,6 @@ ${argumentBlock}`,
         [motionId, r.userId, r.side, r.outcome, r.isMvp],
       );
     }
-    // Apply logic awards (also ledgered for the §10 seasonal window). The
-    // loss penalty rides in season-only, so a career total never falls (§8).
     for (const a of payouts.logicAwards) {
       await awardLogic(
         client,
@@ -151,8 +152,8 @@ ${argumentBlock}`,
     await client.query("COMMIT");
     console.log(`⚖️  concluded debate ${motionId} → ${winner}`);
 
-    // §14 return trigger: tell every participant the verdict is in. Best-effort,
-    // post-commit so a notification failure can't roll back the conclusion.
+    // §20: post-commit and best-effort, so a notification failure can never roll
+    // back a conclusion.
     void notifyVerdict(
       motionId,
       payouts.results.map((r) => ({

@@ -1,4 +1,7 @@
 "use client";
+
+// Upload an avatar or pick a preset.
+
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -14,8 +17,6 @@ interface Preset {
   url: string;
 }
 
-// Profile-head avatar. Everyone sees the avatar; the owner also gets the
-// editor: pick one of the shared presets, upload a photo, or remove it.
 const AvatarEditor = ({
   profileId,
   username,
@@ -43,8 +44,6 @@ const AvatarEditor = ({
       .catch(() => setError("Could not load preset avatars."));
   }, [open, presets.length]);
 
-  // each action resolves to the new avatar path (null = removed) so the
-  // navbar can update live via the crux:avatar-updated event
   async function run(action: () => Promise<string | null>) {
     setBusy(true);
     setError("");

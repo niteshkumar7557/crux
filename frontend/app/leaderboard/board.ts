@@ -1,8 +1,5 @@
-// Two boards, one layout. The season board ranks logic EARNED this month
-// (§10 — everyone starts at 0), the all-time board ranks the career total.
-// They differ in their metric and in whether they carry career counts, so the
-// page normalises both into one row shape and renders them through the same
-// podium and table.
+// Two boards, one row shape, so the podium and the table render both.
+// Spec: game-theory.md §14
 
 export const BOARD_TABS = [
   { slug: "season", label: "This Season" },
@@ -16,15 +13,12 @@ export interface BoardRow {
   name: string;
   username: string;
   avatar: string | null;
-  /** seasonLogic on the season board, logic_score on the all-time board. */
   score: number;
   rank: number;
-  /** All-time only — the season board does not carry career counts. */
   motionCount?: number;
   argumentCount?: number;
 }
 
-/** Season is the default board, so it owns the bare /leaderboard URL. */
 export function parseTab(raw: string | undefined): BoardTab {
   return raw === "all-time" ? "all-time" : "season";
 }
@@ -37,7 +31,6 @@ export function leaderboardHref(tab: BoardTab, page = 1): string {
   return query ? `/leaderboard?${query}` : "/leaderboard";
 }
 
-/** What the score column is called on each board. */
 export function metricLabel(tab: BoardTab): string {
   return tab === "season" ? "Season Logic" : "Logic Score";
 }

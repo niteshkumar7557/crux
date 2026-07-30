@@ -1,3 +1,7 @@
+// Everything the feed, the sidebar, both leaderboards, the archive and the sitemap
+// read. All of it fails soft to an empty payload: a broken panel beats a broken page.
+// Spec: game-theory.md §14, §15
+
 import type { Response, Request } from "express";
 import pool from "../db/index.js";
 import config from "../config/index.js";
@@ -76,6 +80,9 @@ export async function getSecondaryCardsData(req: Request, res: Response) {
                 JOIN users u ON a.user_id = u.id
                 JOIN domains d ON d.id = a.domain_id
                 LEFT JOIN arguments c ON c.motion_id = a.id
+                -- NOTE: this LIMIT is independent of MAIN_STAGE_SIZE in
+                -- jobs/featuring.logic.ts. Raising that constant alone renders
+                -- nothing extra — see codebase-guide.md §8.
                 WHERE a.featured = TRUE AND a.is_motd = FALSE
                 GROUP BY a.id, u.username, u.avatar, d.name, a.content, a.affirmative, a.negative
                 ORDER BY a.featured_at ASC NULLS LAST
@@ -117,7 +124,7 @@ export async function getSidebarData(req: Request, res: Response) {
                 id,
                 RANK () OVER (ORDER BY logic_score DESC, id ASC) AS rank
             FROM users
-            ORDER BY 
+            ORDER BY
                 logic_score DESC,
                 id ASC
             LIMIT 3;
@@ -146,11 +153,6 @@ export async function getSidebarData(req: Request, res: Response) {
   }
 }
 
-/**
- * Both boards are a window onto a capped ranking, not the whole user table:
- * `leaderboard_rows` still decides how deep the board goes, and paging walks
- * that same depth. So the constant keeps the meaning it always had.
- */
 const LEADERBOARD_PAGE_SIZE = 20;
 
 function leaderboardPaging(req: Request) {
@@ -165,7 +167,6 @@ function leaderboardPaging(req: Request) {
   return { cap, page, pageSize };
 }
 
-/** Ranked users, capped — the denominator both boards page through. */
 async function rankedTotal(cap: number): Promise<number> {
   const { rows } = await pool.query(`SELECT COUNT(*)::int AS total FROM users`);
   return Math.min(rows[0].total, cap);
@@ -179,10 +180,10 @@ export async function getLeaderboardData(req: Request, res: Response) {
     const totalPages = Math.max(Math.ceil(total / pageSize), 1);
     if (page > totalPages) page = totalPages;
 
-    // Rank over everyone first, then take the capped board, then the page —
-    // so a rank means the same thing on page 3 as it does on page 1.
     const standings = await pool.query(
       `
+            -- Rank over everyone first, then take the capped board, then the
+            -- page — so a rank means the same thing on page 3 as on page 1.
             WITH board AS (
                 SELECT
                     u.id,
@@ -217,16 +218,9 @@ export async function getLeaderboardData(req: Request, res: Response) {
   }
 }
 
-// §10 Season board: ranks logic EARNED this season (the windowed ledger sum),
-// so everyone starts at 0 each month and a hot newcomer races veterans fairly.
 export async function getSeasonLeaderboard(req: Request, res: Response) {
   const { cap, pageSize } = leaderboardPaging(req);
   let { page } = leaderboardPaging(req);
-  // §14's season strip reads these unconditionally, so they are assembled
-  // before anything can fail and reused on the error path.
-  // `endsAt` is the exact instant the month closes, so the board can run a live
-  // countdown without re-deriving the season rule on the client — the calendar
-  // month lives here (§10) and nowhere else.
   const meta = {
     season: seasonNumber(),
     seasonKey: seasonKey(),
@@ -264,7 +258,6 @@ export async function getSeasonLeaderboard(req: Request, res: Response) {
   }
 }
 
-// §11 SEO: flat list of every debate (id + claim + keyword) for the sitemap.
 export async function getSitemapData(_req: Request, res: Response) {
   try {
     const r = await pool.query(
@@ -287,10 +280,8 @@ export async function getMotions(req: Request, res: Response) {
       typeof req.query.keyword === "string" ? req.query.keyword.trim() : "";
     const hasKeyword = keyword.length > 0;
 
-    // §11 the archive reads the settled record: `status` splits live from
-    // concluded, `outcome` narrows to one ruling. Both are validated against a
-    // closed list rather than interpolated — an unknown value is ignored, not
-    // passed to SQL.
+    // Both filters are validated against a closed list rather than interpolated:
+    // an unknown value is ignored, never passed to SQL.
     const STATUSES = ["live", "concluded"];
     const OUTCOMES = ["for", "against", "draw", "walkover"];
     const status = String(req.query.status ?? "");

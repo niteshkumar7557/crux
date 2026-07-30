@@ -1,4 +1,7 @@
 "use client";
+
+// The Main Stage grid. Spec: game-theory.md §15
+
 import ActiveMotionsNavbar from "./ActiveMotionsNavbar";
 import { useRef } from "react";
 import { useSearchParams } from "next/navigation";
@@ -8,14 +11,6 @@ import TrendingTab from "./TrendingTab";
 
 const tabList = ["trending", "newest"];
 
-// The active tab and the newest feed's page both live in the URL, so a pager
-// link can say which tab it belongs to and a refresh lands where you were.
-// Tab links are soft navigations, so this component stays mounted and the
-// crossfade below still reads as a tab switch rather than a page load.
-//
-// Anchored to /arena, not /: the feed used to be the site root, and when the
-// story landing took that route these links kept pointing at it — so switching
-// tabs or paging left the arena entirely.
 export function feedHref(tab: string, page = 1): string {
   if (tab !== "newest") return "/arena";
   return page > 1 ? `/arena?tab=newest&page=${page}` : "/arena?tab=newest";

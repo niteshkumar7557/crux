@@ -1,3 +1,5 @@
+// The twelve fixed domains.
+
 import type { Request, Response } from "express";
 import pool from "../db/index.js";
 

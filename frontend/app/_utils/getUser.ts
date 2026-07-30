@@ -1,3 +1,5 @@
+// Reads the access token, refreshing it when expired.
+
 import { jwtDecode } from "jwt-decode";
 import { jwtPayload } from "../_types/jwt";
 import axios from "axios";

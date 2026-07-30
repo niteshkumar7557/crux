@@ -1,4 +1,8 @@
 "use client";
+
+// The ruling, and the payout breakdown that explains it.
+// Spec: game-theory.md §11, §12, §19
+
 import { useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -9,10 +13,6 @@ import { shouldAnimate } from "@/app/_utils/animateOnce";
 
 type Winner = MatchState["winner"];
 
-// Literal class strings per ruling so Tailwind's scanner keeps them
-// (mirrors the CaseColumn per-side pattern). Terracotta only ever means
-// "against"; a draw takes the neutral draw tone rather than laurel, because
-// laurel marks things that were won and a draw was not (design-system.md §2).
 const RULINGS: Record<
   "for" | "against" | "draw" | "walkover",
   { label: string; labelClass: string }
@@ -23,13 +23,6 @@ const RULINGS: Record<
   walkover: { label: "Unopposed", labelClass: "text-ink-soft" },
 };
 
-/**
- * §14 the payout breakdown. Two rows of the transparency table land here: the
- * season-only loss penalty must be stated "before AND after" (the side-lock
- * confirmation is the before), and "MVP comes from the winning side" has to be
- * on the verdict card as well as the rules page — otherwise a draw with no MVP
- * just looks like the judge forgot.
- */
 function payoutBreakdown(winner: Winner): string {
   if (winner === "walkover") {
     return "One side never argued, so this concluded unopposed: nobody scored anything — no logic, no record, not even the author's bonus.";
@@ -64,10 +57,6 @@ const VerdictBanner = ({
   const rootRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
-  // The stamp — one of the system's three motion moments (§6). The ruling
-  // lands on the page rather than fading up, because a verdict is an act, not
-  // an arrival. Overshoot down onto the paper and settle; no rotation, this
-  // court is formal.
   useGSAP(
     () => {
       if (!shouldAnimate(`${pathname}#verdict`)) return;
@@ -113,11 +102,6 @@ const VerdictBanner = ({
             {affirmative} – {negative} · Margin {margin}
           </span>
         )}
-        {/* The MVP is the one person this banner names, and the point of naming
-            them is that you can go and read them. Laurel to laurel-bright on
-            hover rather than to ink: the award colour is the whole reason this
-            line is gold, and dropping it on hover would read as the title being
-            revoked under the cursor. */}
         {mvpUsername && (
           <Link
             href={`/profile/${mvpUsername}`}

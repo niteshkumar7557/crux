@@ -1,4 +1,7 @@
 "use client";
+
+// Landing: the stage, fair-by-design, the doors, the seal.
+
 import { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -50,7 +53,6 @@ const Closing = () => {
     () => {
       initReveals(scope.current);
       if (prefersReduced()) return;
-      // Walking toward the doors: the engraving swells as you approach the CTA.
       gsap.fromTo(
         "[data-doors]",
         { scale: 0.92 },
@@ -71,7 +73,6 @@ const Closing = () => {
 
   return (
     <div ref={scope}>
-      {/* ------------------------------------------------ fair by design */}
       <Section id="fair" band>
         <SectionHead
           center
@@ -102,7 +103,6 @@ const Closing = () => {
           ))}
         </div>
 
-        {/* ---------------------------------------------- the bench */}
         <div className="mt-24 grid items-center gap-12 border-t border-ink-faint pt-20 lg:grid-cols-[1fr_1.4fr] lg:gap-20">
           <Plate
             data-reveal
@@ -145,7 +145,6 @@ const Closing = () => {
         </div>
       </Section>
 
-      {/* ------------------------------------------------ final call */}
       <section data-doors-zone className="overflow-hidden px-6 py-24 md:py-32">
         <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
           <div
@@ -185,10 +184,8 @@ const Closing = () => {
         </div>
       </section>
 
-      {/* ------------------------------------------------ footer */}
       <footer className="border-t border-ink-faint px-6 py-14">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-8">
-          {/* The seal: wreath on a cream disc so it survives the dark archive. */}
           <div className="relative flex size-36 items-center justify-center overflow-hidden rounded-full border border-[#24413440] bg-plate">
             <Image
               src="/landing/laurel-wreath.jpeg"
@@ -199,9 +196,6 @@ const Closing = () => {
               sizes="9rem"
               className="engraving absolute inset-0 h-full w-full scale-110"
             />
-            {/* Mark over wordmark, inside the wreath — the one place the two
-                halves of the identity stack, because a seal is the one thing
-                that is allowed to be ceremonial. */}
             <span className="relative flex flex-col items-center gap-1 text-plate-ink">
               <LogoMark size={26} />
               <span className="font-headline text-xl italic tracking-tighter leading-none">

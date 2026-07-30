@@ -13,7 +13,6 @@ const point = (text: string, argumentId: number | null = null) => ({
   text,
 });
 
-// The exact shape `GET /motion/:id` now returns.
 const REAL = {
   lead: "The case in favor holds up under scrutiny.",
   points: [
@@ -63,8 +62,6 @@ describe("parseAnalysis", () => {
     expect(flat.points).toEqual(["real"]);
   });
 
-  // The certificate renders whatever the API hands it, so a debate whose
-  // analysis never landed must produce no panel rather than a broken image.
   it.each([
     ["undefined", undefined],
     ["null", null],

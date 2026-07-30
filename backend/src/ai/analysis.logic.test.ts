@@ -133,7 +133,6 @@ describe("sanitizeAnalysis", () => {
   });
 
   it("strips an id belonging to the other side", () => {
-    // authorByArgumentId only ever holds this side's arguments.
     const a = sanitizeAnalysis(
       { lead: "L", points: [{ argumentId: 77, text: "A point." }] },
       authors,
@@ -163,7 +162,6 @@ describe("sanitizeAnalysis", () => {
     expect(a.points[0]?.text.length).toBeLessThanOrEqual(POINT_MAX_CHARS + 1);
   });
 
-  // The hot path 500s if this throws, so every wrong shape must degrade.
   it.each([
     ["null", null],
     ["a string", "not an object"],

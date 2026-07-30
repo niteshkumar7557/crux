@@ -1,12 +1,12 @@
-// A username is a URL segment (`/profile/<username>`), so it is constrained to
-// what is unambiguous and safe there. Pure + tested; the frontend mirrors this
-// rule in `app/_utils/username.ts` and the two must not drift.
+// What a username may be. It becomes a URL segment, so it is constrained to what is
+// unambiguous there. Duplicated in frontend/app/_utils/username.ts — the frontend
+// cannot import this. Change both.
+// Spec: game-theory.md §13
 
 export const USERNAME_MIN = 3;
 export const USERNAME_MAX = 20;
 export const USERNAME_RE = /^[a-z0-9_]+$/;
 
-/** Names that would collide with a route or read as system-owned. */
 export const RESERVED = new Set([
   "me", "id", "admin", "api", "new", "edit", "settings", "login", "register",
   "logout", "profile", "crux", "root", "support", "help", "about", "rules",
@@ -21,11 +21,6 @@ export type UsernameCheck =
   | { ok: true; value: string }
   | { ok: false; reason: string };
 
-/**
- * Checks run most-specific first, so the message always names the actual
- * problem — "Usernames can't contain spaces." beats a generic charset error
- * for the mistake people actually make.
- */
 export function validateUsername(raw: string): UsernameCheck {
   const value = normalizeUsername(raw);
 
@@ -44,8 +39,6 @@ export function validateUsername(raw: string): UsernameCheck {
   if (!USERNAME_RE.test(value)) {
     return { ok: false, reason: "Use letters, numbers and underscores only." };
   }
-  // At least one letter is load-bearing: it guarantees an all-digits URL
-  // segment is unambiguously a legacy profile id we can redirect.
   if (!/[a-z]/.test(value)) {
     return { ok: false, reason: "Usernames need at least one letter." };
   }

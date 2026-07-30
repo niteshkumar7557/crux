@@ -1,9 +1,11 @@
 "use client";
+
+// Clears the token and the refresh cookie.
+
 import { LuLogOut } from "react-icons/lu";
 import api from "@/app/axios";
 import { useUser } from "@/app/_hooks/useUser";
 
-// Shown only on your own profile; ends the session server-side and locally.
 const LogoutButton = ({ profileId }: { profileId: number }) => {
   const user = useUser();
 
@@ -13,7 +15,6 @@ const LogoutButton = ({ profileId }: { profileId: number }) => {
     try {
       await api.post("/user/logout");
     } catch {
-      // the server session may already be gone — still log out locally
     }
     localStorage.removeItem("access_token");
     window.location.href = "/";

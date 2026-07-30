@@ -1,16 +1,12 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-/* This app switches themes with `data-theme` on <html>, not the `dark` class or
-   a media query, so Tailwind's built-in dark variant would never fire. Rebound
-   here once so `dark:` works everywhere as expected. */
+/* Themes switch on `data-theme`, not the `dark` class or a media query, so
+   Tailwind's built-in dark variant would never fire. Rebound once here. */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-/* ---------------------------------------------------------------------------
-   CRUX DESIGN SYSTEM — "debate-hall editorial"
-   Semantic variables first (so light/dark can swap them), then mapped into
-   Tailwind's @theme below. See docs/design-system.md.
-   -------------------------------------------------------------------------- */
+/* CRUX DESIGN SYSTEM — semantic variables first so light/dark can swap them,
+   then mapped into Tailwind's @theme below. Full reference: docs/design-system.md */
 :root {
   /* paper — the room */
   --paper: #f3edda; /* page background, soft warm cream */
@@ -29,26 +25,20 @@
   --against: #9c4a34; /* the AGAINST camp */
   --draw: #857a55; /* the draw band */
   --plate-ink: #244134; /* captions on plates (constant across modes) */
-  /* The outgoing bubble in the developer DM panel. It cannot be `--ink`: ink
-     inverts to cream at night, which made a user's own messages the brightest
-     blocks on the screen. A forest fill with cream text in BOTH themes instead,
-     so the bubble keeps one identity rather than flipping with the theme. */
+  /* Cannot be `--ink`: ink inverts to cream at night, which would make a user's
+     own messages the brightest blocks on screen. One identity in both themes. */
   --bubble-own: #244134;
   --bubble-own-ink: #f3edda; /* constant, like --plate-ink */
   /* the three metals — podium places and season titles */
   --metal-gold: #8f6e1f;
   --metal-silver: #6b7478;
   --metal-bronze: #8c5a2f;
-  /* modal scrim. Not `ink` at low alpha: ink inverts between themes, and a
-     cream scrim over a dark page lifts the backdrop instead of dimming it. */
+  /* Not `ink` at low alpha: ink inverts, and a cream scrim over a dark page
+     lifts the backdrop instead of dimming it. */
   --scrim: rgba(20, 35, 28, 0.45);
-  /* cast — the system's one depth effect (design-system.md §5). A debate has
-     two camps, and the shadow says which one you are standing over: the FOR
-     panel and its cards cast forest, the AGAINST side casts terracotta. Never
-     black — a neutral shadow on warm paper is a grey haze, and on this page it
-     also throws away the one thing the surface already knows about itself.
-     Low alpha and a short throw on purpose: the cast means "this sits above
-     the page", not "this is floating in space". */
+  /* The cast — the system's one depth effect, and it is never black: a surface
+     that belongs to a camp casts that camp's colour. Low alpha and a short throw
+     on purpose. See design-system.md §5. */
   --cast-for: rgba(47, 107, 79, 0.32);
   --cast-for-soft: rgba(47, 107, 79, 0.16);
   --cast-against: rgba(156, 74, 52, 0.32);
@@ -56,11 +46,8 @@
   /* …and an ink-tinted one for overlays, which belong to no camp. */
   --cast-neutral: rgba(36, 65, 52, 0.24);
   --cast-neutral-soft: rgba(36, 65, 52, 0.12);
-  /* The one true-black drop in the product: the leaderboard champion, which is
-     asked to sit visibly *above* the other two cards rather than merely on a
-     lighter paper. Black on purpose — the ink-tinted cast is too shallow to
-     separate a card from two neighbours it is touching. Kept to that single
-     card (see the note in design-system.md §5). */
+  /* The one true-black drop, and it has exactly one consumer: the leaderboard
+     champion, which must sit above two cards it is touching. */
   --cast-podium: rgba(0, 0, 0, 0.32);
   --cast-podium-soft: rgba(0, 0, 0, 0.16);
 }
@@ -73,9 +60,8 @@
   --ink-soft: #a3b2a4;
   --ink-faint: rgba(236, 229, 208, 0.16);
   --ink-wash: rgba(236, 229, 208, 0.05);
-  /* Lifted off the page tone rather than inverted — a mid forest that reads as
-     the accent bubble against `--paper-raised` (#1b2c24) without glowing.
-     `--bubble-own-ink` stays the cream set in :root. */
+  /* Lifted off the page tone rather than inverted, so it reads as an accent
+     against --paper-raised without glowing. */
   --bubble-own: #2f5241;
   --laurel: #d4ac3a;
   --laurel-bright: #d4ac3a;
@@ -86,26 +72,23 @@
   --metal-silver: #c9d1d4;
   --metal-bronze: #d09a6a;
   --scrim: rgba(4, 9, 7, 0.7);
-  /* The camp colours lighten at night (`--for` goes from #2f6b4f to #63a882),
-     and a light shadow on green-black glows instead of shading. Dark mode
-     casts the same two hues taken down below the page tone — the camp is still
-     legible in the shadow, but the light keeps coming from the same place. */
+  /* The camp colours lighten at night, and a light shadow on green-black glows
+     instead of shading — so dark mode casts the same hues taken down below the
+     page tone. */
   --cast-for: rgba(10, 38, 25, 0.72);
   --cast-for-soft: rgba(10, 38, 25, 0.45);
   --cast-against: rgba(48, 18, 10, 0.72);
   --cast-against-soft: rgba(48, 18, 10, 0.45);
   --cast-neutral: rgba(4, 10, 7, 0.66);
   --cast-neutral-soft: rgba(4, 10, 7, 0.4);
-  /* Black on green-black needs more of itself to register at all. */
+  /* Black on green-black needs more of itself to register. */
   --cast-podium: rgba(0, 0, 0, 0.62);
   --cast-podium-soft: rgba(0, 0, 0, 0.42);
 }
 
-/* `--paper-raised` exists because `--paper-plate` deliberately stays cream in
-   dark mode — that is the landing's whole "archive at night" concept. A feed of
-   cream cards on green-black would be punishing to read, so the product uses
-   three flat paper tones (paper → band → raised) and leaves plates to the
-   landing. Elevation is paper tone; there are no shadows in this system. */
+/* `--paper-raised` exists because `--paper-plate` stays cream in dark mode —
+   right for an engraving, punishing for a feed of text. The product carries
+   elevation in three paper tones: paper → band → raised. */
 
 @theme {
   /* ---- the palette ---- */
@@ -130,11 +113,8 @@
   --color-metal-bronze: var(--metal-bronze);
   --color-scrim: var(--scrim);
 
-  /* ---- depth ----
-     `shadow-cast-for` / `-against` for anything that belongs to a camp, plus a
-     `-deep` step for the hover state; `shadow-cast` is the neutral one, for
-     overlays. See the note on `--cast-for` above — everything not on this short
-     list is still flat paper and hairlines. */
+  /* ---- depth ---- Camp casts, a `-deep` hover step, and a neutral for overlays.
+     Everything not on this short list is flat paper and hairlines. */
   --shadow-cast-for: 0 10px 22px -12px var(--cast-for),
     0 3px 8px -5px var(--cast-for-soft);
   --shadow-cast-for-deep: 0 16px 30px -14px var(--cast-for),
@@ -147,43 +127,38 @@
     0 3px 8px -5px var(--cast-neutral-soft);
   --shadow-cast-deep: 0 16px 30px -14px var(--cast-neutral),
     0 5px 11px -6px var(--cast-neutral-soft);
-  /* The champion's lift — a longer, blacker throw than the cast, because it has
-     to read as a card standing in front of two others. One consumer only. */
+  /* The champion's lift. One consumer only. */
   --shadow-podium: 0 26px 50px -20px var(--cast-podium),
     0 10px 20px -12px var(--cast-podium-soft);
   --shadow-podium-deep: 0 38px 66px -22px var(--cast-podium),
     0 14px 26px -14px var(--cast-podium-soft);
 
-  /* ---- type ----
-     Three faces, no more (design-system.md §3). To swap the display face,
-     change the Anton import in app/layout.tsx and keep the variable name. */
+  /* ---- type ---- Three faces, no more. To swap the display face, change the
+     Anton import in app/layout.tsx and keep the variable name. */
   --font-display: var(--font-anton), var(--font-space-grotesk), sans-serif;
   --font-headline: var(--font-newsreader), serif;
   --font-body: var(--font-newsreader), serif;
   --font-label: var(--font-space-grotesk), monospace;
 
-  /* ---- shape ----
-     Square everywhere except pills and arches (design-system.md §5). */
+  /* ---- shape ---- Square everywhere except pills and arches. */
   --radius: 0px;
   --radius-lg: 0px;
   --radius-xl: 0px;
   --radius-full: 9999px;
 }
 
-/* Keyboard focus — visible everywhere unless a component ships its own, which
-   says so with `data-focus-ring="self"`.
-   The opt-out has to be an attribute: this rule is unlayered, so it outranks
-   anything in Tailwind's `utilities` layer no matter how specific — a
+/* Keyboard focus, visible everywhere unless a component opts out with
+   data-focus-ring="self". The opt-out must be an attribute: this rule is
+   unlayered, so it outranks Tailwind's utilities layer however specific — a
    `focus:outline-none` on the element does nothing against it. */
 :focus-visible:not([data-focus-ring="self"]) {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
 
-/* Tailwind v4's preflight resets buttons to `cursor: default`, which is why
-   controls that never got an explicit `cursor-pointer` class read as dead. Every
-   control in this app is a pointer control, so it is restored once here rather
-   than class by class — a new button is then correct by default. */
+/* Tailwind v4's preflight resets buttons to `cursor: default`, which makes
+   controls read as dead. Restored once here, so a new button is correct by
+   default rather than needing a class. */
 button:not(:disabled),
 [role="button"]:not([aria-disabled="true"]),
 summary,
@@ -204,20 +179,18 @@ button:disabled {
   }
 }
 
-/* Engravings melt into whatever paper they sit on; the generated JPEGs all
-   carry slightly different cream backgrounds, and multiply erases them.
-   Landing only — the product carries no engravings. */
+/* Multiply erases each image's slightly different cream background into
+   whatever paper it sits on. Landing only. */
 .engraving {
   mix-blend-mode: multiply;
 }
 
-/* The arch of the arena doors. A shape, not an image, so the product uses it
-   too (profile portraits) even though it ships no engravings. */
+/* The arena-door arch. A shape, not an image, so the product uses it too. */
 .plate-arch {
   border-radius: calc(infinity * 1px) calc(infinity * 1px) 0 0;
 }
 
-/* Big display setting — Anton needs tight leading and a whisper of tracking. */
+/* Anton needs tight leading and a whisper of tracking. */
 .display-type {
   font-family: var(--font-display);
   text-transform: uppercase;
@@ -226,9 +199,9 @@ button:disabled {
 }
 
 /* Landing reveal targets start invisible; gsap flips them in on scroll. Scoped
-   to .landing because [data-reveal] is app-wide vocabulary (see ui/Reveal) — a
-   looser selector blanks the arena. The page ships a <noscript> override so
-   the page stays fully readable without JS. */
+   to .landing because [data-reveal] is app-wide vocabulary — a looser selector
+   blanks the arena. The page ships a <noscript> override so it stays readable
+   without JS. */
 .landing [data-reveal],
 .landing [data-hero] {
   opacity: 0;

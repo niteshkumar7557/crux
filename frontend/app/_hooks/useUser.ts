@@ -1,3 +1,5 @@
+// The signed-in user, or null.
+
 import { useEffect, useState } from "react";
 import { getUser } from "../_utils/getUser";
 import { jwtPayload } from "../_types/jwt";

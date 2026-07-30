@@ -1,9 +1,8 @@
+// Site footer and the laurel seal.
+
 import Link from "next/link";
 import Logo from "./ui/Logo";
 
-// The two icon buttons that used to sit on the right ("Developer terminal",
-// "Share Crux") carried no handler — they were decoration shaped like controls.
-// A footer of tracked labels says the same thing honestly.
 const links = [
   { label: "Leaderboard", href: "/leaderboard" },
   { label: "Rules of Engagement", href: "/rules" },

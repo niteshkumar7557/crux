@@ -1,10 +1,13 @@
 "use client";
+
+// The shared chrome. noNavRoutes are the pages that ship their own — the landing and
+// the two auth pages.
+
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { usePathname } from "next/navigation";
 import React from "react";
 
-// "/" is the story landing page — it ships its own header and footer.
 const noNavRoutes = ["/login", "/register", "/"];
 
 const ConditionalLayout = ({ children }: { children: React.ReactNode }) => {
@@ -21,9 +24,6 @@ const ConditionalLayout = ({ children }: { children: React.ReactNode }) => {
         </a>
       )}
       {showNav && <Navbar />}
-      {/* `grow` takes the slack under a short page so the footer lands at the
-          bottom of the viewport; the inner column lets a page hand that slack
-          to one of its own sections (see DebateView). */}
       {showNav ? (
         <main id="main-content" className="grow flex flex-col">
           {children}

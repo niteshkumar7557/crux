@@ -1,3 +1,7 @@
+// The profile, split in two: a server-rendered shell (identity and standing) and a
+// client-fetched activity payload, so nothing slow blocks first paint.
+// Spec: game-theory.md §13, §14
+
 import type { Response, Request } from "express";
 import pool from "../db/index.js";
 import {
@@ -9,14 +13,8 @@ import { validateUsername } from "../lib/username.logic.js";
 import config from "../config/index.js";
 import { fillLedgerWeeks } from "../lib/ledger.logic.js";
 
+// §13 tier ladder. Duplicated in frontend/app/_utils/logicScore.ts — change both.
 function convertLogicScore(score: number) {
-  // §9 tier ladder. Duplicated in frontend/app/_utils/logicScore.ts — see
-  // docs/CODEBASE_GUIDE.md §6a.
-  // Beginner     0-99
-  // Intermediate 100-199
-  // Skilled      200-299
-  // Expert       300-399
-  // Master       400+
   let reputation = "beginner";
   if (score >= 400) {
     reputation = "master";
@@ -31,18 +29,7 @@ function convertLogicScore(score: number) {
   return { reputation };
 }
 
-/**
- * Both profile endpoints take a username and neither trusts it: a segment
- * that cannot be a username is rejected before it reaches the database.
- * Returns the user row, or null for malformed and unknown handles alike —
- * they are the same 404 to a caller.
- */
 async function findByUsername(raw: string | string[] | undefined) {
-  // req.params values type as `string | string[] | undefined` under Express's
-  // own ParamsDictionary (see admin.controller.ts's parseId for the same
-  // guard) — a single-segment route never actually produces the array case,
-  // but the type checker doesn't know that, and an unexpected shape here is
-  // just another malformed handle: same 404.
   if (typeof raw !== "string") return null;
 
   const check = validateUsername(raw);
@@ -56,7 +43,6 @@ async function findByUsername(raw: string | string[] | undefined) {
   return rows[0] ?? null;
 }
 
-/** Resolves a legacy numeric profile id to its username, for the redirect. */
 export async function getUsernameById(req: Request, res: Response) {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
@@ -76,10 +62,6 @@ export async function getUsernameById(req: Request, res: Response) {
   }
 }
 
-/**
- * The dossier shell — identity and standing (§9). Server-rendered, so it is
- * kept to one lookup plus four parallel queries.
- */
 export async function getProfileShell(req: Request, res: Response) {
   try {
     const user = await findByUsername(req.params.username);
@@ -88,9 +70,6 @@ export async function getProfileShell(req: Request, res: Response) {
     const logic = Number(user.logic_score);
 
     const [rankRes, recordRes, seasonRes, titlesRes] = await Promise.all([
-      // Mirrors the leaderboard's RANK() OVER (ORDER BY logic_score DESC,
-      // id ASC) exactly, without sorting the whole table. The previous
-      // hand-rolled version reported a 0-logic user as rank #1.
       pool.query(
         `SELECT COUNT(*) + 1 AS rank FROM users
          WHERE logic_score > $1 OR (logic_score = $1 AND id < $2);`,
@@ -104,13 +83,11 @@ export async function getProfileShell(req: Request, res: Response) {
          FROM debate_results WHERE user_id = $1;`,
         [user.id],
       ),
-      // §10: logic earned inside the current season window.
       pool.query(
         `SELECT COALESCE(SUM(amount), 0)::int AS n FROM logic_events
          WHERE user_id = $1 AND created_at >= $2;`,
         [user.id, currentSeasonStart()],
       ),
-      // §10: permanent, stacking titles — every one ever earned, newest first.
       pool.query(
         `SELECT season_key AS "seasonKey", season_number AS "seasonNumber",
                 rank, title, frame
@@ -142,7 +119,6 @@ export async function getProfileShell(req: Request, res: Response) {
         },
         mvpCount: record.mvpCount,
       },
-      // §14 puts the season window on the profile as well as the leaderboard.
       season: {
         number: seasonNumber(),
         logic: seasonRes.rows[0].n,
@@ -156,11 +132,6 @@ export async function getProfileShell(req: Request, res: Response) {
   }
 }
 
-/**
- * Everything earned — the ledger, craft stats, live debates and concluded
- * history. Fetched client-side after mount so none of it blocks first paint;
- * nothing here is worth indexing.
- */
 export async function getProfileActivity(req: Request, res: Response) {
   try {
     const user = await findByUsername(req.params.username);
@@ -170,14 +141,11 @@ export async function getProfileActivity(req: Request, res: Response) {
 
     const [ledgerRes, craftRes, bestRes, liveRes, historyRes] =
       await Promise.all([
-        // §8: the ledger includes season-only rows (the -5 loss penalty), so a
-        // week can net negative. That is the honest reading of the month.
-        // to_char (not a bare date_trunc DATE) is deliberate: node-pg parses a
-        // DATE column into a JS Date at local midnight, which can shift the
-        // day by one under a negative UTC offset. Text sidesteps that, and
-        // fillLedgerWeeks below keys off the string unchanged.
         pool.query(
-          `SELECT to_char(date_trunc('week', created_at), 'YYYY-MM-DD') AS "weekStart",
+          // to_char rather than a bare DATE: node-pg parses a DATE column into a JS
+        // Date at local midnight, which shifts the day under a negative UTC
+        // offset. Text sidesteps that, and fillLedgerWeeks keys off it unchanged.
+        `SELECT to_char(date_trunc('week', created_at), 'YYYY-MM-DD') AS "weekStart",
                   SUM(amount)::int AS amount
            FROM logic_events
            WHERE user_id = $1
@@ -200,8 +168,6 @@ export async function getProfileActivity(req: Request, res: Response) {
            ORDER BY c.points DESC, c.id DESC LIMIT 1;`,
           [user.id],
         ),
-        // One row per live debate they are in, carrying both facts: whether
-        // they authored it, and the side their FIRST argument locked (§4).
         pool.query(
           `SELECT a.id, a.content AS claim, a.closes_at AS "closesAt",
                   (a.user_id = $1) AS "isAuthor",
@@ -247,11 +213,6 @@ export async function getProfileActivity(req: Request, res: Response) {
   }
 }
 
-/**
- * §9 says a profile carries "an AI-written blurb describing how you think".
- * §12 defines five AI personas and none of them writes it, so v1 ships an
- * owner-editable bio and the blurb is deferred (docs/future-features.md).
- */
 export const BIO_MAX = 280;
 
 export async function updateBio(req: Request, res: Response) {
@@ -261,8 +222,6 @@ export async function updateBio(req: Request, res: Response) {
   }
 
   try {
-    // users.description is TEXT, so the cap is enforced here and mirrored in
-    // the editor's counter.
     const { rows } = await pool.query(
       `UPDATE users SET description = $1 WHERE id = $2
        RETURNING description AS bio;`,

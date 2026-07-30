@@ -1,3 +1,5 @@
+// What the access token carries.
+
 export interface jwtPayload {
   id: number;
   role: string;

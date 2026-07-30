@@ -1,3 +1,5 @@
+// Pick a domain, or let the Arbiter choose.
+
 import { LuListFilter, LuWandSparkles } from "react-icons/lu";
 import { AUTO_DOMAIN } from "@/app/motion/new/types";
 
