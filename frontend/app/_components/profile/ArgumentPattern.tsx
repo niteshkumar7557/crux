@@ -72,7 +72,7 @@ const ArgumentPattern = ({ craft }: { craft: CraftStats }) => {
       )}
 
       <p className="font-label text-[10px] uppercase tracking-widest text-ink-soft mt-6">
-        Standalone arguments cap at 5 logic. Replies reach 8.
+        Standalone arguments cap at 7 logic. Replies reach 10.
       </p>
     </div>
   );

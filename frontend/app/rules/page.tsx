@@ -24,11 +24,11 @@ const RULES = [
   },
   {
     title: "Reply to earn the most",
-    body: "Every argument is scored 1–8 on how much it moves the argument. A standalone argument is capped at 5, because it engages nothing specific. A reply to a named opponent reaches the full 8. The exception: while the opposing side is still empty there is nothing to reply to, so the cap does not apply.",
+    body: "Every argument is scored 2–10 on how much it moves the argument. A standalone argument is capped at 7, because it engages nothing specific. A reply to a named opponent reaches the full 10. The exception: while the opposing side is still empty there is nothing to reply to, so the cap does not apply.",
   },
   {
-    title: "Three arguments at full value",
-    body: "Your first three arguments in a debate score in full. The fourth and every one after is halved, with a floor of 1. Reposting an argument word for word is refused outright — yours or anyone else's — and making a point that has already been made on your side scores 1, however it is reworded. Volume never beats sharpness; flooding a debate is a losing strategy by arithmetic.",
+    title: "Say something, or say nothing",
+    body: "An empty post is not an argument and is not posted at all: bare agreement, bare disagreement, or insisting the evidence disagrees without naming any. Reposting an argument word for word is refused outright — yours or anyone else's — and repeating a point already made on your side scores 2, however it is reworded. Add a reason, an example, a mechanism or a burden and it counts as your own.",
   },
   {
     title: "Attack the argument, never the person",

@@ -391,22 +391,21 @@ const Articles = () => {
       <Article numeral="IV" kicker="Article four" title={<>Replies win <Serif>debates</Serif></>}>
         <Body>
           <p data-reveal>
-            Every argument is scored 1–8 by an AI analyst — not on eloquence,
+            Every argument is scored 2–10 by an AI judge — not on eloquence,
             and not on whether it agrees, but on how much it{" "}
             <em className="italic">moves the argument</em>.
           </p>
           <p data-reveal>
             The full range belongs to <strong className="text-ink">replies</strong>:
             pick a specific opposing argument and dismantle it. A standalone
-            point that engages nobody caps at 5. Your fourth argument in the
-            same debate scores half — volume never beats sharpness.
+            point that engages nobody caps at 7. A point already made on your
+            side scores the floor — volume never beats sharpness.
           </p>
           <p data-reveal className="flex items-start gap-2">
             <PiArrowBendDownRight className="mt-1.5 shrink-0 text-laurel" />
             <span>
               Every point you earn arrives with its arithmetic shown — judged
-              score, cap, halving — so the game teaches you its rules as you
-              play it.
+              score and cap — so the game teaches you its rules as you play it.
             </span>
           </p>
         </Body>

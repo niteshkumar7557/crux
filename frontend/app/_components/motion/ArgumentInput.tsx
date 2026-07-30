@@ -1,8 +1,13 @@
 "use client";
 
 // The composer, and most of the transparency layer: the side badge, the
-// standalone-vs-reply hint, the full-value counter and the abuse fine print all live
-// here, because every one of them must be visible BEFORE it can bite.
+// standalone-vs-reply hint and the abuse fine print all live here, because every
+// one of them must be visible BEFORE it can bite.
+//
+// The one rule deliberately NOT surfaced here is the minimum length (§9). Naming
+// it would teach a user to pad to it; leaving it silent means a throwaway post
+// gets the same "think more" as a padded one. Do not add a character counter or
+// a length-aware disabled state.
 // Spec: game-theory.md §19
 
 import { getUser } from "@/app/_utils/getUser";
@@ -152,6 +157,19 @@ const ArgumentInput = ({
           body:
             err.response.data?.message ??
             "You're posting fast — try again in a minute.",
+        });
+        return;
+      }
+      // §9: refused for having no argument in it. The draft is deliberately NOT
+      // cleared — the fix is to add a reason, not to start again. Both refusal
+      // layers land here identically, which is what keeps the cheap one's
+      // threshold undiscoverable.
+      if (isAxiosError(err) && err.response?.status === 422) {
+        setNotice({
+          title: "Needs An Argument",
+          body:
+            err.response.data?.message ??
+            "Appreciated the effort — but this arena requires an argument. Think more.",
         });
         return;
       }

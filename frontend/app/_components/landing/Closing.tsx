@@ -26,11 +26,11 @@ gsap.registerPlugin(useGSAP, ScrollTrigger);
 const defenses = [
   {
     title: "Reply to score high",
-    body: "A language model can write a polished essay about anything. It cannot read the room, pick the most vulnerable live argument, and dismantle that. Standalones cap at 5; replies reach 8 — the game's best move is the one that's hardest to automate.",
+    body: "A language model can write a polished essay about anything. It cannot read the room, pick the most vulnerable live argument, and dismantle that. Standalones cap at 7; replies reach 10 — the game's best move is the one that's hardest to automate.",
   },
   {
     title: "Sharp beats loud",
-    body: "Your first three arguments in a debate score in full; everything after is halved. Flooding a debate is a losing strategy by arithmetic, not by moderation.",
+    body: "A post with no argument in it — bare agreement, bare disagreement — is refused outright and never appears. A point already made on your side scores the floor, however it is reworded. Volume earns nothing on its own.",
   },
   {
     title: "Pick a side, publicly",
@@ -40,9 +40,8 @@ const defenses = [
 
 const bench = [
   ["The Arbiter", "Reads every motion before it goes live; rejects the unarguable, always with a sharper rewrite."],
-  ["The Opening Analyst", "Writes the strongest opening case for each side the moment a motion passes."],
-  ["The Analyst", "Screens each argument for abuse, scores it 1–8, and rewrites the side's running case — crediting you."],
-  ["The Probability Judge", "Keeps the live split honest, judging the two written cases — never the noise."],
+  ["The Opening Brief", "Names what each side must prove the moment a motion passes — the terrain, never the arguments."],
+  ["The Judge", "Screens each argument, scores it 2–10, rewrites the side's running case, and moves the live split — in one ruling."],
   ["The Verdict Judge", "Reads everything at lock and rules: winner, margin, MVP, and the closing in writing."],
 ];
 
