@@ -19,7 +19,6 @@ COPY public/ public/
 # by filename at the project root — omit them and the build still succeeds while the
 # SDK silently never initializes, which is exactly how this went unnoticed.
 COPY instrumentation.ts instrumentation-client.ts ./
-COPY sentry.server.config.ts sentry.edge.config.ts ./
 
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
