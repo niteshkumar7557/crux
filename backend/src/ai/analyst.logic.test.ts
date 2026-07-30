@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   buildAnalystPrompt,
   buildOwnSideBlock,
-  buildProbabilityPrompt,
+  clampAffirmative,
   scoreArgument,
   NONE_YET,
   OWN_SIDE_ARGUMENT_LIMIT,
@@ -13,62 +13,78 @@ const base = {
   rawPoints: 7,
   isReply: false,
   opponentHasArguments: true,
-  priorCount: 0,
 };
 
 describe("scoreArgument", () => {
   it("gives a reply the full range", () => {
-    const r = scoreArgument({ ...base, rawPoints: 8, isReply: true });
-    expect(r.points).toBe(8);
+    const r = scoreArgument({ ...base, rawPoints: 10, isReply: true });
+    expect(r.points).toBe(10);
     expect(r.capped).toBe(false);
-    expect(r.halved).toBe(false);
   });
 
-  it("caps a standalone argument at 5", () => {
-    const r = scoreArgument({ ...base, rawPoints: 7 });
-    expect(r.judged).toBe(7);
-    expect(r.points).toBe(5);
+  it("caps a standalone argument at 7", () => {
+    const r = scoreArgument({ ...base, rawPoints: 9 });
+    expect(r.judged).toBe(9);
+    expect(r.points).toBe(7);
     expect(r.capped).toBe(true);
   });
 
-  it("does not cap a standalone below the cap", () => {
-    const r = scoreArgument({ ...base, rawPoints: 3 });
-    expect(r.points).toBe(3);
+  it("does not cap a standalone sitting exactly on the cap", () => {
+    const r = scoreArgument({ ...base, rawPoints: 7 });
+    expect(r.points).toBe(7);
     expect(r.capped).toBe(false);
   });
 
   it("exempts a standalone when the opposing side is empty", () => {
-    const r = scoreArgument({ ...base, rawPoints: 8, opponentHasArguments: false });
-    expect(r.points).toBe(8);
+    const r = scoreArgument({ ...base, rawPoints: 10, opponentHasArguments: false });
+    expect(r.points).toBe(10);
     expect(r.capped).toBe(false);
   });
 
-  it("halves the 4th argument in a debate", () => {
-    const r = scoreArgument({ ...base, rawPoints: 7, isReply: true, priorCount: 3 });
-    expect(r.points).toBe(3);
-    expect(r.halved).toBe(true);
+  it("clamps a nonsense score from the model into 2-10", () => {
+    expect(scoreArgument({ ...base, rawPoints: 99, isReply: true }).points).toBe(10);
+    expect(scoreArgument({ ...base, rawPoints: -4, isReply: true }).points).toBe(2);
+    expect(scoreArgument({ ...base, rawPoints: NaN, isReply: true }).points).toBe(2);
+    expect(scoreArgument({ ...base, rawPoints: 1, isReply: true }).points).toBe(2);
   });
 
-  it("applies the cap before the halving", () => {
-    const r = scoreArgument({ ...base, rawPoints: 7, priorCount: 3 });
-    expect(r.points).toBe(2);
-    expect(r.capped).toBe(true);
-    expect(r.halved).toBe(true);
+  it("no longer damps a prolific arguer — the halving rule is gone", () => {
+    const r = scoreArgument({ ...base, rawPoints: 8, isReply: true });
+    expect(r.points).toBe(8);
+    expect(r).not.toHaveProperty("halved");
+  });
+});
+
+describe("clampAffirmative", () => {
+  it("keeps a sane value", () => {
+    expect(clampAffirmative(64)).toBe(64);
   });
 
-  it("never halves below 1", () => {
-    const r = scoreArgument({ ...base, rawPoints: 1, isReply: true, priorCount: 9 });
-    expect(r.points).toBe(1);
+  it("rounds a fractional value", () => {
+    expect(clampAffirmative(63.6)).toBe(64);
   });
 
-  it("clamps a nonsense score from the model into 1-8", () => {
-    expect(scoreArgument({ ...base, rawPoints: 99, isReply: true }).points).toBe(8);
-    expect(scoreArgument({ ...base, rawPoints: -4, isReply: true }).points).toBe(1);
-    expect(scoreArgument({ ...base, rawPoints: NaN, isReply: true }).points).toBe(1);
+  it("clamps to the 2-98 sanity bounds", () => {
+    expect(clampAffirmative(130)).toBe(98);
+    expect(clampAffirmative(0)).toBe(2);
+    expect(clampAffirmative(-20)).toBe(2);
+  });
+
+  it("allows a landslide the old 20-80 floor would have hidden", () => {
+    expect(clampAffirmative(91)).toBe(91);
+    expect(clampAffirmative(9)).toBe(9);
+  });
+
+  it("returns null for garbage, so the caller can skip the update", () => {
+    expect(clampAffirmative(NaN)).toBeNull();
+    expect(clampAffirmative(undefined)).toBeNull();
+    expect(clampAffirmative("nope")).toBeNull();
   });
 });
 
 describe("buildAnalystPrompt", () => {
+  const prior = { priorAffirmative: 50, priorNegative: 50 };
+
   it("shows the opponent as (none yet) when their side is empty", () => {
     const p = buildAnalystPrompt({
       motion: "Nuclear power is the fastest path to decarbonisation.",
@@ -81,6 +97,7 @@ describe("buildAnalystPrompt", () => {
       replyTo: null,
       ownSideArguments: [],
       newArgumentId: 63,
+      ...prior,
     });
     expect(p).toContain(`OPPONENT ANALYSIS: ${NONE_YET}`);
     expect(p).not.toContain("REPLYING TO");
@@ -98,6 +115,7 @@ describe("buildAnalystPrompt", () => {
       replyTo: { username: "maya", content: "Nuclear is the only baseload." },
       ownSideArguments: [],
       newArgumentId: 63,
+      ...prior,
     });
     expect(p).toContain("REPLYING TO @maya");
     expect(p).toContain("Nuclear is the only baseload.");
@@ -117,12 +135,48 @@ describe("buildAnalystPrompt", () => {
         { id: 41, username: "maya", content: "Nuclear is the only baseload." },
       ],
       newArgumentId: 63,
+      ...prior,
     });
     expect(p).toContain('OWN SIDE ARGUMENTS:\n[#41] @maya: "Nuclear is the only baseload."');
   });
 
   it("marks an empty own side as (none yet) rather than a blank block", () => {
     expect(buildOwnSideBlock([])).toBe(NONE_YET);
+  });
+});
+
+describe("buildAnalystPrompt — the prior split", () => {
+  const input = {
+    motion: "Nuclear power is the only realistic path to decarbonise.",
+    side: "against" as const,
+    author: "dev",
+    ownAnalysis: "The case against.",
+    opponentAnalysis: "The case for.",
+    ownIsFirst: false,
+    argument: "France was a one-off.",
+    replyTo: null,
+    ownSideArguments: [],
+    newArgumentId: 63,
+    priorAffirmative: 60,
+    priorNegative: 40,
+  };
+
+  it("renders the prior split, so the judge updates it rather than re-deriving", () => {
+    expect(buildAnalystPrompt(input)).toContain("PRIOR SPLIT: FOR 60 / AGAINST 40");
+  });
+
+  it("defaults a null prior split to 50/50", () => {
+    const p = buildAnalystPrompt({
+      ...input,
+      priorAffirmative: null,
+      priorNegative: null,
+    });
+    expect(p).toContain("PRIOR SPLIT: FOR 50 / AGAINST 50");
+  });
+
+  it("puts the prior split ahead of the argument it judges", () => {
+    const p = buildAnalystPrompt(input);
+    expect(p.indexOf("PRIOR SPLIT")).toBeLessThan(p.indexOf("ARGUMENT:"));
   });
 });
 
@@ -154,36 +208,5 @@ describe("buildOwnSideBlock", () => {
     expect(buildOwnSideBlock([argument(1, "Short and whole.")])).toContain(
       '"Short and whole."',
     );
-  });
-});
-
-describe("buildProbabilityPrompt", () => {
-  const probInput = {
-    motion: "Nuclear power is the only realistic path to decarbonise.",
-    priorAffirmative: 60,
-    priorNegative: 40,
-    forAnalysis: "The case for.",
-    againstAnalysis: "The case against.",
-    latest: { username: "dev", side: "against" as const, content: "France was a one-off." },
-  };
-
-  it("renders the prior split and the latest argument, side uppercased", () => {
-    const p = buildProbabilityPrompt(probInput);
-    expect(p).toContain("PRIOR SPLIT: FOR 60 / AGAINST 40");
-    expect(p).toContain(`LATEST ARGUMENT — @dev [AGAINST]: "France was a one-off."`);
-  });
-
-  it("defaults a null prior split to 50/50", () => {
-    const p = buildProbabilityPrompt({
-      ...probInput,
-      priorAffirmative: null,
-      priorNegative: null,
-    });
-    expect(p).toContain("PRIOR SPLIT: FOR 50 / AGAINST 50");
-  });
-
-  it("shows an empty analysis as (none yet)", () => {
-    const p = buildProbabilityPrompt({ ...probInput, forAnalysis: null });
-    expect(p).toContain(`FOR analysis: ${NONE_YET}`);
   });
 });
