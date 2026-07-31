@@ -117,7 +117,7 @@ const Leaderboard = async ({ searchParams }: { searchParams: SearchParams }) => 
           </h1>
           <p className="mt-4 text-ink-soft font-body text-lg max-w-lg leading-relaxed">
             {tab === "season"
-              ? "This month's standings. Logic earned since the 1st — everyone started at zero."
+              ? "This season's standings. Logic earned since it opened — everyone started at zero."
               : "Career standings. Every point of logic ever earned, since the beginning."}
           </p>
         </div>
@@ -159,9 +159,9 @@ const Leaderboard = async ({ searchParams }: { searchParams: SearchParams }) => 
         <span className="font-label text-[10px] uppercase tracking-widest text-ink-soft block mb-1">
           Season {season.season} · closes at month end, UTC
         </span>
-        The top 3 on the 1st earn a permanent title and avatar frame. The season
-        board counts only logic earned this month; the all-time board never
-        falls.
+        The top 3 when it closes earn a permanent title and avatar frame — a
+        season nobody scored in awards nothing. The season board counts only
+        logic earned this season; the all-time board never falls.
       </p>
 
       {rows.length === 0 ? (

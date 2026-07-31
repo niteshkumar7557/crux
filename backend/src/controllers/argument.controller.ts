@@ -367,19 +367,27 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
     }
 
     // §19: the season standing the points pop-up reconciles the award against.
-    // Rank is "how many people are strictly ahead, plus one".
+    // Rank is "how many people sort strictly ahead of me, plus one", where ahead
+    // means more logic, or the same logic and a lower id.
+    //
+    // Both halves matter. The tiebreak is the same one the season board ranks by
+    // (arena.controller.ts), so the number here and the number there agree — and
+    // totals covers EVERY user rather than only those with events this season, or
+    // a user on 0 would be ranked against a table that does not contain them.
     const standing = await pool.query(
       `WITH totals AS (
-         SELECT user_id, SUM(amount)::int AS logic
-         FROM logic_events
-         WHERE created_at >= $1
-         GROUP BY user_id
+         SELECT u.id AS user_id,
+                COALESCE(SUM(le.amount) FILTER (WHERE le.created_at >= $1), 0)::int AS logic
+         FROM users u
+         LEFT JOIN logic_events le ON le.user_id = u.id
+         GROUP BY u.id
        ), mine AS (
          SELECT COALESCE((SELECT logic FROM totals WHERE user_id = $2), 0) AS logic
        )
        SELECT (SELECT logic FROM mine) AS season_logic,
-              (SELECT COUNT(*) + 1 FROM totals
-                WHERE logic > (SELECT logic FROM mine))::int AS season_rank`,
+              (SELECT COUNT(*) + 1 FROM totals, mine
+                WHERE totals.logic > mine.logic
+                   OR (totals.logic = mine.logic AND totals.user_id < $2))::int AS season_rank`,
       [currentSeasonStart(), userId],
     );
 

@@ -122,7 +122,7 @@ export async function getSidebarData(req: Request, res: Response) {
                 avatar,
                 logic_score AS "logicScore",
                 id,
-                RANK () OVER (ORDER BY logic_score DESC, id ASC) AS rank
+                ROW_NUMBER() OVER (ORDER BY logic_score DESC, id ASC) AS rank
             FROM users
             ORDER BY
                 logic_score DESC,
@@ -191,7 +191,7 @@ export async function getLeaderboardData(req: Request, res: Response) {
                     u.username,
                     u.avatar,
                     u.logic_score AS "logicScore",
-                    RANK () OVER (ORDER BY u.logic_score DESC, u.id ASC)::int AS rank,
+                    ROW_NUMBER() OVER (ORDER BY u.logic_score DESC, u.id ASC)::int AS rank,
                     COALESCE(a.count, 0)::int AS "motionCount",
                     COALESCE(c.count, 0)::int AS "argumentCount"
                 FROM users u
@@ -234,11 +234,16 @@ export async function getSeasonLeaderboard(req: Request, res: Response) {
     if (page > totalPages) page = totalPages;
 
     const standings = await pool.query(
+      // ROW_NUMBER, not RANK, and the id tiebreak is load-bearing: a season opens
+      // with every user on 0, and a RANK without a unique key put all of them at
+      // rank 1. Positions on a board are distinct by definition — the function
+      // enforces that rather than a tiebreak column someone can drop.
       `WITH board AS (
          SELECT u.id, u.name, u.username, u.avatar,
                 COALESCE(SUM(le.amount) FILTER (WHERE le.created_at >= $1), 0)::int AS "seasonLogic",
-                RANK() OVER (
-                  ORDER BY COALESCE(SUM(le.amount) FILTER (WHERE le.created_at >= $1), 0) DESC
+                ROW_NUMBER() OVER (
+                  ORDER BY COALESCE(SUM(le.amount) FILTER (WHERE le.created_at >= $1), 0) DESC,
+                           u.id ASC
                 )::int AS rank
          FROM users u
          LEFT JOIN logic_events le ON le.user_id = u.id
