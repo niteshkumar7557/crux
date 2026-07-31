@@ -20,7 +20,7 @@ the code re-validates and which it takes on trust**. Read that before loosening 
 
 - **JSON only.** `ai/llm.ts` sends `response_format: { type: "json_object" }` and parses through
   `jsonrepair`, retrying `LLM_RETRIES` times. Every prompt must state its exact return shape.
-- **One model runs all five** (`deepseek/deepseek-v4-flash` via OpenRouter, swappable by env).
+- **One model runs all five** (`deepseek/deepseek-v4-flash:nitro` via OpenRouter, swappable by env).
   There is no smart/fast split — a prompt that only works on a bigger model does not work.
 - **Reasoning is off for all five.** Thinking tokens are billed as output *and* counted against
   `max_tokens`, so leaving it on truncates the shorter calls into invalid JSON — and on

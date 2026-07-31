@@ -236,7 +236,7 @@ awarded.
 ### The five personas
 
 All go through `ai/llm.ts` → `llmJson()` → an OpenAI-compatible `/chat/completions` endpoint
-(OpenRouter, `deepseek/deepseek-v4-flash`, swappable by env). **One model runs all five.** Each
+(OpenRouter, `deepseek/deepseek-v4-flash:nitro`, swappable by env). **One model runs all five.** Each
 persona is one system prompt, one per file in **`backend/src/ai/prompts/`** — those files are the
 live strings the controllers import, and each carries a header documenting its inputs, its JSON
 contract, and which fields the code re-validates versus takes on trust. Start at

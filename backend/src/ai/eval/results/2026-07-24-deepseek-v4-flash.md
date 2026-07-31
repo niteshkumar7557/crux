@@ -1,7 +1,7 @@
 # Crux judgment eval — baseline
 
 **Date:** 2026-07-24  
-**Model:** deepseek/deepseek-v4-flash (via OpenRouter)  
+**Model:** deepseek/deepseek-v4-flash:nitro (via OpenRouter)  
 **Command:** `npm run eval`
 
 Scoring bands are ranges and probability is directional — the judge is stochastic (temp 0.2). A FAIL row shows the model output vs. the expected label. Re-run after any prompt or model change and compare.
@@ -11,7 +11,7 @@ Scoring bands are ranges and probability is directional — the judge is stochas
 > crux-backend@1.0.0 eval
 > npx tsx src/ai/eval/run.ts
 
-Crux judgment eval · 1 run(s)/case · model deepseek/deepseek-v4-flash
+Crux judgment eval · 1 run(s)/case · model deepseek/deepseek-v4-flash:nitro
 
 SCORING (asserted on judged 1-8)
   PASS  score-01  1/1   judged=8 abused=false (want 7-8)         specific evidenced rebuttal, broken English — the top of the scale

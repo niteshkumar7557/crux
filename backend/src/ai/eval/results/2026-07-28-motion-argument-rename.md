@@ -1,7 +1,7 @@
 # Crux judgment eval — the motion/argument rename
 
 **Date:** 2026-07-28
-**Model:** deepseek/deepseek-v4-flash (via OpenRouter)
+**Model:** deepseek/deepseek-v4-flash:nitro (via OpenRouter)
 **Command:** `npm run eval -- --runs=3`
 **Why:** the rename changed the labelled blocks the model reads (`STATEMENT:` →
 `MOTION:`, `COMMENT:` → `ARGUMENT:`, `OWN SIDE COMMENTS` → `OWN SIDE ARGUMENTS`,
