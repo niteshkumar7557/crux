@@ -5,6 +5,7 @@ import {
   formatCertDate,
 } from "./certificate";
 import { TOKENS } from "./verdictCard";
+import { VERDICT_HARD_MAX } from "./certificateType";
 import type { MatchState } from "@/app/motion/types";
 
 const concluded: MatchState = {
@@ -93,8 +94,61 @@ describe("buildCertificate", () => {
     const long = "word ".repeat(40).trim();
     const m = buildCertificate(concluded, long, source)!;
     expect(m.claim.length).toBeGreaterThan(90);
-    expect(m.claim.length).toBeLessThanOrEqual(121);
-    expect(m.claim.endsWith("…")).toBe(true);
+    expect(m.claim.endsWith("…")).toBe(false);
+  });
+});
+
+describe("the certificate carries the whole ruling", () => {
+  const longVerdict = "x".repeat(700);
+  const longClaim = "y".repeat(400);
+
+  it("keeps the full verdict, with no ellipsis", () => {
+    const m = buildCertificate(
+      { ...concluded, verdictText: longVerdict },
+      longClaim,
+      source,
+    )!;
+    expect(m.verdict).toBe(longVerdict);
+    expect(m.verdict).not.toContain("…");
+  });
+
+  it("keeps the full claim, with no ellipsis", () => {
+    const m = buildCertificate(
+      { ...concluded, verdictText: longVerdict },
+      longClaim,
+      source,
+    )!;
+    expect(m.claim).toBe(longClaim);
+    expect(m.claim).not.toContain("…");
+  });
+
+  it("leaves the share card's own fields truncated, so the OG image cannot regress", () => {
+    const m = buildCertificate(
+      { ...concluded, verdictText: longVerdict },
+      longClaim,
+      source,
+    )!;
+    expect(m.card.heroLine.length).toBeLessThanOrEqual(181);
+    expect(m.card.heroLine).toContain("…");
+    expect(m.card.claim).toContain("…");
+  });
+
+  it("backstops a runaway verdict rather than pushing it off the page", () => {
+    const m = buildCertificate(
+      { ...concluded, verdictText: "z".repeat(3000) },
+      "A short motion.",
+      source,
+    )!;
+    expect(m.verdict.length).toBeLessThanOrEqual(VERDICT_HARD_MAX + 1);
+  });
+
+  it("leaves a walkover with nothing to quote", () => {
+    const m = buildCertificate(
+      { ...concluded, winner: "walkover", mvpUsername: null, verdictText: null },
+      "A short motion.",
+      source,
+    )!;
+    expect(m.verdict).toBe("");
   });
 });
 

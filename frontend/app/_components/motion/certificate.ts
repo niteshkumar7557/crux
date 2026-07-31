@@ -1,7 +1,14 @@
 // Builds the certificate model from a concluded debate. Pure.
+//
+// Note the two claims and the two rulings: `card.*` is the SHARE card's, cut to
+// fit a 1200x630 box that has no room to grow, and the top-level `claim` /
+// `verdict` are the certificate's, uncut. They are different documents with
+// different jobs, and loosening the card's cuts would silently break the OG
+// image.
 
 import type { MatchState } from "@/app/motion/types";
 import { buildVerdictCard, truncate, type VerdictCardModel } from "./verdictCard";
+import { VERDICT_HARD_MAX } from "./certificateType";
 import {
   isEmptyAnalysis,
   parseAnalysis,
@@ -9,8 +16,6 @@ import {
 } from "./certificateAnalysis";
 
 export const CERTIFIABLE_STATUS = "concluded";
-
-export const CERT_CLAIM_MAX = 120;
 
 export interface CertificateSource {
   debateId: number;
@@ -24,6 +29,7 @@ export interface CertificateModel {
   card: VerdictCardModel;
   reference: string;
   claim: string;
+  verdict: string;
   authorUsername: string;
   concludedOn: string | null;
   footer: string;
@@ -68,7 +74,11 @@ export function buildCertificate(
     analysis: hasAnalysis
       ? { for: forAnalysis, against: againstAnalysis }
       : null,
-    claim: truncate(claimRaw, CERT_CLAIM_MAX),
+    // The certificate carries the whole ruling and the whole claim. The only cut
+    // is a backstop three times longer than anything the judge is prompted for,
+    // so that no possible row can push text off the page.
+    claim: claimRaw.trim(),
+    verdict: truncate(state.verdictText ?? "", VERDICT_HARD_MAX),
     authorUsername: source.authorUsername,
     concludedOn,
     footer: parts.join("  ·  "),

@@ -4,6 +4,12 @@ import { TOKENS } from "./verdictCard";
 import type { CertificateModel } from "./certificate";
 import type { AnalysisModel } from "./certificateAnalysis";
 import { BODY, MONO, SERIF } from "@/app/_utils/ogFonts";
+import {
+  claimSize,
+  verdictSize,
+  CLAIM_LINE_HEIGHT,
+  VERDICT_LINE_HEIGHT,
+} from "./certificateType";
 
 export const CERT_SIZE = { width: 1200, height: 1500 };
 
@@ -155,8 +161,8 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
             style={{
               fontFamily: SERIF,
               fontStyle: "italic",
-              fontSize: 56,
-              lineHeight: 1.28,
+              fontSize: claimSize(model.claim.length),
+              lineHeight: CLAIM_LINE_HEIGHT,
               color: TOKENS.ink,
             }}
           >
@@ -164,7 +170,7 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
           </div>
         </div>
 
-        <div style={{ display: "flex", flexGrow: 1, minHeight: 44 }} />
+        <div style={{ display: "flex", flexGrow: 1, minHeight: 24 }} />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <SectionLabel color={card.accent}>THE VERDICT</SectionLabel>
@@ -215,23 +221,26 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
             </div>
           )}
 
-          {card.heroLine && (
+          {/* model.verdict, NOT card.heroLine: the card's is cut to 180 for the
+              share image. A walkover has no ruling text, and the guard keeps the
+              block gone rather than rendering an empty pair of quotes. */}
+          {model.verdict && (
             <div
               style={{
                 fontFamily: SERIF,
                 fontStyle: "italic",
-                fontSize: 32,
-                lineHeight: 1.45,
+                fontSize: verdictSize(model.verdict.length),
+                lineHeight: VERDICT_LINE_HEIGHT,
                 color: TOKENS.muted,
                 marginTop: 30,
               }}
             >
-              {`“${card.heroLine}”`}
+              {`“${model.verdict}”`}
             </div>
           )}
         </div>
 
-        <div style={{ display: "flex", flexGrow: 1, minHeight: 44 }} />
+        <div style={{ display: "flex", flexGrow: 1, minHeight: 24 }} />
 
         {analysis && (
           <div style={{ display: "flex", flexDirection: "column" }}>
@@ -246,7 +255,12 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
           </div>
         )}
 
-        <div style={{ display: "flex", flexGrow: 1, minHeight: 40 }} />
+        {/* minHeight is a FLOOR, not a size — flexGrow already pushes these
+            three past it whenever the page has slack, which is every ordinary
+            certificate. The floor only bites when the text is long, which is
+            exactly when it should get out of the way. certificateType.ts's
+            FIXED_CHROME assumes these three values; they are a pair. */}
+        <div style={{ display: "flex", flexGrow: 1, minHeight: 20 }} />
 
         <Rule margin={0} />
         <div
