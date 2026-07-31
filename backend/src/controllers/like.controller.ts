@@ -1,11 +1,13 @@
 // Likes, and their reversal. A like pays the author +2, so liking your own argument
 // would be minting your own currency — refused here, because the missing UI button
-// is not a rule. Both directions are idempotent.
-// Spec: game-theory.md §10
+// is not a rule. The same goes for the clock: a locked arena refuses BOTH
+// directions here, not just in the UI. Both directions are idempotent.
+// Spec: game-theory.md §4, §10
 
 import type { Request, Response } from "express";
 import pool from "../db/index.js";
 import { awardLogic } from "../economy/logic.js";
+import { isArenaLocked } from "../lib/arenaLock.js";
 
 export async function registerLike(req: Request, res: Response) {
   const { argument_id } = req.body;
@@ -17,12 +19,22 @@ export async function registerLike(req: Request, res: Response) {
 
   try {
     const { rows: argumentRows } = await pool.query(
-      `SELECT user_id FROM arguments WHERE id = $1`,
+      `SELECT c.user_id, m.status
+       FROM arguments c JOIN motions m ON m.id = c.motion_id
+       WHERE c.id = $1`,
       [argument_id]
     );
 
     if (argumentRows.length === 0) {
       return res.status(404).json({ error: "Argument not found" });
+    }
+
+    // §4: at zero the arena locks read-only, and §10 says likes close with it.
+    // The rule lives here, not in the button — a like that landed after
+    // conclusion would pay +2 after payouts were settled, against an ordering
+    // the Verdict Judge has already read (§11).
+    if (isArenaLocked(String(argumentRows[0].status))) {
+      return res.status(409).json({ reason: "locked" });
     }
 
     const post_user_id = argumentRows[0].user_id;
@@ -76,11 +88,18 @@ export async function removeLike(req: Request, res: Response) {
 
   try {
     const { rows: argumentRows } = await pool.query(
-      `SELECT user_id FROM arguments WHERE id = $1`,
+      `SELECT c.user_id, m.status
+       FROM arguments c JOIN motions m ON m.id = c.motion_id
+       WHERE c.id = $1`,
       [argument_id],
     );
     if (argumentRows.length === 0) {
       return res.status(404).json({ error: "Argument not found" });
+    }
+    // §10: read-only is symmetric. Un-liking after conclusion would claw back
+    // +2 the verdict has already been computed against.
+    if (isArenaLocked(String(argumentRows[0].status))) {
+      return res.status(409).json({ reason: "locked" });
     }
     const post_user_id = argumentRows[0].user_id;
 
