@@ -109,16 +109,19 @@ Domain: ${domainName}`;
       ],
     );
 
-    try {
-      await updateDesciption(userId);
-    } catch (err) {
-      console.error(err);
-    }
-
-    return res.status(200).json({
+    res.status(200).json({
       id: rows[0].id,
       message: `Motion with id: ${rows[0].id} added successfully!`,
     });
+
+    // Best-effort, and deliberately AFTER the response: the profiler is a SECOND
+    // LLM call, and nothing the author is waiting for depends on their bio being
+    // rewritten. Awaiting it here is what used to let a motion commit and then
+    // spend up to a minute more rewriting a bio, while the composer — which
+    // gives up at 75s — told the author the broadcast had failed.
+    // Same shape as the §20 notification triggers in argument.controller.ts.
+    void updateDesciption(userId).catch((err) => console.error(err));
+    return;
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to create the motion." });

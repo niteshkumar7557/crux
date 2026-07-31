@@ -55,9 +55,9 @@ const config = {
   llm: {
     base_url: str("LLM_BASE_URL", "https://openrouter.ai/api/v1"),
     api_key: process.env.LLM_API_KEY ?? process.env.OPENROUTER_API_KEY,
-    model: str("LLM_MODEL", "deepseek/deepseek-v4-flash"),
+    model: str("LLM_MODEL", "deepseek/deepseek-v4-flash:nitro"),
     timeout_ms: num("LLM_TIMEOUT_MS", 30_000),
-    retries: num("LLM_RETRIES", 2),
+    retries: num("LLM_RETRIES", 1),
     temperature: num("LLM_TEMPERATURE", 0.2),
     max_tokens: num("LLM_MAX_TOKENS", 3000),
     reasoning: str("LLM_REASONING", "off"),

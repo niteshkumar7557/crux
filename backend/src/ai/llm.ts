@@ -1,6 +1,9 @@
 // The only outbound LLM client: one OpenAI-compatible /chat/completions call, JSON
 // mode, repaired and parsed, retried LLM_RETRIES times. A failing call therefore
-// bills up to three times.
+// bills twice — the budget is deliberately tight, because the whole chain
+// (server → the client's own deadline → Cloudflare at ~100s) has to fit inside
+// 100 seconds. A longer retry budget means a post that commits after the
+// composer has already given up on it.
 //
 // Reasoning is off for all five personas: thinking tokens bill as output AND
 // count against max_tokens, so leaving it on truncates the shorter calls into
