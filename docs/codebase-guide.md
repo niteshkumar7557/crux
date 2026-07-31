@@ -134,7 +134,7 @@ cd frontend && npm i && npm run dev                      # Next.js on :3000
 
 - **`backend/.env.example` is the complete list of knobs**, and `src/config/index.ts` is the only
   place the app reads `process.env`. Add a setting to both — never `process.env.X` at a call site.
-  Two documented exceptions: `economy/season.logic.ts` reads `CRUX_SEASON_ZERO` itself and
+  Two documented exceptions: `economy/season.logic.ts` reads `CRUX_LAUNCH_AT` itself and
   `middlewares/rateLimit.ts` reads `EDGE_SECRET` itself, both because they must stay pure and
   importable by tests without dragging `dotenv/config` in as a side effect.
 - **Game rules are not configuration.** The §21 constants live in the pure modules, are asserted by
@@ -150,8 +150,12 @@ cd frontend && npm i && npm run dev                      # Next.js on :3000
   `LLM_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL` with no code change. There is no free tier, but
   there is also no rate ceiling to dodge: hand-testing back to back is fine, and costs about
   $0.0002 a motion (model in section 6).
-- **Set `CRUX_SEASON_ZERO=YYYY-MM`** to the real launch month. Season numbers are derived from it,
-  so before that month the UI reads "Season −1" and the rollover job correctly awards nothing.
+- **Set `CRUX_LAUNCH_AT=YYYY-MM-DD`** to the real launch date, and never move it afterwards. Season
+  numbers derive from it and are written permanently into `season_awards.season_number`. Seasons
+  count from 1; Season 1 absorbs the launch month's remainder and closes at the end of the next
+  month, and anything before it numbers 0, which the rollover job reads as "never award". This
+  replaces `CRUX_SEASON_ZERO` — the API **refuses to boot** if the old name is set and the new one
+  is not, so a stale month cannot quietly misnumber a season.
 - **Set `NEXT_PUBLIC_SITE_URL` in production**, or share URLs, canonicals, OG images and the
   sitemap all fall back to `localhost:3000`.
 - **Avatar uploads fall back to local disk** when the five `R2_*` variables are absent, so you need
@@ -246,15 +250,16 @@ contract, and which fields the code re-validates versus takes on trust. Start at
 | 4 | Verdict Judge | `ai/verdict.ts` — `concludeDebate`; decisions in pure `ai/verdict.logic.ts` |
 | 5 | Debater Profiler | `controllers/motion.controller.ts` — `updateDesciption`, best-effort |
 
-**Reasoning is off for four of the five, deliberately.** Thinking tokens are billed as output
-*and* count against `max_tokens`, so leaving it on truncates the shorter calls into invalid JSON —
-measured, it turned a 40-token profile line into 267 against a 500-token ceiling. The **Judge** is
-the documented exception: it passes `reasoning: "high"` with an 8000-token ceiling, because it has
-the headroom and it is the call that decides what every score in the product means. The other four
-answer by rubric, so
-thinking buys nothing. The replacement is **decode-first** (§16): each prompt makes the model write
-its analysis into fields the code never reads before it emits the number. **Field order in those
-prompts is load-bearing.**
+**Reasoning is off for all five, deliberately.** Thinking tokens are billed as output *and* count
+against `max_tokens`, so leaving it on truncates the shorter calls into invalid JSON — measured, it
+turned a 40-token profile line into 267 against a 500-token ceiling. The **Judge** ran as the
+documented exception for a while, at `reasoning: "high"` with an 8000-token ceiling, because it has
+the headroom and it decides what every score in the product means; it was turned off because it is
+also the only call a user waits on with the composer locked. It keeps the 8000-token ceiling — it
+emits a six-point case rewrite plus the split, and a truncated response fails the post through every
+retry. The replacement for thinking is **decode-first** (§16): each prompt makes the model write its
+analysis into fields the code never reads before it emits the number. **Field order in those prompts
+is load-bearing**, and with reasoning off it is the only thing keeping scores blind to eloquence.
 
 ### What it costs to run
 
@@ -262,11 +267,14 @@ Per event, measured against the live API with reasoning off, at $0.098 in / $0.1
 tokens. "Cached" is the same traffic once the static system prompts hit the provider's automatic
 prefix cache — treat it as upside, not as the plan.
 
+The **argument-posted** row's token figures predate the scoring/probability merge and have not been
+re-measured since; the call count is current, the tokens are an estimate until someone re-runs them.
+
 | Event | LLM calls | in | out | cost | cached |
 |---|---|---|---|---|---|
 | Motion published | 3 — arbiter + opening analyst + profiler | 1171 | 255 | **$0.000165** | $0.000101 |
 | Motion rejected | 1 — arbiter | 501 | 52 | **$0.000059** | $0.000026 |
-| Argument posted | 2 — analyst + probability | 1081 | 155 | **$0.000136** | $0.000063 |
+| Argument posted | 1 — the merged judge | 1081 | 155 | **$0.000136** | $0.000063 |
 | Debate concluded | 1 — verdict, at the 40-argument cap | 1553 | 98 | **$0.000171** | $0.000155 |
 
 | Traffic | Monthly LLM bill, cold cache |

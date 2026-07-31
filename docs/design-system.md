@@ -135,6 +135,12 @@ runs on type, palette and hairlines alone — the pages people open many times a
 quiet, and the plates keep their impact by being rare. The one thing that crosses over is the
 **arch**, which is geometry rather than imagery: profile portraits and podium avatars wear it.
 
+**One page in front of the login carries a plate: `/register`**, which shows the amphitheater across
+the top of its right-hand panel. It is not an exception to the rule above — register and login ship
+their own chrome and are read once, not many times a day, so they sit on the landing's side of the
+line. The plate obeys §4 in full: `.engraving` on `bg-plate`, hairline, and the caption in
+`plate-ink` rather than `ink`, since a plate stays cream in dark mode and `ink` does not.
+
 All engravings live in `frontend/public/landing/` (green ink on cream, no text inside the images).
 Two rules make them work everywhere:
 
@@ -160,8 +166,14 @@ wreath, bust, medals ×3, amphitheater (full-bleed), doors (final CTA), manicule
   sender's side between stacked bubbles, with circular portraits. It is at least the right family of
   exception: a single-line bubble at that radius *is* a pill. The corner overrides are inline
   `style`, not `rounded-tr-*` utilities, because an all-corners `rounded-*` and a per-corner one
-  write the same shorthand and the winner depends on their order in the generated sheet. **This does
-  not generalise** — a second rounded surface needs its own reason.
+  write the same shorthand and the winner depends on their order in the generated sheet.
+
+  *And a fourth:* the **search overlay's field and result rows** (`SearchBar`), both `rounded-full`.
+  The same reasoning carries it — a result row is a single-line control, and at that radius a
+  single-line row *is* a pill, which is also what the field already was in the navbar trigger. **The
+  panel around them stays square**, and that is the line: the exception is for the rows, not for the
+  surface they sit on. **None of this generalises** — a fifth rounded surface needs its own reason,
+  and anything taller than one line does not get to claim this one.
 
 - **Borders are hairlines** (`--ink-faint`); no glows. Elevation is paper tone.
 

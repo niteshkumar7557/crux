@@ -28,7 +28,6 @@ async function runScoring(c: ScoringCase): Promise<Outcome> {
   }>({
     system: ARGUMENT_JUDGE_SYSTEM_PROMPT,
     user: buildAnalystPrompt(c.input),
-    reasoning: "high",
     maxTokens: 8000,
   });
 

@@ -156,18 +156,18 @@ const ClockExhibit = () => (
 
 const scoreCards = [
   {
-    score: "+7",
-    lines: ["Judged 7 of 8", "Targeted rebuttal — full range unlocked"],
+    score: "+9",
+    lines: ["Judged 9 of 10", "Targeted rebuttal — full range unlocked"],
     accent: "text-side-for",
   },
   {
-    score: "+5",
-    lines: ["Judged 6 of 8", "Capped at 5 — standalone point"],
+    score: "+7",
+    lines: ["Judged 9 of 10", "Capped at 7 — standalone point"],
     accent: "text-side-draw",
   },
   {
-    score: "+3",
-    lines: ["Judged 7 of 8", "Halved — your 4th argument here"],
+    score: "+2",
+    lines: ["Judged 2 of 10", "The floor — a point your side already made"],
     accent: "text-side-draw",
   },
 ];

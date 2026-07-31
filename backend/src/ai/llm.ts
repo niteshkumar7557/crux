@@ -2,10 +2,11 @@
 // mode, repaired and parsed, retried LLM_RETRIES times. A failing call therefore
 // bills up to three times.
 //
-// Reasoning is off by default: thinking tokens bill as output AND count against
-// max_tokens, so leaving it on truncates the shorter calls into invalid JSON.
-// One persona overrides it per call — the argument judge, which has the token
-// headroom to afford it and is the call quality matters most on.
+// Reasoning is off for all five personas: thinking tokens bill as output AND
+// count against max_tokens, so leaving it on truncates the shorter calls into
+// invalid JSON — and on the argument judge it cost seconds a user waits through
+// with the composer locked. The per-call override below is the escape hatch and
+// is currently unused; what replaces thinking is decode-first prompting.
 // Spec: game-theory.md §16
 
 import { jsonrepair } from "jsonrepair";

@@ -67,7 +67,7 @@ const Rules = () => {
           <li
             key={rule.title}
             data-reveal
-            className="flex gap-6 border-t border-ink-faint py-8 transition-colors hover:bg-ink-wash"
+            className="flex gap-6 border-t border-ink-faint py-8 px-3 transition-colors hover:bg-ink-wash"
           >
             <span className="shrink-0 display-type text-2xl text-laurel tabular-nums">
               {String(i + 1).padStart(2, "0")}

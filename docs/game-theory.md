@@ -429,8 +429,12 @@ that is deliberate. "How sharp are you right now" is what the season board is fo
 
 ## §14 Seasons
 
-- **A season is one calendar month, UTC.** Season 0 is the launch month; Season 1 is the following
-  month, and so on. The launch month is configured, not hardcoded.
+- **A season is one calendar month, UTC**, and **seasons are numbered from 1 — there is no Season
+  0.** The launch date is configured, not hardcoded.
+- **Season 1 is the exception: it runs from the launch instant to the end of the *following*
+  month.** Launching on the 28th would otherwise ship a three-day season that hands out three
+  permanent titles, so the remainder of the launch month is absorbed into the next one. Season 1 is
+  between one and two months long; every season after it is exactly one calendar month.
 - **The Season board** ranks users by **logic earned during this month**. Everyone starts each
   month at 0. It is the default board.
 - **The All-Time board** ranks users by career logic, and never resets. Two tabs, one page.
@@ -457,8 +461,9 @@ At the month boundary, a rollover job:
 3. Notifies each winner.
 
 **A non-positive season total earns nothing.** A month nobody played is not a month somebody won,
-and a permanent title is the one reward that can never be taken back. A month before Season 0 can
-never be awarded at all.
+and a permanent title is the one reward that can never be taken back. Anything before Season 1 can
+never be awarded at all — including the month boundary Season 1 runs straight through, which is
+what stops the launch month paying out for a day or two of play.
 
 Titles and frames are **permanent and stacking** — a profile displays every one ever earned. They
 are the only reward that survives a season, and they are **status only**: no logic, no advantage,
@@ -525,9 +530,12 @@ governs how far it may move. A 2 or 3 does not move the bar at all; a 9 or 10 mo
 There is **no cap on how far one argument can move the split**, and no floor holding a losing side
 near the middle. If one argument changes who is winning, the bar says so.
 
-**Reasoning is on for the Judge and off everywhere else.** Thinking tokens bill as output and count
-against the token ceiling, which truncates the shorter calls into invalid JSON — but the Judge has
-the headroom, and it is the call whose quality decides what every score in the product means.
+**Reasoning is off for all five.** Thinking tokens bill as output and count against the token
+ceiling, which truncates the shorter calls into invalid JSON. The Judge ran with it on for a while,
+because it has the headroom and it is the call whose quality decides what every score in the product
+means — but it is also the only call a user sits and waits for, with the composer locked, and the
+seconds it bought were not worth what they cost. What carries the judgement instead is decode-first,
+below.
 
 When an argument is a **reply**, the Judge is additionally handed the exact argument being answered
 and scores the rebuttal against it. When it is standalone, it only sees the opposing side's case —
@@ -541,10 +549,9 @@ conventional position.
 
 ### Decode first — the house technique
 
-Reasoning tokens are **off** for four of the five personas: on this model they are billed as output
-*and* counted against the token ceiling, which truncates the shorter calls into invalid JSON. Those
-four answer by rubric rather than by derivation. The Judge is the exception — it has the ceiling to
-afford thinking, and it is the call worth spending it on.
+Reasoning tokens are **off** for all five personas: on this model they are billed as output *and*
+counted against the token ceiling, which truncates the shorter calls into invalid JSON. All five
+answer by rubric rather than by derivation.
 
 So the "thinking" lives somewhere else. **Every judging prompt makes the model write its analysis
 into fields the code never reads, before it emits the number it is judged on** — the Arbiter
@@ -552,9 +559,9 @@ restates the claim with its grammar repaired before ruling on it; the Judge name
 claim, what it engages and the logical move before scoring; the Verdict Judge names which argument
 won it and why before naming a person.
 
-This is what makes the scores blind to eloquence and to non-native English. **The field order in
-those prompts is load-bearing.** Move a decode field after the number it feeds and the mechanism
-is gone.
+This is what makes the scores blind to eloquence and to non-native English, and with reasoning off
+everywhere it is now the *only* thing that does. **The field order in those prompts is
+load-bearing.** Move a decode field after the number it feeds and the mechanism is gone.
 
 ---
 
@@ -721,7 +728,8 @@ Every tunable constant in the game. **If a number is in the code, it is in this 
 | Tier thresholds | 0 / 100 / 200 / 300 / 400 | §13 |
 | Bio length cap | **280 characters** | §13 |
 | Profile ledger window | **12 weeks** | §13 |
-| Season length | **1 calendar month**, UTC | §14 |
+| Season length | **1 calendar month**, UTC — Season 1 also absorbs the launch month's remainder | §14 |
+| First season number | **1** — there is no Season 0 | §14 |
 | Season awards | **Top 3** — title + frame, positive totals only | §14 |
 | Main Stage size | **4** + the Motion of the Day | §15 |
 | Motion of the Day | **1 per UTC day** | §15 |

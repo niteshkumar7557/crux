@@ -180,7 +180,7 @@ button:disabled {
 }
 
 /* Multiply erases each image's slightly different cream background into
-   whatever paper it sits on. Landing only. */
+   whatever paper it sits on. The landing, plus the one plate on /register. */
 .engraving {
   mix-blend-mode: multiply;
 }

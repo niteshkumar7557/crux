@@ -92,7 +92,6 @@ async function judgeArgument(
   const parsed = await llmJson({
     system: ARGUMENT_JUDGE_SYSTEM_PROMPT,
     user: userPrompt,
-    reasoning: "high",
     maxTokens: 8000,
   });
 

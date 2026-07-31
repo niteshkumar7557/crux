@@ -5,6 +5,7 @@
 
 import api from "@/app/axios";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import {
@@ -14,12 +15,37 @@ import {
   LuMail,
   LuScale,
   LuShieldCheck,
+  LuTrendingUp,
   LuUser,
 } from "react-icons/lu";
 import Button from "@/app/_components/ui/Button";
 import { isAxiosError } from "axios";
 import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
 import { normalizeUsername, validateUsername } from "@/app/_utils/username";
+
+// The real mechanics, with their real numbers — the same disclosure /rules makes,
+// at the moment someone decides whether to sign up. Spec: game-theory.md §7, §9,
+// §12, §19; design-system.md §10.
+const REPUTATION = [
+  {
+    icon: LuShieldCheck,
+    accent: "text-ink",
+    title: "Judged on the argument",
+    body: "An AI scores every argument 2–10 on how much it moves the debate — never on eloquence, length or grammar. Reply to a named opponent and the full range is open; a standalone point caps at 7.",
+  },
+  {
+    icon: LuScale,
+    accent: "text-side-against",
+    title: "The argument, never the person",
+    body: "Hit the reasoning as hard as you like. Hit the person and the moderator discards it before it reaches the arena — and it costs you 4 logic.",
+  },
+  {
+    icon: LuTrendingUp,
+    accent: "text-laurel",
+    title: "Your record only goes up",
+    body: "A loss costs 5 points from the month's board and nothing else. Your all-time logic has no way down.",
+  },
+] as const;
 
 const Register = () => {
   const [name, setName] = useState<string>("");
@@ -237,13 +263,9 @@ const Register = () => {
             </form>
             <p className="mt-8 text-ink-soft text-xs font-body">
               By entering the arena, you agree to the{" "}
-              <a className="text-ink hover:underline" href="#">
+              <Link className="text-ink hover:underline" href="/rules">
                 ARENA RULES
-              </a>{" "}
-              and{" "}
-              <a className="text-ink hover:underline" href="#">
-                TERMS
-              </a>
+              </Link>
               .
             </p>
           </div>
@@ -251,57 +273,52 @@ const Register = () => {
             data-auth-panel
             className="md:col-span-5 bg-band border-l border-ink-faint flex flex-col"
           >
-            <div className="relative h-48 md:h-64 overflow-hidden">
+            {/* A plate, per design-system §4: the engraving multiplies its cream
+                into `bg-plate`, which stays cream in dark mode. The status line
+                sits BELOW it as a caption strip rather than over the image —
+                the hall is dense green ink corner to corner, and any type laid
+                on it disappears into the benches. */}
+            <div className="relative h-48 md:h-64 overflow-hidden border-b border-ink-faint bg-plate">
               <Image
-                className="object-cover"
+                className="engraving object-cover object-[50%_40%]"
                 alt=""
-                src="/register-hero.png"
+                src="/landing/amphitheater-hall.jpeg"
                 fill
                 priority
                 sizes="(min-width: 768px) 40vw, 100vw"
               />
-              <div className="absolute bottom-6 left-10">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-ink animate-pulse motion-reduce:animate-none"></div>
-                  <span className="font-label text-[10px] tracking-widest text-ink font-bold">
-                    STATUS: RECRUITMENT OPEN
-                  </span>
-                </div>
-              </div>
+            </div>
+            <div className="flex items-center gap-2.5 border-b border-ink-faint px-10 py-3.5">
+              <span
+                aria-hidden
+                className="h-1.5 w-1.5 bg-ink animate-pulse motion-reduce:animate-none"
+              />
+              <span className="font-label text-[10px] uppercase tracking-[0.22em] text-ink-soft">
+                Status: recruitment open
+              </span>
             </div>
             <div className="p-10 grow">
               <h2 className="font-headline text-2xl text-ink italic mb-6">
                 Crux Reputation
               </h2>
               <div className="space-y-8">
-                <div className="flex gap-4">
-                  <div className="shrink-0 w-10 h-10 bg-raised flex items-center justify-center">
-                    <LuShieldCheck className="text-ink" />
+                {REPUTATION.map((item) => (
+                  <div key={item.title} className="flex gap-4">
+                    <div className="shrink-0 w-10 h-10 bg-raised flex items-center justify-center">
+                      <item.icon className={item.accent} />
+                    </div>
+                    <div>
+                      <h3
+                        className={`font-label text-xs tracking-widest uppercase mb-1 ${item.accent}`}
+                      >
+                        {item.title}
+                      </h3>
+                      <p className="text-ink-soft text-sm leading-relaxed">
+                        {item.body}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-label text-xs tracking-widest text-ink uppercase mb-1">
-                      EVIDENCE-BASED SCORING
-                    </h3>
-                    <p className="text-ink-soft text-sm leading-relaxed">
-                      Your standing is determined by the rigor of your sources
-                      and the logical consistency of your arguments.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <div className="shrink-0 w-10 h-10 bg-raised flex items-center justify-center">
-                    <LuScale className="text-side-against" />
-                  </div>
-                  <div>
-                    <h3 className="font-label text-xs tracking-widest text-side-against uppercase mb-1">
-                      CIVILITY MULTIPLIER
-                    </h3>
-                    <p className="text-ink-soft text-sm leading-relaxed">
-                      Passive aggression or logical fallacies deplete your
-                      weight. Steel-manning opponents increases your Crux Rank.
-                    </p>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </div>

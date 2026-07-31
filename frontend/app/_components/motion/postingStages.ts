@@ -8,13 +8,16 @@
 
 export const NARROWEST_LABEL = "Post Reply";
 
+// Retimed when the judge stopped running with reasoning on. The old thresholds
+// were paced against a thinking call and now sit far behind the work, which reads
+// as a stall rather than as progress.
 export const POSTING_STAGES = [
   { at: 0, label: "Posting…" },
-  { at: 1_200, label: "Reading…" },
-  { at: 3_500, label: "Weighing…" },
-  { at: 6_500, label: "Scoring…" },
-  { at: 10_000, label: "Rewriting…" },
-  { at: 16_000, label: "Almost…" },
+  { at: 900, label: "Reading…" },
+  { at: 2_200, label: "Weighing…" },
+  { at: 4_000, label: "Scoring…" },
+  { at: 6_000, label: "Rewriting…" },
+  { at: 9_000, label: "Almost…" },
 ] as const;
 
 export function stageAt(elapsedMs: number): string {

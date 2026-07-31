@@ -12,11 +12,14 @@ import Button from "@/app/_components/ui/Button";
 import { LogoMark } from "@/app/_components/ui/Logo";
 import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
 
+const SUPPORT_EMAIL = "help@crux.kumarnitesh.in";
+
 const Login = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
   const [error, setError] = useState("");
+  const [showReset, setShowReset] = useState(false);
 
   const router = useRouter();
   const rootRef = useRef<HTMLElement>(null);
@@ -151,17 +154,38 @@ const Login = () => {
                   onChange={(e) => setPassword(e.currentTarget.value)}
                 />
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between gap-4">
                 <p className="font-label text-[10px] uppercase tracking-widest text-side-against cursor-default">
                   {error}
                 </p>
-                <a
-                  className="font-label text-[10px] uppercase tracking-widest text-ink hover:underline transition-all"
-                  href="#"
+                <button
+                  type="button"
+                  aria-expanded={showReset}
+                  aria-controls="password-reset-help"
+                  onClick={() => setShowReset((open) => !open)}
+                  className="shrink-0 font-label text-[10px] uppercase tracking-widest text-ink hover:underline transition-all"
                 >
                   Forgot Password?
-                </a>
+                </button>
               </div>
+              {/* No automated reset exists yet, so this says what to do instead
+                  rather than pointing at a route that would 404. */}
+              {showReset && (
+                <p
+                  id="password-reset-help"
+                  className="border-l-2 border-laurel py-1 pl-4 font-body text-xs leading-relaxed text-ink-soft"
+                >
+                  There&rsquo;s no automated reset yet. Mail{" "}
+                  <a
+                    className="text-ink hover:underline"
+                    href={`mailto:${SUPPORT_EMAIL}?subject=Password%20reset`}
+                  >
+                    {SUPPORT_EMAIL}
+                  </a>{" "}
+                  from the address you registered with and we&rsquo;ll sort it
+                  out by hand.
+                </p>
+              )}
             </div>
             <div className="pt-4">
               <Button type="submit" size="lg" className="w-full group">
@@ -198,13 +222,7 @@ const Login = () => {
         <div className="flex gap-8">
           <a
             className="font-label text-[10px] uppercase tracking-widest text-ink-soft hover:text-ink transition-colors"
-            href="#"
-          >
-            TERMS
-          </a>
-          <a
-            className="font-label text-[10px] uppercase tracking-widest text-ink-soft hover:text-ink transition-colors"
-            href="#"
+            href={`mailto:${SUPPORT_EMAIL}`}
           >
             CONTACT
           </a>

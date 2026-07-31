@@ -15,6 +15,7 @@ import { jwtPayload } from "@/app/_types/jwt";
 import { ArgumentSide } from "@/app/motion/types";
 import api from "@/app/axios";
 import { isAxiosError } from "axios";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { LuX } from "react-icons/lu";
@@ -69,6 +70,19 @@ const PostLabel = ({
   </span>
 );
 
+// The composer's two dead states — concluded, and not signed in — are the same
+// bar, so they are drawn by the same component rather than by two copies that
+// drift apart.
+const ClosedBar = ({ children }: { children: ReactNode }) => (
+  <div
+    className={`sticky bottom-0 bg-paper/80 backdrop-blur-xl border-t border-ink-faint py-4 md:py-5 ${DEBATE_GUTTER} z-40 text-center`}
+  >
+    <span className="font-label text-[11px] uppercase tracking-[0.2em] text-ink-soft">
+      {children}
+    </span>
+  </div>
+);
+
 type Pending = {
   urlSide: string;
   side: "for" | "against";
@@ -87,6 +101,10 @@ const ArgumentInput = ({
   argumentSides: ArgumentSide[];
 }) => {
   const [user, setUser] = useState<jwtPayload | null>(null);
+  // null means "signed out" only once this is true — before it, it just means the
+  // token check has not come back, and prompting a signed-in reader to sign in on
+  // every page load is worse than a beat of nothing.
+  const [ready, setReady] = useState(false);
   const [input, setInput] = useState("");
   const [notice, setNotice] = useState<Notice | null>(null);
   const [award, setAward] = useState<Award | null>(null);
@@ -100,23 +118,30 @@ const ArgumentInput = ({
     async function fetchUser() {
       const userInfo = await getUser();
       setUser(userInfo);
+      setReady(true);
     }
     fetchUser();
   }, []);
 
   if (status === "concluded") {
-    return (
-      <div
-        className={`sticky bottom-0 bg-paper/80 backdrop-blur-xl border-t border-ink-faint py-4 md:py-5 ${DEBATE_GUTTER} z-40 text-center`}
-      >
-        <span className="font-label text-[11px] uppercase tracking-[0.2em] text-ink-soft">
-          This debate has concluded — the verdict is in.
-        </span>
-      </div>
-    );
+    return <ClosedBar>This debate has concluded — the verdict is in.</ClosedBar>;
   }
 
-  if (!user) return null;
+  if (!ready) return null;
+
+  if (!user) {
+    return (
+      <ClosedBar>
+        Sign in to argue this motion and like arguments.{" "}
+        <Link
+          href={`/login?next=/motion/CRX-${motionId}-A`}
+          className="text-ink underline-offset-4 hover:underline"
+        >
+          Sign in
+        </Link>
+      </ClosedBar>
+    );
+  }
 
   const isAuthor = user.id === authorId;
 

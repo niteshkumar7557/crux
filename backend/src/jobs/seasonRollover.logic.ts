@@ -1,5 +1,5 @@
 // Which three users win a finished season, and when there isn't one. Pure.
-// A non-positive total earns nothing, and a month before Season 0 can never be
+// A non-positive total earns nothing, and anything before Season 1 can never be
 // awarded — a permanent title is the one reward that cannot be taken back.
 // Spec: game-theory.md §14
 
@@ -40,8 +40,10 @@ export function previousSeason(now: number = Date.now()): SeasonWindow | null {
   const end = currentSeasonStart(now);
   const inside = end.getTime() - 1;
 
+  // Seasons are numbered from 1, so anything below it is pre-launch: the partial
+  // month before Season 1 opened, which never closed and never pays out.
   const number = seasonNumber(inside);
-  if (number < 0) return null;
+  if (number < 1) return null;
 
   return { key: seasonKey(inside), number, start: currentSeasonStart(inside), end };
 }

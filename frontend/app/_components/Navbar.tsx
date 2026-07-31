@@ -65,7 +65,10 @@ const Navbar = () => {
           <SearchBar />
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <Button href={user === null ? "/login" : "/motion/new"} size="sm">
+          {/* Not gated on a session: the composer has a spectator mode that lets
+              a signed-out visitor draft a claim and run the Arbiter on it, and
+              only asks for a login at the point of broadcasting. */}
+          <Button href="/motion/new" size="sm">
             New motion
           </Button>
           <ThemeToggle className="hidden sm:flex" />

@@ -2,12 +2,9 @@
 
 // Signed-out prompt in the sidebar.
 
-import { useUser } from "@/app/_hooks/useUser";
 import Button from "@/app/_components/ui/Button";
 
 const InviteCard = () => {
-  const user = useUser();
-
   return (
     <aside
       data-reveal
@@ -24,11 +21,9 @@ const InviteCard = () => {
         Join the highest quality discourse on the web. Sharpen your arguments
         and climb the leaderboard.
       </p>
-      <Button
-        href={user === null ? "/login" : "/motion/new"}
-        size="lg"
-        className="mt-9"
-      >
+      {/* Straight to the composer signed out or not — it has a spectator mode
+          that runs the Arbiter check and only asks for a login to broadcast. */}
+      <Button href="/motion/new" size="lg" className="mt-9">
         Start a debate
       </Button>
     </aside>

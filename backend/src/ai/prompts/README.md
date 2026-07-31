@@ -22,12 +22,13 @@ the code re-validates and which it takes on trust**. Read that before loosening 
   `jsonrepair`, retrying `LLM_RETRIES` times. Every prompt must state its exact return shape.
 - **One model runs all five** (`deepseek/deepseek-v4-flash` via OpenRouter, swappable by env).
   There is no smart/fast split — a prompt that only works on a bigger model does not work.
-- **Reasoning is off for four of the five.** Thinking tokens are billed as output *and* counted
-  against `max_tokens`, so leaving it on truncates the shorter calls into invalid JSON. Those four
-  must be answerable by rubric, not by derivation. **`argument-judge` is the one exception**: it
-  passes `reasoning: "high"` with an 8000-token ceiling, because it has the headroom and it is the
-  call that decides what every score in the product means. Do not extend the exception without
-  checking that persona's ceiling against its output size.
+- **Reasoning is off for all five.** Thinking tokens are billed as output *and* counted against
+  `max_tokens`, so leaving it on truncates the shorter calls into invalid JSON — and on
+  `argument-judge`, the one persona that used to run `reasoning: "high"`, it also cost seconds the
+  user waits through with the composer locked. All five must therefore be answerable by rubric
+  rather than by derivation. `argument-judge` keeps its 8000-token ceiling: it emits a six-point
+  case rewrite plus the split, and an unused ceiling costs nothing while a truncated one fails the
+  post through every retry.
 - **Decode first.** Because reasoning is off, every judging prompt makes the model write its
   analysis into fields the code never reads *before* it emits the number it is judged on — the
   Arbiter's `intent`, the Judge's `decoded_claim`/`engages`/`move`, the Verdict Judge's

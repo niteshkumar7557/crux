@@ -7,18 +7,18 @@ describe("stageAt", () => {
   });
 
   it("holds a stage until the next one is due", () => {
-    expect(stageAt(1_199)).toBe("Posting…");
-    expect(stageAt(1_200)).toBe("Reading…");
+    expect(stageAt(899)).toBe("Posting…");
+    expect(stageAt(900)).toBe("Reading…");
   });
 
   it("walks the pipeline in order", () => {
-    expect(stageAt(4_000)).toBe("Weighing…");
-    expect(stageAt(7_000)).toBe("Scoring…");
-    expect(stageAt(12_000)).toBe("Rewriting…");
+    expect(stageAt(2_500)).toBe("Weighing…");
+    expect(stageAt(4_500)).toBe("Scoring…");
+    expect(stageAt(7_000)).toBe("Rewriting…");
   });
 
   it("rests on the last stage however long the call takes", () => {
-    expect(stageAt(16_000)).toBe("Almost…");
+    expect(stageAt(9_000)).toBe("Almost…");
     expect(stageAt(120_000)).toBe("Almost…");
   });
 
