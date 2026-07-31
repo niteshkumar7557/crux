@@ -7,7 +7,7 @@ import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import config from "./config/index.js";
-import { PUBLIC_DIR } from "./lib/avatars.js";
+import { PRESETS_DIR, PUBLIC_DIR } from "./lib/avatars.js";
 import userRoutes from "./routes/user.route.js";
 import motionRoutes from "./routes/motion.route.js";
 import argumentRoutes from "./routes/argument.route.js";
@@ -39,7 +39,20 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
-app.use(express.static(PUBLIC_DIR));
+// Preset art is mutable behind a permanent URL. The ids stay stable so a stored
+// avatar keeps resolving, which means redesigning a preset ships new bytes at the
+// old address — and every cache in front keys on that address alone, so it serves
+// the previous release's art until its own TTL lapses. Uploads have the opposite
+// shape (unique keys, immutable — see avatarStorage.ts), so only presets need this.
+app.use(
+  express.static(PUBLIC_DIR, {
+    setHeaders: (res, filePath) => {
+      if (filePath.startsWith(PRESETS_DIR)) {
+        res.setHeader("Cache-Control", "no-cache");
+      }
+    },
+  }),
+);
 
 // Above the limiter, deliberately. Unverified traffic shares one bucket, so a
 // flood arriving off-edge would exhaust it — and a starved liveness probe cycles
