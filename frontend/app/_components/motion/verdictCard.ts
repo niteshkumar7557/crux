@@ -1,10 +1,15 @@
-// The share card's model and its palette, mirrored as hex because satori cannot read
-// CSS variables. Uses the LIGHT values on purpose — a certificate is a document you
-// keep. Hand-synced with globals.css.
+// The share card's model and its palette, mirrored as hex because satori cannot
+// read CSS variables. Hand-synced with globals.css.
+//
+// Light is the default, and the share card's only option: a pasted link is opened
+// by strangers who have no theme of their own, so it must not depend on who
+// pasted it. The CERTIFICATE is different — it is downloaded by one person who
+// has already chosen a theme, and it is theirs to keep — so the palette is a
+// parameter here rather than a constant. See design-system.md.
 
 import type { MatchState } from "@/app/motion/types";
 
-export const TOKENS = {
+export const LIGHT_TOKENS = {
   paper: "#f3edda", // --paper
   forSide: "#2f6b4f", // --for      (affirmative)
   againstSide: "#9c4a34", // --against  (negative)
@@ -14,6 +19,32 @@ export const TOKENS = {
   ink: "#244134", // --ink
   track: "#e2dac2", // the split-bar track, a shade under the paper
 } as const;
+
+// Mapped rather than `typeof LIGHT_TOKENS`: the `as const` above makes every
+// value its own literal type, which no second palette could ever satisfy.
+export type Palette = { [K in keyof typeof LIGHT_TOKENS]: string };
+
+// [data-theme="dark"] in globals.css, one for one. The exception is `track`: in
+// light it sits a shade UNDER the paper, and at night a darker groove reads as a
+// hole punched in the page — so it inverts to a shade above, which is
+// --paper-raised. Same relationship to the page, opposite direction.
+export const DARK_TOKENS: Palette = {
+  paper: "#0f1a15", // --paper
+  forSide: "#63a882", // --for
+  againstSide: "#c97757", // --against
+  laurel: "#d4ac3a", // --laurel
+  draw: "#a2966c", // --draw
+  muted: "#a3b2a4", // --ink-soft
+  ink: "#ece5d0", // --ink
+  track: "#1b2c24", // --paper-raised, a shade OVER the page at night
+};
+
+// The share card and every existing caller import this, and must keep getting light.
+export const TOKENS = LIGHT_TOKENS;
+
+export function paletteFor(theme: "light" | "dark"): Palette {
+  return theme === "dark" ? DARK_TOKENS : LIGHT_TOKENS;
+}
 
 export const CLAIM_MAX = 90;
 export const HERO_MAX = 180;
@@ -48,19 +79,24 @@ function liveNoteFrom(closesAt: string | null): string {
   return hours < 1 ? "LIVE · closing soon" : `LIVE · closes in ${hours}h`;
 }
 
-const LABELS: Record<
+function labelsFor(
+  p: Palette,
+): Record<
   "for" | "against" | "draw" | "walkover",
   { label: string; accent: string }
-> = {
-  for: { label: "AFFIRMATIVE WINS", accent: TOKENS.forSide },
-  against: { label: "NEGATIVE WINS", accent: TOKENS.againstSide },
-  draw: { label: "DRAW", accent: TOKENS.draw },
-  walkover: { label: "UNOPPOSED", accent: TOKENS.muted },
-};
+> {
+  return {
+    for: { label: "AFFIRMATIVE WINS", accent: p.forSide },
+    against: { label: "NEGATIVE WINS", accent: p.againstSide },
+    draw: { label: "DRAW", accent: p.draw },
+    walkover: { label: "UNOPPOSED", accent: p.muted },
+  };
+}
 
 export function buildVerdictCard(
   state: MatchState,
   claimRaw: string,
+  palette: Palette = LIGHT_TOKENS,
 ): VerdictCardModel {
   const claim = truncate(claimRaw, CLAIM_MAX);
   const split = { for: state.affirmative, against: state.negative };
@@ -69,7 +105,7 @@ export function buildVerdictCard(
     return {
       mode: "live",
       label: "LIVE",
-      accent: TOKENS.muted,
+      accent: palette.muted,
       score: null,
       split,
       mvpUsername: null,
@@ -80,7 +116,7 @@ export function buildVerdictCard(
   }
 
   const winner = state.winner ?? "draw"; // null on a concluded row → draw
-  const { label, accent } = LABELS[winner];
+  const { label, accent } = labelsFor(palette)[winner];
   const isWalkover = winner === "walkover";
   const hero = truncate(state.verdictText ?? "", HERO_MAX);
 

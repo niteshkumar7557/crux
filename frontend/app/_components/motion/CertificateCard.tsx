@@ -1,6 +1,10 @@
 // The certificate layout, rendered by satori.
+//
+// Every colour comes from the palette handed in, never from a module constant:
+// this is the one generated image that follows the reader's theme. The share
+// card next door is always light, on purpose.
 
-import { TOKENS } from "./verdictCard";
+import { LIGHT_TOKENS, type Palette } from "./verdictCard";
 import type { CertificateModel } from "./certificate";
 import type { AnalysisModel } from "./certificateAnalysis";
 import { BODY, MONO, SERIF } from "@/app/_utils/ogFonts";
@@ -15,17 +19,24 @@ export const CERT_SIZE = { width: 1200, height: 1500 };
 
 const PAD = 64;
 
-const SIDES = {
-  for: { label: "The Case For", accent: TOKENS.forSide },
-  against: { label: "The Case Against", accent: TOKENS.againstSide },
-} as const;
+const sidesFor = (p: Palette) =>
+  ({
+    for: { label: "The Case For", accent: p.forSide },
+    against: { label: "The Case Against", accent: p.againstSide },
+  }) as const;
 
-const Rule = ({ margin = 0 }: { margin?: number }) => (
+const Rule = ({
+  palette,
+  margin = 0,
+}: {
+  palette: Palette;
+  margin?: number;
+}) => (
   <div
     style={{
       height: 1,
       width: "100%",
-      backgroundColor: `${TOKENS.muted}33`,
+      backgroundColor: `${palette.muted}33`,
       marginTop: margin,
       marginBottom: margin,
     }}
@@ -34,10 +45,10 @@ const Rule = ({ margin = 0 }: { margin?: number }) => (
 
 const SectionLabel = ({
   children,
-  color = TOKENS.muted,
+  color,
 }: {
   children: string;
-  color?: string;
+  color: string;
 }) => (
   <div
     style={{
@@ -54,11 +65,13 @@ const SectionLabel = ({
 const AnalysisColumn = ({
   side,
   analysis,
+  palette,
 }: {
   side: "for" | "against";
   analysis: AnalysisModel;
+  palette: Palette;
 }) => {
-  const { label, accent } = SIDES[side];
+  const { label, accent } = sidesFor(palette)[side];
   return (
     <div
       style={{
@@ -88,7 +101,7 @@ const AnalysisColumn = ({
             fontStyle: "italic",
             fontSize: 27,
             lineHeight: 1.38,
-            color: TOKENS.muted,
+            color: palette.muted,
           }}
         >
           {analysis.lead}
@@ -104,7 +117,7 @@ const AnalysisColumn = ({
                 fontFamily: BODY,
                 fontSize: 21,
                 lineHeight: 1.45,
-                color: TOKENS.ink,
+                color: palette.ink,
               }}
             >
               {point}
@@ -116,7 +129,13 @@ const AnalysisColumn = ({
   );
 };
 
-export function CertificateCard({ model }: { model: CertificateModel }) {
+export function CertificateCard({
+  model,
+  palette = LIGHT_TOKENS,
+}: {
+  model: CertificateModel;
+  palette?: Palette;
+}) {
   const { card, analysis } = model;
   return (
     <div
@@ -125,7 +144,7 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
         height: "100%",
         display: "flex",
         position: "relative",
-        backgroundColor: TOKENS.paper,
+        backgroundColor: palette.paper,
         padding: 28,
         fontFamily: MONO,
       }}
@@ -135,7 +154,7 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          border: `1px solid ${TOKENS.muted}55`,
+          border: `1px solid ${palette.muted}55`,
           padding: PAD,
         }}
       >
@@ -146,24 +165,24 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
             alignItems: "center",
             fontSize: 20,
             letterSpacing: 5,
-            color: TOKENS.muted,
+            color: palette.muted,
           }}
         >
           <div>CRUX · CERTIFICATE OF VERDICT</div>
           <div>{model.reference}</div>
         </div>
 
-        <Rule margin={34} />
+        <Rule palette={palette} margin={34} />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <SectionLabel>THE MOTION</SectionLabel>
+          <SectionLabel color={palette.muted}>THE MOTION</SectionLabel>
           <div
             style={{
               fontFamily: SERIF,
               fontStyle: "italic",
               fontSize: claimSize(model.claim.length),
               lineHeight: CLAIM_LINE_HEIGHT,
-              color: TOKENS.ink,
+              color: palette.ink,
             }}
           >
             {`“${model.claim}”`}
@@ -193,7 +212,7 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
               {card.label}
             </div>
             {card.score && (
-              <div style={{ fontSize: 26, color: TOKENS.muted }}>
+              <div style={{ fontSize: 26, color: palette.muted }}>
                 {card.score}
               </div>
             )}
@@ -205,17 +224,17 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
                 display: "flex",
                 height: 18,
                 width: "100%",
-                backgroundColor: TOKENS.track,
+                backgroundColor: palette.track,
                 marginTop: 26,
               }}
             >
               <div
-                style={{ flex: card.split.for, backgroundColor: TOKENS.forSide }}
+                style={{ flex: card.split.for, backgroundColor: palette.forSide }}
               />
               <div
                 style={{
                   flex: card.split.against,
-                  backgroundColor: TOKENS.againstSide,
+                  backgroundColor: palette.againstSide,
                 }}
               />
             </div>
@@ -231,7 +250,7 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
                 fontStyle: "italic",
                 fontSize: verdictSize(model.verdict.length),
                 lineHeight: VERDICT_LINE_HEIGHT,
-                color: TOKENS.muted,
+                color: palette.muted,
                 marginTop: 30,
               }}
             >
@@ -244,13 +263,21 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
 
         {analysis && (
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <Rule margin={0} />
+            <Rule palette={palette} margin={0} />
             <div style={{ marginTop: 26, display: "flex" }}>
-              <SectionLabel>CRUX AI ANALYSIS</SectionLabel>
+              <SectionLabel color={palette.muted}>CRUX AI ANALYSIS</SectionLabel>
             </div>
             <div style={{ display: "flex", gap: 48, marginTop: 8 }}>
-              <AnalysisColumn side="for" analysis={analysis.for} />
-              <AnalysisColumn side="against" analysis={analysis.against} />
+              <AnalysisColumn
+                side="for"
+                analysis={analysis.for}
+                palette={palette}
+              />
+              <AnalysisColumn
+                side="against"
+                analysis={analysis.against}
+                palette={palette}
+              />
             </div>
           </div>
         )}
@@ -262,7 +289,7 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
             FIXED_CHROME assumes these three values; they are a pair. */}
         <div style={{ display: "flex", flexGrow: 1, minHeight: 20 }} />
 
-        <Rule margin={0} />
+        <Rule palette={palette} margin={0} />
         <div
           style={{
             display: "flex",
@@ -271,11 +298,11 @@ export function CertificateCard({ model }: { model: CertificateModel }) {
             marginTop: 22,
             fontSize: 19,
             letterSpacing: 2,
-            color: TOKENS.muted,
+            color: palette.muted,
           }}
         >
           <div
-            style={{ color: card.mvpUsername ? TOKENS.laurel : TOKENS.muted }}
+            style={{ color: card.mvpUsername ? palette.laurel : palette.muted }}
           >
             {model.footer}
           </div>

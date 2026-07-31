@@ -7,7 +7,13 @@
 // image.
 
 import type { MatchState } from "@/app/motion/types";
-import { buildVerdictCard, truncate, type VerdictCardModel } from "./verdictCard";
+import {
+  buildVerdictCard,
+  truncate,
+  LIGHT_TOKENS,
+  type Palette,
+  type VerdictCardModel,
+} from "./verdictCard";
 import { VERDICT_HARD_MAX } from "./certificateType";
 import {
   isEmptyAnalysis,
@@ -52,10 +58,11 @@ export function buildCertificate(
   state: MatchState,
   claimRaw: string,
   source: CertificateSource,
+  palette: Palette = LIGHT_TOKENS,
 ): CertificateModel | null {
   if (state.status !== CERTIFIABLE_STATUS) return null;
 
-  const card = buildVerdictCard(state, claimRaw);
+  const card = buildVerdictCard(state, claimRaw, palette);
   const concludedOn = formatCertDate(source.concludedAt);
 
   const parts: string[] = [];
@@ -85,6 +92,13 @@ export function buildCertificate(
   };
 }
 
-export function certificateFilename(reference: string): string {
-  return `crux-verdict-${reference}.png`;
+// The theme is in the name so that downloading both does not silently overwrite
+// one with the other.
+export function certificateFilename(
+  reference: string,
+  theme: "light" | "dark" = "light",
+): string {
+  return theme === "dark"
+    ? `crux-verdict-${reference}-dark.png`
+    : `crux-verdict-${reference}.png`;
 }

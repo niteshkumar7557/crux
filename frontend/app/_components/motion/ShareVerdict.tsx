@@ -10,6 +10,15 @@ const ACTION =
 
 const COPIED_MS = 2000;
 
+// Read at click time, not at render: the theme toggle stamps <html data-theme>
+// without this component hearing about it.
+function certificateUrl(href: string): string {
+  const dark =
+    typeof document !== "undefined" &&
+    document.documentElement.dataset.theme === "dark";
+  return dark ? `${href}?theme=dark` : href;
+}
+
 const ShareVerdict = ({
   url,
   certificateHref,
@@ -46,6 +55,13 @@ const ShareVerdict = ({
           download
           aria-label="Download this verdict as a certificate image"
           className={ACTION}
+          onClick={(e) => {
+            // The plain href is the no-JS fallback and stays light. The route
+            // sends Content-Disposition: attachment, so assigning location
+            // downloads without navigating away.
+            e.preventDefault();
+            window.location.href = certificateUrl(certificateHref);
+          }}
         >
           <LuDownload /> Certificate
         </a>

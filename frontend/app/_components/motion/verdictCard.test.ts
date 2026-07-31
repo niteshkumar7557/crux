@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { buildVerdictCard, truncate, TOKENS } from "./verdictCard";
+import {
+  buildVerdictCard,
+  truncate,
+  TOKENS,
+  LIGHT_TOKENS,
+  DARK_TOKENS,
+  paletteFor,
+} from "./verdictCard";
 import type { MatchState } from "@/app/motion/types";
 
 const base: MatchState = {
@@ -97,5 +104,37 @@ describe("buildVerdictCard", () => {
       "c",
     );
     expect(m.liveNote).toBe("LIVE · closing soon");
+  });
+});
+
+describe("palettes", () => {
+  it("still defaults to the light palette, so the share card cannot move", () => {
+    const m = buildVerdictCard(base, "A motion.");
+    expect(m.accent).toBe(LIGHT_TOKENS.forSide);
+    expect(TOKENS).toBe(LIGHT_TOKENS);
+  });
+
+  it("takes its accent from the palette it is handed", () => {
+    const m = buildVerdictCard(base, "A motion.", DARK_TOKENS);
+    expect(m.accent).toBe(DARK_TOKENS.forSide);
+    expect(m.accent).not.toBe(LIGHT_TOKENS.forSide);
+  });
+
+  it("carries the palette through every ruling, not just a win", () => {
+    for (const winner of ["against", "draw", "walkover"] as const) {
+      const m = buildVerdictCard({ ...base, winner }, "A motion.", DARK_TOKENS);
+      expect(Object.values(DARK_TOKENS)).toContain(m.accent);
+    }
+  });
+
+  it("resolves a palette by theme name", () => {
+    expect(paletteFor("dark")).toBe(DARK_TOKENS);
+    expect(paletteFor("light")).toBe(LIGHT_TOKENS);
+  });
+
+  it("keeps the share card's truncation whatever the palette", () => {
+    const m = buildVerdictCard(base, "z".repeat(300), DARK_TOKENS);
+    expect(m.claim).toContain("…");
+    expect(m.claim.length).toBeLessThanOrEqual(91);
   });
 });
