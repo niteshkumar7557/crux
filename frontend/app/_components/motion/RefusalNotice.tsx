@@ -1,13 +1,17 @@
 "use client";
 
-// Why a post is not on the page. Shares the award slip's anatomy on purpose — the
-// two are the only answers the composer ever gives — but never dismisses itself:
-// an award can expire unread, a refusal is the reason there is nothing to read.
+// Why a post is not on the page — or, in one case, why it is. Shares the award
+// slip's anatomy on purpose, but never dismisses itself: an award can expire
+// unread, a refusal is the reason there is nothing to read.
+//
+// The "posted" tone exists for one situation only: the write landed and the
+// reply did not survive the trip back. It is not an award — we never received
+// the points — so it says what happened and points at the arena.
 // Spec: game-theory.md §19
 
 import { useEffect, useRef, type ReactNode } from "react";
 import Link from "next/link";
-import { LuTriangleAlert, LuArrowRight, LuX } from "react-icons/lu";
+import { LuTriangleAlert, LuArrowRight, LuX, LuCheck } from "react-icons/lu";
 import { gsap, MOTION_OK } from "@/app/_utils/gsap";
 import Portal from "@/app/_components/ui/Portal";
 
@@ -15,7 +19,17 @@ export type Notice = {
   title: string;
   body: ReactNode;
   action?: { href: string; label: string };
+  tone?: "refusal" | "posted";
 };
+
+const TONES = {
+  refusal: {
+    label: "Not posted",
+    Icon: LuTriangleAlert,
+    accent: "text-side-against",
+  },
+  posted: { label: "Posted", Icon: LuCheck, accent: "text-laurel" },
+} as const;
 
 const RefusalNotice = ({
   notice,
@@ -46,17 +60,21 @@ const RefusalNotice = ({
     return () => window.removeEventListener("keydown", onKey);
   }, [onDismiss]);
 
+  const { label, Icon, accent } = TONES[notice.tone ?? "refusal"];
+
   return (
     <Portal>
       <div
         ref={rootRef}
-        role="alert"
+        role={notice.tone === "posted" ? "status" : "alert"}
         className="fixed bottom-32 right-6 z-60 w-88 max-w-[calc(100vw-3rem)] bg-raised border border-ink-faint shadow-cast-deep"
       >
         <div className="flex items-center justify-between border-b border-ink-faint px-5 py-3">
-          <span className="flex items-center gap-2 font-label text-[10px] uppercase tracking-[0.2em] text-side-against font-bold">
-            <LuTriangleAlert className="text-sm" />
-            Not posted
+          <span
+            className={`flex items-center gap-2 font-label text-[10px] uppercase tracking-[0.2em] ${accent} font-bold`}
+          >
+            <Icon className="text-sm" />
+            {label}
           </span>
           <button
             className="shrink-0 text-ink-soft hover:text-ink transition-colors cursor-pointer"

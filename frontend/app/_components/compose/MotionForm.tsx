@@ -27,8 +27,14 @@ import ArbiterPanel from "./ArbiterPanel";
 import BroadcastPreview from "./BroadcastPreview";
 
 const DRAFT_KEY = "crux:motion-draft";
+// Deliberately shorter than the server's worst case: the eligibility check is
+// read-only and retryable, so a false "Arbiter unreachable" beats making someone
+// watch "Analyzing…" for 75 seconds.
 const CHECK_TIMEOUT_MS = 30000;
-const CAST_TIMEOUT_MS = 60000;
+// The cast writes. Its deadline has to sit ABOVE the server's worst case and
+// below Cloudflare's ~100s, or the composer reports a failure for a motion that
+// exists — and the draft it keeps then produces a duplicate.
+const CAST_TIMEOUT_MS = 75000;
 
 const MotionForm = ({ domains }: { domains: DomainClassification }) => {
 	const router = useRouter();

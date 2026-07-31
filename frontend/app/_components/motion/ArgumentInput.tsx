@@ -27,6 +27,7 @@ import PointsPopup from "../ui/PointsPopup";
 import SideLockConfirm from "./SideLockConfirm";
 import RefusalNotice, { type Notice } from "./RefusalNotice";
 import { stageAt } from "./postingStages";
+import { hasPostedArgument } from "./reconcile";
 import { useArenaClosed } from "./useArenaClock";
 import type { Award } from "../ui/awardCopy";
 
@@ -38,6 +39,14 @@ const BUSY_LABEL = "Posting your argument";
 // open overnight stops asking.
 const VERDICT_POLL_MS = 20_000;
 const VERDICT_POLL_LIMIT_MS = 5 * 60_000;
+
+// The server's worst case is ~60s (one LLM call, two attempts) and Cloudflare
+// cuts the connection at ~100s. The client's deadline has to sit between them,
+// or a timeout stops meaning "the server failed too".
+const POST_TIMEOUT_MS = 75_000;
+// A dropped socket can happen while the server is still inside the transaction,
+// so look more than once before concluding anything.
+const RECONCILE_DELAYS_MS = [0, 4_000, 10_000];
 
 // Mounted only while a post is in flight, so its clock starts at zero every time
 // without an effect resetting it.
@@ -207,14 +216,45 @@ const ArgumentInput = ({
     submit(urlSide, replyToArgumentId);
   }
 
+  // The write may have landed in a socket nobody was holding. Rather than guess,
+  // read the arena back and look for it.
+  async function reconcile(draft: string) {
+    for (const delay of RECONCILE_DELAYS_MS) {
+      if (delay > 0) {
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+      try {
+        const { data } = await api.get(`/motion/${motionId}/arguments`);
+        if (hasPostedArgument(data.arguments ?? [], user!.id, draft)) {
+          setInput("");
+          setTarget(null);
+          setNotice({
+            tone: "posted",
+            title: "It Posted",
+            body: "The connection dropped before the reply came back, but your argument is in the arena below — with its score. Nothing was lost, and nothing was charged twice.",
+          });
+          router.refresh();
+          return;
+        }
+      } catch {
+        // A failed look is not an answer. Try the next delay.
+      }
+    }
+    setNotice({
+      title: "Not Posted",
+      body: "We checked the arena and your argument isn't there. Your draft is still in the box — try again.",
+    });
+  }
+
   async function submit(urlSide: string, replyToArgumentId: number | null) {
     if (input.length === 0) return;
     setPosting(urlSide);
     try {
-      const { data } = await api.post(`/motion/${motionId}/arguments/${urlSide}`, {
-        input,
-        replyToArgumentId,
-      });
+      const { data } = await api.post(
+        `/motion/${motionId}/arguments/${urlSide}`,
+        { input, replyToArgumentId },
+        { timeout: POST_TIMEOUT_MS },
+      );
       setInput("");
       if (data.abused) {
         setAward(null);
@@ -286,12 +326,27 @@ const ArgumentInput = ({
           });
           router.refresh();
         }
-      } else {
-        setNotice({
-          title: "Post Failed",
-          body: "Something went wrong. Try again.",
-        });
+        return;
       }
+      // Everything left is either "we never heard back" or a 5xx. Both can mean
+      // the write landed anyway, so we look before we say anything. A backend
+      // 500 rolled its transaction back and will correctly find nothing — which
+      // costs one cheap GET and saves the client from having to tell a proxy 502
+      // apart from an application 500, which it cannot do.
+      const noAnswer =
+        !isAxiosError(err) ||
+        !err.response ||
+        err.code === "ECONNABORTED" ||
+        err.code === "ERR_NETWORK" ||
+        err.response.status >= 500;
+      if (noAnswer) {
+        await reconcile(input);
+        return;
+      }
+      setNotice({
+        title: "Post Failed",
+        body: "Something went wrong. Try again.",
+      });
     } finally {
       setPosting(null);
     }
