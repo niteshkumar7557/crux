@@ -17,7 +17,13 @@ const shell: ProfileShell = {
     record: { wins: 12, losses: 4, draws: 1 },
     mvpCount: 2,
   },
-  season: { number: 2, logic: 88, daysLeft: 9 },
+  season: {
+    number: 2,
+    logic: 88,
+    rank: 5,
+    startsAt: "2026-08-01T00:00:00.000Z",
+    daysLeft: 9,
+  },
   titles: [],
 };
 

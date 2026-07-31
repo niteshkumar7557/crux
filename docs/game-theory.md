@@ -355,11 +355,16 @@ motion and train people to ignore the banner.
 | Winning side, everyone else | **+10** | +1 W |
 | Losing side | **−5 to your season score only.** Your all-time logic never falls | +1 L |
 | Both sides, on a draw | 0 | +1 D |
-| Motion author, on a decisive or drawn conclusion | **+5** | — |
+| Motion author, on a decisive or drawn conclusion | **+10** | — |
 | Anyone, on a walkover | 0 | — |
 
 The MVP's +25 **replaces** the +10; it does not stack. The author bonus is separate, so an author
 who also argued receives both.
+
+**The author bonus matches the win bonus deliberately.** Asking the question that produced a real
+contest is worth as much as winning inside it. It cannot be farmed: a motion nobody argues on
+concludes as a walkover and pays its author **nothing** (§11), so the bonus is earned by attracting
+two live sides, not by posting.
 
 **How the season-only penalty works:** logic is recorded as a timestamped ledger of events, so
 "logic earned this season" is a sum over the current month while the all-time score is a running
@@ -381,7 +386,7 @@ The debate closes **FOR 58 – AGAINST 42**. Margin 16 > 5, so FOR wins, and May
 - **Maya:** 18 + 25 = **+43 logic**, +1 W, MVP badge.
 - **Dev**, who argued AGAINST across three arguments (+16): keeps **16 all-time**, but his
   **season** total for those arguments is 11 after the −5. +1 L.
-- **Sam**, who posted the motion and argued FOR (+12): 12 + 10 (win) + 5 (author) = **+27**, +1 W.
+- **Sam**, who posted the motion and argued FOR (+12): 12 + 10 (win) + 10 (author) = **+32**, +1 W.
 
 Read the gradient: **arguing** is the base income, **winning** is worth about half a debate's work,
 and **MVP** is worth more than the arguing itself. Losing still leaves you well ahead of not
@@ -638,7 +643,7 @@ it.** A user should never be able to say "I didn't know."
 | **What you just earned** | The points pop-up (below) | Immediately after posting |
 | **48h clock** | A live countdown in the arena and on every card | Always |
 | **The draw zone** | The probability bar renders the draw band (47.5–52.5) as a marked zone, so you can *see* a debate heading for a draw and that it's still winnable | Always |
-| **Loss costs season points** | In the side-commit confirmation, and again in the verdict payout breakdown | Before **and** after |
+| **Loss costs season points** | Rules page and the landing payout table, then again in the verdict payout breakdown | Before and after |
 | **MVP comes from the winning side** | Rules page, and the verdict card | Always |
 | **Walkover risk** | A banner on a live debate with an empty side, once **under 6 hours** remain | Final 6 hours |
 | **Season window** | A "Season 0 · 12 days left" strip on the leaderboard and profile | Always |
@@ -653,6 +658,12 @@ it.** A user should never be able to say "I didn't know."
 > **Two open gaps, unfixed.** The **author-argues-FOR-only** rule (§5) and the **self-like block**
 > (§10) are enforced by the server but stated nowhere before a user hits them. By the principle
 > above, both are bugs. They are recorded here rather than quietly tolerated.
+
+> **The side-lock confirmation states the lock and nothing else.** It used to repeat the loss
+> penalty at the moment of commitment; that was removed deliberately, because pricing the downside
+> in the instant someone commits discourages the commitment. The rule still clears the "before"
+> bar via `/rules` and the landing payout table — but the disclosure is now one step further from
+> the decision than the principle above would ideally place it. An owner's call, recorded.
 
 ### The points pop-up
 
@@ -723,7 +734,7 @@ Every tunable constant in the game. **If a number is in the code, it is in this 
 | MVP bonus | **+25** (replaces the win bonus) | §12 |
 | Win bonus | **+10** | §12 |
 | Loss penalty | **−5**, season score only | §12 |
-| Author bonus | **+5** | §12 |
+| Author bonus | **+10** | §12 |
 | Logic floor | **0** | §7, §13 |
 | Tier thresholds | 0 / 100 / 200 / 300 / 400 | §13 |
 | Bio length cap | **280 characters** | §13 |

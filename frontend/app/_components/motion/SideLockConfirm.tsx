@@ -1,7 +1,9 @@
 "use client";
 
 // The confirmation before a first argument. The side lock is irreversible, so it is
-// confirmed rather than discovered. Spec: game-theory.md §5, §19
+// confirmed rather than discovered. It states the lock and nothing else — the loss
+// penalty is disclosed on /rules and in the verdict, not at the moment of commitment.
+// Spec: game-theory.md §5, §19
 
 import { useEffect } from "react";
 import Button from "@/app/_components/ui/Button";
@@ -59,10 +61,6 @@ const SideLockConfirm = ({
           </h2>
           <p className="font-body text-ink-soft mt-4 leading-relaxed">
             You will not be able to argue {opposing} in this debate.
-          </p>
-          <p className="font-body text-sm text-ink-soft mt-3 leading-relaxed">
-            A loss costs 5 points from your season score — never from your
-            all-time logic.
           </p>
           <div className="flex flex-col-reverse sm:flex-row gap-3 mt-8">
             <Button

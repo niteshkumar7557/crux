@@ -293,7 +293,7 @@ const MotionForm = ({ domains }: { domains: DomainClassification }) => {
 					</p>
 				)}
 				<p className="font-body text-[11px] text-ink-soft leading-relaxed">
-					You earn +5 logic when your motion produces a real debate —
+					You earn +10 logic when your motion produces a real debate —
 					both sides must argue. If one side is still empty at the deadline it
 					concludes unopposed and nobody scores, you included.{" "}
 					<Link

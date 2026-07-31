@@ -27,6 +27,8 @@ export interface ProfileStanding {
 export interface ProfileSeason {
   number: number;
   logic: number;
+  rank: number;
+  startsAt: string;
   daysLeft: number;
 }
 
@@ -46,8 +48,10 @@ export interface CraftStats {
   arguments: number;
   replies: number;
   avgLogic: number;
+  /** Distinct motions these arguments are spread across. */
   motions: number;
-  best: { points: number; motionId: number; claim: string } | null;
+  /** Motions this user put on the board. */
+  motionsStarted: number;
 }
 
 export interface LiveDebate {

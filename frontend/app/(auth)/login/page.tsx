@@ -12,7 +12,7 @@ import Button from "@/app/_components/ui/Button";
 import { LogoMark } from "@/app/_components/ui/Logo";
 import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
 
-const SUPPORT_EMAIL = "help@crux.kumarnitesh.in";
+const SUPPORT_EMAIL = "help@cruxdebate.site";
 
 const Login = () => {
   const [email, setEmail] = useState<string>("");

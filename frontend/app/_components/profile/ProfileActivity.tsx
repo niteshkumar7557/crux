@@ -17,10 +17,12 @@ const ProfileActivity = ({
   username,
   profileId,
   seasonNumber,
+  seasonStartsAt,
 }: {
   username: string;
   profileId: number;
   seasonNumber: number;
+  seasonStartsAt: string;
 }) => {
   const [data, setData] = useState<ProfileActivityData | null>(null);
   const [failed, setFailed] = useState(false);
@@ -85,7 +87,11 @@ const ProfileActivity = ({
     <div ref={rootRef}>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div data-activity-section className="lg:col-span-8">
-          <LogicLedger ledger={data.ledger} seasonNumber={seasonNumber} />
+          <LogicLedger
+            ledger={data.ledger}
+            seasonNumber={seasonNumber}
+            seasonStartsAt={seasonStartsAt}
+          />
         </div>
         <div data-activity-section className="lg:col-span-4">
           <ArgumentPattern craft={data.craft} />

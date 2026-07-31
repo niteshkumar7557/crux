@@ -35,7 +35,7 @@ export const DRAW_MARGIN = 5;
 export const MVP_BONUS = 25;
 export const WIN_BONUS = 10;
 export const LOSS_PENALTY = -5;
-export const AUTHOR_BONUS = 5;
+export const AUTHOR_BONUS = 10;
 
 export function resolveVerdict(
   raw: RawVerdict,

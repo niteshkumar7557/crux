@@ -11,25 +11,34 @@ const label = (weekStart: string) => {
   return `${Number(d)}/${Number(m)}`;
 };
 
-function seasonStartWeek(now: Date = new Date()): string {
-  const first = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-  const dow = (first.getUTCDay() + 6) % 7; // Mon = 0 … Sun = 6
-  first.setUTCDate(first.getUTCDate() - dow);
-  return first.toISOString().slice(0, 10);
+// The bars are keyed by Postgres `date_trunc('week', …)`, which is Monday-based —
+// so the season's opening day has to be walked back to its Monday to name a bar.
+function weekOf(startsAt: string): string {
+  const d = new Date(startsAt);
+  const dow = (d.getUTCDay() + 6) % 7; // Mon = 0 … Sun = 6
+  d.setUTCDate(d.getUTCDate() - dow);
+  return d.toISOString().slice(0, 10);
 }
 
 const LogicLedger = ({
   ledger,
   seasonNumber,
+  seasonStartsAt,
 }: {
   ledger: LedgerWeek[];
   seasonNumber: number;
+  seasonStartsAt: string;
 }) => {
   const peak = Math.max(1, ...ledger.map((w) => Math.abs(w.amount)));
   const total = ledger.reduce((sum, w) => sum + w.amount, 0);
   const empty = ledger.every((w) => w.amount === 0);
-  const seasonWeek = seasonStartWeek();
-  const showsSeasonStart = ledger.some((w) => w.weekStart === seasonWeek);
+  const seasonWeek = weekOf(seasonStartsAt);
+  const seasonIndex = ledger.findIndex((w) => w.weekStart === seasonWeek);
+  // The caption sits in the marked column, not centred under the chart — a season
+  // that opened in the last week is the normal case, and a centred label points at
+  // a week that has nothing to do with it. Past halfway it hangs to the left of its
+  // column so it cannot run off the card.
+  const captionRight = seasonIndex > ledger.length / 2;
 
   return (
     <div className="bg-band p-8 h-full">
@@ -87,19 +96,33 @@ const LogicLedger = ({
       )}
 
       {!empty && (
-        <div className="flex justify-between items-baseline gap-4 mt-3">
-          <span className="font-label text-[10px] text-ink-soft">
-            {label(ledger[0].weekStart)}
-          </span>
-          {showsSeasonStart && (
-            <span className="font-label text-[10px] uppercase tracking-widest text-laurel">
-              │ Season {seasonNumber} began
+        <>
+          <div className="flex justify-between items-baseline gap-4 mt-3">
+            <span className="font-label text-[10px] text-ink-soft">
+              {label(ledger[0].weekStart)}
             </span>
+            <span className="font-label text-[10px] text-ink-soft">
+              {label(ledger[ledger.length - 1].weekStart)}
+            </span>
+          </div>
+          {seasonIndex >= 0 && (
+            <div className="flex mt-2">
+              {ledger.map((w, i) => (
+                <div key={w.weekStart} className="flex-1 min-w-0">
+                  {i === seasonIndex && (
+                    <span
+                      className={`block whitespace-nowrap font-label text-[10px] uppercase tracking-widest text-laurel ${
+                        captionRight ? "text-right" : ""
+                      }`}
+                    >
+                      Season {seasonNumber} began
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
           )}
-          <span className="font-label text-[10px] text-ink-soft">
-            {label(ledger[ledger.length - 1].weekStart)}
-          </span>
-        </div>
+        </>
       )}
     </div>
   );

@@ -40,7 +40,7 @@ const RULES = [
   },
   {
     title: "Winning pays, losing costs the month",
-    body: "MVP earns +25, everyone else on the winning side +10, and the motion's author +5 for producing a real debate. A loss costs 5 points from your season score only — your all-time logic never falls. If one side never argues, the debate concludes unopposed and nobody scores at all.",
+    body: "MVP earns +25, everyone else on the winning side +10, and the motion's author +10 for producing a real debate. A loss costs 5 points from your season score only — your all-time logic never falls. If one side never argues, the debate concludes unopposed and nobody scores at all.",
   },
 ];
 

@@ -68,6 +68,7 @@ export async function getProfileShell(req: Request, res: Response) {
     if (!user) return res.status(404).json({ error: "not_found" });
 
     const logic = Number(user.logic_score);
+    const seasonStart = currentSeasonStart();
 
     const [rankRes, recordRes, seasonRes, titlesRes] = await Promise.all([
       pool.query(
@@ -84,9 +85,23 @@ export async function getProfileShell(req: Request, res: Response) {
         [user.id],
       ),
       pool.query(
-        `SELECT COALESCE(SUM(amount), 0)::int AS n FROM logic_events
-         WHERE user_id = $1 AND created_at >= $2;`,
-        [user.id, currentSeasonStart()],
+        // The season board is scored over every user, not just those with events,
+        // so the board CTE left-joins. The `> mine OR (= mine AND lower id)` tiebreak
+        // is the same one ROW_NUMBER applies in getSeasonLeaderboard — take it out and
+        // a profile would claim a rank the board it links to does not agree with.
+        `WITH board AS (
+           SELECT u.id,
+                  COALESCE(SUM(le.amount) FILTER (WHERE le.created_at >= $2), 0)::int AS n
+           FROM users u
+           LEFT JOIN logic_events le ON le.user_id = u.id
+           GROUP BY u.id
+         ),
+         me AS (SELECT n FROM board WHERE id = $1)
+         SELECT (SELECT n FROM me) AS n,
+                (SELECT COUNT(*) + 1 FROM board, me
+                  WHERE board.n > me.n
+                     OR (board.n = me.n AND board.id < $1))::int AS rank;`,
+        [user.id, seasonStart],
       ),
       pool.query(
         `SELECT season_key AS "seasonKey", season_number AS "seasonNumber",
@@ -122,6 +137,10 @@ export async function getProfileShell(req: Request, res: Response) {
       season: {
         number: seasonNumber(),
         logic: seasonRes.rows[0].n,
+        rank: seasonRes.rows[0].rank,
+        // The ledger marks where the season opened, and Season 1 opens on the launch
+        // date rather than a 1st. Sent, not inferred — the client cannot derive it.
+        startsAt: seasonStart.toISOString(),
         daysLeft: daysLeftInSeason(),
       },
       titles: titlesRes.rows,
@@ -139,7 +158,7 @@ export async function getProfileActivity(req: Request, res: Response) {
 
     const weeks = config.limits.profile_ledger_weeks;
 
-    const [ledgerRes, craftRes, bestRes, liveRes, historyRes] =
+    const [ledgerRes, craftRes, liveRes, historyRes] =
       await Promise.all([
         pool.query(
           // to_char rather than a bare DATE: node-pg parses a DATE column into a JS
@@ -154,18 +173,15 @@ export async function getProfileActivity(req: Request, res: Response) {
           [user.id, weeks],
         ),
         pool.query(
+          // Two different motion counts, and they answer different questions:
+          // `motions` is how many debates these arguments are spread across,
+          // `motionsStarted` is how many the user put on the board themselves.
           `SELECT COUNT(*)::int                                                AS arguments,
                   COUNT(*) FILTER (WHERE reply_to_argument_id IS NOT NULL)::int AS replies,
                   COALESCE(ROUND(AVG(points)::numeric, 1), 0)::float           AS "avgLogic",
-                  (SELECT COUNT(*) FROM motions WHERE user_id = $1)::int     AS motions
+                  COUNT(DISTINCT motion_id)::int                               AS motions,
+                  (SELECT COUNT(*) FROM motions WHERE user_id = $1)::int  AS "motionsStarted"
            FROM arguments WHERE user_id = $1;`,
-          [user.id],
-        ),
-        pool.query(
-          `SELECT c.points, c.motion_id AS "motionId", a.content AS claim
-           FROM arguments c JOIN motions a ON a.id = c.motion_id
-           WHERE c.user_id = $1
-           ORDER BY c.points DESC, c.id DESC LIMIT 1;`,
           [user.id],
         ),
         pool.query(
@@ -202,7 +218,7 @@ export async function getProfileActivity(req: Request, res: Response) {
         replies: craft.replies,
         avgLogic: craft.avgLogic,
         motions: craft.motions,
-        best: bestRes.rows[0] ?? null,
+        motionsStarted: craft.motionsStarted,
       },
       live: liveRes.rows,
       history: historyRes.rows,

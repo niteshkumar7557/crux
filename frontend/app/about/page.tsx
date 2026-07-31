@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/about" },
 };
 
-const SUPPORT_EMAIL = "help@crux.kumarnitesh.in";
+const SUPPORT_EMAIL = "help@cruxdebate.site";
 
 const PILLARS = [
   {

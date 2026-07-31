@@ -221,7 +221,7 @@ const VerdictExhibit = () => (
           ["Everyone else who won", "+10 logic · +1 W"],
           ["The losing side", "−5 season points only · +1 L — your lifetime score never falls"],
           ["A draw (margin ≤ 5)", "0 · +1 D for both camps"],
-          ["The motion's author", "+5 logic for a real debate"],
+          ["The motion's author", "+10 logic for a real debate"],
           ["A walkover (empty side)", "0 for everyone — no farming empty wins"],
         ].map(([who, what]) => (
           <tr key={who} className="border-t border-ink-faint">
@@ -316,7 +316,7 @@ const Articles = () => {
           <p data-reveal>
             You never walk into a debate that was doomed by a bad question — and
             when your motion produces a real contest, you earn{" "}
-            <strong className="text-ink">+5 logic</strong> for asking it.
+            <strong className="text-ink">+10 logic</strong> for asking it.
           </p>
           <Rule>
             Posting always works instantly and always goes live — nothing is

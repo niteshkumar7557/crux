@@ -1,10 +1,8 @@
 "use client";
 
-// Craft stats: how many arguments, how many were replies, the best one.
+// Craft stats: how many arguments, how many were replies, how many motions started.
 
-import Link from "next/link";
 import type { CraftStats } from "@/app/profile/types";
-import { debateSlug } from "@/app/_utils/slugify";
 
 const ArgumentPattern = ({ craft }: { craft: CraftStats }) => {
   const replyRate = craft.arguments > 0 ? craft.replies / craft.arguments : 0;
@@ -57,19 +55,14 @@ const ArgumentPattern = ({ craft }: { craft: CraftStats }) => {
         </div>
       </dl>
 
-      {craft.best && (
-        <div className="mt-auto border-t border-ink-faint pt-6">
-          <span className="font-label text-[10px] text-ink-soft uppercase tracking-widest block mb-2">
-            Best argument · {craft.best.points} logic
-          </span>
-          <Link
-            href={`/debate/${debateSlug(craft.best.claim, craft.best.motionId)}`}
-            className="font-body text-sm text-ink hover:text-ink transition-colors line-clamp-2"
-          >
-            {craft.best.claim}
-          </Link>
-        </div>
-      )}
+      <div className="mt-auto border-t border-ink-faint pt-6">
+        <span className="font-label text-[10px] text-ink-soft uppercase tracking-widest block mb-2">
+          Motions started
+        </span>
+        <span className="font-label text-3xl font-bold text-ink">
+          {craft.motionsStarted}
+        </span>
+      </div>
 
       <p className="font-label text-[10px] uppercase tracking-widest text-ink-soft mt-6">
         Standalone arguments cap at 7 logic. Replies reach 10.

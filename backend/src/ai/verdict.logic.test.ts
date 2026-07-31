@@ -115,6 +115,7 @@ describe("resolvePayouts", () => {
     expect(p.logicAwards).toEqual([
       { userId: 9, amount: AUTHOR_BONUS, seasonOnly: false },
     ]);
+    expect(AUTHOR_BONUS).toBe(10);
     expect(p.results.every((r) => r.outcome === "draw")).toBe(true);
   });
 
@@ -138,10 +139,9 @@ describe("resolvePayouts", () => {
       authorId: 1, // maya wrote the motion AND argued for
     });
     const maya = p.logicAwards.filter((a) => a.userId === 1);
-    expect(maya.map((a) => a.amount).sort((a, b) => a - b)).toEqual([
-      AUTHOR_BONUS,
-      WIN_BONUS,
-    ]);
+    // Order, not a sort: the two bonuses are the same number, so the win-then-author
+    // sequence is the only thing left that can tell a double win bonus from both.
+    expect(maya.map((a) => a.amount)).toEqual([WIN_BONUS, AUTHOR_BONUS]);
   });
 });
 

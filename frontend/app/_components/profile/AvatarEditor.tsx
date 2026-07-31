@@ -33,8 +33,33 @@ const AvatarEditor = ({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
 
   const isOwner = user?.id === profileId;
+
+  // Dismiss on any click that lands outside, and on Escape. The toggle is exempt
+  // because it closes the panel itself — dismissing here first would let it reopen.
+  useEffect(() => {
+    if (!open) return;
+
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as Node;
+      if (panelRef.current?.contains(target)) return;
+      if (toggleRef.current?.contains(target)) return;
+      setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open || presets.length > 0) return;
@@ -96,6 +121,7 @@ const AvatarEditor = ({
       />
       {isOwner && (
         <button
+          ref={toggleRef}
           onClick={() => setOpen(!open)}
           aria-label={open ? "Close avatar editor" : "Edit avatar"}
           aria-expanded={open}
@@ -107,7 +133,10 @@ const AvatarEditor = ({
       )}
 
       {isOwner && open && (
-        <div className="absolute left-0 top-full mt-4 z-20 w-[21rem] bg-paper border border-ink-faint p-5">
+        <div
+          ref={panelRef}
+          className="absolute left-0 top-full mt-4 z-20 w-[21rem] bg-paper border border-ink-faint p-5"
+        >
           <span className="font-label text-[10px] uppercase tracking-[0.2em] text-ink-soft block mb-4">
             Pick a Preset
           </span>

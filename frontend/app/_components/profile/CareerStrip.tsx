@@ -1,6 +1,6 @@
-// W-L-D, MVPs, rank. Spec: game-theory.md §13
+// W-L-D, MVPs, rank. Spec: game-theory.md §13, §14
 
-import type { ProfileStanding } from "@/app/profile/types";
+import type { ProfileSeason, ProfileStanding } from "@/app/profile/types";
 
 const Cell = ({
   label,
@@ -19,7 +19,13 @@ const Cell = ({
   </div>
 );
 
-const CareerStrip = ({ standing }: { standing: ProfileStanding }) => (
+const CareerStrip = ({
+  standing,
+  season,
+}: {
+  standing: ProfileStanding;
+  season: ProfileSeason;
+}) => (
   <section
     aria-label="Career totals"
     className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-ink-faint mb-12"
@@ -38,8 +44,9 @@ const CareerStrip = ({ standing }: { standing: ProfileStanding }) => (
     <Cell label="MVP">
       <span className="text-laurel">×{standing.mvpCount}</span>
     </Cell>
-    <Cell label="Global Rank">
+    <Cell label="Rank (All-time · Season)">
       <span className="text-ink">#{standing.globalRank}</span>
+      <span className="text-sm text-ink-soft"> · #{season.rank}</span>
     </Cell>
   </section>
 );

@@ -93,7 +93,7 @@ const ProfilePage = async ({
         />
       </div>
       <div data-reveal>
-        <CareerStrip standing={shell.standing} />
+        <CareerStrip standing={shell.standing} season={shell.season} />
       </div>
       <div data-reveal>
         <TierLadder logic={shell.standing.logic} />
@@ -105,6 +105,7 @@ const ProfilePage = async ({
         username={shell.identity.username}
         profileId={shell.identity.id}
         seasonNumber={shell.season.number}
+        seasonStartsAt={shell.season.startsAt}
       />
     </Reveal>
   );
