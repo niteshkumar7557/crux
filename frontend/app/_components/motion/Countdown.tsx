@@ -1,8 +1,10 @@
 "use client";
 
-// The live 48h clock. Spec: game-theory.md §4
+// The live 48h clock. Reads the arena's one clock, so the number here and the
+// gate that closes the composer can never disagree.
+// Spec: game-theory.md §4
 
-import { useEffect, useState } from "react";
+import { useNow } from "./useArenaClock";
 
 function fmt(msLeft: number): string {
   const s = Math.max(0, Math.floor(msLeft / 1000));
@@ -15,13 +17,8 @@ function fmt(msLeft: number): string {
 }
 
 const Countdown = ({ closesAt }: { closesAt: string }) => {
-  const target = new Date(closesAt).getTime();
-  const [left, setLeft] = useState(() => target - Date.now());
-
-  useEffect(() => {
-    const t = setInterval(() => setLeft(target - Date.now()), 1000);
-    return () => clearInterval(t);
-  }, [target]);
+  const now = useNow();
+  const left = new Date(closesAt).getTime() - now;
 
   if (left <= 0) return null;
 
