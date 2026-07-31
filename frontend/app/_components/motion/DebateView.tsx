@@ -129,6 +129,8 @@ const DebateView = async ({ id }: { id: number }) => {
             argumentsPayload={argumentsRes.data}
             motionId={id}
             authorId={Number(row.user_id)}
+            status={matchState.status}
+            closesAt={matchState.closesAt}
           />
         </section>
         <ArgumentInput

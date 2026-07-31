@@ -26,6 +26,7 @@ export interface UserArgumentCardProps {
   replyCount: number; // "↳ N replies" shown on the target argument
   firstReplyId: number | null; // scroll anchor for the replies link
   viewerLockedSide: "for" | "against" | null; // gates the cross-side Reply button
+  closed: boolean; // §4: the arena is read-only once the clock is out
 }
 
 export interface MotionHeaderProps {

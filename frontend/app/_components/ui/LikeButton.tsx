@@ -11,7 +11,8 @@ import { gsap, MOTION_OK } from "@/app/_utils/gsap";
 type Mode =
   | { kind: "own" }
   | { kind: "anonymous" }
-  | { kind: "interactive" };
+  | { kind: "interactive" }
+  | { kind: "closed" };
 
 const LikeButton = ({
   argumentId,
@@ -80,6 +81,21 @@ const LikeButton = ({
       {liked ? <PiThumbsUpFill /> : <PiThumbsUp />}
     </span>
   );
+
+  // §4: at zero the arena is read-only. First, so a concluded debate reads the
+  // same for everyone — author, stranger and logged-out alike. The count stays;
+  // read-only is not hidden.
+  if (mode.kind === "closed") {
+    return (
+      <span
+        title="This debate has concluded — likes are closed"
+        className={`${base} text-ink-soft cursor-not-allowed`}
+      >
+        {icon}
+        <span className="tabular-nums">{likeCount}</span>
+      </span>
+    );
+  }
 
   if (mode.kind === "own") {
     return (

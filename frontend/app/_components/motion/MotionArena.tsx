@@ -9,6 +9,7 @@ import { Analysis, UserArgumentCardProps } from "@/app/motion/types";
 import api from "@/app/axios";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useArenaClosed } from "./useArenaClock";
 import { convertLogicScore } from "@/app/_utils/logicScore";
 import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
 import { shouldAnimate } from "@/app/_utils/animateOnce";
@@ -32,12 +33,19 @@ const MotionArena = ({
   argumentsPayload,
   motionId,
   authorId,
+  status,
+  closesAt,
 }: {
   aiAnalysis: [Analysis, Analysis];
   argumentsPayload: { arguments: RawArgument[] };
   motionId: number;
   authorId: number;
+  status: "live" | "concluded";
+  closesAt: string | null;
 }) => {
+  // §4: the same clock the composer closes on, so the thumbs and the composer
+  // can never disagree about whether this debate is still open.
+  const closed = useArenaClosed(status, closesAt);
   const [user, setUser] = useState<jwtPayload | null>(null);
   const [likedIds, setLikedIds] = useState<Set<number>>(new Set());
   const arenaRef = useRef<HTMLDivElement>(null);
@@ -140,6 +148,7 @@ const MotionArena = ({
       replyCount: replyCounts.get(e.argument_id) ?? 0,
       firstReplyId: firstReplyIds.get(e.argument_id) ?? null,
       viewerLockedSide,
+      closed,
     };
     if (e.side === "for") {
       forCaseArguments.push(arenaArgument);

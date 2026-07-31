@@ -25,6 +25,7 @@ const UserArgumentCard = ({
   replyCount,
   firstReplyId,
   viewerLockedSide,
+  closed,
 }: UserArgumentCardProps) => {
   const { setTarget } = useReplyTarget();
 
@@ -32,14 +33,17 @@ const UserArgumentCard = ({
     side === "for" ? "hover:text-side-for" : "hover:text-side-against"
   }`;
 
-  const likeMode =
-    user_id === undefined
+  const likeMode = closed
+    ? ({ kind: "closed" } as const)
+    : user_id === undefined
       ? ({ kind: "anonymous" } as const)
       : user_id === post_user_id
         ? ({ kind: "own" } as const)
         : ({ kind: "interactive" } as const);
 
+  // A Reply button that opens a closed composer is a dead end.
   const canReply =
+    !closed &&
     user_id !== undefined &&
     (viewerLockedSide === null || viewerLockedSide !== side);
 
