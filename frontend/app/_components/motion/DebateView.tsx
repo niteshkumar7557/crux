@@ -134,6 +134,7 @@ const DebateView = async ({ id }: { id: number }) => {
         <ArgumentInput
           motionId={id}
           status={matchState.status}
+          closesAt={matchState.closesAt}
           authorId={Number(row.user_id)}
           argumentSides={(argumentsRes.data.arguments ?? []).map(
             (c: { post_user_id: number; side: "for" | "against" }) => ({

@@ -27,10 +27,17 @@ import PointsPopup from "../ui/PointsPopup";
 import SideLockConfirm from "./SideLockConfirm";
 import RefusalNotice, { type Notice } from "./RefusalNotice";
 import { stageAt } from "./postingStages";
+import { useArenaClosed } from "./useArenaClock";
 import type { Award } from "../ui/awardCopy";
 
 const TICK_MS = 400;
 const BUSY_LABEL = "Posting your argument";
+
+// The conclusion job sweeps every 60s, so five minutes is ~5x the expected wait
+// — long enough that a reader never has to reload, short enough that a tab left
+// open overnight stops asking.
+const VERDICT_POLL_MS = 20_000;
+const VERDICT_POLL_LIMIT_MS = 5 * 60_000;
 
 // Mounted only while a post is in flight, so its clock starts at zero every time
 // without an effect resetting it.
@@ -92,11 +99,13 @@ type Pending = {
 const ArgumentInput = ({
   motionId,
   status,
+  closesAt,
   authorId,
   argumentSides,
 }: {
   motionId: number;
   status: "live" | "concluded";
+  closesAt: string | null;
   authorId: number;
   argumentSides: ArgumentSide[];
 }) => {
@@ -123,8 +132,38 @@ const ArgumentInput = ({
     fetchUser();
   }, []);
 
+  // §4: the arena locks at zero. `status` alone cannot carry this — the
+  // conclusion job flips it up to a minute late, and the page only learns about
+  // it on a render. Every hook in this component sits above the early returns
+  // below, and these two must stay here with them.
+  const closed = useArenaClosed(status, closesAt);
+
+  // Once the clock is out the verdict is a minute away at most. Ask for it
+  // rather than making the reader reload — router.refresh() re-renders the whole
+  // tree, so the banner, the payouts and the certificate all arrive on their
+  // own. When status flips to concluded, this effect's guard turns it off.
+  useEffect(() => {
+    if (!closed || status !== "live") return;
+    let waited = 0;
+    const id = setInterval(() => {
+      waited += VERDICT_POLL_MS;
+      if (waited > VERDICT_POLL_LIMIT_MS) {
+        clearInterval(id);
+        return;
+      }
+      router.refresh();
+    }, VERDICT_POLL_MS);
+    return () => clearInterval(id);
+  }, [closed, status, router]);
+
   if (status === "concluded") {
     return <ClosedBar>This debate has concluded — the verdict is in.</ClosedBar>;
+  }
+
+  // A post already in flight is left alone: aborting it would manufacture
+  // exactly the phantom failure the reconcile path exists to remove.
+  if (closed) {
+    return <ClosedBar>Time&rsquo;s up — the verdict is being prepared.</ClosedBar>;
   }
 
   if (!ready) return null;
