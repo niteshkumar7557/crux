@@ -96,7 +96,7 @@ const Rules = () => {
 
       <div
         data-reveal
-        className="mt-14 border border-ink-faint bg-band p-12 text-center"
+        className="mt-14 border border-ink-faint bg-band p-6 sm:p-12 text-center"
       >
         <p className="mb-7 font-headline text-2xl italic text-ink">
           Agreed? Then say something worth fighting over.

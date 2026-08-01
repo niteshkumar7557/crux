@@ -202,18 +202,18 @@ export default function SearchBar() {
   const hasQuery = searchInput.trim().length > 0;
 
   return (
-    <div className="relative ml-2 flex shrink-0 items-center md:ml-0">
+    <div className="relative ml-2 flex shrink-0 items-center lg:ml-0">
       <button
         onClick={() => setIsOpen(true)}
         aria-label="Search"
-        className="md:hidden p-2 text-ink-soft hover:text-ink transition-colors cursor-pointer"
+        className="lg:hidden p-2 text-ink-soft hover:text-ink transition-colors cursor-pointer"
       >
         <PiMagnifyingGlass className="text-2xl" />
       </button>
       <button
         onClick={() => setIsOpen(true)}
         aria-label="Search motions, domains and users"
-        className="relative z-10 hidden cursor-pointer items-center gap-2 rounded-full border border-ink-faint bg-band px-10 py-2.25 font-label text-[0.62rem] uppercase tracking-[0.18em] text-ink-soft transition-colors hover:bg-ink-wash hover:text-ink md:flex"
+        className="relative z-10 hidden cursor-pointer items-center gap-2 rounded-full border border-ink-faint bg-band px-10 py-2.25 font-label text-[0.62rem] uppercase tracking-[0.18em] text-ink-soft transition-colors hover:bg-ink-wash hover:text-ink lg:flex"
       >
         <PiMagnifyingGlass className="text-sm" />
         Search

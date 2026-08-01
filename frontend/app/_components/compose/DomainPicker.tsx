@@ -17,7 +17,10 @@ const DomainPicker = ({ domains, selected, onSelect, disabled }: DomainPickerPro
         <LuListFilter className="text-sm" />
         SELECT YOUR BATTLEGROUND
       </p>
-      <div className="grid grid-rows-2 grid-flow-col auto-cols-max gap-2 overflow-x-auto pb-2 md:pb-0 md:flex md:flex-wrap md:overflow-visible">
+      {/* Wraps at every width. The two-row horizontal scroller this used to be on
+          mobile clipped its pills mid-word with no affordance that there was more
+          to the right, and /archive and /domain already wrap the same list. */}
+      <div className="flex flex-wrap gap-2">
         <button
           className={`${
             selected === AUTO_DOMAIN

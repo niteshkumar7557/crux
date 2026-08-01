@@ -46,17 +46,38 @@ const MotionProbability = ({
 
   const showDrawBand = status === "live";
 
+  // A reading is written once and placed twice — reversed out inside its own
+  // segment from sm up, and above the bar below it. Inside the segment it is
+  // clipped by that segment's width: a side on 36% of a 390px screen leaves about
+  // 90px of room for "AFFIRMATIVE FINAL 36%", and the losing side of a lopsided
+  // debate loses its number altogether. The arena feed's primary card already
+  // reads its split this way, so the mobile form is the house pattern, not a new one.
+  const reading = (side: "for" | "against", value: number) => (
+    <>
+      {side === "for" ? "Affirmative " : "Negative "}
+      {status === "concluded" && "final "}
+      <span data-count>{value}</span>%
+    </>
+  );
+
   return (
     <div ref={rootRef} className="mb-12">
-      <div className="w-full h-12 bg-band relative flex items-center border border-ink-faint overflow-hidden">
+      <div className="mb-2 flex items-baseline justify-between gap-4 font-label text-[0.7rem] font-bold uppercase tracking-[0.12em] sm:hidden">
+        <span className="text-side-for">
+          {reading("for", affirmativeProbability)}
+        </span>
+        <span className="text-side-against">
+          {reading("against", negativeProbability)}
+        </span>
+      </div>
+      <div className="w-full h-8 sm:h-12 bg-band relative flex items-center border border-ink-faint overflow-hidden">
         <div
           data-bar
           className="h-full bg-side-for flex items-center justify-start px-6 relative overflow-hidden"
           style={{ width: `${affirmativeProbability}%` }}
         >
-          <span className="font-label text-sm text-paper font-bold relative z-10 whitespace-nowrap">
-            AFFIRMATIVE {status === "concluded" && "FINAL "}
-            <span data-count>{affirmativeProbability}</span>%
+          <span className="hidden sm:inline font-label text-sm text-paper font-bold uppercase relative z-10 whitespace-nowrap">
+            {reading("for", affirmativeProbability)}
           </span>
         </div>
         {showDrawBand && (
@@ -79,9 +100,8 @@ const MotionProbability = ({
           className="h-full bg-side-against flex items-center justify-end px-6 ml-auto relative overflow-hidden"
           style={{ width: `${negativeProbability}%` }}
         >
-          <span className="font-label text-sm text-paper font-bold relative z-10 whitespace-nowrap">
-            NEGATIVE {status === "concluded" && "FINAL "}
-            <span data-count>{negativeProbability}</span>%
+          <span className="hidden sm:inline font-label text-sm text-paper font-bold uppercase relative z-10 whitespace-nowrap">
+            {reading("against", negativeProbability)}
           </span>
         </div>
       </div>

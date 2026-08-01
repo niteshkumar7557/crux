@@ -105,10 +105,12 @@ that fills a large area rather than a control should be checked the same way bef
   keyword lifted in laurel italic. A motion is a sentence someone is on the hook for, and condensed
   uppercase poster type turns an argument into a headline shouting at the reader. Section titles
   announce; a motion is written and signed. **Don't "fix" it back to the display face.**
-  It is also the one headline set at a **fixed two-step scale** rather than a clamp
-  (`text-5xl md:text-7xl`, bold, `tracking-tight`) — an owner's call for the poster weight of the
-  claim, taken knowingly against the fluid rule above. `motion/[id]/loading.tsx` hand-mirrors its
-  line box, so the two move together or the page jumps vertically on reload.
+  It is also the one headline set at a **fixed three-step scale** rather than a clamp
+  (`text-4xl sm:text-5xl md:text-7xl`, bold, `tracking-tight`) — an owner's call for the poster
+  weight of the claim, taken knowingly against the fluid rule above. The `sm` step is a phone
+  concession: at `text-5xl` a long claim ran to six lines and ~340px, so the reader met the whole
+  claim and nothing else on the first screen. `motion/[id]/loading.tsx` hand-mirrors its line box
+  at **all three** steps, so the two move together or the page jumps vertically on reload.
 - **The two case titles are framed, not filled** — a hairline box in the side's colour with the
   label face inside at `text-lg`, tracked `0.28em`. Reversed-out type at that size turned the
   column headers into two blocks of solid camp colour competing with the arguments under them.
@@ -230,6 +232,55 @@ wreath, bust, medals ×3, amphitheater (full-bleed), doors (final CTA), manicule
   fills the composer rather than the viewport. Overlays go through `ui/Portal`, which renders them at
   `<body>`. The same applies to any `filter`, `transform`, `perspective` or `will-change` ancestor.
 
+- **Below `lg` the chrome collapses into a drawer, and the rule is that nothing may be dropped.**
+  The navbar row keeps the logo, search and the composer CTA; the four nav links, the GitHub link,
+  the theme toggle, the profile link and the two dropdowns move into a menu under the navbar, drawn
+  with `ui/drawerRow`. The links and the toggle used to be `hidden md:flex` and `hidden sm:flex`
+  with no replacement, which made Domains, Archive and dark mode unreachable on a phone — **a
+  control that is hidden at a breakpoint needs somewhere else to be, not just a `hidden` class.**
+
+  **The switch is at `lg`, not `md`, because ~1020px is where the full row actually fits.** At `md`
+  it did not: an iPad in portrait (810–834px) was pushing the composer CTA, the bell and the avatar
+  off the right edge exactly like a phone was. `SearchBar` swaps its pill for the icon trigger at
+  the same breakpoint — left at `md` its 150px pill collided with the wordmark.
+
+  Two things follow from it:
+
+  1. **A dropdown anchored to its trigger only works while the trigger has room beside it.**
+     `absolute right-0` on a 22px icon sitting ~80px from the right edge hung a 416px panel off the
+     left of the screen. `ui/NavPanel` is the shared shell: anchored under the trigger in `icon`
+     mode, a scrimmed viewport sheet through `Portal` in `row` mode. **A portalled panel is outside
+     its owner's `ref`,** so the owner checks a second `panelRef` before treating a click as
+     outside, and the drawer ignores taps that land inside `[data-nav-panel]` — otherwise opening a
+     panel unmounts the drawer that holds its state.
+  2. **The drawer stays mounted behind its own panels.** Closing it on open would take the panel's
+     state with it, so the sheet's scrim covers the menu instead.
+
+- **The scrollbar is a rule in the margin, not a widget** (`globals.css`). A 10px gutter, a
+  transparent track and a square 4px thumb in `ink-soft` that lifts to `ink` under the cursor — the
+  resting-to-hover progression every other secondary control uses, and both tones invert with the
+  theme on their own. The track is transparent rather than `paper` so the bar sits on whatever
+  surface it scrolls: the page, the notification panel's `band`, the DM thread's `raised`.
+
+  Two things are load-bearing:
+
+  1. **It is behind `@media (pointer: fine)`.** Styling `::-webkit-scrollbar` opts a surface out of
+     overlay scrollbars, so the bar starts taking real layout width. That is worth 10px for a cursor
+     that has to aim at it and not worth 10px of a 320px phone whose thumb can never be dragged.
+  2. **`scrollbar-width`/`scrollbar-color` are behind `@supports not selector(::-webkit-scrollbar)`,
+     which is Firefox.** Chrome ignores every `::-webkit-scrollbar` rule the moment `scrollbar-width`
+     is set on a scroller, so shipping both would silently trade the square thumb for Chrome's own
+     round-ended one.
+
+  Track decorations do not survive on the root scrollbar — a hairline on `html::-webkit-scrollbar-track`
+  simply does not paint — so the thumb is the only mark. Don't re-add one.
+
+- **A `whitespace-nowrap` pill is a hard floor on its container's width, not an overflow.** The
+  `lg` button at `px-10 text-sm` tracked `0.22em` is ~241px, which widened every card that held one
+  past a 320px screen. `lg` steps down below `sm` for that reason; the same care applies to any
+  tracked label face set nowrap — the debate composer's two side buttons tighten to `0.08em` below
+  `md` for it, and `compose/StageRail` below `sm`.
+
 ---
 
 ## §6 Motion
@@ -272,6 +323,14 @@ The count-up sits inside an `aria-live` region, so the ticking numeral is `aria-
 Playing the leaderboard's stagger again on every visit turns a flourish into a toll on the content.
 Interaction feedback is never gated.
 
+**Below `md` the debate composer is a one-line bar until it is asked for.** Expanded it is ~187px,
+which on top of the 65px navbar and the 42px sticky claim left under half an iPhone SE to the
+debate the composer exists to join. Tapping the bar opens it and focuses the box; a successful post
+closes it again. **Choosing an argument to reply to counts as opening it** — `expanded` is derived
+as `openedComposer || target !== null` rather than synced from an effect, so the two can't disagree,
+and collapsing clears the reply target or the bar refuses to close. At `md` and up it is always
+open and the state is inert.
+
 ---
 
 ## §7 The mark
@@ -307,6 +366,11 @@ the three faces; drawing custom letterforms is a separate job with a real chance
 **Phosphor** via `react-icons/pi` — thin strokes that sit well beside engravings. Used sparingly:
 arrows, seal-check, lock, prohibit, heart, sun/moon. Never decorative icon grids; the engravings
 carry the imagery.
+
+**The one brand mark is GitHub** (`PiGithubLogo`, in the navbar and the drawer, pointing at the
+repo). It is Phosphor's outline cut rather than the official Octocat, so it keeps the hairline
+weight of the icons beside it instead of dropping a filled logo into the row. A second brand mark
+needs its own reason.
 
 ---
 
@@ -356,7 +420,7 @@ design + The Bench (herald) → The Doors (CTA) → Footer (laurel seal).
 | Tokens, utilities, the rebound `dark:` variant, focus and cursor rules | `frontend/app/globals.css` |
 | Fonts + the pre-paint theme script | `frontend/app/layout.tsx` |
 | Chrome | `_components/Navbar.tsx`, `Footer.tsx`, `ConditionalLayout.tsx` (`noNavRoutes` = `/`, `/login`, `/register` — those ship their own) |
-| Primitives | `_components/ui/` — `Button`, `Avatar`, `ThemeToggle`, `PointsPopup`, `Pagination`, `Skeleton`, `Reveal`, `Portal`, `AutoGrowTextarea`, `LikeButton`, `Logo` |
+| Primitives | `_components/ui/` — `Button`, `Avatar`, `ThemeToggle`, `PointsPopup`, `Pagination`, `Skeleton`, `Reveal`, `Portal`, `AutoGrowTextarea`, `LikeButton`, `Logo`, `NavPanel`, `drawerRow` |
 | Landing | `frontend/app/page.tsx`; sections in `_components/landing/` (`ui.tsx` holds PillButton, Eyebrow, SectionHead, Plate, Section, reveals) |
 | Draw-band geometry | `_utils/drawBand.ts` — read by both split bars, so the feed and the debate page cannot disagree |
 | Debate page geometry | `_components/motion/debateLayout.ts` — the arena, the sticky composer and the route skeleton are siblings, so their shared gutter and shell live here or they drift and the page jumps sideways on load |

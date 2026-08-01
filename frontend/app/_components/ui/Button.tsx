@@ -28,10 +28,14 @@ const VARIANTS: Record<Variant, string> = {
   "outline-neutral": "border border-ink-faint text-ink-soft hover:bg-ink-wash",
 };
 
+// `lg` steps down below sm. The pill is `whitespace-nowrap` by design, so its width
+// is a hard floor: "Start a debate" at text-sm tracked 0.22em plus px-10 is ~241px,
+// which does not fit a 320px screen inside any card that also has padding — and
+// because it is a floor rather than an overflow, it widened whatever contained it.
 const SIZES: Record<Size, string> = {
   sm: "px-5 py-2.5 text-[0.65rem]",
   md: "px-7 py-3 text-xs",
-  lg: "px-10 py-4 text-sm",
+  lg: "px-6 py-3.5 text-[0.8rem] sm:px-10 sm:py-4 sm:text-sm",
   bare: "",
 };
 

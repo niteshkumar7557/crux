@@ -176,7 +176,7 @@ const About = () => {
 
       <div
         data-reveal
-        className="border border-ink-faint bg-band p-12 text-center"
+        className="border border-ink-faint bg-band p-6 sm:p-12 text-center"
       >
         <p className="font-headline italic text-2xl text-ink mb-6">
           The arena is open. Bring an opinion.

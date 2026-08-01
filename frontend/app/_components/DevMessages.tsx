@@ -12,6 +12,8 @@ import { jwtPayload } from "../_types/jwt";
 import AutoGrowTextarea from "./ui/AutoGrowTextarea";
 import Avatar from "./ui/Avatar";
 import Skeleton from "./ui/Skeleton";
+import NavPanel from "./ui/NavPanel";
+import { DRAWER_COUNT, drawerRow } from "./ui/drawerRow";
 
 type DevMessage = {
   id: number;
@@ -90,9 +92,11 @@ function buildRows(items: DevMessage[]): Row[] {
 const DevMessages = ({
   user,
   avatar,
+  variant = "icon",
 }: {
   user: jwtPayload;
   avatar: string | null;
+  variant?: "icon" | "row";
 }) => {
   const [items, setItems] = useState<DevMessage[]>([]);
   const [dev, setDev] = useState<Participant>({
@@ -107,6 +111,9 @@ const DevMessages = ({
   const [loaded, setLoaded] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const threadRef = useRef<HTMLDivElement>(null);
+  // In the drawer the panel is portalled to <body>, so it is no longer inside
+  // `ref` and the outside-click handler would close it on its own contents.
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const load = () =>
     api
@@ -133,7 +140,10 @@ const DevMessages = ({
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (ref.current?.contains(target)) return;
+      if (panelRef.current?.contains(target)) return;
+      setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
@@ -201,25 +211,45 @@ const DevMessages = ({
   const me: Participant = { username: user.username, avatar };
 
   return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={toggle}
-        aria-label="Talk to the developer"
-        aria-expanded={open}
-        className={`relative flex translate-y-[2px] cursor-pointer items-center transition-colors ${
-          open ? "text-ink" : "text-ink-soft hover:text-ink"
-        }`}
-      >
-        {open ? <PiChatCircleFill size={22} /> : <PiChatCircle size={22} />}
-        {unread > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 bg-ink text-paper text-[9px] font-bold leading-none px-1 py-0.5 min-w-[16px] text-center">
-            {unread > 9 ? "9+" : unread}
-          </span>
-        )}
-      </button>
+    <div ref={ref} className={variant === "row" ? undefined : "relative"}>
+      {variant === "row" ? (
+        <button
+          type="button"
+          onClick={toggle}
+          aria-expanded={open}
+          className={drawerRow()}
+        >
+          <PiChatCircle size={18} className="shrink-0" />
+          Talk to the developer
+          {unread > 0 && (
+            <span className={DRAWER_COUNT}>{unread > 9 ? "9+" : unread}</span>
+          )}
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label="Talk to the developer"
+          aria-expanded={open}
+          className={`relative flex translate-y-[2px] cursor-pointer items-center transition-colors ${
+            open ? "text-ink" : "text-ink-soft hover:text-ink"
+          }`}
+        >
+          {open ? <PiChatCircleFill size={22} /> : <PiChatCircle size={22} />}
+          {unread > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 bg-ink text-paper text-[9px] font-bold leading-none px-1 py-0.5 min-w-[16px] text-center">
+              {unread > 9 ? "9+" : unread}
+            </span>
+          )}
+        </button>
+      )}
       {open && (
-        <div className="absolute right-0 mt-4 flex max-h-136 w-104 max-w-[calc(100vw-2rem)] flex-col border border-ink-faint bg-raised shadow-cast-deep z-50">
+        <NavPanel
+          variant={variant}
+          panelRef={panelRef}
+          width="max-h-136 w-104 max-w-[calc(100vw-2rem)]"
+          className="flex flex-col border border-ink-faint bg-raised shadow-cast-deep"
+        >
           <div className="flex shrink-0 items-center gap-2.5 border-b border-ink-faint px-3.5 py-2.5">
             <Avatar
               username={dev.username}
@@ -350,7 +380,7 @@ const DevMessages = ({
               )}
             </div>
           </div>
-        </div>
+        </NavPanel>
       )}
     </div>
   );

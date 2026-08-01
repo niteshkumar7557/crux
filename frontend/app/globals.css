@@ -179,6 +179,60 @@ button:disabled {
   }
 }
 
+/* The scrollbar — a rule in the margin, not a widget. See design-system.md §5.
+
+   Square (nothing here is one of the two rounded shapes), no track furniture, and
+   `ink-soft` at rest lifting to `ink` under the cursor — the same progression
+   every other secondary control in the product uses. Both tones invert with the
+   theme on their own, so there is no dark-mode branch.
+
+   Gated on `pointer: fine` deliberately. Styling ::-webkit-scrollbar opts a
+   surface out of overlay scrollbars, so the bar starts taking real layout width:
+   worth 10px for a cursor that has to aim at it, not worth 10px of a 320px phone
+   whose thumb can never be dragged. Touch keeps the native overlay bar. */
+@media (pointer: fine) {
+  /* Firefox only, and the guard is load-bearing rather than tidy: Chrome ignores
+     every ::-webkit-scrollbar rule below the moment `scrollbar-width` is set on a
+     scroller, so applying both would silently trade the square thumb for Chrome's
+     own round-ended one. Firefox styles no parts, so this is the whole treatment
+     there. */
+  @supports not selector(::-webkit-scrollbar) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--ink-soft) transparent;
+    }
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  /* Transparent rather than `--paper`: the bar has to sit on whatever surface it
+     is scrolling — the page, the notification panel's band, the DM thread's raised
+     — or the page colour is punched through every inner panel. The track carries
+     no rule of its own; the thumb is the only mark. */
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--ink-soft);
+    /* A transparent padding-box border rather than a narrower bar: the mark reads
+       as a 4px rule while the whole 10px stays draggable. */
+    border: 3px solid transparent;
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--ink);
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
 /* Multiply erases each image's slightly different cream background into
    whatever paper it sits on. The landing, plus the one plate on /register. */
 .engraving {

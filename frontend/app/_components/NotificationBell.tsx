@@ -7,6 +7,8 @@ import Link from "next/link";
 import { LuX } from "react-icons/lu";
 import { PiBell, PiBellFill } from "react-icons/pi";
 import api from "../axios";
+import NavPanel from "./ui/NavPanel";
+import { DRAWER_COUNT, drawerRow } from "./ui/drawerRow";
 
 type Notif = {
   id: number;
@@ -26,11 +28,18 @@ const TYPE_TONE: Record<string, { rule: string; label: string }> = {
 };
 const UNKNOWN_TONE = { rule: "border-l-ink-faint", label: "text-ink-soft" };
 
-const NotificationBell = () => {
+const NotificationBell = ({
+  variant = "icon",
+}: {
+  variant?: "icon" | "row";
+}) => {
   const [items, setItems] = useState<Notif[]>([]);
   const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  // In the drawer the panel is portalled to <body>, so it is no longer inside
+  // `ref` and the outside-click handler would close it on its own contents.
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const load = () =>
     api
@@ -49,7 +58,10 @@ const NotificationBell = () => {
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (ref.current?.contains(target)) return;
+      if (panelRef.current?.contains(target)) return;
+      setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
@@ -82,25 +94,45 @@ const NotificationBell = () => {
   };
 
   return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={toggle}
-        aria-label="Notifications"
-        aria-expanded={open}
-        className={`relative flex translate-y-0.5 cursor-pointer items-center transition-colors ${
-          open ? "text-ink" : "text-ink-soft hover:text-ink"
-        }`}
-      >
-        {open ? <PiBellFill size={22} /> : <PiBell size={22} />}
-        {unread > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 bg-ink text-paper text-[9px] font-bold leading-none px-1 py-0.5 min-w-4 text-center">
-            {unread > 9 ? "9+" : unread}
-          </span>
-        )}
-      </button>
+    <div ref={ref} className={variant === "row" ? undefined : "relative"}>
+      {variant === "row" ? (
+        <button
+          type="button"
+          onClick={toggle}
+          aria-expanded={open}
+          className={drawerRow()}
+        >
+          <PiBell size={18} className="shrink-0" />
+          Notifications
+          {unread > 0 && (
+            <span className={DRAWER_COUNT}>{unread > 9 ? "9+" : unread}</span>
+          )}
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label="Notifications"
+          aria-expanded={open}
+          className={`relative flex translate-y-0.5 cursor-pointer items-center transition-colors ${
+            open ? "text-ink" : "text-ink-soft hover:text-ink"
+          }`}
+        >
+          {open ? <PiBellFill size={22} /> : <PiBell size={22} />}
+          {unread > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 bg-ink text-paper text-[9px] font-bold leading-none px-1 py-0.5 min-w-4 text-center">
+              {unread > 9 ? "9+" : unread}
+            </span>
+          )}
+        </button>
+      )}
       {open && (
-        <div className="absolute right-0 mt-4 w-96 max-w-[calc(100vw-2rem)] max-h-96 overflow-y-auto bg-band border border-ink-faint shadow-cast-deep z-50">
+        <NavPanel
+          variant={variant}
+          panelRef={panelRef}
+          width="w-96 max-w-[calc(100vw-2rem)] max-h-96"
+          className="overflow-y-auto bg-band border border-ink-faint shadow-cast-deep"
+        >
           <div className="sticky top-0 flex items-center gap-3 bg-band px-3 py-2.5 border-b border-ink-faint">
             <span className="font-label text-[11px] uppercase tracking-[0.2em] text-ink-soft">
               Notifications
@@ -160,7 +192,7 @@ const NotificationBell = () => {
               );
             })
           )}
-        </div>
+        </NavPanel>
       )}
     </div>
   );

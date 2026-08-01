@@ -15,15 +15,18 @@ const BoardTable = ({
 
   return (
     <div>
-      <div className="grid grid-cols-12 px-8 py-4 bg-paper border-b border-ink-faint">
+      {/* The score is one to four digits, so below md it takes two columns rather
+          than four and the name gets them: at 6/12 of a 390px row minus the gutter
+          and the avatar, every debater past rank three read as "Alex Ca…". */}
+      <div className="grid grid-cols-12 px-4 sm:px-8 py-4 bg-paper border-b border-ink-faint">
         <div className="col-span-2 md:col-span-1 font-label text-[10px] text-ink-soft uppercase tracking-widest">
           Rank
         </div>
-        <div className="col-span-6 md:col-span-5 font-label text-[10px] text-ink-soft uppercase tracking-widest">
+        <div className="col-span-8 md:col-span-5 font-label text-[10px] text-ink-soft uppercase tracking-widest">
           Debater
         </div>
         <div
-          className={`col-span-4 ${hasCounts ? "md:col-span-2" : "md:col-span-6"} font-label text-[10px] text-ink-soft uppercase tracking-widest text-right`}
+          className={`col-span-2 ${hasCounts ? "md:col-span-2" : "md:col-span-6"} font-label text-[10px] text-ink-soft uppercase tracking-widest text-right`}
         >
           {metric}
         </div>
@@ -44,12 +47,12 @@ const BoardTable = ({
             key={debater.id}
             href={`/profile/${debater.username}`}
             data-reveal
-            className={`grid grid-cols-12 px-8 py-6 ${i % 2 === 0 ? "bg-band" : "bg-paper"} hover:bg-raised transition-colors items-center group border-l-2 border-transparent hover:border-ink`}
+            className={`grid grid-cols-12 px-4 sm:px-8 py-5 sm:py-6 ${i % 2 === 0 ? "bg-band" : "bg-paper"} hover:bg-raised transition-colors items-center group border-l-2 border-transparent hover:border-ink`}
           >
             <div className="col-span-2 md:col-span-1 font-label text-xl font-bold text-ink-soft group-hover:text-ink transition-colors">
               {String(debater.rank).padStart(2, "0")}
             </div>
-            <div className="col-span-6 md:col-span-5 flex items-center gap-4 min-w-0">
+            <div className="col-span-8 md:col-span-5 flex items-center gap-3 sm:gap-4 min-w-0">
               <Avatar
                 username={debater.username}
                 src={debater.avatar}
@@ -65,7 +68,7 @@ const BoardTable = ({
               </span>
             </div>
             <div
-              className={`col-span-4 ${hasCounts ? "md:col-span-2" : "md:col-span-6"} text-right font-label text-lg font-medium text-ink`}
+              className={`col-span-2 ${hasCounts ? "md:col-span-2" : "md:col-span-6"} text-right font-label text-lg font-medium text-ink`}
             >
               {debater.score.toLocaleString("en-US")}
             </div>

@@ -126,13 +126,13 @@ const Register = () => {
     <>
       <main
         ref={rootRef}
-        className="relative min-h-screen grow flex items-center justify-center pt-14 pb-12 px-6"
+        className="relative min-h-screen grow flex items-center justify-center pt-14 pb-12 px-4 sm:px-6"
       >
 
         <div className="w-full max-w-5xl grid md:grid-cols-12 gap-0 border border-ink-faint bg-paper overflow-hidden">
           <div
             data-auth-form
-            className="md:col-span-7 p-10 md:p-16 flex flex-col justify-center"
+            className="md:col-span-7 p-6 sm:p-10 md:p-16 flex flex-col justify-center"
           >
             <div className="mb-12">
               <p className="flex items-center gap-3 font-label text-[0.62rem] uppercase tracking-[0.3em] text-ink-soft">
@@ -288,7 +288,7 @@ const Register = () => {
                 sizes="(min-width: 768px) 40vw, 100vw"
               />
             </div>
-            <div className="flex items-center gap-2.5 border-b border-ink-faint px-10 py-3.5">
+            <div className="flex items-center gap-2.5 border-b border-ink-faint px-6 sm:px-10 py-3.5">
               <span
                 aria-hidden
                 className="h-1.5 w-1.5 bg-ink animate-pulse motion-reduce:animate-none"
@@ -297,7 +297,7 @@ const Register = () => {
                 Status: recruitment open
               </span>
             </div>
-            <div className="p-10 grow">
+            <div className="p-6 sm:p-10 grow">
               <h2 className="font-headline text-2xl text-ink italic mb-6">
                 Crux Reputation
               </h2>

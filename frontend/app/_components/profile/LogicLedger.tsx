@@ -38,10 +38,22 @@ const LogicLedger = ({
   // that opened in the last week is the normal case, and a centred label points at
   // a week that has nothing to do with it. Past halfway it hangs to the left of its
   // column so it cannot run off the card.
+  //
+  // It is offset from the ROW's edge rather than laid inside its own column: a
+  // column is a twelfth of the chart, which is ~50px on a desktop card and ~23px on
+  // a phone, and a nowrap caption three times wider than its box overflows whatever
+  // its text-align says. On mobile that overflow escaped the card and gave the whole
+  // profile page a horizontal scrollbar. Anchored to the row it can only ever run
+  // inward, so the caption is clamped by the chart's full width instead.
   const captionRight = seasonIndex > ledger.length / 2;
+  const captionOffset = `${
+    ((captionRight ? ledger.length - 1 - seasonIndex : seasonIndex) /
+      ledger.length) *
+    100
+  }%`;
 
   return (
-    <div className="bg-band p-8 h-full">
+    <div className="bg-band p-5 sm:p-8 h-full">
       <div className="flex justify-between items-start mb-10">
         <div>
           <h2 className="font-headline text-3xl font-bold mb-1 italic">
@@ -106,20 +118,13 @@ const LogicLedger = ({
             </span>
           </div>
           {seasonIndex >= 0 && (
-            <div className="flex mt-2">
-              {ledger.map((w, i) => (
-                <div key={w.weekStart} className="flex-1 min-w-0">
-                  {i === seasonIndex && (
-                    <span
-                      className={`block whitespace-nowrap font-label text-[10px] uppercase tracking-widest text-laurel ${
-                        captionRight ? "text-right" : ""
-                      }`}
-                    >
-                      Season {seasonNumber} began
-                    </span>
-                  )}
-                </div>
-              ))}
+            <div className="relative mt-2 h-4 overflow-hidden">
+              <span
+                className="absolute whitespace-nowrap font-label text-[10px] uppercase tracking-widest text-laurel"
+                style={captionRight ? { right: captionOffset } : { left: captionOffset }}
+              >
+                Season {seasonNumber} began
+              </span>
             </div>
           )}
         </>

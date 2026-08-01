@@ -17,8 +17,8 @@ import api from "@/app/axios";
 import { isAxiosError } from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
-import { LuX } from "react-icons/lu";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { LuChevronDown, LuX } from "react-icons/lu";
 import Button from "@/app/_components/ui/Button";
 import AutoGrowTextarea from "@/app/_components/ui/AutoGrowTextarea";
 import { useReplyTarget } from "./ReplyContext";
@@ -128,7 +128,18 @@ const ArgumentInput = ({
   const [award, setAward] = useState<Award | null>(null);
   const [pending, setPending] = useState<Pending | null>(null);
   const [posting, setPosting] = useState<string | null>(null);
+  // Below md the composer is a one-line bar until it is asked for. Expanded it is
+  // 187px of a 667px phone, which with the navbar and the sticky claim left under
+  // half the screen for the debate the composer exists to join. Above md it is
+  // always open and this state is inert.
+  //
+  // A reply target counts as open rather than opening it from an effect: choosing
+  // an argument to answer IS asking for the box, so the two are one state read two
+  // ways, not two states to keep in step.
+  const [openedComposer, setOpenedComposer] = useState(false);
   const { target, setTarget } = useReplyTarget();
+  const expanded = openedComposer || target !== null;
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const router = useRouter();
 
@@ -262,6 +273,7 @@ const ArgumentInput = ({
       } else {
         setNotice(null);
         setTarget(null);
+        setOpenedComposer(false);
         setAward(data as Award);
         router.refresh();
       }
@@ -352,10 +364,38 @@ const ArgumentInput = ({
     }
   }
 
+  function expand() {
+    setOpenedComposer(true);
+    // After the row it lives in has been painted, or there is nothing to focus.
+    requestAnimationFrame(() => inputRef.current?.focus());
+  }
+
+  // Collapsing drops the reply too, or `expanded` stays true and the bar refuses
+  // to close.
+  function collapse() {
+    setTarget(null);
+    setOpenedComposer(false);
+  }
+
   return (
     <div
       className={`sticky bottom-0 bg-paper/80 backdrop-blur-xl border-t border-ink-faint py-4 md:py-6 ${DEBATE_GUTTER} z-40`}
     >
+      {!expanded && (
+        <button
+          type="button"
+          onClick={expand}
+          className="max-w-screen-2xl mx-auto flex w-full cursor-pointer items-center gap-3 border border-ink-faint bg-band px-4 py-3 text-left font-body text-ink-soft transition-colors hover:border-ink/50 md:hidden"
+        >
+          <span className="grow truncate">
+            {lockedSide
+              ? `Argue ${lockedSide === "for" ? "FOR" : "AGAINST"}…`
+              : "Join the Argument..."}
+          </span>
+          <LuChevronDown className="shrink-0 rotate-180 text-sm" />
+        </button>
+      )}
+      <div className={expanded ? undefined : "hidden md:block"}>
       {target && (
         <div className="max-w-screen-2xl mx-auto mb-3 flex items-center gap-3 border-l-2 border-side-for/50 bg-band/60 py-2 px-3">
           <span className="grow min-w-0 truncate font-label text-xs uppercase tracking-[0.12em] text-ink-soft">
@@ -374,25 +414,50 @@ const ArgumentInput = ({
           </button>
         </div>
       )}
-      {lockedSide && (
-        <div className="max-w-screen-2xl mx-auto mb-2.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <span
-            className={`font-label text-[11px] uppercase tracking-[0.18em] ${
-              lockedSide === "for" ? "text-side-for" : "text-side-against"
-            }`}
+      {/* The side badge and the collapse control share a row, so the chevron sits
+          on the first line of a notice that wraps to two or three on a phone
+          rather than being pushed onto one of its own. */}
+      {lockedSide ? (
+        <div className="max-w-screen-2xl mx-auto mb-2.5 flex items-start gap-3">
+          <div className="flex min-w-0 grow flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span
+              className={`font-label text-[11px] uppercase tracking-[0.18em] ${
+                lockedSide === "for" ? "text-side-for" : "text-side-against"
+              }`}
+            >
+              You&rsquo;re arguing {lockedSide === "for" ? "FOR" : "AGAINST"}
+            </span>
+            <span className="font-body text-sm leading-relaxed text-ink-soft">
+              {isAuthor
+                ? "— you posted this motion, so you can only argue FOR it."
+                : `— you can't argue ${lockedSide === "for" ? "AGAINST" : "FOR"} in this debate.`}
+            </span>
+          </div>
+          <button
+            type="button"
+            aria-label="Collapse the composer"
+            onClick={collapse}
+            className="shrink-0 cursor-pointer text-ink-soft transition-colors hover:text-ink md:hidden"
           >
-            You&rsquo;re arguing {lockedSide === "for" ? "FOR" : "AGAINST"}
-          </span>
-          <span className="font-body text-sm leading-relaxed text-ink-soft">
-            {isAuthor
-              ? "— you posted this motion, so you can only argue FOR it."
-              : `— you can't argue ${lockedSide === "for" ? "AGAINST" : "FOR"} in this debate.`}
-          </span>
+            <LuChevronDown className="text-base" />
+          </button>
+        </div>
+      ) : (
+        <div className="max-w-screen-2xl mx-auto mb-2 flex justify-end md:hidden">
+          <button
+            type="button"
+            aria-label="Collapse the composer"
+            onClick={collapse}
+            className="cursor-pointer text-ink-soft transition-colors hover:text-ink"
+          >
+            <LuChevronDown className="text-base" />
+          </button>
         </div>
       )}
       <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center gap-3 md:gap-6">
         <div className="flex-1 w-full relative">
           <AutoGrowTextarea
+            ref={inputRef}
             className="w-full bg-band border border-ink-faint focus:border-side-for focus:outline-none px-4 py-3 md:px-6 md:py-4 font-body text-ink placeholder:text-ink-soft transition-all block disabled:opacity-60"
             placeholder={target ? "Write your reply..." : "Join the Argument..."}
             aria-label={target ? "Write your reply" : "Join the argument"}
@@ -407,7 +472,7 @@ const ArgumentInput = ({
             <Button
               variant={target.side === "for" ? "outline-secondary" : "outline"}
               size="bare"
-              className="flex-1 md:flex-none px-2 py-3 md:px-8 md:py-4 text-[10px] md:text-xs"
+              className="flex-1 md:flex-none px-2 py-3 md:px-8 md:py-4 text-[10px] md:text-xs max-md:tracking-[0.08em]"
               disabled={posting !== null}
               aria-busy={posting !== null}
               aria-label={posting !== null ? BUSY_LABEL : undefined}
@@ -426,7 +491,7 @@ const ArgumentInput = ({
               <Button
                 variant="outline"
                 size="bare"
-                className="flex-1 md:flex-none px-2 py-3 md:px-8 md:py-4 text-[10px] md:text-xs"
+                className="flex-1 md:flex-none px-2 py-3 md:px-8 md:py-4 text-[10px] md:text-xs max-md:tracking-[0.08em]"
                 disabled={lockedSide === "against" || posting !== null}
                 aria-busy={posting === "affirmative"}
                 aria-label={
@@ -446,7 +511,7 @@ const ArgumentInput = ({
               <Button
                 variant="outline-secondary"
                 size="bare"
-                className="flex-1 md:flex-none px-2 py-3 md:px-8 md:py-4 text-[10px] md:text-xs"
+                className="flex-1 md:flex-none px-2 py-3 md:px-8 md:py-4 text-[10px] md:text-xs max-md:tracking-[0.08em]"
                 disabled={lockedSide === "for" || posting !== null}
                 aria-busy={posting === "negative"}
                 aria-label={posting === "negative" ? BUSY_LABEL : undefined}
@@ -466,6 +531,7 @@ const ArgumentInput = ({
             </>
           )}
         </div>
+      </div>
       </div>
       {pending && (
         <SideLockConfirm
