@@ -1,0 +1,11 @@
+-- Normalised copy of motions.content, for exact-duplicate detection. Same
+-- normalisation routine as arguments (lib/duplicate.logic.ts's
+-- normaliseArgument) reused, not reimplemented — keeping combining marks
+-- alongside letters/numbers is load-bearing for scripts like Devanagari.
+-- Nullable here: existing rows are backfilled, verified collision-free, and
+-- only THEN given NOT NULL + a unique index, all by
+-- scripts/backfill-similarity-data.ts (Postgres cannot run the JS-side
+-- Unicode-aware normalisation this needs, so the index cannot be created by
+-- a plain .sql migration the way it is described in the spec).
+-- Spec: game-theory.md §3
+ALTER TABLE motions ADD COLUMN normalised_content TEXT;

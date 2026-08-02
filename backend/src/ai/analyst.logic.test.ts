@@ -4,6 +4,7 @@ import {
   buildOwnSideBlock,
   clampAffirmative,
   scoreArgument,
+  selectForJudge,
   NONE_YET,
   OWN_SIDE_ARGUMENT_LIMIT,
   type OwnSideArgument,
@@ -180,6 +181,56 @@ describe("buildAnalystPrompt — the prior split", () => {
   });
 });
 
+describe("selectForJudge", () => {
+  const argument = (id: number, content: string): OwnSideArgument => ({
+    id,
+    username: `u${id}`,
+    content,
+  });
+
+  it("returns everything, chronologically, when at or under the limit", () => {
+    const few = [argument(1, "First point."), argument(2, "Second point.")];
+    expect(selectForJudge(few, "A brand new argument about something else.")).toEqual(few);
+  });
+
+  it("picks the most similar arguments over the newest ones", () => {
+    const target = "France built 56 reactors in 15 years under a state monopoly.";
+    const many = Array.from({ length: OWN_SIDE_ARGUMENT_LIMIT + 1 }, (_, i) =>
+      argument(i + 1, `Unrelated filler point number ${i + 1} about storage costs.`),
+    );
+    // The 4th argument (scrolled out of a recency window) is the one that
+    // actually matches the incoming argument.
+    many[3] = argument(4, "France built 56 reactors in 15 years, state monopoly.");
+    const selected = selectForJudge(many, target);
+    expect(selected.map((c) => c.id)).toContain(4);
+    expect(selected).toHaveLength(OWN_SIDE_ARGUMENT_LIMIT);
+  });
+
+  it("renders the selection in original chronological order, not similarity order", () => {
+    const target = "France built 56 reactors in 15 years under a state monopoly.";
+    const many = Array.from({ length: OWN_SIDE_ARGUMENT_LIMIT + 1 }, (_, i) =>
+      argument(i + 1, `Unrelated filler point number ${i + 1} about storage costs.`),
+    );
+    many[0] = argument(1, "France built 56 reactors in 15 years, state monopoly.");
+    const selected = selectForJudge(many, target);
+    const ids = selected.map((c) => c.id);
+    expect(ids).toEqual([...ids].sort((a, b) => a - b));
+  });
+
+  it("breaks ties by recency — the most recent of equally-scored candidates wins", () => {
+    const target = "Something with no overlap with any candidate at all zz.";
+    const many = Array.from({ length: OWN_SIDE_ARGUMENT_LIMIT + 2 }, (_, i) =>
+      argument(i + 1, "Identical filler text shared by every candidate here."),
+    );
+    const selected = selectForJudge(many, target);
+    const ids = selected.map((c) => c.id).sort((a, b) => a - b);
+    // With every score tied at the same value, the two OLDEST (ids 1 and 2)
+    // must be the ones dropped.
+    expect(ids).not.toContain(1);
+    expect(ids).not.toContain(2);
+  });
+});
+
 describe("buildOwnSideBlock", () => {
   const argument = (id: number, content = "A point."): OwnSideArgument => ({
     id,
@@ -187,15 +238,10 @@ describe("buildOwnSideBlock", () => {
     content,
   });
 
-  it("keeps only the most recent arguments, in order", () => {
-    const many = Array.from({ length: OWN_SIDE_ARGUMENT_LIMIT + 4 }, (_, i) =>
-      argument(i + 1),
-    );
-    const block = buildOwnSideBlock(many);
+  it("renders every argument it is given, in the order given", () => {
+    const block = buildOwnSideBlock([argument(1), argument(2)]);
     const ids = [...block.matchAll(/\[#(\d+)\]/g)].map((m) => Number(m[1]));
-    expect(ids).toHaveLength(OWN_SIDE_ARGUMENT_LIMIT);
-    expect(ids[0]).toBe(5);
-    expect(ids.at(-1)).toBe(OWN_SIDE_ARGUMENT_LIMIT + 4);
+    expect(ids).toEqual([1, 2]);
   });
 
   it("trims a long argument so one wall of text can't dominate the prompt", () => {

@@ -34,6 +34,12 @@ import type { Award } from "../ui/awardCopy";
 const TICK_MS = 400;
 const BUSY_LABEL = "Posting your argument";
 
+// Spec: game-theory.md §22 — a deliberate second copy of the backend's
+// ARGUMENT_LIMIT, matching the pattern already used for STANDALONE_CAP in
+// awardCopy.ts (the frontend cannot import backend modules). Only a fallback
+// for the brief window before the server-reported limit arrives.
+const ARGUMENT_LIMIT_DEFAULT = 5;
+
 // The conclusion job sweeps every 60s, so five minutes is ~5x the expected wait
 // — long enough that a reader never has to reload, short enough that a tab left
 // open overnight stops asking.
@@ -140,6 +146,13 @@ const ArgumentInput = ({
   const { target, setTarget } = useReplyTarget();
   const expanded = openedComposer || target !== null;
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  // §22: whether the signed-in viewer is blocked on THIS motion, and their
+  // effective allowance (raised past 5 if a block was lifted). Both come from
+  // an authenticated re-read of the arguments endpoint — DebateView is a
+  // server component with no access to the browser's JWT, so this is the
+  // only point identity and participation status can meet.
+  const [blockedOnMotion, setBlockedOnMotion] = useState(false);
+  const [argumentLimit, setArgumentLimit] = useState<number | null>(null);
 
   const router = useRouter();
 
@@ -151,6 +164,22 @@ const ArgumentInput = ({
     }
     fetchUser();
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    api
+      .get(`/motion/${motionId}/arguments`)
+      .then(({ data }) => {
+        if (!active) return;
+        setBlockedOnMotion(Boolean(data.blockedOnMotion));
+        setArgumentLimit(typeof data.argumentLimit === "number" ? data.argumentLimit : null);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [user, motionId]);
 
   // §4: the arena locks at zero. `status` alone cannot carry this — the
   // conclusion job flips it up to a minute late, and the page only learns about
@@ -202,11 +231,29 @@ const ArgumentInput = ({
     );
   }
 
+  // §22: the composer is hidden and replaced, never left enabled to fail on
+  // submit — showing someone a text box that cannot accept their writing is
+  // the worst version of this.
+  if (blockedOnMotion) {
+    return (
+      <ClosedBar>
+        You&rsquo;ve used your {argumentLimit ?? ARGUMENT_LIMIT_DEFAULT} arguments — a
+        strong case beats a long one. If you have more to say here, message the
+        developer via the chat icon in the navbar and ask.
+      </ClosedBar>
+    );
+  }
+
   const isAuthor = user.id === authorId;
 
   const lockedSide = isAuthor
     ? "for"
     : (argumentSides.find((c) => c.post_user_id === user.id)?.side ?? null);
+
+  // §22: "Argument 3 of 5" — shown throughout so nobody is surprised. A rule
+  // that can cost something is shown before it can bite.
+  const myArgumentCount = argumentSides.filter((c) => c.post_user_id === user.id).length;
+  const displayedLimit = argumentLimit ?? ARGUMENT_LIMIT_DEFAULT;
 
   const abuseNotice: Notice = {
     title: "Flagged for abuse",
@@ -257,13 +304,17 @@ const ArgumentInput = ({
     });
   }
 
-  async function submit(urlSide: string, replyToArgumentId: number | null) {
+  async function submit(
+    urlSide: string,
+    replyToArgumentId: number | null,
+    ackSimilarTo: number | null = null,
+  ) {
     if (input.length === 0) return;
     setPosting(urlSide);
     try {
       const { data } = await api.post(
         `/motion/${motionId}/arguments/${urlSide}`,
-        { input, replyToArgumentId },
+        { input, replyToArgumentId, ackSimilarTo },
         { timeout: POST_TIMEOUT_MS },
       );
       setInput("");
@@ -279,6 +330,18 @@ const ArgumentInput = ({
       }
     } catch (err) {
       setAward(null);
+      // §22: the block was reached between this render and this submit (e.g.
+      // a previous post in the same session already hit the cap). Set state
+      // directly rather than a round trip — the next render swaps in the
+      // closed bar.
+      if (isAxiosError(err) && err.response?.status === 403) {
+        setBlockedOnMotion(true);
+        setNotice({
+          title: "You've Used Your 5 Arguments",
+          body: "Five arguments is the limit on one debate, so a strong case beats a long one. If you have more to say here, message the developer via the chat icon in the navbar and ask.",
+        });
+        return;
+      }
       if (isAxiosError(err) && err.response?.status === 429) {
         setNotice({
           title: "Easy There",
@@ -324,6 +387,28 @@ const ArgumentInput = ({
           setNotice({
             title: "Already Argued",
             body: `That argument has already been made${who ? ` by @${who}` : ""}. Reposting it earns nothing — argue it further or take it somewhere new.`,
+          });
+        } else if (reason === "similar_argument") {
+          // §8: a confirm gate, not a wall — the draft stays in the box, and
+          // "Post anyway" retries with the specific match acknowledged. If
+          // someone else posts in the interval the top match changes server
+          // side, so the ack silently stops applying rather than disarming
+          // the wrong warning.
+          const self = Boolean(err.response.data?.self);
+          const who = err.response.data?.username;
+          const argId = Number(err.response.data?.argumentId);
+          setNotice({
+            title: self ? "Already Said" : "Already Argued",
+            body: self
+              ? "You made this point earlier in this debate. Posting it again will score 2 unless it adds a new reason, example, mechanism, evidence, or burden."
+              : `@${who} already made this point for your side. Posting it again will score 2 unless you add a new reason, example, mechanism, evidence, or burden.`,
+            action: {
+              label: "Post anyway",
+              onClick: () => {
+                setNotice(null);
+                submit(urlSide, replyToArgumentId, argId);
+              },
+            },
           });
         } else if (reason === "bad_reply_target") {
           setTarget(null);
@@ -432,6 +517,9 @@ const ArgumentInput = ({
                 ? "— you posted this motion, so you can only argue FOR it."
                 : `— you can't argue ${lockedSide === "for" ? "AGAINST" : "FOR"} in this debate.`}
             </span>
+            <span className="font-label text-[10px] uppercase tracking-widest text-ink-soft">
+              Argument {Math.min(myArgumentCount + 1, displayedLimit)} of {displayedLimit}
+            </span>
           </div>
           <button
             type="button"
@@ -443,7 +531,10 @@ const ArgumentInput = ({
           </button>
         </div>
       ) : (
-        <div className="max-w-screen-2xl mx-auto mb-2 flex justify-end md:hidden">
+        <div className="max-w-screen-2xl mx-auto mb-2 flex items-center justify-between md:hidden">
+          <span className="font-label text-[10px] uppercase tracking-widest text-ink-soft">
+            Argument {Math.min(myArgumentCount + 1, displayedLimit)} of {displayedLimit}
+          </span>
           <button
             type="button"
             aria-label="Collapse the composer"

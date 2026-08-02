@@ -2,7 +2,7 @@
 // codebase's conventions in one flow, walked step by step in codebase-guide.md §6.
 //
 // Order is deliberate throughout: validate, then refuse cheaply, then spend tokens.
-// Spec: game-theory.md §5, §6, §7, §8, §9, §16, §17, §19, §20
+// Spec: game-theory.md §5, §6, §7, §8, §9, §16, §17, §19, §20, §22
 
 import type { Request, Response } from "express";
 import pool from "../db/index.js";
@@ -14,7 +14,9 @@ import {
   type OwnSideArgument,
   type ReplyTarget,
 } from "../ai/analyst.logic.js";
-import { findDuplicate } from "../lib/duplicate.logic.js";
+import { contentHash, findDuplicate } from "../lib/duplicate.logic.js";
+import { evaluateReworded, fingerprintOf } from "../lib/similarity.logic.js";
+import logger from "../lib/logger.js";
 import {
   isEmptyAnalysis,
   readAnalysis,
@@ -28,6 +30,7 @@ import { notifyOpposition, notifyReply } from "../notifications/notify.js";
 import { awardLogic } from "../economy/logic.js";
 import { currentSeasonStart } from "../economy/season.logic.js";
 import { checkText, isTooShortToJudge } from "../lib/validate.js";
+import { effectiveAllowance, shouldBlock } from "../lib/blocks.logic.js";
 
 // §9: both refusal layers must be indistinguishable from outside, so the silent
 // length floor and the judge's "no_argument" verdict return this same body. A
@@ -116,6 +119,7 @@ async function judgeArgument(
 
 export async function getArguments(req: Request, res: Response) {
   const { id } = req.params;
+  const motionId = Number(id);
   const argumentsRes = await pool.query(
     `
             SELECT c.id AS argument_id, u.username, u.avatar, c.side, u.logic_score,
@@ -130,9 +134,33 @@ export async function getArguments(req: Request, res: Response) {
             WHERE c.motion_id = $1
             ORDER BY c.created_at ASC, c.id ASC;
         `,
-    [Number(id)],
+    [motionId],
   );
-  res.status(200).json({ arguments: argumentsRes.rows });
+
+  // §22: the signed-in viewer's participation status on THIS motion, read via
+  // optionalMiddleware — no auth, no fields; a spectator gets neither.
+  let blockedOnMotion = false;
+  let argumentLimit: number | null = null;
+  if (req.user) {
+    const [activeBlock, priorLift] = await Promise.all([
+      pool.query(
+        `SELECT 1 FROM motion_blocks WHERE user_id = $1 AND motion_id = $2 AND lifted_at IS NULL`,
+        [req.user.id, motionId],
+      ),
+      pool.query(
+        `SELECT allowance FROM motion_blocks
+         WHERE user_id = $1 AND motion_id = $2 AND lifted_at IS NOT NULL
+         ORDER BY lifted_at DESC LIMIT 1`,
+        [req.user.id, motionId],
+      ),
+    ]);
+    blockedOnMotion = activeBlock.rows.length > 0;
+    argumentLimit = effectiveAllowance(
+      priorLift.rows[0] ? { allowance: Number(priorLift.rows[0].allowance) } : null,
+    );
+  }
+
+  res.status(200).json({ arguments: argumentsRes.rows, blockedOnMotion, argumentLimit });
 }
 
 async function postArgument(req: Request, res: Response, side: "for" | "against") {
@@ -140,6 +168,26 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
   const userId = req.user!.id; // authMiddleware ran; body userId is ignored
   const { input } = req.body;
   const motionId = Number(id);
+
+  // §22: first, before validation and before the duplicate checks — a
+  // blocked user should burn as little as possible, and one indexed lookup
+  // is cheaper than anything else this handler does.
+  const activeBlock = await pool.query(
+    `SELECT reason FROM motion_blocks
+     WHERE user_id = $1 AND motion_id = $2 AND lifted_at IS NULL`,
+    [userId, motionId],
+  );
+  if (activeBlock.rows.length > 0) {
+    const usedRes = await pool.query(
+      `SELECT COUNT(*)::int AS n FROM arguments WHERE motion_id = $1 AND user_id = $2`,
+      [motionId, userId],
+    );
+    return res.status(403).json({
+      reason: "blocked_on_motion",
+      blockReason: activeBlock.rows[0].reason,
+      used: usedRes.rows[0].n,
+    });
+  }
 
   const checkedInput = checkText(input, { field: "input", max: 2000 });
   if (!checkedInput.ok)
@@ -225,30 +273,90 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
       return res.status(409).json({ reason: "author_affirmative_only" });
     }
 
-    // Every argument in this debate, read once: the side counts, this user's
-    // prior count, the repost check and the analyst's own-side block are all
-    // views of these rows. Captured before the insert, so a first argument
-    // correctly sees priorCount 0.
+    // Every argument in this debate, read once, WITHOUT full text: the
+    // side counts, this user's prior count and the analyst's own-side ranking
+    // are all views of these lightweight rows. Full text is fetched only for
+    // the handful actually used further down. Captured before the insert, so
+    // a first argument correctly sees priorCount 0.
     const { rows: existing } = await pool.query(
-      `SELECT c.id, c.user_id, c.side, c.content, u.username
+      `SELECT c.id, c.user_id, c.side, c.fingerprint, u.username
        FROM arguments c JOIN users u ON u.id = c.user_id
        WHERE c.motion_id = $1
        ORDER BY c.created_at ASC, c.id ASC`,
       [motionId],
     );
 
-    // §8: refused before the model is called, so the exploit costs the attacker
-    // a round trip and us no tokens. Paraphrase is the analyst's job.
-    const dupe = findDuplicate(checkedInput.value, existing.map((c) => ({
-      userId: Number(c.user_id),
-      username: String(c.username),
-      content: String(c.content),
-    })), userId);
+    // §8: refused before the model is called, so the exploit costs the
+    // attacker a round trip and us no tokens. One indexed (motion_id,
+    // content_hash) lookup costs the same at 10 arguments and at 10,000 —
+    // this is the only place full text is loaded for arguments that are NOT
+    // going to be used (the tiny set of hash-matching candidates, if any).
+    const hashCandidates = await pool.query(
+      `SELECT c.id, c.user_id, c.content, u.username
+       FROM arguments c JOIN users u ON u.id = c.user_id
+       WHERE c.motion_id = $1 AND c.content_hash = $2`,
+      [motionId, contentHash(checkedInput.value)],
+    );
+    const dupe = findDuplicate(
+      checkedInput.value,
+      hashCandidates.rows.map((c) => ({
+        userId: Number(c.user_id),
+        username: String(c.username),
+        content: String(c.content),
+      })),
+      userId,
+    );
     if (dupe.duplicate) {
       return res.status(409).json({
         reason: dupe.of === "self" ? "duplicate_own" : "duplicate_other",
         ...(dupe.of === "other" ? { username: dupe.username } : {}),
       });
+    }
+
+    // §8: a reworded restatement on the author's OWN side (self or a
+    // team-mate) is a confirm gate, not a wall — the author can read the
+    // existing argument and post anyway. Scope is own-side only: restating
+    // an opponent is conceding or steelmanning, not repeating.
+    const ownSideCandidates = existing
+      .filter((c) => c.side === effectiveSide && Array.isArray(c.fingerprint))
+      .map((c) => ({ item: c, fingerprint: c.fingerprint as number[] }));
+    const reworded = evaluateReworded(checkedInput.value, ownSideCandidates);
+
+    if (reworded.action === "shadow" && reworded.top) {
+      // No warning, one structured log line. This is calibration data and a
+      // ready-made eval set for a future semantic tier — it costs nothing
+      // and is thrown away if unused.
+      logger.info(
+        {
+          event: "similarity_shadow_band",
+          motionId,
+          newArgumentAuthor: userId,
+          existingArgumentId: Number(reworded.top.item.id),
+          score: reworded.top.score,
+        },
+        "argument similarity in shadow band",
+      );
+    }
+
+    if (reworded.action === "warn" && reworded.top) {
+      const top = reworded.top;
+      const ackId = req.body.ackSimilarTo;
+      const acknowledged =
+        ackId !== undefined && ackId !== null && Number(ackId) === Number(top.item.id);
+      if (!acknowledged) {
+        const matchContentRes = await pool.query(`SELECT content FROM arguments WHERE id = $1`, [
+          top.item.id,
+        ]);
+        const excerpt = String(matchContentRes.rows[0]?.content ?? "").slice(0, 200);
+        return res.status(409).json({
+          reason: "similar_argument",
+          argumentId: Number(top.item.id),
+          username: String(top.item.username),
+          self: Number(top.item.user_id) === userId,
+          excerpt,
+          score: top.score,
+        });
+      }
     }
 
     // Pre-insert side counts drive the opener exception (own side still empty)
@@ -272,6 +380,18 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
     const newArgumentId = Number(idRes.rows[0].id);
     const authorUsername = String(idRes.rows[0].username);
 
+    // Full text, fetched only for THIS side's arguments — the set the judge
+    // (via selectForJudge, §8) will rank and actually read. Everything else
+    // stayed lightweight above.
+    const ownSideContent = ownSideRows.length
+      ? await pool.query(`SELECT id, content FROM arguments WHERE id = ANY($1::int[])`, [
+          ownSideRows.map((c) => Number(c.id)),
+        ])
+      : { rows: [] as { id: number; content: string }[] };
+    const contentById = new Map<number, string>(
+      ownSideContent.rows.map((r) => [Number(r.id), String(r.content)]),
+    );
+
     const judgement = await judgeArgument(
       motionId,
       effectiveSide,
@@ -282,7 +402,7 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
       ownSideRows.map((c) => ({
         id: Number(c.id),
         username: String(c.username),
-        content: String(c.content),
+        content: contentById.get(Number(c.id)) ?? "",
       })),
       newArgumentId,
     );
@@ -307,12 +427,13 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
 
     // Insert, award and case-rewrite commit or roll back together — a failure
     // between them must never leave a half-persisted argument.
+    let justHitLimit = false;
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
       await client.query(
-        `INSERT INTO arguments (id, motion_id, user_id, content, side, reply_to_argument_id, points)
-         VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+        `INSERT INTO arguments (id, motion_id, user_id, content, side, reply_to_argument_id, points, content_hash, fingerprint)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
         [
           newArgumentId,
           motionId,
@@ -321,8 +442,41 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
           effectiveSide,
           replyToArgumentId,
           breakdown.points,
+          contentHash(checkedInput.value),
+          fingerprintOf(checkedInput.value),
         ],
       );
+
+      // §22: proactive, not reactive — inserted the moment the cap is
+      // reached, in the SAME transaction as the argument that reached it, so
+      // the block is a fact with a timestamp (the admin queue depends on
+      // that) and this user is told on their fifth post that it was their
+      // last. ON CONFLICT DO NOTHING: the partial unique index means a race
+      // between two "fifth" posts must not fail either transaction.
+      const priorLiftRes = await client.query(
+        `SELECT allowance FROM motion_blocks
+         WHERE user_id = $1 AND motion_id = $2 AND lifted_at IS NOT NULL
+         ORDER BY lifted_at DESC LIMIT 1`,
+        [userId, motionId],
+      );
+      const allowance = effectiveAllowance(
+        priorLiftRes.rows[0] ? { allowance: Number(priorLiftRes.rows[0].allowance) } : null,
+      );
+      const countRes = await client.query(
+        `SELECT COUNT(*)::int AS n FROM arguments WHERE motion_id = $1 AND user_id = $2`,
+        [motionId, userId],
+      );
+      const countAfterInsert = Number(countRes.rows[0].n);
+      justHitLimit = shouldBlock(countAfterInsert, allowance);
+      if (justHitLimit) {
+        await client.query(
+          `INSERT INTO motion_blocks (user_id, motion_id, reason)
+           VALUES ($1, $2, 'argument_limit')
+           ON CONFLICT DO NOTHING`,
+          [userId, motionId],
+        );
+      }
+
       await awardLogic(client, userId, breakdown.points, "argument");
       // §17: attribution is resolved against this side's real arguments,
       // including the one being inserted right now — so an id the model invented
@@ -399,6 +553,7 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
       replyToUsername: replyTarget?.username ?? null,
       seasonLogic: standing.rows[0].season_logic,
       seasonRank: standing.rows[0].season_rank,
+      lastArgumentOnMotion: justHitLimit,
     });
   } catch (err) {
     console.log(err);

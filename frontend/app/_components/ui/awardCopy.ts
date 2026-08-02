@@ -17,6 +17,9 @@ export interface Award {
   replyToUsername: string | null;
   seasonLogic: number;
   seasonRank: number;
+  // Spec: game-theory.md §22 — warned at the moment it becomes true, not
+  // after the fact, so it takes priority over the cap/reply notes below.
+  lastArgumentOnMotion: boolean;
 }
 
 export interface LedgerRow {
@@ -42,6 +45,9 @@ export function awardLedger(a: Award): LedgerRow[] {
 }
 
 export function awardNote(a: Award): string | null {
+  if (a.lastArgumentOnMotion) {
+    return "That was your fifth and last argument on this debate.";
+  }
   if (a.capped) return "Reply to an opponent next time to earn up to 10.";
   if (a.isReply && a.replyToUsername) {
     return `A targeted rebuttal of @${a.replyToUsername} — the full range was in play.`;

@@ -44,6 +44,9 @@ export async function authMiddleware(
   }
 }
 
+// A request with no token, or an invalid one, still proceeds — req.user is
+// simply left unset, so the handler behaves as it would for a spectator. Only
+// a VALID token populates req.user, exactly like authMiddleware.
 export async function optionalMiddleware(
   req: Request,
   res: Response,
@@ -53,24 +56,23 @@ export async function optionalMiddleware(
   const token = authHeader?.split(" ")[1];
 
   if (!token) {
-    return res
-      .status(200)
-      .json({ message: "No token Provided! Going without userInfo." });
+    return next();
   }
 
   try {
-    const decoded = jwt.verify(token as string, config.jwt_secret!) as any;
+    const decoded = jwt.verify(token, config.jwt_secret!) as any;
 
     req.user = {
       id: decoded.id,
       email: decoded.email,
       role: decoded.role,
     };
-
-    next();
-  } catch (err) {
-    return res.status(401).json({ message: "invalid or expired token" });
+  } catch {
+    // Invalid/expired token on an optional route: proceed as a spectator
+    // rather than refusing a read nobody required auth for.
   }
+
+  next();
 }
 
 export function requireRole(...roles: string[]) {

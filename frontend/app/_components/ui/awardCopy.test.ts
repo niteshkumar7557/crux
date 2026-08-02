@@ -9,6 +9,7 @@ const award = (over: Partial<Award> = {}): Award => ({
   replyToUsername: null,
   seasonLogic: 143,
   seasonRank: 12,
+  lastArgumentOnMotion: false,
   ...over,
 });
 
@@ -74,5 +75,14 @@ describe("awardNote", () => {
 
   it("stays quiet on an ordinary standalone", () => {
     expect(awardNote(award())).toBeNull();
+  });
+
+  it("names the fifth-and-last argument, ahead of the cap and reply notes", () => {
+    expect(awardNote(award({ lastArgumentOnMotion: true }))).toBe(
+      "That was your fifth and last argument on this debate.",
+    );
+    expect(
+      awardNote(award({ lastArgumentOnMotion: true, capped: true })),
+    ).toBe("That was your fifth and last argument on this debate.");
   });
 });

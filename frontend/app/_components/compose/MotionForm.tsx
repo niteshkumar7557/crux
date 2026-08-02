@@ -46,7 +46,7 @@ const MotionForm = ({ domains }: { domains: DomainClassification }) => {
 	const [verdict, setVerdict] = useState<ArbiterVerdict | null>(null);
 	const [chosenVersion, setChosenVersion] = useState<ClaimVersion>("improved");
 	const [similar, setSimilar] = useState<SimilarMotion[]>([]);
-	const [composeNotice, setComposeNotice] = useState("");
+	const [composeNotice, setComposeNotice] = useState<React.ReactNode>("");
 	const [castNotice, setCastNotice] = useState("");
 	const [authUser, setAuthUser] = useState<jwtPayload | null | undefined>(undefined);
 	const [avatar, setAvatar] = useState<string | null>(null);
@@ -194,6 +194,52 @@ const MotionForm = ({ domains }: { domains: DomainClassification }) => {
 				);
 				return;
 			}
+			if (isAxiosError(err) && err.response?.status === 409) {
+				const reason = err.response.data?.reason;
+				const mid = err.response.data?.motionId;
+				const status = err.response.data?.status;
+				// §3: exact-duplicate — blocked forever, either endpoint. No new UI
+				// surface: the compose notice line already carries one-off status
+				// text, and here it also carries a real link to the existing motion.
+				if (reason === "duplicate_motion") {
+					setVerdict(null);
+					setComposeNotice(
+						<>
+							{status === "live" ? "Already Running — " : "Already Debated — "}
+							{status === "live"
+								? "this exact motion is live right now."
+								: "this exact motion has already been debated and ruled on."}{" "}
+							<Link
+								href={`/motion/CRX-${mid}-A`}
+								className="underline underline-offset-2 hover:text-ink"
+							>
+								{status === "live" ? "Go argue in it." : "Read the verdict."}
+							</Link>
+						</>,
+					);
+					return;
+				}
+				// §3: same debate as a currently live motion — a hard block, not a
+				// suggestion. The primary action is Join, never Try Again: someone
+				// who wanted to talk about this now has somewhere to do it with
+				// hours left on the clock.
+				if (reason === "similar_motion") {
+					setVerdict(null);
+					setComposeNotice(
+						<>
+							This Debate Is Already Running —{" "}
+							<Link
+								href={`/motion/CRX-${mid}-A`}
+								className="underline underline-offset-2 hover:text-ink"
+							>
+								join it
+							</Link>{" "}
+							instead of starting a new one.
+						</>,
+					);
+					return;
+				}
+			}
 			setVerdict({
 				status: "unavailable",
 				original: text,
@@ -242,6 +288,27 @@ const MotionForm = ({ domains }: { domains: DomainClassification }) => {
 						"You're casting fast — try again in a minute.",
 				);
 				setCasting(false);
+				return;
+			}
+			// §3: the race backstop — the eligibility check passed, but between
+			// then and now someone else broadcast the identical motion (or the
+			// unique index caught a simultaneous submission). Send the author to
+			// what already exists rather than making them retype.
+			if (
+				isAxiosError(err) &&
+				err.response?.status === 409 &&
+				err.response.data?.reason === "duplicate_motion"
+			) {
+				const status = err.response.data?.status;
+				try {
+					localStorage.removeItem(DRAFT_KEY);
+				} catch {}
+				router.push(`/motion/CRX-${err.response.data.motionId}-A`);
+				setCastNotice(
+					status === "live"
+						? "This exact motion is already live — you've been sent there instead."
+						: "This exact motion has already been debated — you've been sent to the verdict.",
+				);
 				return;
 			}
 			setCastNotice(

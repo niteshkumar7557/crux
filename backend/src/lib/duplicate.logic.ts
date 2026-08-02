@@ -1,6 +1,12 @@
-// Verbatim repost detection, run before the model is ever called. Cheap,
-// deterministic, no tokens. Paraphrase is the analyst's job, not this module's.
+// Verbatim repost detection. The caller finds candidates via an indexed
+// (motion_id, content_hash) lookup (see argument.controller.ts) instead of
+// loading every argument on the motion — this module's job is unchanged:
+// given the small set of hash-matching candidates, decide self vs. other and
+// apply the cross-user length floor. Paraphrase is the analyst's job, not
+// this module's.
 // Spec: game-theory.md §8
+
+import crypto from "crypto";
 
 export const CROSS_USER_MIN_LENGTH = 40;
 
@@ -53,4 +59,12 @@ export function findDuplicate(
     return { duplicate: true, of: "other", username: byOther.username };
   }
   return NOT_DUPLICATE;
+}
+
+// 16-byte truncated SHA-256 of the normalised content — no collision anxiety
+// at this scale. Shared by argument.controller.ts (compute-and-store on
+// insert, lookup-by-hash on post) and scripts/backfill-similarity-data.ts
+// (backfill existing rows) — the two must never diverge.
+export function contentHash(text: string): Buffer {
+  return crypto.createHash("sha256").update(normaliseArgument(text)).digest().subarray(0, 16);
 }

@@ -105,6 +105,20 @@ These words are used precisely, in the product and in the code. Fix them now.
                   Share card and certificate generate.
 ```
 
+**A motion can never be posted twice, verbatim.** "Same" ignores case, punctuation, spacing and
+accents — the identical comparison used for arguments (§8). This is enforced permanently: a
+duplicate of a LIVE motion is pointed at the live debate, a duplicate of a CONCLUDED one is
+pointed at its verdict, and neither can ever be reposted to "try again" on a topic that already
+ran.
+
+**A motion that means the same thing as a currently live motion is also refused** — same debate,
+not merely same topic ("should nuclear be expanded" and "is nuclear safe" are different debates).
+This is checked only against LIVE motions: a motion similar to a CONCLUDED one is allowed,
+because the debate is over and re-litigating a settled question with fresh people is a feature,
+not a gap. The ARBITER (§16) makes this call as one extra field, `duplicate_of`, on the
+eligibility check it already runs — no second AI call, and a shortlist of at most five live
+motions (by character-trigram overlap, floor 0.20) is all it is ever shown.
+
 ---
 
 ## §4 The clock
@@ -224,7 +238,8 @@ prompt is ordered (§16).
 
 ## §8 Originality — reposts and restatements
 
-The same exploit at two levels of effort, refused at two different layers.
+The same exploit at three levels of effort, refused at three different layers: exact, cheap-similar,
+and judged.
 
 **A verbatim repost is refused outright**, before the AI is ever called. Two cases:
 
@@ -235,7 +250,27 @@ The same exploit at two levels of effort, refused at two different layers.
   1–2 anyway, so copying one gains nothing.
 
 Comparison ignores case, punctuation, spacing and Latin accents, so trivial edits do not evade it.
-It costs no tokens and takes no judgement.
+It costs no tokens and takes no judgement. The lookup is an indexed hash match on
+`(motion_id, content_hash)`, so it costs the same at 10 arguments on a motion and at 10,000.
+
+**Between the verbatim check and the judge sits a cheap, deterministic middle layer**: a
+character-trigram similarity score against the same side's existing arguments (own posts and
+team-mates', mirroring the self/other split above — the opposing side is never compared, because
+restating an opponent is conceding or steelmanning, not repeating). Above **0.75**, the post is
+stopped and the author is shown the existing argument — a **confirm gate, not a wall**. They can
+read it and post anyway, and the retry carries an acknowledgement of the *specific* argument shown
+rather than a bare "yes" that would silently stop warning on every future post. Between **0.45 and
+0.75** nothing is shown to the author; the pair is only logged, as calibration data for tightening
+the threshold and as a ready-made evaluation set for a future semantic layer. Below **40 normalised
+characters** the layer is skipped entirely, for the same reason the verbatim check's cross-user
+floor exists: too few trigrams for a score to mean anything.
+
+This middle layer catches the cheap version of restating a point — light rewording, reordering, a
+substituted word — for free. It cannot catch a genuine paraphrase in different vocabulary; that is
+the judge's job, below, and it is why the judge is shown the 12 most SIMILAR own-side arguments to
+the one just posted rather than the 12 most RECENT — a paraphrase-catcher that cannot see the
+argument it should be compared against cannot do its job regardless of prompt quality, and on a
+busy motion the most recent 12 are frequently not the relevant 12.
 
 **A reworded restatement scores 2.** Making a point that has already been made on your side — by
 you or by a team-mate, reworded, translated or reordered — earns the floor. This is a judgement,
@@ -749,6 +784,12 @@ Every tunable constant in the game. **If a number is in the code, it is in this 
 | Case points per side | **6** max | §17 |
 | Probability move cap | **none** — sanity clamp only, 2–98 | §16 |
 | Username | **3–20** chars, `a-z0-9_`, ≥1 letter | §13 |
+| Argument participation cap | **5** per motion | §22 |
+| Similarity warning threshold | **0.75** (provisional — see the calibration script) | §8 |
+| Similarity shadow-band floor | **0.45** | §8 |
+| Similarity minimum length | **40** normalised characters | §8 |
+| Motion shortlist size | **5** | §3 |
+| Motion shortlist floor | **0.20** | §3 |
 
 **These are deliberately not environment variables.** Each is asserted by a unit test and most are
 printed to users as prose, so an env override would make the product lie about its own rules.
@@ -757,7 +798,33 @@ Changing one is a coordinated edit — see the checklist in
 
 ---
 
-## §22 Not in v1
+## §22 Participation limits
+
+Nothing else in the game limits how many arguments one user posts on one motion, and an argument
+scores a minimum of 2 — so a user posting many small, technically-valid, low-effort points could
+climb the leaderboard on volume rather than reasoning. That is unfair to someone who posts three
+sharp arguments instead, and it is the cheapest available exploit in the game.
+
+**A user may post at most 5 arguments on any one motion.** On the 5th, they are told it was their
+last; on the 6th attempt, they are blocked from that motion only — every other motion is
+unaffected. Only arguments that actually get inserted count toward the five: a discarded abuse
+post or a refused empty one costs nothing toward the limit, because it was never persisted.
+
+**The block is a fact with a timestamp, not a live count check.** It is written the moment the
+5th argument commits, in the same transaction, to an auditable table with a reason, so a future
+second block reason (not yet built) slots into the same mechanism rather than replacing it.
+
+**The cap is not a ceiling that stays shut.** A blocked user can message the developer; the
+developer reads all five arguments on that motion and decides — genuine reasoning earns a raised
+allowance (a new total, not an increment, e.g. lifting a 5-block with an allowance of 8 means 3
+more), spam does not. Reaching the new total blocks again, and the cycle repeats cleanly with no
+special case. This lift path is load-bearing, not an edge case: the cap binds good debaters as
+much as bad ones, and if lifting a good debater's cap is slow, the cap feels arbitrary to exactly
+the users worth keeping.
+
+---
+
+## §23 Not in v1
 
 Deliberately out of scope. Every one is designed and preserved in
 [`future-features.md`](./future-features.md) — deferred, not discarded.

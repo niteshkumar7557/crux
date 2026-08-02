@@ -3,7 +3,9 @@
 // scoreArgument runs the documented order — clamp to 2-10, then apply the
 // standalone cap — and returns the whole breakdown, not just the number, because
 // the user is shown the arithmetic.
-// Spec: game-theory.md §7, §16, §19
+// Spec: game-theory.md §7, §8, §16, §19
+
+import { fingerprintOf, findSimilar } from "../lib/similarity.logic.js";
 
 export type Side = "for" | "against";
 
@@ -54,10 +56,34 @@ function orNoneYet(text: string | null): string {
   return text && text.trim().length > 0 ? text : NONE_YET;
 }
 
+// §8 fix: the judge used to see the 12 MOST RECENT own-side arguments, so on
+// a busy motion an early argument scrolled out of view and rewording it went
+// unpunished. Select the 12 MOST SIMILAR to the incoming argument instead —
+// same token count, same cost, the right 12 instead of the newest 12.
+export function selectForJudge(
+  ownSide: OwnSideArgument[],
+  incomingText: string,
+): OwnSideArgument[] {
+  if (ownSide.length <= OWN_SIDE_ARGUMENT_LIMIT) return ownSide;
+
+  // Score newest-first so the stable sort in findSimilar keeps the more
+  // recent candidate on a tied score ("ties broken by recency").
+  const newestFirst = [...ownSide].reverse();
+  const ranked = findSimilar(
+    fingerprintOf(incomingText),
+    newestFirst.map((c) => ({ item: c, fingerprint: fingerprintOf(c.content) })),
+    { limit: OWN_SIDE_ARGUMENT_LIMIT, floor: 0 },
+  );
+  const chosenIds = new Set(ranked.map((m) => m.item.id));
+
+  // Render in the ORIGINAL chronological order: the judge reasons about a
+  // side's case as it developed, and similarity order would scramble that.
+  return ownSide.filter((c) => chosenIds.has(c.id));
+}
+
 export function buildOwnSideBlock(ownSide: OwnSideArgument[]): string {
   if (ownSide.length === 0) return NONE_YET;
   return ownSide
-    .slice(-OWN_SIDE_ARGUMENT_LIMIT)
     .map((c) => {
       const text =
         c.content.length > OWN_SIDE_ARGUMENT_MAX_CHARS
@@ -97,7 +123,7 @@ AUTHOR: ${author}
 OWN SIDE ANALYSIS: ${own}
 OPPONENT ANALYSIS: ${opponent}
 OWN SIDE ARGUMENTS:
-${buildOwnSideBlock(input.ownSideArguments)}${idBlock}${replyBlock}
+${buildOwnSideBlock(selectForJudge(input.ownSideArguments, input.argument))}${idBlock}${replyBlock}
 ARGUMENT: "${argument}"`;
 }
 

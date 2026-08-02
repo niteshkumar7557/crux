@@ -9,6 +9,7 @@ import { DEBATER_PROFILER_SYSTEM_PROMPT } from "../ai/prompts/debater-profiler.p
 import { OPENING_BRIEF_SYSTEM_PROMPT } from "../ai/prompts/opening-brief.prompt.js";
 import { checkText } from "../lib/validate.js";
 import { readAnalysis, sanitizeAnalysis, writeAnalysis } from "../ai/analysis.logic.js";
+import { normaliseArgument } from "../lib/duplicate.logic.js";
 
 async function updateDesciption(user_id: number) {
   const { rows } = await pool.query(
@@ -62,6 +63,24 @@ export async function addNewMotion(req: Request, res: Response) {
   const domainIn = checkText(req.body?.domain, { field: "domain", max: 100 });
   if (!domainIn.ok) return res.status(400).json({ error: domainIn.reason });
 
+  // §3: refused before ANY model is called (Opening Brief below), so a
+  // verbatim repost costs the attacker a round trip and us no tokens. The
+  // pre-check here handles the common case with a good error message; the
+  // unique index (caught below on insert) is the race-safe backstop for two
+  // simultaneous submissions of the identical motion.
+  const normalisedContent = normaliseArgument(content.value);
+  const existingDupe = await pool.query(
+    `SELECT id, status FROM motions WHERE normalised_content = $1`,
+    [normalisedContent],
+  );
+  if (existingDupe.rows.length > 0) {
+    return res.status(409).json({
+      reason: "duplicate_motion",
+      motionId: existingDupe.rows[0].id,
+      status: existingDupe.rows[0].status,
+    });
+  }
+
   const domainResult = await pool.query(
     `
         SELECT id, name FROM domains
@@ -86,28 +105,50 @@ Domain: ${domainName}`;
       maxTokens: 3000,
     });
 
-    const { rows } = await pool.query(
-      `
-        INSERT INTO motions (user_id, content_keyword, content, domain_id, for_analysis, against_analysis, closes_at)
-        VALUES ($1,$2,$3,$4,$5,$6, NOW() + INTERVAL '48 hours')
+    let insertRes;
+    try {
+      insertRes = await pool.query(
+        `
+        INSERT INTO motions (user_id, content_keyword, content, domain_id, for_analysis, against_analysis, closes_at, normalised_content)
+        VALUES ($1,$2,$3,$4,$5,$6, NOW() + INTERVAL '48 hours', $7)
         RETURNING id;
         `,
-      [
-        userId,
-        keyword.value,
-        content.value,
-        domainId,
-        // §17: a brief is a lead with NO points. Nobody has argued, so there is
-        // nothing to credit — and an empty points array is what keeps the panel
-        // honest until a real argument fills it.
-        writeAnalysis(
-          sanitizeAnalysis({ lead: parsed.for_opening, points: [] }, new Map()),
-        ),
-        writeAnalysis(
-          sanitizeAnalysis({ lead: parsed.against_opening, points: [] }, new Map()),
-        ),
-      ],
-    );
+        [
+          userId,
+          keyword.value,
+          content.value,
+          domainId,
+          // §17: a brief is a lead with NO points. Nobody has argued, so there is
+          // nothing to credit — and an empty points array is what keeps the panel
+          // honest until a real argument fills it.
+          writeAnalysis(
+            sanitizeAnalysis({ lead: parsed.for_opening, points: [] }, new Map()),
+          ),
+          writeAnalysis(
+            sanitizeAnalysis({ lead: parsed.against_opening, points: [] }, new Map()),
+          ),
+          normalisedContent,
+        ],
+      );
+    } catch (err: any) {
+      // Race backstop: two simultaneous submissions of the identical motion
+      // both pass the pre-check above and both attempt to insert — only one
+      // can win the unique index. Check the constraint name specifically so
+      // an unrelated unique violation is never misreported as a duplicate.
+      if (err?.code === "23505" && err?.constraint === "idx_motions_normalised_content") {
+        const conflict = await pool.query(
+          `SELECT id, status FROM motions WHERE normalised_content = $1`,
+          [normalisedContent],
+        );
+        return res.status(409).json({
+          reason: "duplicate_motion",
+          motionId: conflict.rows[0]?.id ?? null,
+          status: conflict.rows[0]?.status ?? "live",
+        });
+      }
+      throw err;
+    }
+    const rows = insertRes.rows;
 
     res.status(200).json({
       id: rows[0].id,

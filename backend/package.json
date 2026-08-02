@@ -12,8 +12,9 @@
     "db:migrate:dev": "npx tsx src/db/migrate.ts",
     "db:reset:dev": "npx tsx src/db/reset.ts",
     "db:seed:dev": "npx tsx src/db/seed-dev.ts",
-    "db-init": "npm run db:migrate:dev && npm run db:seed:dev",
-    "development": "npm run db:migrate:dev && npm run db:seed:dev && npm run dev",
+    "db:backfill:dev": "npx tsx scripts/backfill-similarity-data.ts",
+    "db-init": "npm run db:migrate:dev && npm run db:seed:dev && npm run db:backfill:dev",
+    "development": "npm run db:migrate:dev && npm run db:seed:dev && npm run db:backfill:dev && npm run dev",
     "test": "vitest run",
     "test:watch": "vitest",
     "eval": "npx tsx src/ai/eval/run.ts"

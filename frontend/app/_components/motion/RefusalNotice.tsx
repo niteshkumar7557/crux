@@ -18,7 +18,9 @@ import Portal from "@/app/_components/ui/Portal";
 export type Notice = {
   title: string;
   body: ReactNode;
-  action?: { href: string; label: string };
+  // A link (navigates away) or a click action (e.g. §8's "Post anyway" —
+  // retries the same submit with an acknowledgement, so it cannot be a Link).
+  action?: { href: string; label: string } | { onClick: () => void; label: string };
   tone?: "refusal" | "posted";
 };
 
@@ -92,7 +94,7 @@ const RefusalNotice = ({
           <p className="mt-2 font-body text-[0.95rem] leading-relaxed text-ink-soft">
             {notice.body}
           </p>
-          {notice.action && (
+          {notice.action && "href" in notice.action && (
             <Link
               href={notice.action.href}
               className="mt-4 inline-flex items-center gap-1.5 font-label text-[10px] uppercase tracking-[0.15em] text-ink-soft hover:text-ink transition-colors"
@@ -100,6 +102,16 @@ const RefusalNotice = ({
               {notice.action.label}
               <LuArrowRight className="text-[11px]" />
             </Link>
+          )}
+          {notice.action && "onClick" in notice.action && (
+            <button
+              type="button"
+              onClick={notice.action.onClick}
+              className="mt-4 inline-flex items-center gap-1.5 font-label text-[10px] uppercase tracking-[0.15em] text-ink-soft hover:text-ink transition-colors cursor-pointer"
+            >
+              {notice.action.label}
+              <LuArrowRight className="text-[11px]" />
+            </button>
           )}
         </div>
       </div>

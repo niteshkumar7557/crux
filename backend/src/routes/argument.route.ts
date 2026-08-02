@@ -6,12 +6,12 @@ import {
   postAffirmativeArgument,
   postNegativeArgument,
 } from "../controllers/argument.controller.js";
-import { authMiddleware } from "../middlewares/auth.js";
+import { authMiddleware, optionalMiddleware } from "../middlewares/auth.js";
 import { llmLimiter } from "../middlewares/rateLimit.js";
 
 const argumentRoutes = Router();
 
-argumentRoutes.get("/:id/arguments", getArguments);
+argumentRoutes.get("/:id/arguments", optionalMiddleware, getArguments);
 
 argumentRoutes.post(
   "/:id/arguments/affirmative",

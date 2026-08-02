@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   CROSS_USER_MIN_LENGTH,
+  contentHash,
   findDuplicate,
   normaliseArgument,
   type PriorArgument,
@@ -96,5 +97,19 @@ describe("findDuplicate", () => {
     expect(findDuplicate("???", [prior({ content: "!!!" })], 2)).toEqual({
       duplicate: false,
     });
+  });
+});
+
+describe("contentHash", () => {
+  it("is stable for the same normalised content", () => {
+    expect(contentHash("The COST — is real!!")).toEqual(contentHash("the cost is real"));
+  });
+
+  it("differs for different content", () => {
+    expect(contentHash("point A")).not.toEqual(contentHash("point B"));
+  });
+
+  it("is 16 bytes", () => {
+    expect(contentHash("anything").length).toBe(16);
   });
 });
