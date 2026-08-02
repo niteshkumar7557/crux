@@ -784,7 +784,7 @@ Every tunable constant in the game. **If a number is in the code, it is in this 
 | Case points per side | **6** max | §17 |
 | Probability move cap | **none** — sanity clamp only, 2–98 | §16 |
 | Username | **3–20** chars, `a-z0-9_`, ≥1 letter | §13 |
-| Argument participation cap | **5** per motion | §22 |
+| Argument participation cap | **8** per motion | §22 |
 | Similarity warning threshold | **0.75** (provisional — see the calibration script) | §8 |
 | Similarity shadow-band floor | **0.45** | §8 |
 | Similarity minimum length | **40** normalised characters | §8 |
@@ -805,13 +805,13 @@ scores a minimum of 2 — so a user posting many small, technically-valid, low-e
 climb the leaderboard on volume rather than reasoning. That is unfair to someone who posts three
 sharp arguments instead, and it is the cheapest available exploit in the game.
 
-**A user may post at most 5 arguments on any one motion.** On the 5th, they are told it was their
-last; on the 6th attempt, they are blocked from that motion only — every other motion is
+**A user may post at most 8 arguments on any one motion.** On the 9th, they are told it was their
+last; on the 9th attempt, they are blocked from that motion only — every other motion is
 unaffected. Only arguments that actually get inserted count toward the five: a discarded abuse
 post or a refused empty one costs nothing toward the limit, because it was never persisted.
 
 **The block is a fact with a timestamp, not a live count check.** It is written the moment the
-5th argument commits, in the same transaction, to an auditable table with a reason, so a future
+6th argument commits, in the same transaction, to an auditable table with a reason, so a future
 second block reason (not yet built) slots into the same mechanism rather than replacing it.
 
 **The cap is not a ceiling that stays shut.** A blocked user can message the developer; the

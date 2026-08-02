@@ -38,7 +38,7 @@ const BUSY_LABEL = "Posting your argument";
 // ARGUMENT_LIMIT, matching the pattern already used for STANDALONE_CAP in
 // awardCopy.ts (the frontend cannot import backend modules). Only a fallback
 // for the brief window before the server-reported limit arrives.
-const ARGUMENT_LIMIT_DEFAULT = 5;
+const ARGUMENT_LIMIT_DEFAULT = 8;
 
 // The conclusion job sweeps every 60s, so five minutes is ~5x the expected wait
 // — long enough that a reader never has to reload, short enough that a tab left
@@ -517,9 +517,9 @@ const ArgumentInput = ({
                 ? "— you posted this motion, so you can only argue FOR it."
                 : `— you can't argue ${lockedSide === "for" ? "AGAINST" : "FOR"} in this debate.`}
             </span>
-            <span className="font-label text-[10px] uppercase tracking-widest text-ink-soft">
+            {/* <span className="font-label text-[10px] uppercase tracking-widest text-ink-soft">
               Argument {Math.min(myArgumentCount + 1, displayedLimit)} of {displayedLimit}
-            </span>
+            </span> */}
           </div>
           <button
             type="button"
@@ -532,9 +532,9 @@ const ArgumentInput = ({
         </div>
       ) : (
         <div className="max-w-screen-2xl mx-auto mb-2 flex items-center justify-between md:hidden">
-          <span className="font-label text-[10px] uppercase tracking-widest text-ink-soft">
+          {/* <span className="font-label text-[10px] uppercase tracking-widest text-ink-soft">
             Argument {Math.min(myArgumentCount + 1, displayedLimit)} of {displayedLimit}
-          </span>
+          </span> */}
           <button
             type="button"
             aria-label="Collapse the composer"

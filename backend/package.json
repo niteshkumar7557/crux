@@ -1,7 +1,8 @@
 {
   "name": "crux-backend",
   "version": "1.0.0",
-  "description": "",
+  "private": true,
+  "description": "AI-powered debate platform",
   "main": "dist/index.js",
   "scripts": {
     "db:migrate": "node dist/db/migrate.js",
