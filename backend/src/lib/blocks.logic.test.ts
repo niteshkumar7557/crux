@@ -4,7 +4,7 @@ import { ARGUMENT_LIMIT, effectiveAllowance, shouldBlock } from "./blocks.logic.
 describe("effectiveAllowance", () => {
   it("is the default ARGUMENT_LIMIT with no prior lift", () => {
     expect(effectiveAllowance(null)).toBe(ARGUMENT_LIMIT);
-    expect(ARGUMENT_LIMIT).toBe(5);
+    expect(ARGUMENT_LIMIT).toBe(8);
   });
 
   it("is the lifted total when a lift exists", () => {
