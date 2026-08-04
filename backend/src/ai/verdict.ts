@@ -154,12 +154,21 @@ ${argumentBlock}`,
 
     // §20: post-commit and best-effort, so a notification failure can never roll
     // back a conclusion.
+    // What each person actually walked away with. One user can hold several
+    // awards — the author of a motion who also argued and won holds two — so the
+    // email quotes the sum rather than whichever line happens to be first.
+    const netByUser = new Map<number, number>();
+    for (const award of payouts.logicAwards) {
+      netByUser.set(award.userId, (netByUser.get(award.userId) ?? 0) + award.amount);
+    }
+
     void notifyVerdict(
       motionId,
       payouts.results.map((r) => ({
         userId: r.userId,
         outcome: r.outcome,
         isMvp: r.isMvp,
+        points: netByUser.get(r.userId) ?? 0,
       })),
     );
   } catch (err) {

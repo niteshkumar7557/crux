@@ -7,6 +7,7 @@ import logger from "../lib/logger.js";
 import { awardsForSeason, previousSeason } from "./seasonRollover.logic.js";
 import { createNotification } from "../notifications/notify.js";
 import { seasonAwardMessage } from "../notifications/messages.js";
+import { queueEmail } from "../emails/queue.js";
 import config from "../config/index.js";
 
 const TICK_MS = config.jobs.season_rollover_tick_ms;
@@ -69,6 +70,13 @@ async function tick(): Promise<void> {
           type: "season",
           message: seasonAwardMessage(a.title, a.rank),
         });
+        // Queued inside the same transaction as the award: if the rollover rolls
+        // back, the email that announces it goes with it.
+        await queueEmail(
+          a.userId,
+          { category: "season", data: { title: a.title, rank: a.rank } },
+          client,
+        );
       }
       await client.query("COMMIT");
     } catch (err) {

@@ -78,11 +78,28 @@ const config = {
     dev_username: str("DEV_USERNAME", "dev_nitesh"),
   },
 
+  // With any of region/keys/from empty the transport reports itself unconfigured,
+  // the poller never starts, and queued mail simply waits. Dev and CI need no AWS
+  // account; the boot log says which mode is live.
+  ses: {
+    region: process.env.SES_REGION,
+    accessKeyId: process.env.SES_ACCESS_KEY_ID,
+    secretAccessKey: process.env.SES_SECRET_ACCESS_KEY,
+    fromEmail: process.env.SES_FROM_EMAIL,
+    fromName: str("SES_FROM_NAME", "Crux"),
+    replyTo: process.env.SES_REPLY_TO,
+    configurationSet: process.env.SES_CONFIGURATION_SET,
+    // The webhook trusts this topic and no other.
+    snsTopicArn: process.env.SES_SNS_TOPIC_ARN,
+  },
+
   jobs: {
     conclusion_tick_ms: num("CONCLUSION_TICK_MS", 60_000),
     conclusion_batch: num("CONCLUSION_BATCH", 20),
     featuring_tick_ms: num("FEATURING_TICK_MS", 5 * 60_000),
     season_rollover_tick_ms: num("SEASON_ROLLOVER_TICK_MS", 60 * 60_000),
+    email_tick_ms: num("EMAIL_TICK_MS", 15_000),
+    email_batch: num("EMAIL_BATCH", 20),
   },
 
   limits: {

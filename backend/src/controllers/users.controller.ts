@@ -14,6 +14,7 @@ import {
   saveRefreshTokenToDB,
 } from "../lib/tokens.js";
 import { validateUsername } from "../lib/username.logic.js";
+import { queueEmail } from "../emails/queue.js";
 
 const isProduction = config.node_env === "production";
 const cookieOptions: CookieOptions = {
@@ -72,6 +73,13 @@ export async function addNewUser(req: Request, res: Response) {
     res.cookie("refresh_token", refreshToken, cookieOptions);
     res.status(201).json({
       accessToken: accessToken,
+    });
+
+    // Transactional, and after the response: the account already exists, so a
+    // mail failure must not turn a successful signup into an error.
+    void queueEmail(user.id, {
+      category: "welcome",
+      data: { username: user.username },
     });
   } catch (err) {
     console.error(err);

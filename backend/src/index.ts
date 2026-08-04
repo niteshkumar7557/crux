@@ -11,6 +11,7 @@ import { startConclusionPoller } from "./jobs/conclusion.js";
 import { startFeaturingPoller } from "./jobs/featuring.js";
 import { startSeasonRolloverPoller } from "./jobs/seasonRollover.js";
 import { startTelegramPoller } from "./jobs/telegram.js";
+import { startEmailPoller, requeueStuckEmails, sesTransport } from "./jobs/email.js";
 import { avatarStore } from "./controllers/avatar.controller.js";
 
 async function start() {
@@ -31,6 +32,9 @@ async function start() {
     // Which store the uploads land in is invisible until someone uploads one,
     // and "local" in production means they vanish on the next deploy.
     logger.info({ store: avatarStore.kind }, "avatar storage");
+    // Silent otherwise: queued mail that never sends looks identical to no mail.
+    logger.info({ enabled: sesTransport.configured }, "email delivery");
+    await requeueStuckEmails();
 
     app.listen(config.server_port, "::", () => {
       logger.info({ port: config.server_port }, "server up");
@@ -39,6 +43,7 @@ async function start() {
       startFeaturingPoller();
       startSeasonRolloverPoller();
       startTelegramPoller();
+      startEmailPoller();
     });
   } catch (err) {
     logger.fatal({ err }, "Failed to connect to database");

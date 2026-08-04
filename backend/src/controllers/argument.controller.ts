@@ -518,7 +518,13 @@ async function postArgument(req: Request, res: Response, side: "for" | "against"
 
     // §20 return triggers, both best-effort — neither blocks the response.
     if (replyTargetUserId !== null) {
-      void notifyReply(motionId, replyTargetUserId, userId);
+      // The two texts the reply email quotes. Passed in rather than re-queried:
+      // both are already in hand here, and the target's content is the exact
+      // string this argument was written against.
+      void notifyReply(motionId, replyTargetUserId, userId, {
+        yourArgument: replyTarget?.content ?? "",
+        theirArgument: input,
+      });
     }
     if (priorCount === 0) {
       void notifyOpposition(motionId, effectiveSide, userId);

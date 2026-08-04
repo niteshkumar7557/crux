@@ -21,6 +21,7 @@ import domainRoutes from "./routes/domain.route.js";
 import notificationRoutes from "./routes/notification.route.js";
 import devMessageRoutes from "./routes/devMessage.route.js";
 import adminRoutes from "./routes/admin.route.js";
+import emailRoutes, { webhookRoutes } from "./routes/email.route.js";
 import { globalLimiter, clientIp } from "./middlewares/rateLimit.js";
 import { pinoHttp } from "pino-http";
 import * as Sentry from "@sentry/node";
@@ -37,6 +38,19 @@ app.use(
     credentials: true,
   }),
 );
+// Two reasons this sits here rather than beside the other route groups.
+//
+// It needs its own parser: SNS posts its JSON as text/plain, which express.json
+// ignores, leaving the handler an empty body.
+//
+// And it sits ABOVE the rate limiter, for the same reason /health does. SNS
+// carries no edge secret, so it would land in the shared unverified bucket — and
+// a flood arriving off-edge would then 429 genuine bounce and complaint events
+// until SNS gave up retrying. Losing those means continuing to mail an address
+// that complained, which is the one mistake that costs a sending reputation.
+// Everything expensive here is gated behind a topic-ARN check instead.
+app.use("/webhooks", express.text({ type: "*/*", limit: "256kb" }), webhookRoutes);
+
 app.use(express.json());
 app.use(cookieParser());
 // Preset art is mutable behind a permanent URL. The ids stay stable so a stored
@@ -91,6 +105,7 @@ app.use("/avatar", avatarRoutes);
 app.use("/notifications", notificationRoutes);
 app.use("/messages", devMessageRoutes);
 app.use("/admin", adminRoutes);
+app.use("/email", emailRoutes);
 
 Sentry.setupExpressErrorHandler(app);
 

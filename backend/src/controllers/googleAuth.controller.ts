@@ -24,6 +24,7 @@ import {
 } from "../lib/tokens.js";
 import { validateUsername } from "../lib/username.logic.js";
 import { importAvatarFromUrl } from "../lib/avatarImport.js";
+import { queueEmail } from "../emails/queue.js";
 import { avatarStore } from "./avatar.controller.js";
 import {
   buildAuthUrl,
@@ -368,6 +369,11 @@ export async function completeGoogleSignup(req: Request, res: Response) {
     res.clearCookie(SIGNUP_COOKIE, FLOW_COOKIE);
     res.cookie("refresh_token", refreshToken, REFRESH_COOKIE);
     res.status(201).json({ accessToken });
+
+    void queueEmail(user.id, {
+      category: "welcome",
+      data: { username: user.username },
+    });
   } catch (err) {
     logger.error({ err }, "google signup failed");
     res.status(500).json({ error: "registration failed!" });
