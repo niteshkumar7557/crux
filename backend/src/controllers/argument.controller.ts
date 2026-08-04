@@ -123,7 +123,11 @@ export async function getArguments(req: Request, res: Response) {
   const argumentsRes = await pool.query(
     `
             SELECT c.id AS argument_id, u.username, u.avatar, c.side, u.logic_score,
-                   c.content, c.likes, c.points, c.created_at, u.id AS post_user_id,
+                   c.content, c.likes, c.points, u.id AS post_user_id,
+                   -- Zoned, like the arena feed's own SELECT: the column is a
+                   -- bare timestamp holding UTC, so without this the driver
+                   -- reads it in the process's zone and every card is skewed.
+                   c.created_at AT TIME ZONE 'UTC' AS created_at,
                    c.reply_to_argument_id,
                    ru.username AS reply_to_username,
                    rc.content  AS reply_to_content

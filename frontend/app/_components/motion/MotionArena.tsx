@@ -23,6 +23,7 @@ interface RawArgument {
   content: string;
   likes: number;
   post_user_id: number;
+  created_at: string;
   reply_to_argument_id: number | null;
   reply_to_username: string | null;
   reply_to_content: string | null;
@@ -149,6 +150,7 @@ const MotionArena = ({
       firstReplyId: firstReplyIds.get(e.argument_id) ?? null,
       viewerLockedSide,
       closed,
+      createdAt: e.created_at,
     };
     if (e.side === "for") {
       forCaseArguments.push(arenaArgument);

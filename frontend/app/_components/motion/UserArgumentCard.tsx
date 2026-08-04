@@ -7,6 +7,7 @@ import Link from "next/link";
 import { UserArgumentCardProps } from "@/app/motion/types";
 import Avatar from "@/app/_components/ui/Avatar";
 import LikeButton from "@/app/_components/ui/LikeButton";
+import RelativeTime from "@/app/_components/ui/RelativeTime";
 import { focusArgument } from "@/app/_utils/focusArgument";
 import { useReplyTarget } from "./ReplyContext";
 
@@ -26,6 +27,7 @@ const UserArgumentCard = ({
   firstReplyId,
   viewerLockedSide,
   closed,
+  createdAt,
 }: UserArgumentCardProps) => {
   const { setTarget } = useReplyTarget();
 
@@ -142,6 +144,12 @@ const UserArgumentCard = ({
               ↳ {replyCount} {replyCount === 1 ? "reply" : "replies"}
             </button>
           )}
+          {/* Last in the row and pushed to the far edge: when an argument was
+              posted is context for the ones above it, not an action beside them. */}
+          <RelativeTime
+            timestamp={createdAt}
+            className="ml-auto shrink-0 font-label text-[10px] uppercase text-ink-soft"
+          />
         </div>
       </div>
     </div>

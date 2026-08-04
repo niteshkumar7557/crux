@@ -1,0 +1,49 @@
+"use client";
+
+// A timestamp that reads as "3h ago" without risking a hydration mismatch.
+//
+// The server cannot know which minute the browser will hydrate on, so rendering
+// timeAgoShort() on both sides makes the two disagree across every boundary —
+// that is the console-noise bug already recorded against Countdown in
+// codebase-guide.md §11, and one instance of it is enough. So the server emits
+// the absolute date, which is the same string everywhere, and the relative form
+// takes over once hydrated.
+//
+// useSyncExternalStore is how that swap is expressed rather than a setState in
+// an effect: it has a server snapshot by design, and the lint rule that bans
+// set-state-in-effect is right that the effect version is a second render the
+// component never needed. The snapshots are constants, so React can cache them —
+// the label is derived from the flag, never returned by getSnapshot, which would
+// hand React a new string every time it looked.
+//
+// It does not tick. "3h ago" going stale while a tab sits open costs nothing,
+// and an interval per argument card is a real cost on a busy debate.
+
+import { useSyncExternalStore } from "react";
+import { timeAgoShort } from "@/app/_utils/timeAgo";
+import { absoluteDateTime } from "@/app/_utils/formatDate";
+
+const subscribe = () => () => {};
+const hydrated = () => true;
+const rendering = () => false;
+
+const RelativeTime = ({
+  timestamp,
+  className,
+}: {
+  timestamp: string;
+  className?: string;
+}) => {
+  const isHydrated = useSyncExternalStore(subscribe, hydrated, rendering);
+  const absolute = absoluteDateTime(timestamp);
+
+  if (absolute === "") return null;
+
+  return (
+    <time dateTime={timestamp} title={absolute} className={className}>
+      {isHydrated ? timeAgoShort(timestamp) : absolute}
+    </time>
+  );
+};
+
+export default RelativeTime;
