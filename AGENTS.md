@@ -80,7 +80,9 @@ without being asked, and never add it to CI.
 
 - **Editing a migration in place is invisible to a database that already ran it.** The runner
   tracks filenames. If `db-init` prints `⏭ skipping`, your edit did not land — reset first.
-- **Four pollers run in-process**, so they only run where the API runs. Single replica is a
+  **That workflow stops at `0015`.** Production holds real accounts and cannot be reset, so
+  schema changes from `0016` on ship as a **new** numbered file using `ALTER TABLE`.
+- **Five pollers run in-process**, so they only run where the API runs. Single replica is a
   requirement, not a preference; the rate limiter's in-memory state assumes it too.
 - **The Telegram poller is not a `setInterval`** — it long-polls, so it is a self-rescheduling
   loop with backoff.

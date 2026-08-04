@@ -465,6 +465,26 @@ that is deliberate. "How sharp are you right now" is what the season board is fo
 > blurb that a manual override beats — is specified in
 > [`future-features.md`](./future-features.md).
 
+### Signing in
+
+Two ways in, and **an account may hold both at once**: email and password, or Google.
+
+- **Google is only ever trusted on a verified email.** An unverified Google address is refused
+  outright — anyone can attach an arbitrary unverified address to a Google account, so treating one
+  as proof of identity would be an account-takeover route.
+- **Signing in with Google on an address that already has an account links the two**, rather than
+  creating a second account or refusing. The handle, logic, record and titles are untouched.
+- **Linking Google never removes the password.** Both routes keep working. There is no self-serve
+  password reset in this product, so discarding the hash would turn a lost Google account into a
+  dead end.
+- A user who has not linked is **asked once, then snoozed for 7 days, at most 3 times.** After the
+  third dismissal the prompt never returns and the profile is the only remaining path. A prompt
+  that cannot be finally dismissed is a nag, and the people who see it most are the earliest users.
+
+A Google signup takes the name and picture Google supplies, but **the handle is always chosen by
+the user** — it is the profile URL and the identity everyone else argues against, so it is never
+derived from an email address.
+
 ---
 
 ## §14 Seasons
@@ -729,7 +749,14 @@ the whole game is designed to produce.
 
 ## §20 Notifications
 
-Four in-app return triggers, in a navbar inbox. Every one deep-links to a live debate or a payoff.
+Two channels over the same four triggers: an **in-app inbox** in the navbar, and **email**. The
+inbox is the complete record and is never rationed. Email is the copy that reaches someone who is
+not on the site, and it is rationed hard.
+
+**The golden rule for both: every notification leads to a live debate or a payoff.** A ping that
+lands someone in a dead room makes churn worse, not better.
+
+### The four triggers
 
 1. **Someone replied to your argument.** Personal, specific, time-sensitive — the strongest pull in
    the product, and precise because replies are explicit.
@@ -740,6 +767,42 @@ Four in-app return triggers, in a navbar inbox. Every one deep-links to a live d
 
 All four are written best-effort, after the work they describe has committed. A failed notification
 must never roll back a verdict or a posted argument.
+
+### Email
+
+Six categories. Five mirror a trigger; one is transactional and one is sent by hand.
+
+| Category | Sent when | Opt-out | Rationed |
+|---|---|---|---|
+| `welcome` | account created | **no** — it is the signup confirmation | no |
+| `verdict` | a debate you argued in concludes | yes | no |
+| `reply` | someone answers your argument | yes | **yes** |
+| `opponent` | someone joins the opposing side | yes | **yes** |
+| `season` | monthly, to the top three | yes | no |
+| `announcement` | the operator writes to users about one motion | yes | no |
+
+**The ration is 4 emails per user per rolling 24 hours, across `reply` and `opponent` only.**
+Overflow is **dropped, not deferred** — there is no digest, so there is nowhere to defer it to. The
+in-app inbox still shows every one of them. `verdict`, `season`, `welcome` and `announcement` are
+exempt because they are rare and they are the payoff: a welcome is once per lifetime, a season
+result goes to three people once a month, and a verdict is the thing the user was waiting for.
+
+**Three rules that are not negotiable, because they are what makes bulk email honest:**
+
+1. **Preferences are re-read at the moment of sending, never at the moment of queueing.**
+   Unsubscribing while a message is queued means it is not sent.
+2. **A hard bounce or a complaint suppresses the address permanently, for every category,
+   immediately.** A complaint is treated as stronger than an unsubscribe and is never softened or
+   confirmed with the user. Suppression is checked on every message, including operator
+   announcements — no code path can reintroduce a suppressed address.
+3. **Every non-transactional message carries one-click unsubscribe** — both the `List-Unsubscribe`
+   header and a visible footer link — alongside per-category toggles on the profile.
+
+Email is queued rather than sent inline: the work that triggers it must never wait on a mail
+provider, a transient failure must not silently destroy a verdict notice, and an operator
+announcement fans out to every user at once.
+
+### Talk to the developer
 
 Separately, **Talk to the developer** is a two-way message thread from the navbar, relayed to the
 developer's phone. Postgres is the record and the relay is a view of it, so the panel works, saves
@@ -790,6 +853,10 @@ Every tunable constant in the game. **If a number is in the code, it is in this 
 | Similarity minimum length | **40** normalised characters | §8 |
 | Motion shortlist size | **5** | §3 |
 | Motion shortlist floor | **0.20** | §3 |
+| Email ration | **4** per user per 24h, `reply` + `opponent` only | §20 |
+| Email send retries | **5** attempts, then dead | §20 |
+| Google prompt dismissals | **3**, then never again | §13 |
+| Google prompt snooze | **7 days** | §13 |
 
 **These are deliberately not environment variables.** Each is asserted by a unit test and most are
 printed to users as prose, so an env override would make the product lie about its own rules.

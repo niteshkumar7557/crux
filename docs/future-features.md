@@ -267,22 +267,28 @@ debates really do die mid-swing, revisit.
 
 ---
 
-## 11. Email and digests
+## 11. Email and digests — ~~deferred~~ **partly built, 2026-08**
 
-v1 ships in-app notifications only. The full design:
+**The real-time half of this shipped. It lives in [`game-theory.md`](./game-theory.md) §20 now,
+and that section is the source of truth — not this one.** What shipped: real-time email over
+Amazon SES for the verdict, a reply, a new opponent, a season placement and a welcome, plus an
+operator announcement about a single motion; a per-category unsubscribe with one-click; permanent
+suppression on hard bounce and complaint; and the anti-annoyance budget, as a hard ration of 4
+sends per user per 24 hours across the two high-frequency categories.
 
-- **Real-time email** for the personal, rare, actionable events (you were rebutted; your debate
-  got its first opponent; your debate closes in 2h; the verdict is in).
-- **A daily or weekly digest** for the ambient habit anchor: the Motion of the Day, debates
-  needing your side, your rank movement, debates you're in that concluded.
-- **An anti-annoyance budget:** a hard cap on real-time sends per user per day, overflow batched
-  into the digest, per-category unsubscribe, and every link deep-linking to a live payoff.
-- Web push, later still.
+**What is still deferred, and why:**
 
-Email is the reactivation workhorse and addresses are already stored — this is the highest-value
-item in this file after the video arena.
+- **The digest**, daily or weekly — the Motion of the Day, debates needing your side, your rank
+  movement, debates you're in that concluded. It was cut because it is the expensive half: a fifth
+  set of queries, a send window, and a second editorial voice to maintain. Without it, email that
+  exceeds the ration is **dropped rather than batched**, which is the honest trade and is stated
+  as such in §20. **If the drop rate turns out to be high, that is the trigger to build this.**
+- **The walkover warning email** — "6 hours left and nobody has argued against you". Designed,
+  and deliberately not in the first cut: the in-app banner already covers the case, and it needed
+  a poller pass of its own.
+- **Web push.** Untouched.
 
-**The golden rule to keep if this is built:** every notification must lead to a **live** arena. A
+**The golden rule, which §20 now carries:** every notification must lead to a **live** arena. A
 ping that lands someone in a dead room makes churn worse, not better.
 
 ---

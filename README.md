@@ -68,7 +68,7 @@ crux/
 │       ├── controllers/        request parsing + SQL + response (no service layer)
 │       ├── db/migrations/      twelve .sql files — together, the whole schema
 │       ├── economy/            logic awards and the season window
-│       ├── jobs/               four in-process pollers
+│       ├── jobs/               five in-process pollers
 │       ├── lib/ middlewares/ notifications/ routes/
 ├── frontend/                   Next.js app
 │   └── app/

@@ -44,15 +44,15 @@ code.** Three minutes, and you know why it exists.
 
 Depth-first through **one real path**, not breadth-first through every folder:
 
-1. **Entry points.** `backend/src/index.ts` (boots the server + four background jobs) and
+1. **Entry points.** `backend/src/index.ts` (boots the server + five background jobs) and
    `backend/src/app.ts` (mounts every route group). On the frontend, `frontend/app/layout.tsx` and
    `frontend/app/arena/page.tsx`. Ten minutes here tells you the shape.
-2. **The data model.** Read `backend/src/db/migrations/*.sql` **in numeric order** — twelve files,
+2. **The data model.** Read `backend/src/db/migrations/*.sql` **in numeric order** — eighteen files,
    and together they are the whole schema. Section 4 narrates them.
 3. **Trace one request end to end.** Pick "post an argument" and follow it: route → controller →
    the AI calls → the SQL writes → the response. Do this once and most of the codebase's
    conventions click. Section 6 walks it for you.
-4. **The background jobs.** Four in-process pollers do everything that isn't request-driven.
+4. **The background jobs.** Five in-process pollers do everything that isn't request-driven.
 5. **Then widen out.** The other controllers and components rhyme with what you've already seen.
 
 **The single most useful convention to know first:** anything named `*.logic.ts` is **pure,
@@ -179,10 +179,16 @@ deliberate manual gate, never a CI job. That is what keeps the suite runnable wi
 
 ---
 
-## 4. The data model — twelve migrations, one schema
+## 4. The data model — eighteen migrations, one schema
 
 Postgres, raw SQL, applied by a home-grown runner (`db/migrate.ts`, filename-ordered, tracked in a
-`_migrations` table). These twelve files *are* the schema.
+`_migrations` table). These eighteen files *are* the schema.
+
+> **`0000`–`0015` may be edited in place; `0016` and up may not.** The reset-and-rerun workflow
+> below assumes a database you are allowed to throw away. Production is past that point — it holds
+> real accounts — so **anything that changes the schema from here on ships as a new numbered file
+> using `ALTER TABLE`**, never as an edit to a file production has already run. The runner is
+> additive-safe by design: it records filenames and skips what it has applied.
 
 | Migration | Table | What it means |
 |---|---|---|
@@ -198,9 +204,17 @@ Postgres, raw SQL, applied by a home-grown runner (`db/migrate.ts`, filename-ord
 | `0009` | `logic_events` | The timestamped logic ledger. `season_only = TRUE` writes a row **without** touching `logic_score` — that is how a loss costs the month's race and never the career total. |
 | `0010` | *(indexes only)* | `arguments(user_id)`, `motions(user_id)`, `users(logic_score DESC, id ASC)`. Postgres does not auto-index foreign keys, and every profile query filters on those columns. |
 | `0011` | `dev_messages` | "Talk to the developer" — one thread per user, relayed to one Telegram chat. A thread is not a table: it is every row for a `user_id` in `created_at` order. |
+| `0012` | *(column)* | `motions.normalised_content` — exact-duplicate detection, reusing the arguments normaliser rather than a second copy of it (§8). |
+| `0013` | *(column)* | `arguments.content_hash` — SHA-256 of the normalised content, so an exact-duplicate lookup is an index hit rather than a scan. Deliberately not unique: the repost rule varies by author and length, so enforcement stays in `duplicate.logic.ts`. |
+| `0014` | *(column)* | `arguments.fingerprint` — sorted trigram hashes, so similarity scoring merge-walks two arrays instead of re-tokenising text (§8). |
+| `0015` | `motion_blocks` | Per-motion posting blocks with a reason, an audit trail and a lift record (§22). A table rather than a `COUNT` because "why can't I post here" needs a reason and a timestamp. |
+| `0016` | *(columns)* | `users.google_sub` and friends — Google sign-in and account linking (§13). **Also makes `hashed_password` nullable**, for accounts that only ever had Google. |
+| `0017` | `email_outbox`, `email_suppressions` | Queued email, its retry state and its delivery record; plus the per-category preference columns and `unsubscribe_token` on `users` (§20). Suppression is keyed on the **address**, not the user — a bounce is a property of a mailbox. |
 
-**Two things to internalise:** there is no `seasons` table (a season is a **computed calendar
-month**, §14), and `motions.pinned` is the admin override — not a separate curation table.
+**Three things to internalise:** there is no `seasons` table (a season is a **computed calendar
+month**, §14), `motions.pinned` is the admin override — not a separate curation table — and
+`users.hashed_password` is **nullable** since `0016`, so every read of it must tolerate `NULL`
+(`bcrypt.compare` throws on one).
 
 ---
 
@@ -353,6 +367,25 @@ file, snapshot its final board, write the top three a permanent title and frame,
 all in one transaction. Idempotent twice over: the already-filed check, and
 `UNIQUE (season_key, rank)`.
 
+### Flow F — email (background, 15s)
+
+Nothing sends email inline. Every producer — `notifications/notify.ts`, `ai/verdict.ts`,
+`jobs/seasonRollover.ts`, registration, and the admin broadcast — writes a `pending` row into
+`email_outbox` and returns. `jobs/email.ts` claims a batch (`FOR UPDATE SKIP LOCKED`), and for
+each row **re-checks three things at send time, not at queue time**: the address is not
+suppressed, the user still wants that category, and the 24-hour ration has room. Only then does it
+sign an SES v2 request with `aws4fetch` — the same client R2 uses — and record the message id.
+
+**The re-check is the point of the whole design.** Queue-time checks would send mail to someone
+who unsubscribed thirty seconds ago, and §20 promises they will not.
+
+A failure increments `attempts` and pushes `next_attempt_at` out on a backoff; five failures mark
+the row dead. `POST /webhooks/ses` receives SES's bounce and complaint feed over SNS and writes
+`email_suppressions`, which the poller consults first for every subsequent send.
+
+With `SES_*` unset the poller never starts and rows simply accumulate — the same shape as the
+Telegram relay, so dev and CI need no AWS account and the boot log says which mode is live.
+
 ---
 
 ## 7. The frontend
@@ -487,6 +520,9 @@ Then re-read `/rules` in a browser and confirm the page and the code say the sam
 | The debate page UI | `_components/motion/DebateView.tsx` and its children |
 | What a pop-up or banner says | `_components/ui/awardCopy.ts` (+ test) and the §19 surfaces |
 | Add a notification type | `notifications/messages.ts` (+ test) + `notifications/notify.ts` |
+| Add or change an email | `emails/templates.logic.ts` (+ test) for the copy, `emails/queue.ts` for who gets it, `emails/budget.logic.ts` (+ test) if it should be rationed |
+| Why an email did not arrive | `email_outbox` first — `status`, `attempts`, `last_error` — then `email_suppressions`, then the user's `email_*` columns. In that order; each answers a different question |
+| Google sign-in behaviour | `lib/googleIdentity.logic.ts` (+ test) for link/create/refuse, `lib/googleOAuth.ts` for the two fetches, `controllers/googleAuth.controller.ts` for the wiring |
 | The developer DM channel | `jobs/telegram.logic.ts` (+ test) for what an update means, `jobs/telegram.ts` for the loop, `controllers/devMessage.controller.ts` for the web side, `_components/DevMessages.tsx` for the panel |
 | Colour, type, spacing, motion | [`design-system.md`](./design-system.md), then `frontend/app/globals.css` |
 
@@ -496,7 +532,7 @@ Then re-read `/rules` in a browser and confirm the page and the code say the sam
 
 - **ESM `.js` imports** in backend `.ts` files are intentional.
 - **No ORM.** All SQL is inline in controllers — grep the table name to find every touch point.
-- **Four pollers, in-process.** No external queue or cron; they run inside the API process, each
+- **Five pollers, in-process.** No external queue or cron; they run inside the API process, each
   guarded against overlap. That means **they only run where the API runs**: scaling past one
   instance needs a real scheduler first. Deployment pins a single replica, and that pin is the only
   thing enforcing it.

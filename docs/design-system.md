@@ -426,3 +426,51 @@ design + The Bench (herald) → The Doors (CTA) → Footer (laurel seal).
 | Debate page geometry | `_components/motion/debateLayout.ts` — the arena, the sticky composer and the route skeleton are siblings, so their shared gutter and shell live here or they drift and the page jumps sideways on load |
 | The mark | `_components/ui/Logo.tsx` owns the path data; `app/icon.svg`, `app/apple-icon.tsx` and `app/opengraph-image.tsx` are generated from it |
 | Generated images | `_components/motion/verdictCard.ts` mirrors the palette as hex (satori cannot read CSS variables) and exports **both** — `LIGHT_TOKENS` and `DARK_TOKENS`. **Share cards are always light:** a pasted link is opened by strangers who have no theme of their own, so how it looks must not depend on who pasted it. **The certificate follows the reader's theme** (`/certificate?theme=dark`, read from `<html data-theme>` at click time): it is downloaded by one person who already chose one, and it is theirs to keep. `_utils/brandMark.ts` does the same for the mark, as a data URI, because satori has no mask support. All hand-synced with `globals.css` and `Logo.tsx`. |
+
+---
+
+## §13 The email surface
+
+**Email is the one place the system runs without the system.** No CSS variables survive the trip,
+no web font can be relied on, and the reader's client — not our stylesheet — decides what renders.
+So this section is a set of substitutions, not a new look: the same palette and the same voice,
+expressed in what email can actually carry.
+
+**The rules:**
+
+- **Table layout, inline styles.** No external stylesheet, no `<style>` block worth trusting, no
+  flexbox, no grid. A single centred table, max 600px.
+- **The palette is the light-mode tokens as hex literals** — the same concession
+  `_components/motion/verdictCard.ts` already makes for satori, and it is hand-synced with
+  `globals.css` for the same reason. `--paper` `#f3edda`, `--paper-band` `#ece4cb`, `--ink`
+  `#244134`, `--ink-soft` `#52685b`, `--ink-faint` as `#d8d0b8` (a solid stand-in — alpha
+  hairlines are unreliable), `--laurel` `#8f6e1f`, `--for` `#2f6b4f`, `--against` `#9c4a34`.
+- **Light only, always.** A pasted or forwarded email is read by someone with no theme of their
+  own — the identical reasoning that already fixes share cards to light (§12). There is no
+  `prefers-color-scheme` branch.
+- **Type falls back, and the fallback is chosen, not accidental.** Display becomes
+  `Helvetica Neue, Arial, sans-serif`, uppercase and tracked, standing in for Anton. Body becomes
+  `Georgia, 'Times New Roman', serif`, standing in for Newsreader. Labels use the display stack at
+  a small tracked size. **Never `@import` a web font into an email** — it fails silently in most
+  clients and shifts the layout in the rest.
+- **No engravings, and no images at all.** §4 already keeps the plates off every product surface;
+  email goes further and ships no remote images whatsoever — not a logo, not a spacer, not a
+  tracking pixel. Most clients block them by default, so an email that needs one is an email that
+  arrives broken, and a remote image in a notification is indistinguishable from tracking. **The
+  mark is set as type**, the way the wordmark already is.
+- **Square corners.** No pills — a `border-radius` on a table cell is unevenly supported, and a
+  button that is a rectangle everywhere beats one that is a pill in half the world.
+- **The cast does not cross over.** No shadows. Elevation is the `band` tone against `paper`,
+  exactly as it is in the product.
+- **Every message ships a plain-text alternative**, built by the same pure function as the HTML so
+  the two cannot drift.
+- **Every non-transactional message carries a visible unsubscribe link in the footer**, in
+  `ink-soft` at label size. It is not hidden, not greyed to invisibility, and not smaller than the
+  rest of the footer.
+
+**Voice is §10 unchanged** — formal, alive, and every rule stated with its real number. A verdict
+email says `+35 logic` and `62–38`, because that is what the product says everywhere else.
+
+**Where it lives:** `backend/src/emails/templates.logic.ts` — pure, `(category, data) =>
+{ subject, text, html }`, tested. The palette literals live at the top of that file, and they are
+hand-synced with `globals.css` the same way `verdictCard.ts` is.
