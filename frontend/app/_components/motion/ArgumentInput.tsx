@@ -29,7 +29,7 @@ import RefusalNotice, { type Notice } from "./RefusalNotice";
 import { stageAt } from "./postingStages";
 import { hasPostedArgument } from "./reconcile";
 import { useArenaClosed } from "./useArenaClock";
-import type { Award } from "../ui/awardCopy";
+import { STANDALONE_HINT, type Award } from "../ui/awardCopy";
 
 const TICK_MS = 400;
 const BUSY_LABEL = "Posting your argument";
@@ -623,6 +623,19 @@ const ArgumentInput = ({
           )}
         </div>
       </div>
+      {/* §19: the reply rule has to be readable while the argument is being
+          written, not only priced in the pop-up afterwards. Suppressed once a
+          reply target exists — the "Replying to @x" bar above already says the
+          full range is in play, and two lines saying the same thing is one too
+          many. Tracking tightens below md: at 0.2em the sentence ran to three
+          lines on a 320px screen, against a composer whose height budget
+          design-system §6 already calls tight. */}
+      {!target && (
+        <p className="max-w-screen-2xl mx-auto mt-2.5 font-label text-[10px] leading-relaxed uppercase tracking-[0.06em] text-ink-soft md:tracking-[0.15em]">
+          <span aria-hidden="true">↳ </span>
+          {STANDALONE_HINT}
+        </p>
+      )}
       </div>
       {pending && (
         <SideLockConfirm

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { awardLedger, awardNote, type Award } from "./awardCopy";
+import { awardLedger, awardNote, STANDALONE_HINT, type Award } from "./awardCopy";
 
 const award = (over: Partial<Award> = {}): Award => ({
   points: 7,
@@ -84,5 +84,21 @@ describe("awardNote", () => {
     expect(
       awardNote(award({ lastArgumentOnMotion: true, capped: true })),
     ).toBe("That was your fifth and last argument on this debate.");
+  });
+});
+
+describe("STANDALONE_HINT", () => {
+  it("states the cap the pop-up will later charge, so it cannot surprise", () => {
+    expect(STANDALONE_HINT).toContain("caps at 7");
+  });
+
+  it("states the range a reply opens up", () => {
+    expect(STANDALONE_HINT).toContain("2–10");
+  });
+
+  it("prices the same cap the ledger does", () => {
+    const priced = awardLedger(award({ points: 7, judged: 10, capped: true }));
+    expect(priced.at(-1)).toEqual({ label: "Awarded", value: "7", total: true });
+    expect(STANDALONE_HINT).toContain("caps at 7");
   });
 });

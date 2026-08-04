@@ -457,7 +457,7 @@ in four or five places at once, and missing the copy is how a product ends up ly
 | Constant | Source of truth | Also change |
 |---|---|---|
 | Debate duration 48h | *no constant* — `INTERVAL '48 hours'` inline in `controllers/motion.controller.ts` | `db/seed-data.ts` (same literal); `/rules` rule 1. Consider extracting it first. |
-| Score range 2–10 | `ai/analyst.logic.ts` `SCORE_MIN`/`SCORE_MAX` | `analyst.logic.test.ts`; the band descriptions in `ai/prompts/argument-judge.prompt.ts`; `/rules` rule 3 |
+| Score range 2–10 | `ai/analyst.logic.ts` `SCORE_MIN`/`SCORE_MAX` | `analyst.logic.test.ts`; the band descriptions in `ai/prompts/argument-judge.prompt.ts`; `/rules` rule 3; **`_components/ui/awardCopy.ts`** states it twice — `awardNote`'s "up to 10" and `STANDALONE_HINT`'s "2–10" — both asserted by its test |
 | Standalone cap 7 | `ai/analyst.logic.ts` `STANDALONE_CAP` | `analyst.logic.test.ts`; **`_components/ui/awardCopy.ts` holds its own copy** + its test; `ArgumentPattern.tsx`; `/rules` rule 3 |
 | Split clamp 2–98 | `ai/analyst.logic.ts` `AFFIRMATIVE_MIN`/`AFFIRMATIVE_MAX` | `analyst.logic.test.ts`. A sanity bound only — there is no move cap |
 | Min argument length 18 | `lib/validate.ts` `MIN_ARGUMENT_CHARS` | `validate.test.ts`. **Deliberately absent from the product surface** — no counter, no distinct error, nothing in `/rules`. Its response must stay byte-identical to the Judge's `no_argument` body |
