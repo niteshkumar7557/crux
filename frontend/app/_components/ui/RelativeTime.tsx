@@ -16,12 +16,16 @@
 // the label is derived from the flag, never returned by getSnapshot, which would
 // hand React a new string every time it looked.
 //
+// Both halves have to be timezone-independent or the swap solves nothing: the
+// server-rendered half is formatted in UTC (see formatDate.ts), and the
+// hydrated half is a duration, which has no zone at all.
+//
 // It does not tick. "3h ago" going stale while a tab sits open costs nothing,
 // and an interval per argument card is a real cost on a busy debate.
 
 import { useSyncExternalStore } from "react";
 import { timeAgoShort } from "@/app/_utils/timeAgo";
-import { absoluteDateTime } from "@/app/_utils/formatDate";
+import { utcDate, utcDateTime } from "@/app/_utils/formatDate";
 
 const subscribe = () => () => {};
 const hydrated = () => true;
@@ -35,13 +39,13 @@ const RelativeTime = ({
   className?: string;
 }) => {
   const isHydrated = useSyncExternalStore(subscribe, hydrated, rendering);
-  const absolute = absoluteDateTime(timestamp);
+  const exact = utcDateTime(timestamp);
 
-  if (absolute === "") return null;
+  if (exact === "") return null;
 
   return (
-    <time dateTime={timestamp} title={absolute} className={className}>
-      {isHydrated ? timeAgoShort(timestamp) : absolute}
+    <time dateTime={timestamp} title={exact} className={className}>
+      {isHydrated ? timeAgoShort(timestamp) : utcDate(timestamp)}
     </time>
   );
 };

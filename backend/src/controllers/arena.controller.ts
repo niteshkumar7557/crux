@@ -347,6 +347,7 @@ export async function getMotions(req: Request, res: Response) {
                     a.winner,
                     a.margin,
                     a.created_at AT TIME ZONE 'UTC' AS time,
+                    a.concluded_at AT TIME ZONE 'UTC' AS "concludedAt",
                     COALESCE(c.count, 0)::int AS "argumentNum"
                 FROM motions a
                 JOIN users u ON a.user_id = u.id

@@ -8,6 +8,7 @@ import Avatar from "@/app/_components/ui/Avatar";
 import ScoreBar from "./ScoreBar";
 import Countdown from "@/app/_components/motion/Countdown";
 import { settledSide } from "./settledSides";
+import { utcDate } from "@/app/_utils/formatDate";
 
 export interface ArenaCardComponentProps {
   username: string;
@@ -18,9 +19,9 @@ export interface ArenaCardComponentProps {
   negativescore: number;
   motionid: number;
   footerLeft: ReactNode;
-  time?: string;
   status?: string;
   closesAt?: string | null;
+  concludedAt?: string | null;
   winner?: string | null;
   className?: string;
 }
@@ -36,6 +37,7 @@ const ArenaSecondaryCard = ({
   footerLeft,
   status,
   closesAt,
+  concludedAt,
   winner,
   className = "",
 }: ArenaCardComponentProps) => {
@@ -65,12 +67,27 @@ const ArenaSecondaryCard = ({
                 {username}
               </span>
             </Link>
+            {/* One slot, two states: a live debate shows what is left on the
+                clock, a settled one shows the date the clock ran out. The date
+                is absolute rather than relative because the archive is a record
+                — "3 months ago" is a worse answer to "when did this close" than
+                the date is, and it decays. */}
             {ruling ? (
-              <span
-                className={`shrink-0 border px-2 py-0.5 font-label text-[0.6rem] uppercase tracking-[0.2em] ${ruling.chip}`}
-              >
-                {ruling.label}
-              </span>
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                <span
+                  className={`border px-2 py-0.5 font-label text-[0.6rem] uppercase tracking-[0.2em] ${ruling.chip}`}
+                >
+                  {ruling.label}
+                </span>
+                {concludedAt && (
+                  <time
+                    dateTime={concludedAt}
+                    className="font-label text-[0.55rem] uppercase tracking-[0.16em] text-ink-soft"
+                  >
+                    Closed {utcDate(concludedAt)}
+                  </time>
+                )}
+              </div>
             ) : (
               closesAt && (
                 <span className="shrink-0">

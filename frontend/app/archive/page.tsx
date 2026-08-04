@@ -11,7 +11,6 @@ import Pagination from "@/app/_components/ui/Pagination";
 import Reveal from "@/app/_components/ui/Reveal";
 import { DomainInfo, PaginatedMotions } from "@/app/types";
 import { slugifyDomain } from "@/app/_utils/domainSlug";
-import { timeAgo } from "@/app/_utils/timeAgo";
 import { ARCHIVE_OUTCOMES, archiveHref, parseOutcome } from "./archiveHref";
 
 export const metadata: Metadata = {
@@ -174,7 +173,7 @@ const ArchivePage = async ({ searchParams }: { searchParams: SearchParams }) => 
               status={e.status}
               closesAt={e.closesAt}
               winner={e.winner}
-              time={timeAgo(e.time)}
+              concludedAt={e.concludedAt}
               footerLeft={
                 <>
                   <LuMessageSquare className="inline text-ink" />{" "}

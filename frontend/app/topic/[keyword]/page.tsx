@@ -9,7 +9,6 @@ import ArenaSecondaryCard from "@/app/_components/arena/ArenaSecondaryCard";
 import Button from "@/app/_components/ui/Button";
 import Pagination from "@/app/_components/ui/Pagination";
 import Reveal from "@/app/_components/ui/Reveal";
-import { timeAgo } from "@/app/_utils/timeAgo";
 import { PaginatedMotions } from "@/app/types";
 
 const EMPTY: PaginatedMotions = { motions: [], total: 0, page: 1, pageSize: 12 };
@@ -123,7 +122,7 @@ const TopicPage = async ({
               status={e.status}
               closesAt={e.closesAt}
               winner={e.winner}
-              time={timeAgo(e.time)}
+              concludedAt={e.concludedAt}
               footerLeft={
                 <>
                   <LuMessageSquare className="inline text-ink" />{" "}

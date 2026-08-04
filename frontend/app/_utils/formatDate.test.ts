@@ -1,53 +1,57 @@
 import { describe, it, expect } from "vitest";
-import { absoluteDate, absoluteDateTime } from "./formatDate";
+import { utcDate, utcDateTime } from "./formatDate";
 
-// These render in the machine's local timezone, so the expectations are derived
-// from the same Date rather than hardcoded — otherwise the suite passes in UTC
-// and fails for anyone west of it. Mid-month, midday instants are used so no
-// real offset (UTC-12..UTC+14) can push one into a different month or year.
-const ISO = "2026-08-15T12:00:00.000Z";
-const local = new Date(ISO);
+// Every expectation is hardcoded on purpose. These render against UTC rather
+// than the machine's zone, so the correct output does not depend on where the
+// suite runs — and if someone switches them to local time, these fail rather
+// than quietly passing in a UTC container and mismatching in a real browser.
+const ISO = "2026-08-02T20:04:00.000Z";
 
-describe("absoluteDate", () => {
+describe("utcDate", () => {
   it("reads as day, short month, full year", () => {
-    expect(absoluteDate(ISO)).toBe(`${local.getDate()} Aug 2026`);
+    expect(utcDate(ISO)).toBe("2 Aug 2026");
   });
 
   it("does not pad the day, so it reads as prose and not as data", () => {
-    const early = "2026-08-03T12:00:00.000Z";
-    expect(absoluteDate(early)).toMatch(/^\d{1,2} Aug 2026$/);
+    expect(utcDate("2026-08-03T12:00:00.000Z")).toBe("3 Aug 2026");
   });
 
   it("names every month with three letters", () => {
-    for (let month = 0; month < 12; month++) {
-      const iso = new Date(Date.UTC(2026, month, 15, 12)).toISOString();
-      expect(absoluteDate(iso)).toMatch(/^\d{1,2} [A-Z][a-z]{2} 2026$/);
-    }
+    const names = Array.from({ length: 12 }, (_, m) =>
+      utcDate(new Date(Date.UTC(2026, m, 15)).toISOString()),
+    );
+    expect(names).toEqual([
+      "15 Jan 2026", "15 Feb 2026", "15 Mar 2026", "15 Apr 2026",
+      "15 May 2026", "15 Jun 2026", "15 Jul 2026", "15 Aug 2026",
+      "15 Sep 2026", "15 Oct 2026", "15 Nov 2026", "15 Dec 2026",
+    ]);
+  });
+
+  it("does not drift across a UTC midnight, whatever the host zone", () => {
+    expect(utcDate("2026-08-02T23:59:59.000Z")).toBe("2 Aug 2026");
+    expect(utcDate("2026-08-03T00:00:00.000Z")).toBe("3 Aug 2026");
   });
 
   it("returns nothing rather than 'Invalid Date' for junk", () => {
-    expect(absoluteDate("not a date")).toBe("");
-    expect(absoluteDate("")).toBe("");
+    expect(utcDate("not a date")).toBe("");
+    expect(utcDate("")).toBe("");
   });
 });
 
-describe("absoluteDateTime", () => {
-  it("appends a zero-padded 24-hour clock to the date", () => {
-    const hours = String(local.getHours()).padStart(2, "0");
-    const minutes = String(local.getMinutes()).padStart(2, "0");
-    expect(absoluteDateTime(ISO)).toBe(`${local.getDate()} Aug 2026, ${hours}:${minutes}`);
+describe("utcDateTime", () => {
+  it("appends a zero-padded 24-hour clock and names the zone", () => {
+    expect(utcDateTime(ISO)).toBe("2 Aug 2026, 20:04 UTC");
   });
 
-  it("always pads to two digits on both sides of the colon", () => {
-    const iso = new Date(Date.UTC(2026, 7, 15, 12, 5)).toISOString();
-    expect(absoluteDateTime(iso)).toMatch(/, \d{2}:\d{2}$/);
+  it("pads both sides of the colon", () => {
+    expect(utcDateTime("2026-08-02T05:07:00.000Z")).toBe("2 Aug 2026, 05:07 UTC");
   });
 
   it("opens with exactly the date form, so the two cannot drift apart", () => {
-    expect(absoluteDateTime(ISO).startsWith(absoluteDate(ISO))).toBe(true);
+    expect(utcDateTime(ISO).startsWith(utcDate(ISO))).toBe(true);
   });
 
   it("returns nothing rather than 'Invalid Date' for junk", () => {
-    expect(absoluteDateTime("not a date")).toBe("");
+    expect(utcDateTime("not a date")).toBe("");
   });
 });

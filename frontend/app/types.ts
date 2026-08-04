@@ -64,6 +64,7 @@ export interface NewestCardProps {
   time: string;
   status?: string;
   closesAt?: string | null;
+  concludedAt?: string | null;
   winner?: string | null;
   margin?: number | null;
 }

@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import api from "@/app/axios";
 import { PaginatedMotions } from "@/app/types";
 import { LuMessageSquare } from "react-icons/lu";
-import { timeAgo } from "@/app/_utils/timeAgo";
 import ArenaSecondaryCard from "./ArenaSecondaryCard";
 import Pagination from "@/app/_components/ui/Pagination";
 import { feedHref } from "./ActiveMotions";
@@ -56,7 +55,7 @@ const NewestTab = ({ page }: { page: number }) => {
           status={e.status}
           closesAt={e.closesAt}
           winner={e.winner}
-          time={timeAgo(e.time)}
+          concludedAt={e.concludedAt}
           footerLeft={
             <>
               <LuMessageSquare className="inline text-ink-soft" />{" "}
