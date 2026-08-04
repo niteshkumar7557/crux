@@ -19,6 +19,8 @@ import {
   LuUser,
 } from "react-icons/lu";
 import Button from "@/app/_components/ui/Button";
+import GoogleButton from "@/app/_components/auth/GoogleButton";
+import { useGoogleAvailable } from "@/app/_components/auth/useGoogleAvailable";
 import { isAxiosError } from "axios";
 import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
 import { normalizeUsername, validateUsername } from "@/app/_utils/username";
@@ -55,6 +57,7 @@ const Register = () => {
 
   const [error, setError] = useState("");
   const [userNameError, setUserNameError] = useState("");
+  const googleAvailable = useGoogleAvailable();
 
   const router = useRouter();
   const rootRef = useRef<HTMLElement>(null);
@@ -143,6 +146,26 @@ const Register = () => {
                 Join the Intellectual Fray
               </h1>
             </div>
+
+            {/* Google first: it is three fields shorter, and the handle it still
+                has to ask for is asked on its own screen afterwards.
+                The label matches /login's exactly, because the endpoint does:
+                it signs an existing user in and creates an account for a new
+                one, whichever page it was pressed from. "Sign up with Google"
+                here would promise a distinction that does not exist. */}
+            {googleAvailable && (
+              <div className="mb-10">
+                <GoogleButton href="/api/user/auth/google" />
+                <div className="mt-8 flex items-center gap-4">
+                  <span aria-hidden className="h-px grow bg-ink-faint" />
+                  <span className="font-label text-[0.58rem] uppercase tracking-[0.3em] text-ink-soft">
+                    or
+                  </span>
+                  <span aria-hidden className="h-px grow bg-ink-faint" />
+                </div>
+              </div>
+            )}
+
             <form className="space-y-8" onSubmit={handleSubmit}>
               <div data-auth-field className="space-y-2">
                 <label

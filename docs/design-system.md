@@ -367,10 +367,22 @@ the three faces; drawing custom letterforms is a separate job with a real chance
 arrows, seal-check, lock, prohibit, heart, sun/moon. Never decorative icon grids; the engravings
 carry the imagery.
 
-**The one brand mark is GitHub** (`PiGithubLogo`, in the navbar and the drawer, pointing at the
+**The first brand mark is GitHub** (`PiGithubLogo`, in the navbar and the drawer, pointing at the
 repo). It is Phosphor's outline cut rather than the official Octocat, so it keeps the hairline
-weight of the icons beside it instead of dropping a filled logo into the row. A second brand mark
-needs its own reason.
+weight of the icons beside it instead of dropping a filled logo into the row.
+
+**The second, and the only coloured thing in the product, is Google** (`FcGoogle`, in
+`_components/auth/GoogleButton`). It has the reason the rule asks for, and it is a different reason
+from GitHub's: the GitHub icon is a link to a repository, and nothing is lost if a reader reads it
+as a generic icon. The Google mark is a **credential control** — its whole job is to be recognised
+as Google's before it is clicked, and the four-colour G is what people scan a sign-in screen for. A
+monochrome cut, which is what §8 would otherwise demand, makes the one control on the page whose
+recognisability is functional look like a decoration.
+
+So it stays in colour, and that is the boundary: **a brand mark may be coloured only where being
+recognised is the control's function.** Anything else — a share icon, a footer link, a provider
+badge — takes the Phosphor treatment. If a second provider is ever added, both buttons follow this
+rule together rather than one of them arguing for a third exception.
 
 ---
 

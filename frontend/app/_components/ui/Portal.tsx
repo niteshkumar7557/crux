@@ -4,16 +4,9 @@
 // ancestor becomes the containing block for position: fixed, so a modal inside the
 // backdrop-blurred composer would fill the composer rather than the viewport.
 
-import { useSyncExternalStore, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { createPortal } from "react-dom";
-
-const NEVER_CHANGES = () => () => {};
-const useHydrated = () =>
-  useSyncExternalStore(
-    NEVER_CHANGES,
-    () => true,
-    () => false,
-  );
+import { useHydrated } from "@/app/_hooks/useHydrated";
 
 const Portal = ({ children }: { children: ReactNode }) => {
   const hydrated = useHydrated();

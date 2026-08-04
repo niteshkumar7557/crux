@@ -5,10 +5,20 @@
 
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import GoogleLinkPrompt from "./auth/GoogleLinkPrompt";
 import { usePathname } from "next/navigation";
 import React from "react";
 
-const noNavRoutes = ["/login", "/register", "/"];
+// The two /auth pages join the list for the same reason login and register are
+// on it: they are read once, mid-flow, and a navbar offering somewhere else to
+// go is the wrong thing to put in front of someone halfway through signing in.
+const noNavRoutes = [
+  "/login",
+  "/register",
+  "/",
+  "/auth/complete",
+  "/auth/username",
+];
 
 const ConditionalLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
@@ -32,6 +42,9 @@ const ConditionalLayout = ({ children }: { children: React.ReactNode }) => {
         children
       )}
       {showNav && <Footer />}
+      {/* Rides with the chrome, so it can never appear over the landing page or
+          over a page someone is mid-sign-in on. */}
+      {showNav && <GoogleLinkPrompt />}
     </>
   );
 };

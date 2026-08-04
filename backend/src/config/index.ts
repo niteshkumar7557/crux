@@ -52,6 +52,14 @@ const config = {
   refresh_token_days: num("REFRESH_TOKEN_DAYS", 7),
   bcrypt_rounds: num("BCRYPT_ROUNDS", 10),
 
+  // With any of the three empty, the Google routes answer 503 and the button is
+  // hidden — the same shape as the Telegram relay, so dev needs no OAuth client.
+  google: {
+    client_id: process.env.GOOGLE_CLIENT_ID,
+    client_secret: process.env.GOOGLE_CLIENT_SECRET,
+    redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+  },
+
   llm: {
     base_url: str("LLM_BASE_URL", "https://openrouter.ai/api/v1"),
     api_key: process.env.LLM_API_KEY ?? process.env.OPENROUTER_API_KEY,

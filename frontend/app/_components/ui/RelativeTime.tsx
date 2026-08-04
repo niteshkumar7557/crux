@@ -23,13 +23,9 @@
 // It does not tick. "3h ago" going stale while a tab sits open costs nothing,
 // and an interval per argument card is a real cost on a busy debate.
 
-import { useSyncExternalStore } from "react";
 import { timeAgoShort } from "@/app/_utils/timeAgo";
 import { utcDate, utcDateTime } from "@/app/_utils/formatDate";
-
-const subscribe = () => () => {};
-const hydrated = () => true;
-const rendering = () => false;
+import { useHydrated } from "@/app/_hooks/useHydrated";
 
 const RelativeTime = ({
   timestamp,
@@ -38,7 +34,7 @@ const RelativeTime = ({
   timestamp: string;
   className?: string;
 }) => {
-  const isHydrated = useSyncExternalStore(subscribe, hydrated, rendering);
+  const isHydrated = useHydrated();
   const exact = utcDateTime(timestamp);
 
   if (exact === "") return null;

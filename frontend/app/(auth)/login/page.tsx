@@ -10,9 +10,26 @@ import { useRouter } from "next/navigation";
 import api from "@/app/axios";
 import Button from "@/app/_components/ui/Button";
 import { LogoMark } from "@/app/_components/ui/Logo";
+import GoogleButton from "@/app/_components/auth/GoogleButton";
+import { useGoogleAvailable } from "@/app/_components/auth/useGoogleAvailable";
+import { useHydrated } from "@/app/_hooks/useHydrated";
 import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
 
 const SUPPORT_EMAIL = "help@cruxdebate.site";
+
+// The callback can only hand back a code in a URL, so each one is turned into a
+// sentence here. An unrecognised code still says something true rather than
+// leaving the user staring at a page that silently did nothing.
+const GOOGLE_ERRORS: Record<string, string> = {
+  google_email_unverified:
+    "That Google account's email isn't verified, so we can't use it to prove who you are. Verify it with Google and try again.",
+  email_linked_elsewhere:
+    "That email already belongs to an account linked to a different Google account. Sign in with your password instead.",
+  google_cancelled: "Google sign-in was cancelled.",
+  google_state_expired: "That took too long. Try signing in again.",
+  google_state_mismatch: "That sign-in didn't look right, so we stopped it. Try again.",
+  google_unavailable: "Google sign-in isn't available right now.",
+};
 
 const Login = () => {
   const [email, setEmail] = useState<string>("");
@@ -20,6 +37,22 @@ const Login = () => {
 
   const [error, setError] = useState("");
   const [showReset, setShowReset] = useState(false);
+  const googleAvailable = useGoogleAvailable();
+
+  // /login is statically prerendered, so the server never sees the query string
+  // the callback redirected with. Derived from the hydration flag rather than an
+  // effect: same render count, and no markup that only matches when the URL is
+  // clean.
+  const hydrated = useHydrated();
+  const googleError = hydrated
+    ? (() => {
+        const code = new URLSearchParams(window.location.search).get("error");
+        if (!code) return "";
+        return (
+          GOOGLE_ERRORS[code] ?? "We couldn't finish signing you in with Google."
+        );
+      })()
+    : "";
 
   const router = useRouter();
   const rootRef = useRef<HTMLElement>(null);
@@ -110,6 +143,29 @@ const Login = () => {
               Welcome back. Log in to rejoin the debate.
             </p>
           </header>
+
+          {googleError && (
+            <p
+              role="alert"
+              className="mb-6 border-l-2 border-side-against py-1 pl-4 font-body text-xs leading-relaxed text-ink-soft"
+            >
+              {googleError}
+            </p>
+          )}
+
+          {googleAvailable && (
+            <div className="mb-8">
+              <GoogleButton href="/api/user/auth/google" />
+              <div className="mt-8 flex items-center gap-4">
+                <span aria-hidden className="h-px grow bg-ink-faint" />
+                <span className="font-label text-[0.58rem] uppercase tracking-[0.3em] text-ink-soft">
+                  or
+                </span>
+                <span aria-hidden className="h-px grow bg-ink-faint" />
+              </div>
+            </div>
+          )}
+
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <label

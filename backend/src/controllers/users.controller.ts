@@ -103,8 +103,18 @@ export async function loginUser(req: Request, res: Response) {
       role: string;
       username: string;
       email: string;
-      hashed_password: string;
+      hashed_password: string | null;
     } = rows[0];
+
+    // Nullable since migration 0016: an account created through Google has no
+    // password. bcrypt.compare throws on a null hash, so this must come first —
+    // and the message has to name the way in, or the user is told their correct
+    // password is wrong.
+    if (user.hashed_password === null) {
+      return res
+        .status(400)
+        .json({ error: "This account signs in with Google. Use the Google button." });
+    }
 
     const valid = await bcrypt.compare(password, user.hashed_password);
     if (!valid) {
