@@ -465,11 +465,27 @@ expressed in what email can actually carry.
   `Georgia, 'Times New Roman', serif`, standing in for Newsreader. Labels use the display stack at
   a small tracked size. **Never `@import` a web font into an email** — it fails silently in most
   clients and shifts the layout in the rest.
-- **No engravings, and no images at all.** §4 already keeps the plates off every product surface;
-  email goes further and ships no remote images whatsoever — not a logo, not a spacer, not a
-  tracking pixel. Most clients block them by default, so an email that needs one is an email that
-  arrives broken, and a remote image in a notification is indistinguishable from tracking. **The
-  mark is set as type**, the way the wordmark already is.
+- **No engravings.** §4 keeps the plates off every product surface, and email is no exception.
+- **Exactly one image: the mark, beside the wordmark in the header.** `public/email/logo.png`, 96px
+  rendered from the same path data as `ui/Logo.tsx`, served from our own domain. Everything else —
+  rules, bars, the button — is a table cell with a background colour, because those are the things
+  that break when images are blocked.
+
+  Four constraints make the one image safe, and a second image would have to meet all of them:
+
+  1. **It is decorative, and the header reads without it.** `alt=""`, with the wordmark set as
+     type beside it. Blocked images leave exactly the header this design had before the logo
+     existed — not a broken icon and not a gap.
+  2. **It is sized in the tag** (`width`/`height`), so a blocked or slow image cannot reflow the
+     header.
+  3. **It is on our own domain, with no query string.** A per-recipient URL is an open tracker
+     wearing a logo's name, and we told AWS in writing that we ship no tracking pixels.
+  4. **It is never load-bearing.** No text inside the image, no image-only call to action.
+
+  This is a real trade, taken knowingly: a remote image discloses that a message was opened, and
+  from roughly where. That is the cost of a logo in email and there is no version without it — CID
+  attachments need raw MIME, and data URIs are stripped by Gmail. The compensation is that it is
+  one request, to us, for a file with no identifier in it.
 - **Square corners.** No pills — a `border-radius` on a table cell is unevenly supported, and a
   button that is a rectangle everywhere beats one that is a pill in half the world.
 - **The cast does not cross over.** No shadows. Elevation is the `band` tone against `paper`,

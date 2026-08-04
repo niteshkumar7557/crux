@@ -111,8 +111,21 @@ function renderHtml(b: Block, links: EmailLinks): string {
   <tr><td align="center" style="padding:32px 16px">
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;background-color:${C.band};border:1px solid ${C.hairline}">
       <tr><td style="padding:32px 32px 0 32px">
-        <div style="font-family:${DISPLAY};font-size:18px;font-weight:bold;letter-spacing:1px;color:${C.ink}">CRUX</div>
-        <div style="font-family:${DISPLAY};font-size:10px;letter-spacing:3px;text-transform:uppercase;color:${C.inkSoft};padding-top:6px">${escapeHtml(b.eyebrow)}</div>
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td valign="middle" style="padding-right:10px">
+              <!-- alt is deliberately empty: the wordmark beside it already says
+                   "Crux", and an alt of "Crux" makes a screen reader say it twice.
+                   With images blocked the row degrades to the wordmark alone,
+                   which is what the header said before this image existed. -->
+              <img src="${escapeHtml(links.siteUrl)}/email/logo.png" width="26" height="26" alt="" style="display:block;border:0;outline:none;text-decoration:none" />
+            </td>
+            <td valign="middle">
+              <div style="font-family:${DISPLAY};font-size:20px;font-weight:bold;letter-spacing:1px;color:${C.ink}">CRUX</div>
+            </td>
+          </tr>
+        </table>
+        <div style="font-family:${DISPLAY};font-size:10px;letter-spacing:3px;text-transform:uppercase;color:${C.inkSoft};padding-top:10px">${escapeHtml(b.eyebrow)}</div>
       </td></tr>
       <tr><td style="padding:20px 32px 0 32px">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">

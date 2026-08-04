@@ -80,11 +80,30 @@ describe("every template", () => {
     }
   });
 
-  it.each(ALL)("$category — embeds no images at all", (t) => {
-    const mail = renderEmail(t, links);
-    // design-system §13: no remote images, no tracking pixels, no logo file.
-    expect(mail.html).not.toMatch(/<img/i);
-    expect(mail.html).not.toMatch(/background-image/i);
+  it.each(ALL)("$category — carries exactly one image, the logo", (t) => {
+    const images = renderEmail(t, links).html.match(/<img\b[^>]*>/gi) ?? [];
+    expect(images).toHaveLength(1);
+    expect(images[0]).toContain(`${links.siteUrl}/email/logo.png`);
+  });
+
+  it.each(ALL)("$category — sizes the logo, so a blocked image cannot reflow it", (t) => {
+    const [img] = renderEmail(t, links).html.match(/<img\b[^>]*>/gi) ?? [];
+    expect(img).toMatch(/width="\d+"/);
+    expect(img).toMatch(/height="\d+"/);
+  });
+
+  it.each(ALL)("$category — is not a tracking pixel in disguise", (t) => {
+    const [img] = renderEmail(t, links).html.match(/<img\b[^>]*>/gi) ?? [];
+    // design-system §13: the one image is a visible logo. A 1x1, or an image
+    // whose URL carries the recipient, is an open tracker wearing a logo's name.
+    expect(img).not.toMatch(/width="1"/);
+    expect(img).not.toMatch(/height="1"/);
+    expect(img).not.toMatch(/\?/);
+    expect(img).toMatch(/alt="/);
+  });
+
+  it.each(ALL)("$category — uses no CSS background images", (t) => {
+    expect(renderEmail(t, links).html).not.toMatch(/background-image/i);
   });
 
   it.each(ALL)("$category — carries no stylesheet or script", (t) => {
