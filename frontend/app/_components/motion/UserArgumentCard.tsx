@@ -10,6 +10,12 @@ import LikeButton from "@/app/_components/ui/LikeButton";
 import RelativeTime from "@/app/_components/ui/RelativeTime";
 import { focusArgument } from "@/app/_utils/focusArgument";
 import { useReplyTarget } from "./ReplyContext";
+import ClampedText from "./ClampedText";
+
+// §7 scores an argument 2–10. Only the strong ones are marked: a mark that always
+// appears is a grade, and a public 2 beside a beginner's name is a put-down the
+// author already saw privately in their points pop-up.
+const STRONG_ARGUMENT = 8;
 
 const UserArgumentCard = ({
   side,
@@ -17,12 +23,12 @@ const UserArgumentCard = ({
   username,
   avatar,
   argument,
+  points,
   likes,
   user_id,
   argument_id,
   post_user_id,
   initiallyLiked,
-  replyTo,
   replyCount,
   firstReplyId,
   viewerLockedSide,
@@ -34,6 +40,8 @@ const UserArgumentCard = ({
   const actionClass = `font-label text-[10px] uppercase text-ink-soft cursor-pointer transition-colors ${
     side === "for" ? "hover:text-side-for" : "hover:text-side-against"
   }`;
+
+  const sideLabelClass = side === "for" ? "text-side-for" : "text-side-against";
 
   const likeMode = closed
     ? ({ kind: "closed" } as const)
@@ -58,64 +66,50 @@ const UserArgumentCard = ({
             : "border-side-against/20 hover:border-side-against/60 hover:shadow-cast-against-deep"
         }`}
       >
-        <div className="flex items-start mb-4">
+        <div className="mb-3 flex flex-wrap items-center gap-x-2.5 gap-y-1">
           <Link
             href={`/profile/${username}`}
             aria-label={`@${username}'s profile`}
-            className="group/author flex items-center gap-3"
+            title={`Reputation: ${reputation}`}
+            className="group/author flex items-center gap-2"
           >
             <Avatar
               username={username}
               src={avatar}
-              size="md"
+              size="sm"
               accent={side === "for" ? "primary" : "secondary"}
             />
-            <div>
-              <p className="font-label text-[10px] uppercase text-ink">
-                Reputation: {reputation}
-              </p>
-              <p
-                className={`font-label text-[10px] uppercase text-ink-soft transition-colors ${
-                  side === "for"
-                    ? "group-hover/author:text-side-for"
-                    : "group-hover/author:text-side-against"
-                }`}
-              >
-                @{username}
-              </p>
-            </div>
-          </Link>
-        </div>
-        {replyTo && (
-          <div
-            className={`mb-4 border-l-2 pl-3 py-2 bg-paper/60 transition-colors has-[button:hover]:bg-paper ${side === "for" ? "border-side-against/40 has-[button:hover]:border-side-against" : "border-side-for/40 has-[button:hover]:border-side-for"}`}
-          >
-            <p className="font-label text-[9px] uppercase tracking-[0.15em] text-ink-soft mb-1">
-              replying to{" "}
-              <Link
-                href={`/profile/${replyTo.username}`}
-                className="transition-colors hover:text-ink"
-              >
-                @{replyTo.username}
-              </Link>
-            </p>
-            <button
-              type="button"
-              onClick={() => focusArgument(replyTo.argumentId)}
-              aria-label={`Go to the argument by @${replyTo.username} this answers`}
-              className="block w-full cursor-pointer text-left font-label text-[0.72rem] leading-relaxed text-ink-soft/80 truncate"
+            <span
+              className={`font-label text-[10px] uppercase tracking-[0.15em] ${sideLabelClass}`}
             >
-              &ldquo;
-              {replyTo.content.length > 80
-                ? `${replyTo.content.slice(0, 80)}…`
-                : replyTo.content}
-              &rdquo;
-            </button>
-          </div>
-        )}
-        <p className="font-label text-[0.9rem] leading-[1.75] text-ink mb-6">
-          {argument}
-        </p>
+              {side === "for" ? "For" : "Against"}
+            </span>
+            <span
+              className={`font-label text-[10px] uppercase tracking-[0.15em] text-ink-soft transition-colors ${
+                side === "for"
+                  ? "group-hover/author:text-side-for"
+                  : "group-hover/author:text-side-against"
+              }`}
+            >
+              @{username}
+            </span>
+          </Link>
+          {points >= STRONG_ARGUMENT && (
+            <span className="font-label text-[10px] font-bold uppercase tracking-[0.15em] text-laurel tabular-nums">
+              {points} logic
+            </span>
+          )}
+          <RelativeTime
+            timestamp={createdAt}
+            className="ml-auto shrink-0 font-label text-[10px] uppercase text-ink-soft"
+          />
+        </div>
+        <div className="mb-6">
+          <ClampedText
+            text={argument}
+            className="font-label text-[0.9rem] leading-[1.75] text-ink"
+          />
+        </div>
         <div className="flex gap-4 items-center">
           <LikeButton
             argumentId={argument_id}
@@ -144,12 +138,6 @@ const UserArgumentCard = ({
               ↳ {replyCount} {replyCount === 1 ? "reply" : "replies"}
             </button>
           )}
-          {/* Last in the row and pushed to the far edge: when an argument was
-              posted is context for the ones above it, not an action beside them. */}
-          <RelativeTime
-            timestamp={createdAt}
-            className="ml-auto shrink-0 font-label text-[10px] uppercase text-ink-soft"
-          />
         </div>
       </div>
     </div>

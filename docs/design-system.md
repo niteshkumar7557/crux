@@ -555,3 +555,41 @@ margin, or it collides regardless of fitting.
 **Where it lives:** `frontend/app/_components/social/` — `layout/Frame.tsx` owns every shared
 shape, `templates.tsx` maps a name to a renderer, and the four pure modules beside them are tested.
 The route is `app/admin/social/render` (POST → PNG); the console is `app/admin/social`.
+
+## §15 The arena is a stack of clashes
+
+A debate page is not two columns of arguments. It is a vertical stack of **clashes** — one root
+argument and every reply it drew, rendered as one block. **Left is always FOR and right is always
+AGAINST**, so §6's rule that a reply lives in its own side's column survives intact; what changed
+is the block a reader scans.
+
+- **The exchange is the unit, so the reply-quote stub is gone.** A point and its rebuttal are
+  adjacent across the spine, and a stub quoting what sits beside it is restating the layout.
+  **This deletion is conditional on the layout** — revert the stack and the stub has to come back,
+  or replies lose their context entirely.
+- **Only strong arguments are marked.** `points >= 8` prints the numeral in laurel (`9 LOGIC`);
+  below that, nothing is drawn. Praise is public; the author already saw their own score privately
+  in the points pop-up. A mark that always appears is a grade, and a permanent public `2` beside a
+  beginner's name is the cost the hierarchy is not worth. Laurel is right rather than merely
+  available: §2 reserves it for earned things and names numerals first.
+- **The empty half of a row is the best call to action on the page.** A root that drew nothing
+  renders `UNANSWERED` in the *opposing* side's colour with a Reply affordance, or
+  `STOOD UNANSWERED` once concluded. The tense is load-bearing: one is an invitation, the other is
+  a result. It waits **6 hours** (`UNANSWERED_AFTER_HOURS` in `clash.ts`) before appearing on a
+  live debate — the same instinct §11 uses to hold the walkover warning back, so the mark does not
+  land on every fresh post and train people to ignore it. **That number is display-only and is not
+  a game constant**; it must never reach `/rules`.
+- **Ordering follows the debate's state.** Live, the most recently active clash is first — you are
+  standing in the room. Concluded, the strongest is first — you are reading the record.
+- **The stack header is not sticky.** `StickyMotion` already owns the strip under the navbar, and
+  below `md` the composer is a collapsed bar precisely because that space is scarce (§6). Side
+  identity is carried by position, by the camp colours, and by a `FOR`/`AGAINST` label on every
+  card.
+- **One index band, not two panels.** §17's living case is an index into the arguments rather than
+  a document beside them: every attributed point jumps to the argument that made it. It is
+  `bg-raised` with the **neutral** cast, because it belongs to no camp.
+
+**Where it lives:** `_components/motion/clash.ts` is pure and tested — it owns the tree, the
+ordering and the unanswered window. `ClashRow.tsx` draws one exchange, `CaseIndex.tsx` the band,
+`ClampedText.tsx` the eight-line governor on a long argument. `motion/[id]/loading.tsx` mirrors the
+stack, and drifts into a vertical jump on reload if it stops.

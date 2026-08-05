@@ -2,14 +2,16 @@
 
 // The two argument columns. Spec: game-theory.md §6
 
-import CaseColumn from "./CaseColumn";
+import CaseIndex from "./CaseIndex";
+import ClashRow from "./ClashRow";
+import { buildClashes } from "./clash";
 import { getUser } from "@/app/_utils/getUser";
 import { jwtPayload } from "@/app/_types/jwt";
 import { Analysis, UserArgumentCardProps } from "@/app/motion/types";
 import api from "@/app/axios";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { useArenaClosed } from "./useArenaClock";
+import { useArenaClosed, useNow } from "./useArenaClock";
 import { convertLogicScore } from "@/app/_utils/logicScore";
 import { gsap, useGSAP, MOTION_OK } from "@/app/_utils/gsap";
 import { shouldAnimate } from "@/app/_utils/animateOnce";
@@ -20,6 +22,7 @@ interface RawArgument {
   avatar: string | null;
   side: "for" | "against";
   logic_score: number;
+  points: number;
   content: string;
   likes: number;
   post_user_id: number;
@@ -47,6 +50,7 @@ const MotionArena = ({
   // §4: the same clock the composer closes on, so the thumbs and the composer
   // can never disagree about whether this debate is still open.
   const closed = useArenaClosed(status, closesAt);
+  const now = useNow();
   const [user, setUser] = useState<jwtPayload | null>(null);
   const [likedIds, setLikedIds] = useState<Set<number>>(new Set());
   const arenaRef = useRef<HTMLDivElement>(null);
@@ -78,21 +82,17 @@ const MotionArena = ({
       if (!shouldAnimate(pathname)) return;
       const mm = gsap.matchMedia();
       mm.add(MOTION_OK, () => {
-        const sides = [
-          ["[data-case='for']", -24],
-          ["[data-case='against']", 24],
-        ] as const;
-        for (const [selector, x] of sides) {
+        for (const row of gsap.utils.toArray<HTMLElement>("[data-reveal]")) {
           gsap.fromTo(
-            selector,
-            { opacity: 0.25, x },
+            row,
+            { opacity: 0, y: 24 },
             {
               opacity: 1,
-              x: 0,
-              duration: 0.8,
+              y: 0,
+              duration: 0.6,
               ease: "power3.out",
               clearProps: "opacity,transform",
-              scrollTrigger: { trigger: selector, start: "top 80%", once: true },
+              scrollTrigger: { trigger: row, start: "top 88%", once: true },
             },
           );
         }
@@ -133,6 +133,7 @@ const MotionArena = ({
       username: e.username,
       avatar: e.avatar,
       argument: e.content,
+      points: e.points,
       likes: e.likes,
       user_id: user?.id,
       argument_id: e.argument_id,
@@ -158,31 +159,38 @@ const MotionArena = ({
       againstCaseArguments.push(arenaArgument);
     }
   });
-  forCaseArguments.reverse();
-  againstCaseArguments.reverse();
-
-  const motionArenaData = {
-    forArgumentsCount: forCaseArguments.length,
-    againstArgumentsCount: againstCaseArguments.length,
-    forCaseArguments: forCaseArguments,
-    againstCaseArguments: againstCaseArguments,
-  };
+  const clashes = buildClashes({
+    arguments: [...forCaseArguments, ...againstCaseArguments],
+    status,
+    now,
+  });
 
   return (
-    <div
-      ref={arenaRef}
-      className="grid grid-cols-1 lg:grid-cols-2 gap-px overflow-x-clip"
-    >
-      <CaseColumn
-        side="for"
-        aiAnalysis={aiAnalysis[0]}
-        motionArenaData={motionArenaData}
+    <div ref={arenaRef} className="overflow-x-clip">
+      <CaseIndex
+        analysis={aiAnalysis}
+        forCount={forCaseArguments.length}
+        againstCount={againstCaseArguments.length}
       />
-      <CaseColumn
-        side="against"
-        aiAnalysis={aiAnalysis[1]}
-        motionArenaData={motionArenaData}
-      />
+      <div
+        className="mt-10 hidden items-center gap-4 border-b border-ink-faint pb-3 lg:flex"
+        aria-hidden="true"
+      >
+        <span className="font-label text-[0.62rem] font-bold uppercase tracking-[0.28em] text-side-for">
+          For
+        </span>
+        <span className="grow border-t border-ink-faint" />
+        <span className="font-label text-[0.62rem] font-bold uppercase tracking-[0.28em] text-side-against">
+          Against
+        </span>
+      </div>
+      <ol>
+        {clashes.map((clash) => (
+          <li key={clash.id} data-reveal>
+            <ClashRow clash={clash} />
+          </li>
+        ))}
+      </ol>
     </div>
   );
 };

@@ -17,6 +17,7 @@ export interface UserArgumentCardProps {
   username: string;
   avatar: string | null;
   argument: string;
+  points: number; // §7: what the AI scored this argument, 2–10. 0 predates scoring.
   likes: number;
   user_id?: number; // the viewer's id (undefined when logged out)
   argument_id: number;
@@ -54,16 +55,4 @@ export interface MatchState {
 export interface ArgumentSide {
   post_user_id: number;
   side: "for" | "against";
-}
-
-export interface MotionArenaProps {
-  forArgumentsCount: number;
-  againstArgumentsCount: number;
-  forCaseArguments: UserArgumentCardProps[];
-  againstCaseArguments: UserArgumentCardProps[];
-}
-
-export interface MotionPageData {
-  motionHeaderData: MotionHeaderProps;
-  motionArenaData: MotionArenaProps;
 }

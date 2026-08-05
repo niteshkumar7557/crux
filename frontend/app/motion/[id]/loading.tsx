@@ -12,28 +12,23 @@ const Loading = () => (
     {/* The split bar carries its readings above itself below sm — MotionProbability */}
     <Skeleton className="h-3 w-56 mb-2 sm:hidden" />
     <Skeleton className="h-8 sm:h-12 w-full mb-8" />
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-px">
-      {(["for", "against"] as const).map((side) => (
-        <div
-          key={side}
-          className={
-            side === "for"
-              ? "lg:pr-7 py-8"
-              : "lg:pl-7 py-8 border-t lg:border-t-0 lg:border-l border-ink-faint"
-          }
-        >
-          <div className="mb-10 flex items-center justify-between border-b border-ink-faint pb-4">
-            <Skeleton className="h-12 w-56" />
-            <Skeleton className="h-3 w-24" />
-          </div>
-          <Skeleton className="h-52 w-full mb-6" />
-          <div className="flex flex-col gap-3">
-            <Skeleton className="h-40 w-full" />
-            <Skeleton className="h-40 w-full" />
-          </div>
-        </div>
-      ))}
+    {/* The index band, then the clash stack — mirrors MotionArena, or the page
+        lurches vertically when the real content lands. */}
+    <Skeleton className="h-56 w-full mb-10" />
+    <div className="hidden lg:flex items-center gap-4 border-b border-ink-faint pb-3 mb-6">
+      <Skeleton className="h-3 w-12" />
+      <span className="grow border-t border-ink-faint" />
+      <Skeleton className="h-3 w-20" />
     </div>
+    {[0, 1, 2].map((row) => (
+      <div
+        key={row}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 border-b border-ink-faint py-8"
+      >
+        <Skeleton className="h-32 w-full lg:col-start-1" />
+        <Skeleton className="h-32 w-full mt-3 lg:mt-0 lg:col-start-2" />
+      </div>
+    ))}
   </section>
 );
 

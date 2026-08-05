@@ -168,22 +168,28 @@ reply still lives in **your own side's column** (side integrity is never broken)
 compact quote of what it answers. The argument you replied to shows a `↳ N replies` counter.
 
 ```
-FOR                        AGAINST
-┌───────────────────────┐  ┌───────────────────────┐
-│ @maya            +7   │  │ @arjun           +6   │
-│ Nuclear is the only   │  │ Build time alone kills│
-│ baseload that scales. │  │ it — 12 yrs a plant.  │
-│              ↳ 1 reply│  │                       │
-└───────────────────────┘  └───────────────────────┘
-                           ┌───────────────────────┐
-                           │ @dev             +8   │
-                           │ ┌─replying to @maya─┐ │
-                           │ │"the only baseload"│ │
-                           │ └───────────────────┘ │
-                           │ Hydro and geothermal  │
-                           │ are both baseload...  │
-                           └───────────────────────┘
+            FOR                  │            AGAINST
+┌───────────────────────────┐    │
+│ @maya            7 LOGIC  │    │
+│ Nuclear is the only       │    │
+│ baseload that scales.     │    │
+└───────────────────────────┘    │
+                                 │  ┌───────────────────────────┐
+                                 │  │ @dev             8 LOGIC  │
+                                 │  │ Hydro and geothermal are  │
+                                 │  │ both baseload too.        │
+                                 │  └───────────────────────────┘
+─────────────────────────────────┼────────────────────────────────
+┌───────────────────────────┐    │
+│ @arjun                    │    │
+│ Build time alone kills it │    │  UNANSWERED
+│ — 12 yrs a plant.         │    │  Answer it →
+└───────────────────────────┘    │
 ```
+
+The arena renders these as **clashes** — a root argument and every reply it drew, as one block.
+Side integrity is unchanged: FOR is always the left half, AGAINST always the right. See
+design-system.md §15.
 
 **Rules:**
 
