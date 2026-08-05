@@ -10,10 +10,14 @@ import { truncate } from "@/app/_components/motion/verdictCard";
 import type { Analysis } from "@/app/motion/types";
 import type { TemplateName } from "./socialTokens";
 import { hostOf, type SocialCopy } from "./socialCopy";
+import { isSizeStep, type SizeStep } from "./socialFit";
 
 export const SLIDES_PER_SIDE = 3;
 export const LINE_MAX = 96;
 export const QUOTE_MAX = 220;
+// The ruling was the one field with no cap, and a 400-character verdict is what
+// pushed the CTA band on top of the story's text. Auto-fit handles the rest.
+export const RULING_MAX = 260;
 
 export interface RawArgument {
   argument_id: number;
@@ -32,8 +36,40 @@ export interface SlidePayload {
   fallback: boolean;
 }
 
+// An editor's overrides, one preset per element. Everything left `auto` is sized
+// from the content by socialFit; anything else is a deliberate override that may
+// overflow, which is the editor's call.
+export interface SocialSizes {
+  headline: SizeStep; // the Anton display line
+  motion: SizeStep; // the serif motion
+  body: SizeStep; // quotes and rulings
+  word: SizeStep; // the plain-English word above an argument
+  plate: SizeStep; // the engraving
+  pad: SizeStep; // the frame's inner padding — the "box"
+}
+
+export const DEFAULT_SIZES: SocialSizes = {
+  headline: "auto",
+  motion: "auto",
+  body: "auto",
+  word: "auto",
+  plate: "auto",
+  pad: "auto",
+};
+
+export function normaliseSizes(raw: unknown): SocialSizes {
+  const source =
+    typeof raw === "object" && raw !== null ? (raw as Record<string, unknown>) : {};
+  const out = { ...DEFAULT_SIZES };
+  for (const key of Object.keys(DEFAULT_SIZES) as (keyof SocialSizes)[]) {
+    if (isSizeStep(source[key])) out[key] = source[key];
+  }
+  return out;
+}
+
 export interface SocialPayload {
   template: TemplateName;
+  sizes: SocialSizes;
   reference: string;
   motionId: number;
   motion: string;
@@ -69,6 +105,8 @@ export interface BuildInput {
   copy: SocialCopy;
   siteUrl: string;
   now: number;
+  /** Omitted means every element sizes itself from the content. */
+  sizes?: SocialSizes;
 }
 
 function sideSlides(
@@ -162,6 +200,7 @@ export function buildPayloads(input: BuildInput): SocialPayload[] {
   const closesInHours = liveHoursLeft(input.closesAt, input.now);
 
   const common = {
+    sizes: input.sizes ?? DEFAULT_SIZES,
     reference,
     motionId: input.id,
     motion: input.motion,
@@ -170,7 +209,7 @@ export function buildPayloads(input: BuildInput): SocialPayload[] {
     winner: input.winner,
     split: input.split,
     margin: input.margin,
-    verdictText: input.verdictText,
+    verdictText: input.verdictText ? truncate(input.verdictText, RULING_MAX) : null,
     mvpUsername: input.mvpUsername,
     closesInHours,
     hook: input.copy.hook,

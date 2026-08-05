@@ -8,22 +8,25 @@
 
 import { PALETTE } from "../socialTokens";
 import { PLATE_SOURCES, plateBox } from "../socialPlates";
+import { MOTION_BOX } from "../socialBoxes";
+import { fitMotion, scaled } from "../socialFit";
 import type { SocialPayload } from "../socialAssets";
 import { BigLine, Frame, Lockup, Meta, MotionLine, Plate, Rule, TopRow } from "./Frame";
 
 const PLATE_WIDTH = 856;
 
 export function CoverSlide({ payload, plate }: { payload: SocialPayload; plate: string }) {
-  const box = plateBox("duel", PLATE_WIDTH);
+  const box = plateBox("duel", scaled(PLATE_WIDTH, payload.sizes.plate));
+  const motionSize = fitMotion(payload.motion, MOTION_BOX["ig-cover"], 86, payload.sizes.motion);
 
   return (
-    <Frame>
+    <Frame pad={scaled(66, payload.sizes.pad)}>
       <TopRow
         left={<Meta>{`CRUX · ${payload.reference}`}</Meta>}
         right={<Meta>{`${String(payload.slideNumber).padStart(2, "0")} / ${payload.slideTotal}`}</Meta>}
       />
 
-      <MotionLine motion={payload.motion} keyword={payload.keyword} size={86} marginTop={56} />
+      <MotionLine motion={payload.motion} keyword={payload.keyword} size={motionSize} marginTop={56} />
 
       <div style={{ display: "flex", flex: 1, minHeight: 40 }} />
 
@@ -47,7 +50,7 @@ export function CoverSlide({ payload, plate }: { payload: SocialPayload; plate: 
           marginTop: 28,
         }}
       >
-        <BigLine size={40} color={PALETTE.ink}>
+        <BigLine size={scaled(40, payload.sizes.headline)} color={PALETTE.ink}>
           Swipe for both cases →
         </BigLine>
         <Lockup domain={payload.domain} />

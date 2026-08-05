@@ -535,6 +535,23 @@ the whitespace at a flex item's edges (so `MotionLine`'s spans use `pre-wrap`, o
 welds to the next word), and it shrinks every item rather than clipping when content overflows —
 which is why the 1080×1920 story is sized to the 1372px its two safe bands leave.
 
+**Type is sized from its content, not fixed.** Satori does not clip on overflow — it shrinks every
+sibling and then draws the text over whatever follows — so a fixed headline size printed a long
+referee line straight through the quote beneath it. `socialFit.ts` sizes each element to the box
+`socialBoxes.ts` computes for it. Its character ratios are calibrated against satori's own line
+breaking, including word wrap: averaging glyph widths predicted five lines where satori laid out
+seven. The ratios are deliberately conservative, because over-estimating width costs a slightly
+smaller headline while under-estimating it costs an overlap.
+
+**An editor can override any of it**, from the Sizing panel: headline, motion, body, word, image and
+box, each `Auto` plus five steps. `Auto` is the fitted size; every other step scales from it and may
+overflow, which is the editor's call. Presets are narrowed server-side — an unknown step would index
+the scale table with `undefined`.
+
+**`BigLine`'s 0.94 leading is tighter than Anton's own line box**, so its ink overflows the element
+by about 13% of the font size. Anything sitting directly beneath a display line needs that back as a
+margin, or it collides regardless of fitting.
+
 **Where it lives:** `frontend/app/_components/social/` — `layout/Frame.tsx` owns every shared
 shape, `templates.tsx` maps a name to a renderer, and the four pure modules beside them are tested.
 The route is `app/admin/social/render` (POST → PNG); the console is `app/admin/social`.

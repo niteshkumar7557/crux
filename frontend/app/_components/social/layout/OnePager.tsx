@@ -4,6 +4,8 @@
 import { HAIRLINE, PALETTE } from "../socialTokens";
 import { plateBox } from "../socialPlates";
 import type { SocialPayload } from "../socialAssets";
+import { MOTION_BOX, RULING_BOX } from "../socialBoxes";
+import { fitMotion, fitRuling, scaled } from "../socialFit";
 import { SERIF } from "@/app/_utils/ogFonts";
 import {
   BigLine, CtaBand, Frame, Lockup, Meta, MotionLine, Plate, Rule, SideBox, SplitBar, TopRow, sideColour,
@@ -46,11 +48,19 @@ export function OnePager({
   const winner = payload.winner ?? "draw";
   const accent = winner === "for" || winner === "against" ? sideColour(winner) : PALETTE.muted;
   const settled = payload.split !== null && winner !== "walkover";
+  const key = wide ? "x-verdict" : "li-verdict";
+  const motionSize = fitMotion(payload.motion, MOTION_BOX[key], wide ? 54 : 60, payload.sizes.motion);
+  const rulingSize = fitRuling(
+    payload.verdictText ?? "",
+    RULING_BOX[key],
+    wide ? 29 : 33,
+    payload.sizes.body,
+  );
 
   if (!wide) {
-    const box = plateBox("scales", 236);
+    const box = plateBox("scales", scaled(236, payload.sizes.plate));
     return (
-      <Frame>
+      <Frame pad={scaled(66, payload.sizes.pad)}>
         <TopRow
           left={<Meta>{`CRUX · ${payload.reference}`}</Meta>}
           right={
@@ -62,13 +72,13 @@ export function OnePager({
           }
         />
 
-        <MotionLine motion={payload.motion} keyword={payload.keyword} size={60} marginTop={44} />
+        <MotionLine motion={payload.motion} keyword={payload.keyword} size={motionSize} marginTop={44} />
         <Rule margin={40} />
 
         <div style={{ display: "flex", alignItems: "flex-end", gap: 40 }}>
           <Plate src={plate} width={box.width} height={box.height} arch={box.arch} />
           <div style={{ display: "flex", flexDirection: "column", flex: 1, paddingBottom: 6 }}>
-            <BigLine size={92} color={accent}>{WINNER_LABEL[winner]}</BigLine>
+            <BigLine size={scaled(92, payload.sizes.headline)} color={accent}>{WINNER_LABEL[winner]}</BigLine>
             {settled ? (
               <div style={{ display: "flex", marginTop: 18 }}>
                 <Meta>{`${payload.split!.for}–${payload.split!.against} · MARGIN ${payload.margin ?? 0}`}</Meta>
@@ -80,7 +90,7 @@ export function OnePager({
         {settled ? <SplitBar split={payload.split!} height={24} marginTop={34} /> : null}
         {payload.verdictText ? (
           <div style={{ display: "flex", marginTop: 36 }}>
-            <Ruling text={payload.verdictText} size={33} />
+            <Ruling text={payload.verdictText} size={rulingSize} />
           </div>
         ) : null}
         {payload.mvpUsername ? <Mvp username={payload.mvpUsername} size={25} /> : null}
@@ -91,16 +101,16 @@ export function OnePager({
     );
   }
 
-  const box = plateBox("scales", 150);
+  const box = plateBox("scales", scaled(150, payload.sizes.plate));
   return (
     <Frame pad={0} outer={32}>
       <div style={{ display: "flex", flex: 1, width: "100%" }}>
         <div style={{ display: "flex", flexDirection: "column", flex: 1.5,
                       padding: "52px 44px 44px 52px" }}>
           <Meta size={24}>{`CRUX · ${payload.reference}`}</Meta>
-          <MotionLine motion={payload.motion} keyword={payload.keyword} size={54} marginTop={26} />
+          <MotionLine motion={payload.motion} keyword={payload.keyword} size={motionSize} marginTop={26} />
           <div style={{ display: "flex", flex: 1, minHeight: 20 }} />
-          {payload.verdictText ? <Ruling text={payload.verdictText} size={29} /> : null}
+          {payload.verdictText ? <Ruling text={payload.verdictText} size={rulingSize} /> : null}
           {payload.mvpUsername ? <Mvp username={payload.mvpUsername} size={23} /> : null}
         </div>
 
@@ -117,7 +127,7 @@ export function OnePager({
           <div style={{ display: "flex", alignItems: "flex-end", gap: 28, marginTop: 32 }}>
             <Plate src={plate} width={box.width} height={box.height} arch={box.arch} />
             <div style={{ display: "flex", flex: 1, paddingBottom: 4 }}>
-              <BigLine size={74} color={accent}>{WINNER_LABEL[winner]}</BigLine>
+              <BigLine size={scaled(74, payload.sizes.headline)} color={accent}>{WINNER_LABEL[winner]}</BigLine>
             </div>
           </div>
 

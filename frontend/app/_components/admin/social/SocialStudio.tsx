@@ -11,12 +11,15 @@ import api from "@/app/axios";
 import Button from "@/app/_components/ui/Button";
 import { defaultCopy, hostOf, normaliseCopy, type SocialCopy } from "@/app/_components/social/socialCopy";
 import {
+  DEFAULT_SIZES,
   assetFilename,
   buildPayloads,
   canExportLive,
   type RawArgument,
   type SocialPayload,
+  type SocialSizes,
 } from "@/app/_components/social/socialAssets";
+import { SIZE_STEPS, type SizeStep } from "@/app/_components/social/socialFit";
 import { zipStore } from "@/app/_components/social/zipStore";
 import type { Analysis } from "@/app/motion/types";
 
@@ -52,10 +55,71 @@ interface Loaded {
   now: number;
 }
 
+// Tailwind cannot see class names built at runtime, so the selected state is a
+// lookup of two literal strings rather than an interpolation.
+const STEP_CLASS = {
+  on: "border-ink bg-ink text-paper",
+  off: "border-ink-faint bg-paper text-ink-soft hover:border-ink",
+} as const;
+
+const STEP_LABEL: Record<SizeStep, string> = {
+  auto: "Auto",
+  xs: "XS",
+  sm: "S",
+  md: "M",
+  lg: "L",
+  xl: "XL",
+};
+
+/** One row of size presets. `Auto` is the fitted size; the rest scale from it. */
+const SizeRow = ({
+  label,
+  hint,
+  value,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  value: SizeStep;
+  onChange: (step: SizeStep) => void;
+}) => (
+  <div className="flex flex-wrap items-center justify-between gap-3">
+    <span className="font-label text-[0.58rem] uppercase tracking-[0.28em] text-ink-soft">
+      {label}
+      <span className="ml-2 normal-case tracking-normal opacity-60">{hint}</span>
+    </span>
+    <div className="flex gap-1">
+      {SIZE_STEPS.map((step) => (
+        <button
+          key={step}
+          type="button"
+          aria-pressed={value === step}
+          onClick={() => onChange(step)}
+          className={`border px-2.5 py-1 font-label text-[0.55rem] uppercase tracking-[0.18em] transition-colors ${
+            value === step ? STEP_CLASS.on : STEP_CLASS.off
+          }`}
+        >
+          {STEP_LABEL[step]}
+        </button>
+      ))}
+    </div>
+  </div>
+);
+
+function saveBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 const SocialStudio = () => {
   const [ref, setRef] = useState("");
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [copy, setCopy] = useState<SocialCopy | null>(null);
+  const [sizes, setSizes] = useState<SocialSizes>(DEFAULT_SIZES);
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<"idle" | "loading" | "drafting" | "rendering">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -63,8 +127,13 @@ const SocialStudio = () => {
 
   const payloads = useMemo(() => {
     if (!loaded || !copy) return [];
-    return buildPayloads({ ...loaded, copy, siteUrl: SITE });
-  }, [loaded, copy]);
+    return buildPayloads({ ...loaded, copy, sizes, siteUrl: SITE });
+  }, [loaded, copy, sizes]);
+
+  // Pinned to the load, so a live poster's hour stamp cannot change between the
+  // render pass that fills `blobs` and the export that looks names up in it.
+  // The epoch fallback is never read: with nothing loaded there are no payloads.
+  const stampedAt = useMemo(() => new Date(loaded?.now ?? 0), [loaded]);
 
   const load = async () => {
     const id = parseMotionRef(ref);
@@ -140,7 +209,7 @@ const SocialStudio = () => {
       setBusy("rendering");
       const next: Record<string, string> = {};
       for (const payload of payloads) {
-        const key = assetFilename(payload, new Date());
+        const key = assetFilename(payload, stampedAt);
         const blob = await render(payload);
         if (!blob) continue;
         blobs.current.set(key, blob);
@@ -153,7 +222,7 @@ const SocialStudio = () => {
       setBusy("idle");
     }, 600);
     return () => clearTimeout(timer);
-  }, [payloads, render]);
+  }, [payloads, render, stampedAt]);
 
   const exportSet = async (which: "instagram" | "linkedin" | "x") => {
     if (!loaded || !copy) return;
@@ -162,11 +231,10 @@ const SocialStudio = () => {
       linkedin: ["li-verdict"],
       x: ["x-verdict", "x-live"],
     };
-    const at = new Date();
     const entries = [];
     for (const payload of payloads) {
       if (!wanted[which].includes(payload.template)) continue;
-      const name = assetFilename(payload, at);
+      const name = assetFilename(payload, stampedAt);
       const blob = blobs.current.get(name);
       if (!blob) continue;
       entries.push({ name, data: new Uint8Array(await blob.arrayBuffer()) });
@@ -176,13 +244,10 @@ const SocialStudio = () => {
       data: new TextEncoder().encode(copy.captions[which]),
     });
 
-    const zip = zipStore(entries);
-    const url = URL.createObjectURL(new Blob([zip], { type: "application/zip" }));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `crux-${which}-${String(loaded.id).padStart(4, "0")}.zip`;
-    a.click();
-    URL.revokeObjectURL(url);
+    saveBlob(
+      new Blob([zipStore(entries)], { type: "application/zip" }),
+      `crux-${which}-${String(loaded.id).padStart(4, "0")}.zip`,
+    );
   };
 
   const staleLive =
@@ -252,6 +317,62 @@ const SocialStudio = () => {
                 ))}
               </div>
             ))}
+          </div>
+
+          <div className="flex flex-col gap-3 border-t border-ink-faint pt-6">
+            <span className="font-label text-[0.62rem] uppercase tracking-[0.3em] text-ink-soft">
+              Sizing
+            </span>
+            <p className="font-body text-sm text-ink-soft">
+              Auto sizes each element to its own content, which is what stops a long line
+              running into the text beneath it. The other steps scale from that, and may
+              overflow — the preview shows exactly what exports.
+            </p>
+            <div className="flex flex-col gap-2.5">
+              <SizeRow
+                label="Headline"
+                hint="the display line"
+                value={sizes.headline}
+                onChange={(step) => setSizes({ ...sizes, headline: step })}
+              />
+              <SizeRow
+                label="Motion"
+                hint="the serif motion"
+                value={sizes.motion}
+                onChange={(step) => setSizes({ ...sizes, motion: step })}
+              />
+              <SizeRow
+                label="Body"
+                hint="quotes and rulings"
+                value={sizes.body}
+                onChange={(step) => setSizes({ ...sizes, body: step })}
+              />
+              <SizeRow
+                label="Word"
+                hint="the word above an argument"
+                value={sizes.word}
+                onChange={(step) => setSizes({ ...sizes, word: step })}
+              />
+              <SizeRow
+                label="Image"
+                hint="the engraving plate"
+                value={sizes.plate}
+                onChange={(step) => setSizes({ ...sizes, plate: step })}
+              />
+              <SizeRow
+                label="Box"
+                hint="the frame's inner padding"
+                value={sizes.pad}
+                onChange={(step) => setSizes({ ...sizes, pad: step })}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setSizes(DEFAULT_SIZES)}
+              className="self-start font-label text-[0.58rem] uppercase tracking-[0.24em] text-ink underline"
+            >
+              Reset to auto
+            </button>
           </div>
 
           {(["instagram", "linkedin", "x"] as const).map((platform) => (

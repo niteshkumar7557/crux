@@ -5,6 +5,8 @@
 import { PALETTE, STORY_SAFE_BOTTOM, STORY_SAFE_TOP } from "../socialTokens";
 import { plateBox } from "../socialPlates";
 import type { SocialPayload } from "../socialAssets";
+import { MOTION_BOX, RULING_BOX } from "../socialBoxes";
+import { fitMotion, fitRuling, scaled } from "../socialFit";
 import { SERIF } from "@/app/_utils/ogFonts";
 import { BigLine, CtaBand, Frame, Meta, MotionLine, Plate, SideBox, SplitBar, TopRow, sideColour } from "./Frame";
 
@@ -15,16 +17,25 @@ const WINNER_LABEL = {
   walkover: "Unopposed",
 } as const;
 
-// 1080x1920 less the two safe bands leaves 1372px of content. The plate and the
-// ruling line are sized to fit inside it: overflow here does not clip, it makes
-// yoga shrink every item, and the score collapses into the display line.
+// 1080x1920 less the two safe bands, the motion, the plate, the display line,
+// the score, the bar, the MVP and the CTA leaves 196px for the ruling. Overflow
+// here does not clip: yoga shrinks every item, and the score collapses into the
+// display line while the MVP climbs into the ruling. Every block below is sized
+// so the total lands inside the canvas.
 export function StoryPoster({ payload, plate }: { payload: SocialPayload; plate: string }) {
   const winner = payload.winner ?? "draw";
-  const box = plateBox("scales", 256);
+  const box = plateBox("scales", scaled(210, payload.sizes.plate));
   const accent = winner === "for" || winner === "against" ? sideColour(winner) : PALETTE.muted;
+  const motionSize = fitMotion(payload.motion, MOTION_BOX["ig-story"], 62, payload.sizes.motion);
+  const rulingSize = fitRuling(
+    payload.verdictText ?? "",
+    RULING_BOX["ig-story"],
+    38,
+    payload.sizes.body,
+  );
 
   return (
-    <Frame pad={64}>
+    <Frame pad={scaled(64, payload.sizes.pad)}>
       <div style={{ display: "flex", height: STORY_SAFE_TOP - 60 }} />
 
       <TopRow
@@ -38,14 +49,14 @@ export function StoryPoster({ payload, plate }: { payload: SocialPayload; plate:
         right={<Meta>{payload.reference.replace("MOTION ", "")}</Meta>}
       />
 
-      <MotionLine motion={payload.motion} keyword={payload.keyword} size={66} marginTop={52} />
+      <MotionLine motion={payload.motion} keyword={payload.keyword} size={motionSize} marginTop={52} />
 
       <div style={{ display: "flex", justifyContent: "center", width: "100%", marginTop: 64 }}>
         <Plate src={plate} width={box.width} height={box.height} arch={box.arch}
                caption="PLATE II" captionSize={20} />
       </div>
 
-      <BigLine size={132} color={accent} marginTop={60}>
+      <BigLine size={scaled(118, payload.sizes.headline)} color={accent} marginTop={60}>
         {WINNER_LABEL[winner]}
       </BigLine>
 
@@ -61,7 +72,7 @@ export function StoryPoster({ payload, plate }: { payload: SocialPayload; plate:
       ) : null}
 
       {payload.verdictText ? (
-        <div style={{ display: "flex", fontFamily: SERIF, fontStyle: "italic", fontSize: 38,
+        <div style={{ display: "flex", fontFamily: SERIF, fontStyle: "italic", fontSize: rulingSize,
                       lineHeight: 1.42, color: PALETTE.muted, marginTop: 44 }}>
           {`“${payload.verdictText}”`}
         </div>

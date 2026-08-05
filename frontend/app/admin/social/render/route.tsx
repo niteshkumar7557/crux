@@ -5,7 +5,11 @@ import { ImageResponse } from "next/og";
 import serverApi from "@/app/axios.server";
 import { loadOgFonts } from "@/app/_utils/ogFonts";
 import { SIZES, type TemplateName } from "@/app/_components/social/socialTokens";
-import { canExportLive, type SocialPayload } from "@/app/_components/social/socialAssets";
+import {
+  canExportLive,
+  normaliseSizes,
+  type SocialPayload,
+} from "@/app/_components/social/socialAssets";
 import { TEMPLATES } from "@/app/_components/social/templates";
 
 export const runtime = "nodejs";
@@ -34,7 +38,9 @@ function narrow(raw: unknown): SocialPayload | null {
   const template = body.template;
   if (typeof template !== "string" || !(template in SIZES)) return null;
   if (typeof body.motion !== "string" || typeof body.domain !== "string") return null;
-  return body as unknown as SocialPayload;
+  // The size presets come from a form, so they are narrowed to the known steps
+  // rather than trusted: an unknown step would index SIZE_SCALES with undefined.
+  return { ...body, sizes: normaliseSizes(body.sizes) } as unknown as SocialPayload;
 }
 
 export async function POST(req: Request) {

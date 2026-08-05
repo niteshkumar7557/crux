@@ -6,6 +6,8 @@
 
 import { HAIRLINE, PALETTE } from "../socialTokens";
 import { plateBox } from "../socialPlates";
+import { MOTION_BOX } from "../socialBoxes";
+import { fitMotion, scaled } from "../socialFit";
 import type { SocialPayload } from "../socialAssets";
 import { SERIF } from "@/app/_utils/ogFonts";
 import { BigLine, CtaBand, Frame, Meta, MotionLine, Plate, SplitBar, TopRow } from "./Frame";
@@ -39,12 +41,19 @@ export function LivePoster({
   const split = payload.split ?? { for: 50, against: 50 };
   const contested = Math.abs(split.for - split.against) < DRAW_MARGIN;
 
+  const motionSize = fitMotion(
+    payload.motion,
+    MOTION_BOX[wide ? "x-live" : "ig-live"],
+    wide ? 54 : 62,
+    payload.sizes.motion,
+  );
+
   if (!wide) {
-    const box = plateBox("hourglass", 230);
+    const box = plateBox("hourglass", scaled(230, payload.sizes.plate));
     return (
-      <Frame>
+      <Frame pad={scaled(66, payload.sizes.pad)}>
         <TopRow left={<Meta size={25}>{`CRUX · ${payload.reference}`}</Meta>} right={<LiveBox />} />
-        <MotionLine motion={payload.motion} keyword={payload.keyword} size={62} marginTop={44} />
+        <MotionLine motion={payload.motion} keyword={payload.keyword} size={motionSize} marginTop={44} />
         <div style={{ display: "flex", height: 1.5, width: "100%", backgroundColor: HAIRLINE,
                       marginTop: 42, marginBottom: 42 }} />
 
@@ -54,7 +63,7 @@ export function LivePoster({
             <div style={{ display: "flex", fontSize: 24, letterSpacing: 7.2, color: PALETTE.muted }}>
               CLOSES IN
             </div>
-            <BigLine size={112} marginTop={14}>{countdown}</BigLine>
+            <BigLine size={scaled(112, payload.sizes.headline)} marginTop={14}>{countdown}</BigLine>
           </div>
         </div>
 
@@ -73,7 +82,7 @@ export function LivePoster({
     );
   }
 
-  const box = plateBox("hourglass", 190);
+  const box = plateBox("hourglass", scaled(190, payload.sizes.plate));
   return (
     <Frame pad={0} outer={32}>
       <div style={{ display: "flex", flex: 1, width: "100%" }}>
@@ -81,7 +90,7 @@ export function LivePoster({
                       padding: "50px 44px 42px 52px" }}>
           <TopRow left={<Meta size={22}>{`CRUX · ${payload.reference}`}</Meta>}
                   right={<LiveBox size={20} />} />
-          <MotionLine motion={payload.motion} keyword={payload.keyword} size={54} marginTop={30} />
+          <MotionLine motion={payload.motion} keyword={payload.keyword} size={motionSize} marginTop={30} />
           <div style={{ display: "flex", flex: 1, minHeight: 18 }} />
           <SplitBar split={split} height={44} drawBand labels />
           {contested ? (
@@ -100,7 +109,7 @@ export function LivePoster({
                         marginTop: 26 }}>
             CLOSES IN
           </div>
-          <BigLine size={88} marginTop={12}>{countdown}</BigLine>
+          <BigLine size={scaled(88, payload.sizes.headline)} marginTop={12}>{countdown}</BigLine>
         </div>
       </div>
 

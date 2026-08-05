@@ -8,6 +8,8 @@
 import { PALETTE } from "../socialTokens";
 import { plateBox } from "../socialPlates";
 import type { SocialPayload } from "../socialAssets";
+import { RULING_BOX } from "../socialBoxes";
+import { fitRuling, scaled } from "../socialFit";
 import { SERIF } from "@/app/_utils/ogFonts";
 import { BigLine, CtaBand, Frame, Meta, Plate, SideBox, SplitBar, TopRow, sideColour } from "./Frame";
 
@@ -20,12 +22,18 @@ const WINNER_LABEL = {
 
 export function VerdictSlide({ payload, plate }: { payload: SocialPayload; plate: string }) {
   const winner = payload.winner ?? "draw";
-  const box = plateBox("scales", 270);
+  const box = plateBox("scales", scaled(270, payload.sizes.plate));
   const accent =
     winner === "for" || winner === "against" ? sideColour(winner) : PALETTE.muted;
+  const rulingSize = fitRuling(
+    payload.verdictText ?? "",
+    RULING_BOX["ig-verdict"],
+    37,
+    payload.sizes.body,
+  );
 
   return (
-    <Frame>
+    <Frame pad={scaled(66, payload.sizes.pad)}>
       <TopRow
         left={
           winner === "for" || winner === "against" ? (
@@ -41,13 +49,18 @@ export function VerdictSlide({ payload, plate }: { payload: SocialPayload; plate
         <Plate src={plate} width={box.width} height={box.height} arch={box.arch}
                caption="PLATE II" captionSize={19} />
         <div style={{ display: "flex", flexDirection: "column", flex: 1, paddingBottom: 12 }}>
-          <BigLine size={104} color={accent}>
+          <BigLine size={scaled(104, payload.sizes.headline)} color={accent}>
             {WINNER_LABEL[winner]}
           </BigLine>
+          {/* BigLine's 0.94 leading is tighter than Anton's own line box, so its
+              ink overflows the element by ~13% of the size. Anything sitting
+              directly beneath it needs that back as a margin. */}
           {payload.split && winner !== "walkover" ? (
-            <Meta size={26}>
-              {`${payload.split.for}–${payload.split.against} · MARGIN ${payload.margin ?? 0}`}
-            </Meta>
+            <div style={{ display: "flex", marginTop: 22 }}>
+              <Meta size={26}>
+                {`${payload.split.for}–${payload.split.against} · MARGIN ${payload.margin ?? 0}`}
+              </Meta>
+            </div>
           ) : null}
         </div>
       </div>
@@ -62,7 +75,7 @@ export function VerdictSlide({ payload, plate }: { payload: SocialPayload; plate
             display: "flex",
             fontFamily: SERIF,
             fontStyle: "italic",
-            fontSize: 37,
+            fontSize: rulingSize,
             lineHeight: 1.42,
             color: PALETTE.muted,
             marginTop: 40,

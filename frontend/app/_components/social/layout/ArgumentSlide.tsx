@@ -6,9 +6,18 @@
 
 import { PALETTE } from "../socialTokens";
 import type { SocialPayload } from "../socialAssets";
+import { argumentBudget, blockHeight } from "../socialBoxes";
+import { fitScaled, linesAt, scaled } from "../socialFit";
 import { BigLine, FootBar, Frame, Meta, PlainWord, SideBox, TopRow, sideColour } from "./Frame";
 
 const LABEL = { for: "The case for", against: "The case against" } as const;
+
+const QUOTE_MAX_SIZE = 31;
+const QUOTE_LINE_HEIGHT = 1.5;
+const HANDLE_BLOCK = 24 + 28;
+const HEADLINE_MAX = 116;
+const HEADLINE_MIN = 52;
+const HEADLINE_LINE_HEIGHT = 0.94;
 
 export function ArgumentSlide({ payload }: { payload: SocialPayload }) {
   const slide = payload.slide;
@@ -16,16 +25,44 @@ export function ArgumentSlide({ payload }: { payload: SocialPayload }) {
 
   const accent = sideColour(slide.side);
 
+  // The quote is the author's verbatim words and is already capped, so it is
+  // measured first; the headline is then fitted into whatever height is left.
+  // Sizing it fixed is what printed a six-line headline through the quote.
+  const quoteSize = scaled(QUOTE_MAX_SIZE, payload.sizes.body);
+  const budget = argumentBudget(
+    slide.quote
+      ? blockHeight(
+          linesAt(slide.quote, "body", argumentBudget(0, 0).width, quoteSize),
+          quoteSize,
+          QUOTE_LINE_HEIGHT,
+        )
+      : 0,
+    slide.quote && slide.handle ? HANDLE_BLOCK : 0,
+  );
+
+  const headlineSize = fitScaled(
+    {
+      text: slide.line,
+      face: "display",
+      width: budget.width,
+      height: budget.headline,
+      lineHeight: HEADLINE_LINE_HEIGHT,
+      max: HEADLINE_MAX,
+      min: HEADLINE_MIN,
+    },
+    payload.sizes.headline,
+  );
+
   return (
-    <Frame>
+    <Frame pad={scaled(66, payload.sizes.pad)}>
       <TopRow
         left={<SideBox side={slide.side} label={LABEL[slide.side]} />}
         right={<Meta>{`${String(payload.slideNumber).padStart(2, "0")} / ${payload.slideTotal}`}</Meta>}
       />
 
-      <PlainWord word={slide.word} />
+      <PlainWord word={slide.word} size={scaled(30, payload.sizes.word)} />
 
-      <BigLine size={116} marginTop={24}>
+      <BigLine size={headlineSize} marginTop={24}>
         {slide.line}
       </BigLine>
 
@@ -43,7 +80,8 @@ export function ArgumentSlide({ payload }: { payload: SocialPayload }) {
             marginBottom: 44,
           }}
         >
-          <div style={{ display: "flex", fontSize: 31, lineHeight: 1.5, color: PALETTE.ink }}>
+          <div style={{ display: "flex", fontSize: quoteSize, lineHeight: QUOTE_LINE_HEIGHT,
+                        color: PALETTE.ink }}>
             {slide.quote}
           </div>
           {slide.handle ? (
