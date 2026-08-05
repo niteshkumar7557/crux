@@ -511,6 +511,7 @@ Then re-read `/rules` in a browser and confirm the page and the code say the sam
 | The season window or numbering | `economy/season.logic.ts` (+ test) |
 | Who wins a season | `jobs/seasonRollover.logic.ts` (+ test) |
 | Curate the stage by hand | `controllers/admin.controller.ts` + `_components/arena/PinControl.tsx` |
+| The social post kit (`/admin/social`) | `_components/social/` for the eight templates, `app/admin/social/render` for the PNG, `controllers/social.controller.ts` for the drafted copy. Design: `design-system.md` §14 |
 | Add an API endpoint | a `routes/*.route.ts` + a `controllers/*.controller.ts`, mounted in `app.ts` |
 | Change the schema | **edit the existing migration in place**, then `db:reset:dev && db-init` |
 | Add or change a setting | `src/config/index.ts` **and** `backend/.env.example` — both, always |

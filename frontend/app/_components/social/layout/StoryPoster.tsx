@@ -1,0 +1,84 @@
+// 1080x1920. Instagram draws its own UI over the top and bottom 250px, so those
+// bands are spacers and nothing load-bearing enters them. The CTA lands just
+// above the bottom zone, leaving room for a link sticker beneath it.
+
+import { PALETTE, STORY_SAFE_BOTTOM, STORY_SAFE_TOP } from "../socialTokens";
+import { plateBox } from "../socialPlates";
+import type { SocialPayload } from "../socialAssets";
+import { SERIF } from "@/app/_utils/ogFonts";
+import { BigLine, CtaBand, Frame, Meta, MotionLine, Plate, SideBox, SplitBar, TopRow, sideColour } from "./Frame";
+
+const WINNER_LABEL = {
+  for: "For wins",
+  against: "Against wins",
+  draw: "Draw",
+  walkover: "Unopposed",
+} as const;
+
+// 1080x1920 less the two safe bands leaves 1372px of content. The plate and the
+// ruling line are sized to fit inside it: overflow here does not clip, it makes
+// yoga shrink every item, and the score collapses into the display line.
+export function StoryPoster({ payload, plate }: { payload: SocialPayload; plate: string }) {
+  const winner = payload.winner ?? "draw";
+  const box = plateBox("scales", 256);
+  const accent = winner === "for" || winner === "against" ? sideColour(winner) : PALETTE.muted;
+
+  return (
+    <Frame pad={64}>
+      <div style={{ display: "flex", height: STORY_SAFE_TOP - 60 }} />
+
+      <TopRow
+        left={
+          winner === "for" || winner === "against" ? (
+            <SideBox side={winner} label="The verdict" />
+          ) : (
+            <Meta>THE VERDICT</Meta>
+          )
+        }
+        right={<Meta>{payload.reference.replace("MOTION ", "")}</Meta>}
+      />
+
+      <MotionLine motion={payload.motion} keyword={payload.keyword} size={66} marginTop={52} />
+
+      <div style={{ display: "flex", justifyContent: "center", width: "100%", marginTop: 64 }}>
+        <Plate src={plate} width={box.width} height={box.height} arch={box.arch}
+               caption="PLATE II" captionSize={20} />
+      </div>
+
+      <BigLine size={132} color={accent} marginTop={60}>
+        {WINNER_LABEL[winner]}
+      </BigLine>
+
+      {/* A column wrapper, not a fragment: satori does not flatten fragments, so
+          the score and the bar would be laid out as a row. */}
+      {payload.split && winner !== "walkover" ? (
+        <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+          <div style={{ display: "flex", marginTop: 26 }}>
+            <Meta>{`${payload.split.for}–${payload.split.against} · MARGIN ${payload.margin ?? 0}`}</Meta>
+          </div>
+          <SplitBar split={payload.split} height={28} marginTop={28} />
+        </div>
+      ) : null}
+
+      {payload.verdictText ? (
+        <div style={{ display: "flex", fontFamily: SERIF, fontStyle: "italic", fontSize: 38,
+                      lineHeight: 1.42, color: PALETTE.muted, marginTop: 44 }}>
+          {`“${payload.verdictText}”`}
+        </div>
+      ) : null}
+
+      {payload.mvpUsername ? (
+        <div style={{ display: "flex", marginTop: 34, fontSize: 28, fontWeight: 600,
+                      letterSpacing: 6, color: PALETTE.laurel }}>
+          {`MVP · @${payload.mvpUsername}`}
+        </div>
+      ) : null}
+
+      <div style={{ display: "flex", flex: 1, minHeight: 30 }} />
+
+      <CtaBand text="Read the full verdict" domain={payload.domain} size={44} padY={32} padX={38} />
+
+      <div style={{ display: "flex", height: STORY_SAFE_BOTTOM - 100 }} />
+    </Frame>
+  );
+}

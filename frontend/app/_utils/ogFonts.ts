@@ -5,6 +5,7 @@ import { join } from "node:path";
 
 const FONT_DIR = join(process.cwd(), "app", "_fonts");
 
+export const DISPLAY = "Anton";
 export const MONO = "Grotesk";
 export const SERIF = "Newsreader";
 export const BODY = MONO;
@@ -28,12 +29,14 @@ type Family = {
 };
 
 const FAMILIES: Family[] = [
+  { name: DISPLAY, weight: 400, style: "normal", files: ["Anton-Regular.woff"] },
   {
     name: SERIF,
     weight: 400,
     style: "italic",
     files: ["Newsreader-Italic.woff"],
   },
+  { name: SERIF, weight: 400, style: "normal", files: ["Newsreader-Regular.woff"] },
   { name: MONO, weight: 400, style: "normal", files: ["SpaceGrotesk-Regular.woff"] },
   { name: MONO, weight: 700, style: "normal", files: ["SpaceGrotesk-Bold.woff"] },
 ];

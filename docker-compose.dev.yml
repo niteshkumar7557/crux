@@ -26,7 +26,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - crux_postgres_dev_data:/var/lib/postgresql/data
+      - crux_postgres_dev_data:/var/lib/postgresql
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U crux -d cruxdb" ]
       interval: 5s
