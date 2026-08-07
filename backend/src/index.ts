@@ -13,6 +13,13 @@ import { startSeasonRolloverPoller } from "./jobs/seasonRollover.js";
 import { startTelegramPoller } from "./jobs/telegram.js";
 import { startEmailPoller, requeueStuckEmails, sesTransport } from "./jobs/email.js";
 import { avatarStore } from "./controllers/avatar.controller.js";
+import { makeVideoStore } from "./video-debates/videoStorage.js";
+
+const videoStore = makeVideoStore(config.video_storage);
+const videoPublicHost =
+  videoStore.configured && config.video_storage.publicUrl
+    ? new URL(config.video_storage.publicUrl).host
+    : null;
 
 async function start() {
   try {
@@ -32,6 +39,13 @@ async function start() {
     // Which store the uploads land in is invisible until someone uploads one,
     // and "local" in production means they vanish on the next deploy.
     logger.info({ store: avatarStore.kind }, "avatar storage");
+    logger.info(
+      {
+        configured: videoStore.configured,
+        publicHost: videoPublicHost,
+      },
+      "video storage",
+    );
     // Silent otherwise: queued mail that never sends looks identical to no mail.
     logger.info({ enabled: sesTransport.configured }, "email delivery");
     await requeueStuckEmails();

@@ -15,6 +15,7 @@ migration is; it will tell you where ours live and what will bite you.
 | **`codebase-guide.md`** (this file) | How the code is organised and how a request flows. | Before changing anything. |
 | [`design-system.md`](./design-system.md) | Colour, type, shape, motion, component conventions. | Before changing UI. It owns no game rules. |
 | [`future-features.md`](./future-features.md) | Designed-and-deferred features, and two dead ends. | Before "adding" something — it may already have a shape. |
+| [`video-debates.md`](./video-debates.md) | The video programme: pipeline, manifest, reveal model, access gate. | Before touching anything under `video-debates/`. It is unranked and password-gated. |
 | [`../README.md`](../README.md) | The pitch and local setup. | First day. |
 | [`../AGENTS.md`](../AGENTS.md) | The short version, for AI coding agents. | If you are one. |
 

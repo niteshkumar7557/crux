@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "draft_id": "fixture-video-debate",
+  "media_id": "fixture-video-debate-media",
+  "motion": "Coursework should replace final examinations.",
+  "slug": "coursework-should-replace-final-examinations",
+  "participants": [
+    { "role": "host", "display_name": "Harper Vale", "avatar_url": null },
+    { "role": "for", "display_name": "Avery Shah", "avatar_url": null },
+    { "role": "against", "display_name": "Morgan Reed", "avatar_url": null }
+  ],
+  "rounds": [
+    { "number": 1, "domain_id": 1, "domain": "Education", "opener": "for" },
+    { "number": 2, "domain_id": 2, "domain": "Economics & Business", "opener": "against" },
+    { "number": 3, "domain_id": 3, "domain": "Ethics & Philosophy", "opener": "for" },
+    { "number": 4, "domain_id": 4, "domain": "Society & Culture", "opener": "against" },
+    { "number": 5, "domain_id": 5, "domain": "Technology & AI", "opener": "for" }
+  ]
+}

@@ -31,10 +31,19 @@ const fetchShell = cache(async function fetchShell(
   }
 });
 
-/** A registered account that has never argued: nothing here for anyone to find. */
+/** A registered account that has never argued: nothing here for anyone to find.
+ *  A published video appearance is something to find, even with no Arena standing. */
 function hasNothingToShow(shell: ProfileShell): boolean {
   const { logic, record } = shell.standing;
-  return logic === 0 && record.wins + record.losses + record.draws === 0;
+  const appearances = shell.editorial?.videoAppearanceCount ?? 0;
+  return logic === 0 && record.wins + record.losses + record.draws === 0 && appearances === 0;
+}
+
+/** Editorial, and kept out of the logic/record sentence rather than folded into it. */
+function appearancePhrase(shell: ProfileShell): string {
+  const count = shell.editorial?.videoAppearanceCount ?? 0;
+  if (count === 0) return "";
+  return ` Also appeared in ${count} video debate${count === 1 ? "" : "s"}.`;
 }
 
 export async function generateMetadata({
@@ -48,7 +57,7 @@ export async function generateMetadata({
   if (!shell) return {};
   return {
     title: `${shell.identity.name} (@${shell.identity.username})`,
-    description: `${shell.standing.logic} logic · ${shell.standing.record.wins}–${shell.standing.record.losses}–${shell.standing.record.draws} · ${shell.standing.tier} tier on Crux.`,
+    description: `${shell.standing.logic} logic · ${shell.standing.record.wins}–${shell.standing.record.losses}–${shell.standing.record.draws} · ${shell.standing.tier} tier on Crux.${appearancePhrase(shell)}`,
     alternates: { canonical: `/profile/${shell.identity.username}` },
     // Empty profiles are the bulk of a young platform's URLs and none of its
     // value. Keep them out until there is a record to show; the page starts

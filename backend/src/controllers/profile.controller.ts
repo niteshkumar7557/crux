@@ -12,6 +12,7 @@ import {
 import { validateUsername } from "../lib/username.logic.js";
 import config from "../config/index.js";
 import { fillLedgerWeeks } from "../lib/ledger.logic.js";
+import { toVideoAppearances } from "../video-debates/profile.logic.js";
 
 // §13 tier ladder. Duplicated in frontend/app/_utils/logicScore.ts — change both.
 function convertLogicScore(score: number) {
@@ -70,7 +71,7 @@ export async function getProfileShell(req: Request, res: Response) {
     const logic = Number(user.logic_score);
     const seasonStart = currentSeasonStart();
 
-    const [rankRes, recordRes, seasonRes, titlesRes] = await Promise.all([
+    const [rankRes, recordRes, seasonRes, titlesRes, videoRes] = await Promise.all([
       pool.query(
         `SELECT COUNT(*) + 1 AS rank FROM users
          WHERE logic_score > $1 OR (logic_score = $1 AND id < $2);`,
@@ -110,6 +111,15 @@ export async function getProfileShell(req: Request, res: Response) {
          ORDER BY season_number DESC, rank ASC;`,
         [user.id],
       ),
+      // Editorial, and counted separately from everything above on purpose: a video
+      // appearance is not a debate result and must never reach `standing`.
+      pool.query(
+        `SELECT COUNT(*)::int AS n
+         FROM video_debate_participants p
+         JOIN video_debates v ON v.id = p.video_debate_id
+         WHERE p.user_id = $1 AND v.status = 'published';`,
+        [user.id],
+      ),
     ]);
 
     const tier = convertLogicScore(logic);
@@ -144,6 +154,9 @@ export async function getProfileShell(req: Request, res: Response) {
         daysLeft: daysLeftInSeason(),
       },
       titles: titlesRes.rows,
+      editorial: {
+        videoAppearanceCount: Number(videoRes.rows[0]?.n ?? 0),
+      },
     });
   } catch (err) {
     console.error(err);
@@ -158,7 +171,7 @@ export async function getProfileActivity(req: Request, res: Response) {
 
     const weeks = config.limits.profile_ledger_weeks;
 
-    const [ledgerRes, craftRes, liveRes, historyRes] =
+    const [ledgerRes, craftRes, liveRes, historyRes, videoRes] =
       await Promise.all([
         pool.query(
           // to_char rather than a bare DATE: node-pg parses a DATE column into a JS
@@ -207,6 +220,24 @@ export async function getProfileActivity(req: Request, res: Response) {
            ORDER BY r.created_at DESC LIMIT $2;`,
           [user.id, config.limits.profile_history_rows],
         ),
+        // Read-only, published-only, and joined to no Arena table.
+        pool.query(
+          `SELECT v.slug, v.motion, v.status, p.role, v.final_winner,
+                  v.for_round_wins, v.against_round_wins, v.duration_ms,
+                  v.published_at,
+                  COALESCE(
+                    (SELECT jsonb_agg(d.name ORDER BY r.round_number)
+                       FROM video_debate_rounds r
+                       JOIN domains d ON d.id = r.domain_id
+                      WHERE r.video_debate_id = v.id),
+                    '[]'::jsonb
+                  ) AS domains
+           FROM video_debate_participants p
+           JOIN video_debates v ON v.id = p.video_debate_id
+           WHERE p.user_id = $1 AND v.status = 'published'
+           ORDER BY v.published_at DESC, v.id DESC LIMIT $2;`,
+          [user.id, config.limits.profile_history_rows],
+        ),
       ]);
 
     const craft = craftRes.rows[0];
@@ -222,6 +253,7 @@ export async function getProfileActivity(req: Request, res: Response) {
       },
       live: liveRes.rows,
       history: historyRes.rows,
+      videoAppearances: toVideoAppearances(videoRes.rows),
     });
   } catch (err) {
     console.error(err);

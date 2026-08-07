@@ -53,12 +53,20 @@ const AdminPage = () => {
 
       {role === "admin" && (
         <>
-          <a
-            href="/admin/social"
-            className="mb-10 inline-flex border border-ink-faint bg-band px-6 py-3 font-label text-[0.62rem] uppercase tracking-[0.3em] text-ink"
-          >
-            The post studio →
-          </a>
+          <div className="mb-10 flex flex-wrap gap-3">
+            <a
+              href="/admin/social"
+              className="inline-flex border border-ink-faint bg-band px-6 py-3 font-label text-[0.62rem] uppercase tracking-[0.3em] text-ink"
+            >
+              The post studio →
+            </a>
+            <a
+              href="/admin/video-debates"
+              className="inline-flex border border-ink-faint bg-band px-6 py-3 font-label text-[0.62rem] uppercase tracking-[0.3em] text-ink"
+            >
+              Video debates →
+            </a>
+          </div>
           <BroadcastForm />
         </>
       )}

@@ -1,0 +1,19 @@
+{
+  "segments": [
+    {
+      "start": 31,
+      "end": 33,
+      "text": "Applied learning improves retention.",
+      "words": [
+        { "start": 31, "end": 31.6, "word": "Applied " },
+        { "start": 31.6, "end": 32.2, "word": "learning " },
+        { "start": 32.2, "end": 33, "word": "improves retention." }
+      ]
+    },
+    {
+      "start": 146,
+      "end": 147,
+      "text": "Les examens mesurent aussi la mémorisation."
+    }
+  ]
+}

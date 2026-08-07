@@ -47,6 +47,22 @@ const config = {
     publicUrl: process.env.R2_AVATAR_PUBLIC_URL,
   },
 
+  video_storage: {
+    endpoint: process.env.R2_ENDPOINT,
+    bucket: process.env.R2_VIDEO_BUCKET,
+    accessKeyId: process.env.R2_ACCESS_KEY_ID,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+    publicUrl: process.env.R2_VIDEO_PUBLIC_URL,
+    cruxOrigin: process.env.CLIENT_URL,
+    nodeEnv: process.env.NODE_ENV,
+  },
+
+  // The programme is shown to a handful of people before it is announced. Unset
+  // means nobody gets in — see docs/video-debate-redesign-design.md §4.
+  video_debate: {
+    password: process.env.VIDEO_DEBATE_PASSWORD,
+  },
+
   jwt_secret: process.env.JWT_SECRET,
   access_token_ttl: str("ACCESS_TOKEN_TTL", "15m"),
   refresh_token_days: num("REFRESH_TOKEN_DAYS", 7),

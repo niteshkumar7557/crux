@@ -12,6 +12,7 @@ import userRoutes from "./routes/user.route.js";
 import motionRoutes from "./routes/motion.route.js";
 import argumentRoutes from "./routes/argument.route.js";
 import arenaRoutes from "./routes/arena.route.js";
+import videoDebateRoutes from "./routes/videoDebate.route.js";
 import aiRoutes from "./routes/ai.route.js";
 import likeRoutes from "./routes/like.route.js";
 import profileRoutes from "./routes/profile.route.js";
@@ -51,7 +52,7 @@ app.use(
 // Everything expensive here is gated behind a topic-ARN check instead.
 app.use("/webhooks", express.text({ type: "*/*", limit: "256kb" }), webhookRoutes);
 
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 // Preset art is mutable behind a permanent URL. The ids stay stable so a stored
 // avatar keeps resolving, which means redesigning a preset ships new bytes at the
@@ -96,6 +97,7 @@ app.use("/motion", motionRoutes);
 // Arguments live under the motion they belong to: /motion/:id/arguments.
 app.use("/motion", argumentRoutes);
 app.use("/arena", arenaRoutes);
+app.use("/video-debates", videoDebateRoutes);
 app.use("/ai", aiRoutes);
 app.use("/like", likeRoutes);
 app.use("/profile", profileRoutes);

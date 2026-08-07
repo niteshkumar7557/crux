@@ -1,0 +1,53 @@
+{
+  "host": {
+    "duration_ms": 480000,
+    "byte_length": 150000000,
+    "video_codec": "h264",
+    "video_profile": "High",
+    "width": 1280,
+    "height": 720,
+    "pixel_format": "yuv420p",
+    "frame_rate": "30/1",
+    "video_bitrate_bps": 2500000,
+    "max_keyframe_interval_ms": 2000,
+    "faststart": true,
+    "audio_codec": "aac",
+    "audio_sample_rate_hz": 48000
+  },
+  "for": {
+    "duration_ms": 480000,
+    "byte_length": 150000000,
+    "video_codec": "h264",
+    "video_profile": "High",
+    "width": 1280,
+    "height": 720,
+    "pixel_format": "yuv420p",
+    "frame_rate": "30/1",
+    "video_bitrate_bps": 2500000,
+    "max_keyframe_interval_ms": 2000,
+    "faststart": true,
+    "audio_codec": "aac",
+    "audio_sample_rate_hz": 48000
+  },
+  "against": {
+    "duration_ms": 480000,
+    "byte_length": 150000000,
+    "video_codec": "h264",
+    "video_profile": "High",
+    "width": 1280,
+    "height": 720,
+    "pixel_format": "yuv420p",
+    "frame_rate": "30/1",
+    "video_bitrate_bps": 2500000,
+    "max_keyframe_interval_ms": 2000,
+    "faststart": true,
+    "audio_codec": "aac",
+    "audio_sample_rate_hz": 48000
+  },
+  "poster": {
+    "format": "webp",
+    "width": 1600,
+    "height": 900,
+    "byte_length": 250000
+  }
+}

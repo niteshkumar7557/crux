@@ -1,0 +1,18 @@
+{
+  "segments": [
+    {
+      "start": 61,
+      "end": 62,
+      "text": "Recall can matter under pressure."
+    },
+    {
+      "start": 89,
+      "end": 91,
+      "text": "Closing. Thank you.",
+      "words": [
+        { "start": 89, "end": 90, "word": "Closing. " },
+        { "start": 90, "end": 91, "word": "Thank you." }
+      ]
+    }
+  ]
+}

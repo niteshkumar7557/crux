@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "duration_ms": 480000,
+  "intro": { "start_ms": 0, "end_ms": 30000 },
+  "rounds": [
+    {
+      "number": 1,
+      "domain": "Education",
+      "opener": "for",
+      "for": { "start_ms": 30000, "end_ms": 60000 },
+      "against": { "start_ms": 60000, "end_ms": 90000 },
+      "grace": { "start_ms": 90000, "end_ms": 115000 }
+    },
+    {
+      "number": 2,
+      "domain": "Economics & Business",
+      "opener": "against",
+      "against": { "start_ms": 115000, "end_ms": 145000 },
+      "for": { "start_ms": 145000, "end_ms": 175000 },
+      "grace": { "start_ms": 175000, "end_ms": 200000 }
+    },
+    {
+      "number": 3,
+      "domain": "Ethics & Philosophy",
+      "opener": "for",
+      "for": { "start_ms": 200000, "end_ms": 230000 },
+      "against": { "start_ms": 230000, "end_ms": 260000 },
+      "grace": { "start_ms": 260000, "end_ms": 285000 }
+    },
+    {
+      "number": 4,
+      "domain": "Society & Culture",
+      "opener": "against",
+      "against": { "start_ms": 285000, "end_ms": 315000 },
+      "for": { "start_ms": 315000, "end_ms": 345000 },
+      "grace": { "start_ms": 345000, "end_ms": 370000 }
+    },
+    {
+      "number": 5,
+      "domain": "Technology & AI",
+      "opener": "for",
+      "for": { "start_ms": 370000, "end_ms": 400000 },
+      "against": { "start_ms": 400000, "end_ms": 430000 },
+      "grace": { "start_ms": 430000, "end_ms": 455000 }
+    }
+  ],
+  "outro": { "start_ms": 455000, "end_ms": 480000 }
+}

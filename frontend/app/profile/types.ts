@@ -32,11 +32,17 @@ export interface ProfileSeason {
   daysLeft: number;
 }
 
+/** Editorial counts sit outside `standing` so nothing ranked can read them. */
+export interface ProfileEditorial {
+  videoAppearanceCount: number;
+}
+
 export interface ProfileShell {
   identity: ProfileIdentity;
   standing: ProfileStanding;
   season: ProfileSeason;
   titles: SeasonTitle[];
+  editorial?: ProfileEditorial;
 }
 
 export interface LedgerWeek {
@@ -72,9 +78,24 @@ export interface HistoryRow {
   concludedAt: string;
 }
 
+export interface VideoAppearance {
+  slug: string;
+  motion: string;
+  role: "host" | "for" | "against";
+  winner: "for" | "against";
+  roundScore: { for: number; against: number };
+  /** null for the host, who has no side to win with. */
+  sideWon: boolean | null;
+  durationMs: number;
+  publishedAt: string;
+  domains: string[];
+}
+
 export interface ProfileActivityData {
   ledger: LedgerWeek[];
   craft: CraftStats;
   live: LiveDebate[];
   history: HistoryRow[];
+  /** Editorial: never merged into craft, live or history. */
+  videoAppearances?: VideoAppearance[];
 }

@@ -8,6 +8,11 @@ import Articles from "./_components/landing/Articles";
 import Climb from "./_components/landing/Climb";
 import Closing from "./_components/landing/Closing";
 
+// The landing is otherwise static, but the video-debate band reads the API through
+// axios rather than a tracked fetch — nothing would tell Next the data moved, so the
+// first published programme would stay off the home page until the next deploy.
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "Crux — Every argument deserves a verdict",
   description:

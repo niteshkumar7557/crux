@@ -78,5 +78,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
+  // The video programme is unlisted while it is shown privately, so it is not
+  // advertised here. Its route is also gated and would refuse this call.
+
   return [...staticUrls, ...debates, ...topics];
 }

@@ -10,6 +10,19 @@ import {
 import { listBlocks, liftBlock } from "../controllers/block.controller.js";
 import { draftSocialCopy } from "../controllers/social.controller.js";
 import { authMiddleware, requireRole } from "../middlewares/auth.js";
+import {
+  checkVideoDebateMedia,
+  createVideoDebateDraft,
+  getAdminVideoDebate,
+  listAdminVideoDebates,
+  patchVideoDebateMetadata,
+  previewVideoDebate,
+  publishVideoDebate,
+  putVideoDebateManifest,
+  rotateVideoDebateMedia,
+  unpublishVideoDebate,
+  validateVideoDebate,
+} from "../controllers/videoDebate.controller.js";
 
 const adminRoutes = Router();
 
@@ -31,5 +44,17 @@ adminRoutes.get("/social/session", (_req, res) => {
 });
 
 adminRoutes.post("/social/copy", draftSocialCopy);
+
+adminRoutes.post("/video-debates", createVideoDebateDraft);
+adminRoutes.get("/video-debates", listAdminVideoDebates);
+adminRoutes.get("/video-debates/:id", getAdminVideoDebate);
+adminRoutes.patch("/video-debates/:id/metadata", patchVideoDebateMetadata);
+adminRoutes.post("/video-debates/:id/media-version", rotateVideoDebateMedia);
+adminRoutes.post("/video-debates/:id/media/check", checkVideoDebateMedia);
+adminRoutes.put("/video-debates/:id/manifest", putVideoDebateManifest);
+adminRoutes.post("/video-debates/:id/validate", validateVideoDebate);
+adminRoutes.get("/video-debates/:id/preview", previewVideoDebate);
+adminRoutes.post("/video-debates/:id/publish", publishVideoDebate);
+adminRoutes.post("/video-debates/:id/unpublish", unpublishVideoDebate);
 
 export default adminRoutes;

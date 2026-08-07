@@ -18,6 +18,13 @@
     "development": "npm run db:migrate:dev && npm run db:seed:dev && npm run db:backfill:dev && npm run dev",
     "test": "vitest run",
     "test:watch": "vitest",
+    "video:tools:check": "tsc -p tsconfig.video-tools.json --noEmit",
+    "video:inspect": "tsx scripts/video-debate/inspect-media.ts",
+    "video:normalize": "tsx scripts/video-debate/normalize-transcript.ts",
+    "video:merge": "tsx scripts/video-debate/merge-transcript.ts",
+    "video:judge": "tsx scripts/video-debate/judge.ts",
+    "video:manifest": "tsx scripts/video-debate/build-manifest.ts",
+    "video:validate": "tsx scripts/video-debate/validate-package.ts",
     "eval": "npx tsx src/ai/eval/run.ts"
   },
   "keywords": [],

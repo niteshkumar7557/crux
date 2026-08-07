@@ -14,110 +14,21 @@ out of the pitch. Section references like §13 point at the spec unless they nam
 
 ## 1. Live Video Arena
 
-**The biggest one, and the one worth building next once v1 has an audience.**
+The earlier live-premiere concept has been superseded by the approved design in
+[`video-debate-design.md`](./video-debate-design.md).
 
-A Crux **premiere** is a hand-curated, recorded-then-scheduled **video debate**: two picked
-opponents argue one claim across five rounds, an AI judge rules each round *aloud*, and it ends
-with a spoken closing verdict. Published as a watchable VOD plus a share card.
+The first version is a separately authored, on-demand editorial programme: one host and two
+debaters argue five domain-lens rounds in at most ten minutes. Three synchronized MP4s are
+recorded and processed locally; the host track carries the playback mix, and isolated audio feeds
+local Whisper transcription. A dedicated local AI pipeline rules every round, while the website
+reveals transcript, cited points and rulings progressively from the shared playhead.
 
-### Positioning
+It remains deliberately outside the ranked game: no arena-motion link and no writes to logic,
+records, seasons or leaderboards. Railway owns metadata and APIs only; Cloudflare R2 delivers the
+video directly.
 
-This is a **marketing showcase, not a ranked mode.** It does not touch logic, records, or
-seasons, and it mints no ranked page. Its job is acquisition — a premium, human, AI-judged
-spectacle whose recordings and share cards pull people toward the async game.
-
-One principle underneath the whole design: **ship manual and controlled, automate once proven.**
-Three axes evolve from v1 to v2:
-
-| Axis | First version | Later |
-|---|---|---|
-| Container | Recorded, then scheduled as a group premiere | Live-streamed |
-| Host | A human on camera, with a control cockpit | An AI host |
-| Integration | Standalone marketing | Wired into the season economy |
-
-The later versions arrive together as **"AI-host live"** — the full original vision. The
-premiere format proves the format cheaply first.
-
-### Curation and cadence
-
-**The dev is the matchmaker, and that dissolves the hardest problem.** A synchronous format
-normally needs two committed people in the same ten minutes. At this cadence you simply
-hand-pick them out of the async fights — watch the live debates, find two users genuinely on
-opposite sides of one claim, and invite them by email to a scheduled slot.
-
-**Cadence: rare and marquee — roughly 2–3 per week, ~30 minutes each.** Scarcity is the point.
-
-### Format — domain-lens rounds
-
-**Five rounds; each round is one domain lens.** A round assigns a domain from the fixed 12, and
-each debater argues — **from their committed side** — whether the pro or con case weighs heavier
-*in that domain*. Does this claim's pro case dominate in Health? In Economics? In Ethics?
-
-Sides are fixed across all five rounds; the side lock, live.
-
-**Why this is novel:** it isn't a generic debate. It's **one crux interrogated through five
-different lenses**, reusing the domain taxonomy the app already has.
-
-### Scoring
-
-- **Per round**, the AI delivers a spoken **domain ruling with a margin** (which side weighs
-  heavier in that domain, e.g. 60/40) **plus a craft read** on each debater's delivery.
-- **The match is best-of-five rulings.** Cumulative margin and craft break ties. A draw is
-  possible.
-- **A standout-debater honour** can go to the sharpest arguer even in defeat — craft honoured
-  separately from substance.
-- **The capstone is the spoken closing verdict** — the verdict judge, finally given a voice.
-
-### The AI pipeline, and why recorded comes first
-
-A **local speech-to-text model** transcribes both speakers → the transcript feeds the **LLM
-judge** → the ruling is spoken back onto the stage via **TTS**.
-
-Because v1 is recorded, every AI call fires automatically at round end and the ruling waits,
-pre-staged. **The host reviews it before it is ever spoken — edit, approve, or retry, off-air.**
-That safety net is the single strongest argument for premiere over live: a garbled transcript or
-a weak ruling never reaches the audience.
-
-### The stage
-
-Three video tiles in a talk-show row: **the host anchors the centre**, Pro left, Con right — a
-hosted feel rather than a sterile face-off. The **AI judge is a quiet side-card during rounds
-that takes over the full screen to deliver each ruling** — the drama beat. Its voice and that
-takeover *are* the payoff; it needs no video tile of its own. A scoreboard strip carries the
-current domain, the round (3/5), and the running score. A chat rail carries the audience.
-
-### The host cockpit
-
-Host-only, overlaid on the host's view. The match mostly runs itself; the host just drives it.
-
-- **Match header** — round stepper, current domain, running score.
-- **Timer** — auto-advancing segments (Pro 90s → Con 90s → rebuttals → judge) with manual
-  pause/resume, +15s, and skip.
-- **AI judge** — the auto-staged ruling with edit / approve / retry, then *approve and speak*.
-- **Round flow** — the five pre-defined domains as a stepper.
-- **Participants** — two independent switches per person: **audio (mute)** and
-  **transcript-to-judge (pause)**. The sharp bit: you can keep an off-topic debater *audible on
-  stage* but *excluded from the judge's input* — natural human flow, clean judge signal.
-- **Live transcript** — exactly what the judge will read, with paused speakers struck out.
-
-### Deliverables
-
-- **A "Past Video Debates" tab** on the home page — playable VOD cards with thumbnail, the
-  claim, both debaters, the winner and score, and duration.
-- **A share card per video debate** — claim, both faces, round-win pips, winner and margin, the
-  AI's one-line verdict, per-domain split chips, and a link home.
-
-### What it needs
-
-A 3-way video room (WebRTC or a hosted SDK) and a recording pipeline; a local streaming STT
-model with per-speaker pausing; LLM judge calls per round plus the closing; TTS playback; a
-match-runner state machine for the cockpit; VOD hosting; a `video_debates` record; the share-card
-generator; the home tab and a public VOD page.
-
-**Explicitly not wired:** no writes to logic, records, or seasons. That coupling is the v2.
-
-**Why it's deferred:** it is more work than everything in v1 combined, and it markets a product
-that has to exist and be good first. Build it when there is an audience worth premiering to.
+Live broadcasting, an AI host, a spoken judge and ranked integration remain possible later, but
+none is an architectural requirement for this version.
 
 ---
 

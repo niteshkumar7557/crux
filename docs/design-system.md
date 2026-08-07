@@ -307,7 +307,7 @@ initial states, and the page ships a `<noscript>` override).
 ### In the product — quiet, with three earned moments
 
 The landing's scroll choreography does **not** cross over. Pages used many times a day get the
-`[data-reveal]` fade-and-rise on lists, `-2px` hover lifts, and CSS transitions. Exactly three
+`[data-reveal]` fade-and-rise on lists, `-2px` hover lifts, and CSS transitions. Exactly four
 things animate, because in each one something is actually at stake:
 
 | Moment | Where | Behaviour |
@@ -315,6 +315,12 @@ things animate, because in each one something is actually at stake:
 | The split settling | `arena/ScoreBar` via `useScoreBarReveal` | both halves start level and settle onto the real split |
 | The stamp | `motion/VerdictBanner` | the ruling lands from 1.35× — a verdict is an act, not an arrival |
 | The count-up | `ui/PointsPopup` | the award ticks up in laurel |
+| The verdict landing | `video-debates/VerdictPanel` | the programme stops and the ruling lands from 1.35× — the same stamp, because a round verdict is the same kind of act |
+
+The fourth is the newest and the only one on a surface the landing never sees. It reuses the
+stamp rather than introducing a gesture, and it is **not** gated by `animateOnce`: it answers
+something the reader just watched happen, and §6's rule is that interaction feedback is never
+gated.
 
 The count-up sits inside an `aria-live` region, so the ticking numeral is `aria-hidden` and a static
 `sr-only` line carries the announcement — otherwise a screen reader reads the award ~30 times.
@@ -593,3 +599,35 @@ is the block a reader scans.
 ordering and the unanswered window. `ClashRow.tsx` draws one exchange, `CaseIndex.tsx` the band,
 `ClampedText.tsx` the eight-line governor on a long argument. `motion/[id]/loading.tsx` mirrors the
 stack, and drifts into a vertical jump on reload if it stops.
+
+## §16 The video programme
+
+A judged video debate is watched, not read. The page is theatre-first: the three-stream stage owns
+the fold, a sticky rail carries the running score, and the record beneath it is set at the weight of
+a ruling rather than the weight of a caption.
+
+- **The playhead is the only input.** Every reveal is a pure function of one clamped millisecond
+  value (`timeline.logic.ts`), so a backward seek takes a ruling off the page exactly the way a
+  forward seek put it there. **No component here may remember what it has shown** — a monotonic
+  "revealed" set would break that and is the one change to avoid.
+- **The programme stops for every verdict.** Crossing the end of a round's grace period while
+  playing pauses all three streams and covers the page with the ruling and that round's key
+  arguments; the programme's end does the same for the final verdict. The rule lives in
+  `verdictGate.logic.ts` and fires on **forward playback only** — scrubbing across five rounds must
+  not throw five overlays. Its step threshold is display-only and is not a game constant.
+- **The takeover goes through `ui/Portal`.** Not stylistic: §5's rule about `backdrop-filter`
+  ancestors applies, and the navbar is blurred.
+- **Key arguments are a clash** — FOR left, AGAINST right, a hairline spine, §15's shape applied to
+  a second surface. Column headers use §3's framed-not-filled case titles. One component serves both
+  the record and the takeover, so the arguments cannot read two ways.
+- **No laurel on this page.** §2 reserves gold for earned things, and a round number is structural.
+- **There is no transcript, and no `<noscript>` block.** The transcript was removed deliberately —
+  the programme is the artefact. The `<noscript>` is a harder rule: browsers parse its contents as
+  raw text when scripting is on, so React's streaming markers inside it are never real nodes and its
+  reveal script throws once per marker. It cost 165 uncaught errors a page load. **Do not
+  reintroduce one here.**
+- **The navbar measurement in `ScoreRail` is duplicated from `motion/StickyMotion`**, not shared.
+  Ten lines, deliberately not extracted while the two pages are owned separately. A third consumer
+  is the signal to extract it.
+- **The whole feature sits behind a shared password** while it is unannounced, enforced by
+  `requireVideoPass` on every public route. See `docs/video-debates.md`.

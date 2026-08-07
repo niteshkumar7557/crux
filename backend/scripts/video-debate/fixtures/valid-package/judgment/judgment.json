@@ -1,0 +1,62 @@
+{
+  "rounds": [
+    {
+      "number": 1,
+      "winner": "for",
+      "for_score": 61,
+      "against_score": 39,
+      "ruling": "FOR connected applied learning to durable understanding more directly.",
+      "points": {
+        "for": [
+          { "segment_id": "for-0001", "text": "Applied learning improves retention." }
+        ],
+        "against": [
+          { "segment_id": "against-0001", "text": "Recall can matter under pressure." }
+        ]
+      }
+    },
+    {
+      "number": 2,
+      "winner": "against",
+      "for_score": 47,
+      "against_score": 53,
+      "ruling": "AGAINST made the stronger economic comparison.",
+      "points": {
+        "for": [
+          { "segment_id": "for-0002", "text": "Examinations also measure memorisation." }
+        ],
+        "against": []
+      }
+    },
+    {
+      "number": 3,
+      "winner": "for",
+      "for_score": 58,
+      "against_score": 42,
+      "ruling": "FOR better addressed the ethical burden of assessment.",
+      "points": { "for": [], "against": [] }
+    },
+    {
+      "number": 4,
+      "winner": "against",
+      "for_score": 44,
+      "against_score": 56,
+      "ruling": "AGAINST gave the more material account of social comparability.",
+      "points": { "for": [], "against": [] }
+    },
+    {
+      "number": 5,
+      "winner": "for",
+      "for_score": 63,
+      "against_score": 37,
+      "ruling": "FOR made the stronger case for technology-supported applied assessment.",
+      "points": { "for": [], "against": [] }
+    }
+  ],
+  "final": {
+    "winner": "for",
+    "round_score": { "for": 3, "against": 2 },
+    "crux": "Whether applied assessment gives a truer account of durable understanding.",
+    "verdict": "FOR won three domains by tying coursework to retained knowledge and practical mastery, while AGAINST prevailed on economic and social comparability concerns."
+  }
+}

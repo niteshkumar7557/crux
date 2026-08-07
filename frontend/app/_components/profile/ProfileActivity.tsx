@@ -100,6 +100,8 @@ const ProfileActivity = ({
       <div data-activity-section>
         <ArenaNow live={data.live} profileId={profileId} />
       </div>
+      {/* Video appearances are hidden while the programme is unlisted. The
+          component and its backend field stay put — restoring this is one block. */}
       <div data-activity-section>
         <CareerHistory history={data.history} />
       </div>
