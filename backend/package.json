@@ -21,6 +21,7 @@
     "video:tools:check": "tsc -p tsconfig.video-tools.json --noEmit",
     "video:inspect": "tsx scripts/video-debate/inspect-media.ts",
     "video:normalize": "tsx scripts/video-debate/normalize-transcript.ts",
+    "video:check-delivery": "tsx scripts/video-debate/check-delivery.ts",
     "video:merge": "tsx scripts/video-debate/merge-transcript.ts",
     "video:judge": "tsx scripts/video-debate/judge.ts",
     "video:manifest": "tsx scripts/video-debate/build-manifest.ts",

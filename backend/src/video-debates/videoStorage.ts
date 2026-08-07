@@ -144,7 +144,7 @@ function childUrl(base: URL, path: string): string {
   return new URL(path.split("/").map(encodeURIComponent).join("/"), base).toString();
 }
 
-function expectedContentType(name: VideoObjectName): "video/mp4" | "image/webp" {
+export function expectedContentType(name: VideoObjectName): "video/mp4" | "image/webp" {
   return name === "poster" ? "image/webp" : "video/mp4";
 }
 
@@ -158,7 +158,7 @@ function strongEtag(value: string | null): value is string {
   return value !== null && /^"[^"\r\n]+"$/.test(value);
 }
 
-function immutablePublicCache(value: string | null): boolean {
+export function immutablePublicCache(value: string | null): boolean {
   if (value === null) return false;
   const directives = new Map<string, string | null>();
   const token = /^[!#$%&'*+\-.^_`|~0-9a-z]+$/i;
@@ -194,7 +194,7 @@ function immutablePublicCache(value: string | null): boolean {
   return Number.isSafeInteger(seconds) && seconds >= 31_536_000;
 }
 
-function matchingContentRange(value: string | null, expectedLength: number): boolean {
+export function matchingContentRange(value: string | null, expectedLength: number): boolean {
   if (value === null) return false;
   const match = /^bytes 0-0\/([1-9]\d*)$/i.exec(value.trim());
   if (!match) return false;
