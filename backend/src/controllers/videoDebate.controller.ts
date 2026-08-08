@@ -1028,6 +1028,9 @@ export function makeVideoDebateHandlers({
           debate: adminDebateState(debateId, row.slug, state),
           mediaId: row.media_id,
           rclonePrefix: `video-debates/${row.media_id}/`,
+          // The panel prints a copy-paste upload command, so the bucket has to come
+          // from the deployment rather than a constant in the frontend.
+          rcloneBucket: config.video_storage.bucket ?? "",
           metadata: draftMetadata(row, row.slug, participants, rounds),
         });
       } catch (err) {

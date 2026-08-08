@@ -263,8 +263,11 @@ const DraftWorkstation = ({
 
       <div className="mt-8">
         <p className={HEADING}>Media prefix</p>
-        <code className="mt-3 block overflow-x-auto border border-ink-faint bg-paper px-4 py-3 font-label text-xs text-ink">
-          rclone copy ./publish/media r2:crux-video/{detail.rclonePrefix}
+        {/* The --header-upload is not decoration: without it the objects carry no
+            Cache-Control, Cloudflare stamps its own short default, and Check media
+            refuses every MP4 with `cache_control`. */}
+        <code className="mt-3 block overflow-x-auto whitespace-pre border border-ink-faint bg-paper px-4 py-3 font-label text-xs text-ink">
+          {`rclone copy publish/ r2:${detail.rcloneBucket}/${detail.rclonePrefix} \\\n  --header-upload "Cache-Control: public, max-age=31536000, immutable" --progress`}
         </code>
         {workflow.showsUploadInstructions && (
           <ul className="mt-3 space-y-1 font-body text-sm text-ink-soft">

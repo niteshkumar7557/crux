@@ -11,20 +11,20 @@ import type {
 
 type UnknownRecord = Record<string, unknown>;
 
-type WhisperWord = {
+export type WhisperWord = {
   start_ms: number;
   end_ms: number;
   text: string;
 };
 
-type WhisperSegment = {
+export type WhisperSegment = {
   start_ms: number;
   end_ms: number;
   text: string;
   words: WhisperWord[] | null;
 };
 
-type TimelineWindow = {
+export type TimelineWindow = {
   start_ms: number;
   end_ms: number;
   phase: TranscriptPhase;
@@ -94,7 +94,7 @@ function whisperSegment(value: unknown): WhisperSegment | null {
   return { start_ms, end_ms, text, words };
 }
 
-function whisperSegments(document: unknown, path: string): ValidationResult<WhisperSegment[]> {
+export function whisperSegments(document: unknown, path: string): ValidationResult<WhisperSegment[]> {
   const root = object(document);
   if (!root || !Array.isArray(root.segments)) return issue("invalid_whisper_json", path, "Whisper transcript must contain a segments array.");
   const segments: WhisperSegment[] = [];
@@ -106,7 +106,7 @@ function whisperSegments(document: unknown, path: string): ValidationResult<Whis
   return { ok: true, value: segments };
 }
 
-function timelineWindows(timeline: readonly TimelineEntry[]): TimelineWindow[] {
+export function timelineWindows(timeline: readonly TimelineEntry[]): TimelineWindow[] {
   const windows: TimelineWindow[] = [];
   for (const entry of timeline) {
     if (entry.type === "intro") {

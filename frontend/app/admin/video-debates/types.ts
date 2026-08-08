@@ -60,6 +60,7 @@ export interface AdminVideoDebateDetail {
   debate: AdminVideoDebate;
   mediaId: string;
   rclonePrefix: string;
+  rcloneBucket: string;
   metadata: VideoDebateDraftMetadataV1;
 }
 

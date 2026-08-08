@@ -310,6 +310,25 @@ sections later, at which point the fix is a re-export.
 Snapshot the Resolve project now. Every later correction starts from this snapshot, never from a
 newer timeline.
 
+### 2.1 What the recording must have got right
+
+Every one of these was learned by having it go wrong. They cannot be fixed after the fact:
+
+- [ ] **Each mic hears only its own speaker.** Close-mic everyone and gate hard. Bleed does not
+      merely add stray text — Whisper's word alignment collapses on quiet, distant speech and
+      produces "words" lasting several seconds, and a multi-second word blocks every boundary near
+      it. One 5.4-second `" time's"` was enough to make an entire round unplaceable.
+- [ ] **The host is silent at every turn handover.** Between a round's two judged turns there is no
+      non-judged window, so "your time starts now" spoken there has nowhere legal to sit and must
+      be deleted from the transcript afterwards.
+- [ ] **Host cues live in grace or intro**, never inside a judged turn.
+- [ ] **Roughly 300 ms of clean silence at each planned boundary**, so the edge has a gap to land in.
+- [ ] **Three different people.** One person covering two roles puts the same voice on two tracks;
+      no boundary and no edit can separate them afterwards.
+
+Expect Whisper to hallucinate during silence regardless — isolated tracks are quiet two-thirds of
+the time, and `"Thank you."` and runs of `"..."` are its favourites. Section 12.0 finds them.
+
 Write the marker times, in milliseconds from zero, into a scratch file. You will not turn them into
 `boundaries.json` until Section 8 — the real boundaries must be snapped to word gaps that do not
 exist yet.
@@ -392,9 +411,9 @@ validator rejects any file without it (`media_faststart`).
 ```bash
 # [MAC]
 cd "$PKG"
-ffmpeg -i exports-resolve/host-resolve.mp4    -map 0 -c copy -movflags +faststart publish/host.mp4
-ffmpeg -i exports-resolve/for-resolve.mp4     -map 0 -c copy -movflags +faststart publish/for.mp4
-ffmpeg -i exports-resolve/against-resolve.mp4 -map 0 -c copy -movflags +faststart publish/against.mp4
+ffmpeg -i exports-resolve/host-resolve.mp4     -c copy -movflags +faststart publish/host.mp4
+ffmpeg -i exports-resolve/for-resolve.mp4      -c copy -movflags +faststart publish/for.mp4
+ffmpeg -i exports-resolve/against-resolve.mp4  -c copy -movflags +faststart publish/against.mp4
 ```
 
 Stop if FFmpeg reports a corrupt input, a missing stream or an incomplete output.
@@ -638,6 +657,48 @@ the segment's `text` still equals its `words[]` joined together. Editing `text` 
 
 ## 12. Merge, judge, build — MAC
 
+### 12.0 Preflight first — always
+
+`video:merge` is a validator: it stops at its **first** error. On the first real package
+that meant discovering eighty-odd problems one re-run at a time. Run this instead, first:
+
+```bash
+# [MAC]
+cd "$CRUX/backend"
+npm run video:preflight -- "$PKG"
+```
+
+It walks the merger's own windows with the merger's own parser and reports everything at once, in
+three groups:
+
+| Group | What it means | How you fix it |
+|---|---|---|
+| **Boundary straddles** | a word the boundary cuts in half (`unsplittable_boundary_segment`) | the proposal below |
+| **Foreign speech** | a word landing in a judged turn belonging to someone else (`speaker_window_mismatch`) | edit the raw JSON — no boundary can fix it |
+| **Hallucinations** | punctuation-only, known Whisper filler, implausibly short | delete from the raw JSON |
+
+Then it searches for boundaries that work: for each round it slides the whole 60 s judged block and
+varies each turn inside the 30 s ±100 ms allowance until every edge lands between words, keeping the
+programme contiguous. The result goes to `metadata/boundaries.proposed.json`. **It never overwrites
+your `boundaries.json`** — review the proposal, then copy it across yourself:
+
+```bash
+# [MAC]
+cd "$PKG/metadata"
+cp boundaries.json boundaries.original.json
+cp boundaries.proposed.json boundaries.json
+```
+
+Re-run preflight after applying. Moving the windows can expose foreign speech that was previously
+sitting in a legal phase, so expect one or two more rounds of edit-and-recheck. Preflight exits
+non-zero while anything is blocking.
+
+If it reports *"Round N: no placement keeps both turns inside 30 s ±100 ms"*, somebody is speaking
+across that round's handover. Between a round's two judged turns there is no non-judged window at
+all, so the speech has to go — or the round has to be re-cut.
+
+### 12.1 Merge
+
 ```bash
 # [MAC]
 cd "$CRUX/backend"
@@ -862,8 +923,10 @@ cascades is the whole operation.
 | `content_length` | MP4s changed after `video:inspect` | re-run Section 6 and rebuild the manifest |
 | `422` in the browser console on Check media | the check refused; the codes are rendered under the buttons | read the list, not the console |
 | `503 video_storage_unconfigured` | server R2 env missing or `publicUrl` is an `r2.dev`/API host | fix the deployed env |
-| `unsplittable_boundary_segment` | a boundary lands mid-word, or word timestamps missing | re-run Section 9, re-snap boundaries to word gaps |
+| `unsplittable_boundary_segment` | a boundary lands mid-word, or word timestamps missing | run 12.0 and apply the proposal |
+| `speaker_window_mismatch` | a word inside a judged turn belongs to another speaker — usually mic bleed or a host cue | run 12.0, delete the offending segments from the raw JSON |
 | `corrected_split_requires_word_edits` | edited `text` without editing `words[].word` | edit the word entries on boundary-crossing segments |
+| A "word" lasting seconds in the raw JSON | Whisper's alignment collapses on quiet or bleed audio, smearing one word across a wide span | that span blocks every boundary near it; the speech is almost always bleed — delete the segment |
 | `timeline_partition` | a gap or overlap in the programme | make the phases contiguous, outro ending at `duration_ms` |
 | Judged turn rejected | turn is outside 30 s ± 100 ms | slide the whole judged block; re-export if the recorded turn really overran |
 | `video_bitrate` / `media_keyframe_interval` | export settings drifted | re-export at 2.5 Mbps with 2-second keyframes |
