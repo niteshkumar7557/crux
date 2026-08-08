@@ -9,6 +9,7 @@
 
 import { pathToFileURL } from "node:url";
 import {
+  allowsCruxOrigin,
   expectedContentType,
   immutablePublicCache,
   matchingContentRange,
@@ -61,10 +62,12 @@ export function evaluateDelivery(
   });
 
   const allowOrigin = headers.get("Access-Control-Allow-Origin");
+  const allowCredentials = headers.get("Access-Control-Allow-Credentials");
   rules.push({
     rule: "cors_origin",
-    ok: allowOrigin === cruxOrigin,
-    detail: `${show(allowOrigin)} vs required exactly ${cruxOrigin}`,
+    ok: allowsCruxOrigin(allowOrigin, allowCredentials, cruxOrigin),
+    detail: `${show(allowOrigin)} — needs ${cruxOrigin}, or * without allow-credentials`
+      + (allowCredentials === null ? "" : ` (allow-credentials: ${allowCredentials})`),
   });
 
   rules.push({

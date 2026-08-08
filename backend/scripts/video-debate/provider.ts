@@ -63,8 +63,19 @@ function tokenUsage(value: unknown): TokenUsage | undefined {
   };
 }
 
+// Deliberately not `config.llm` wholesale: every other Crux caller runs the cheap
+// flash model through src/ai/llm.ts, and this one decides a published verdict.
+// Only the model differs — endpoint, key, timeout and temperature stay shared.
+export const videoJudgeLlm: ProviderLlmConfig = {
+  base_url: config.llm.base_url,
+  api_key: config.llm.api_key,
+  model: config.llm.video_judge_model,
+  timeout_ms: config.llm.timeout_ms,
+  temperature: config.llm.temperature,
+};
+
 const systemPorts: ProviderPorts = {
-  llm: config.llm,
+  llm: videoJudgeLlm,
   fetch: (input, init) => globalThis.fetch(input, init),
 };
 

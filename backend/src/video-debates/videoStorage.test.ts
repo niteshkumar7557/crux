@@ -445,6 +445,18 @@ describe("video object verification", () => {
     expect(result.ok).toBe(true);
   });
 
+  it("accepts a wildcard CORS origin when credentials are not allowed", async () => {
+    const result = await configuredStore({
+      publicFetch: async (input) => {
+        const response = validRange(videoAngle(input));
+        response.headers.set("Access-Control-Allow-Origin", "*");
+        return response;
+      },
+    }).verify(MEDIA_ID, LENGTHS);
+
+    expect(result.ok).toBe(true);
+  });
+
   it("requires CORS to allow the configured Crux origin without wildcard credentials", async () => {
     const result = await configuredStore({
       publicFetch: async (input) => {

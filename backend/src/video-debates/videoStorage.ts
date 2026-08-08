@@ -194,6 +194,21 @@ export function immutablePublicCache(value: string | null): boolean {
   return Number.isSafeInteger(seconds) && seconds >= 31_536_000;
 }
 
+// A CDN in front of R2 cannot always vary its cache on Origin, so whichever request
+// lands first pins the echoed origin for everyone after it — and a request carrying
+// no Origin at all pins a response with no CORS headers. The escape is a static
+// `*`, which is identical for the anonymous, credential-free fetches the player
+// makes. Paired with credentials it is invalid per Fetch and a browser refuses it,
+// so that combination stays a failure.
+export function allowsCruxOrigin(
+  allowOrigin: string | null,
+  allowCredentials: string | null,
+  cruxOrigin: string,
+): boolean {
+  if (allowOrigin === cruxOrigin) return true;
+  return allowOrigin === "*" && allowCredentials?.trim().toLowerCase() !== "true";
+}
+
 export function matchingContentRange(value: string | null, expectedLength: number): boolean {
   if (value === null) return false;
   const match = /^bytes 0-0\/([1-9]\d*)$/i.exec(value.trim());
@@ -318,7 +333,11 @@ async function verifyRange(
   if (!immutablePublicCache(response.headers.get("Cache-Control"))) {
     failures.push(failure(name, "cache_control"));
   }
-  if (response.headers.get("Access-Control-Allow-Origin") !== cruxOrigin) {
+  if (!allowsCruxOrigin(
+    response.headers.get("Access-Control-Allow-Origin"),
+    response.headers.get("Access-Control-Allow-Credentials"),
+    cruxOrigin,
+  )) {
     failures.push(failure(name, "cors_origin"));
   }
 

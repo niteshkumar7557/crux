@@ -80,6 +80,12 @@ const config = {
     base_url: str("LLM_BASE_URL", "https://openrouter.ai/api/v1"),
     api_key: process.env.LLM_API_KEY ?? process.env.OPENROUTER_API_KEY,
     model: str("LLM_MODEL", "deepseek/deepseek-v4-flash:nitro"),
+    // The video-debate judge is the one caller that ignores `model`. Its six calls
+    // decide a verdict that gets published under a real person's name and cannot be
+    // hand-corrected afterwards, so it runs on a stronger model than the rest of
+    // Crux. Reasoning stays off for it either way: the runner needs a bare JSON
+    // object back, not a thinking preamble.
+    video_judge_model: str("VIDEO_JUDGE_LLM_MODEL", "deepseek/deepseek-v4-pro"),
     timeout_ms: num("LLM_TIMEOUT_MS", 30_000),
     retries: num("LLM_RETRIES", 1),
     temperature: num("LLM_TEMPERATURE", 0.2),

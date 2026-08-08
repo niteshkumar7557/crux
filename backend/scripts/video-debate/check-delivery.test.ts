@@ -39,8 +39,17 @@ describe("evaluateDelivery", () => {
     expect(failing(rules)).toEqual(["cache_control"]);
   });
 
-  it("rejects a wildcard CORS origin, which the server compares for exact equality", () => {
+  it("accepts a wildcard CORS origin, which is what a static edge rule serves", () => {
     const rules = evaluateDelivery(206, headers({ "Access-Control-Allow-Origin": "*" }), ORIGIN, "host", null);
+
+    expect(failing(rules)).toEqual([]);
+  });
+
+  it("rejects a wildcard paired with credentials, which no browser honours", () => {
+    const rules = evaluateDelivery(206, headers({
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Credentials": "true",
+    }), ORIGIN, "host", null);
 
     expect(failing(rules)).toEqual(["cors_origin"]);
   });

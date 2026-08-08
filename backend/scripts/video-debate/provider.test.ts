@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { callJson } from "./provider.js";
+import config from "../../src/config/index.js";
+import { callJson, videoJudgeLlm } from "./provider.js";
 
 const request = {
   system: "SENTINEL_SYSTEM_PROMPT",
@@ -14,6 +15,44 @@ const llm = {
   timeout_ms: 1_000,
   temperature: 0.2,
 };
+
+describe("videoJudgeLlm", () => {
+  it("judges on the video-judge model rather than the shared Crux model", () => {
+    expect(videoJudgeLlm.model).toBe(config.llm.video_judge_model);
+  });
+
+  it("takes every other setting from the shared llm config", () => {
+    expect(videoJudgeLlm).toMatchObject({
+      base_url: config.llm.base_url,
+      timeout_ms: config.llm.timeout_ms,
+      temperature: config.llm.temperature,
+    });
+    // Compared as a boolean on purpose: a failing toBe would print the real key.
+    expect(videoJudgeLlm.api_key === config.llm.api_key).toBe(true);
+  });
+});
+
+describe("callJson request body", () => {
+  it("sends the injected model and keeps reasoning disabled", async () => {
+    let sent: unknown = null;
+    const capturingFetch = (async (_input: unknown, init: { body: string }) => {
+      sent = JSON.parse(init.body);
+      return new Response(JSON.stringify({ choices: [{ message: { content: "{}" } }] }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }) as unknown as typeof fetch;
+
+    await callJson(request, { llm, fetch: capturingFetch });
+
+    expect(sent).toMatchObject({
+      model: "SENTINEL_MODEL",
+      max_tokens: 321,
+      response_format: { type: "json_object" },
+      reasoning: { enabled: false },
+    });
+  });
+});
 
 describe("callJson provider failures", () => {
   it("does not expose an untrusted HTTP error body or request configuration", async () => {
